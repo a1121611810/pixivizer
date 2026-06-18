@@ -1,0 +1,31 @@
+{
+  "name": "pixivizer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "check": "vp check",
+    "preview": "vp preview",
+    "cap:init": "npx cap init pixivizer com.pixivizer.app",
+    "cap:add:android": "npx cap add android",
+    "cap:copy": "npx cap copy",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/http": "^0.0.2",
+    "@capacitor/preferences": "^8.0.1",
+    "@solidjs/router": "^0.16.1",
+    "solid-js": "^1.9.13"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.4.0",
+    "typescript": "^6.0.3",
+    "unocss": "^66.7.2",
+    "vite": "^8.0.16",
+    "vite-plugin-solid": "^2.11.12"
+  }
+}
