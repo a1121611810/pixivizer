@@ -1,4 +1,4 @@
-import { type Component, Show, onMount, onCleanup, createSignal, createEffect } from 'solid-js';
+import { type Component, Show, createSignal, createEffect, onCleanup } from 'solid-js';
 import {
   showSettingsSheet,
   setShowSettingsSheet,
@@ -10,26 +10,26 @@ const SettingsSheet: Component = () => {
   const [closing, setClosing] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
 
-  // Reset animation state each time the sheet is opened
+  // Reset animation state and register back-button listener each time opened
   createEffect(() => {
     if (showSettingsSheet()) {
+      (window as any).__settingsOpen = true;
+
+      const handler = () => close();
+      window.addEventListener('closeSettings', handler);
+
       setMounted(false);
       setClosing(false);
-      requestAnimationFrame(() => setMounted(true));
+      // Double rAF ensures a paint frame at opacity:0 before transitioning to opacity:1
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setMounted(true));
+      });
+
+      onCleanup(() => {
+        (window as any).__settingsOpen = false;
+        window.removeEventListener('closeSettings', handler);
+      });
     }
-  });
-
-  // On mount: register back-button listener
-  onMount(() => {
-    (window as any).__settingsOpen = true;
-
-    const handler = () => close();
-    window.addEventListener('closeSettings', handler);
-
-    onCleanup(() => {
-      (window as any).__settingsOpen = false;
-      window.removeEventListener('closeSettings', handler);
-    });
   });
 
   function close() {
