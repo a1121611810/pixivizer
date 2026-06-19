@@ -132,14 +132,14 @@ const SettingsSheet: Component = () => {
                 role="switch"
                 aria-checked={theme() === 'dark'}
                 aria-label="深色模式"
-                class="relative flex-shrink-0 w-14 h-7 rounded-[var(--borderRadiusCircular)] border-0 outline-none cursor-pointer transition-colors duration-[var(--durationNormal)]"
+                class="relative flex-shrink-0 w-14 h-7 p-0 rounded-[var(--borderRadiusCircular)] appearance-none border-0 outline-none cursor-pointer transition-colors duration-[var(--durationNormal)]"
                 classList={{
                   'bg-[var(--colorCompoundBrandBackground)]': theme() === 'dark',
                   'bg-[var(--colorNeutralStrokeAccessible)]': theme() !== 'dark',
                 }}
               >
                 <span
-                  class="absolute top-0.5 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-all duration-[var(--durationNormal)]"
+                  class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)]"
                   classList={{
                     'translate-x-[28px]': theme() === 'dark',
                     'translate-x-0.5': theme() !== 'dark',
