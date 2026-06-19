@@ -6,7 +6,6 @@ import {
   loading,
   refreshing,
   error,
-  feedMounted,
   ensureLoaded,
   fetchMore,
   refresh,

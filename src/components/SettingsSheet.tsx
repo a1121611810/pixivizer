@@ -10,6 +10,8 @@ const SettingsSheet: Component = () => {
   const [closing, setClosing] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
 
+  let closeTimer: ReturnType<typeof setTimeout> | undefined;
+
   // Animate in on mount
   onMount(() => {
     (window as any).__settingsOpen = true;
@@ -19,6 +21,7 @@ const SettingsSheet: Component = () => {
     window.addEventListener('closeSettings', handler);
 
     onCleanup(() => {
+      if (closeTimer) clearTimeout(closeTimer);
       (window as any).__settingsOpen = false;
       window.removeEventListener('closeSettings', handler);
     });
@@ -26,7 +29,7 @@ const SettingsSheet: Component = () => {
 
   function close() {
     setClosing(true);
-    setTimeout(() => {
+    closeTimer = setTimeout(() => {
       setShowSettingsSheet(false);
       setClosing(false);
       setMounted(false);
@@ -41,21 +44,20 @@ const SettingsSheet: Component = () => {
     setTheme(theme() === 'dark' ? 'light' : 'dark');
   }
 
-  // Prevent body scroll while sheet is open
-  function handleTouchMove(e: TouchEvent) {
-    e.preventDefault();
+  // Prevent body scroll when touching the scrim while sheet is open
+  function handleScrimTouchMove(e: TouchEvent) {
+    if (e.target === e.currentTarget) {
+      e.preventDefault();
+    }
   }
 
   return (
     <Show when={showSettingsSheet()}>
-      <div
-        class="fixed inset-0 z-50"
-        onClick={handleScrimClick}
-        onTouchMove={handleTouchMove}
-      >
+      <div class="fixed inset-0 z-50" onClick={handleScrimClick}>
         {/* Scrim */}
         <div
           class="absolute inset-0 transition-opacity"
+          onTouchMove={handleScrimTouchMove}
           style={{
             'background-color': 'var(--colorScrim)',
             opacity: mounted() && !closing() ? 1 : 0,
