@@ -16,7 +16,7 @@ import {
   isFeedCached,
   getFeedScrollY,
 } from '../stores/feedStore';
-import { currentTab, showSettingsSheet, setShowSettingsSheet } from '../stores/uiStore';
+import { currentTab, setShowSettingsSheet } from '../stores/uiStore';
 import VirtualFeed from '../components/VirtualFeed';
 import NavBar from '../components/NavBar';
 import PageTransition from '../components/PageTransition';
