@@ -113,41 +113,36 @@ const SettingsSheet: Component = () => {
             {/* Theme toggle row */}
             <div class="flex items-center justify-between py-3">
               <div class="flex items-center gap-3">
-                <span class="text-xl leading-none select-none">
+                <span class="text-2xl leading-none select-none">
                   {theme() === 'dark' ? '🌙' : '☀️'}
                 </span>
                 <div>
-                  <p class="[font-size:var(--fontSizeBase300)] font-medium text-[var(--colorNeutralForeground1)] leading-snug">
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
                     深色模式
                   </p>
                   <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                    {theme() === 'dark' ? '已开启' : '已关闭'}
+                    {theme() === 'dark' ? '已开启 · 点击关闭' : '已关闭 · 点击开启'}
                   </p>
                 </div>
               </div>
 
-              {/* Fluent-style toggle switch */}
+              {/* Toggle switch — uses classList for reliable Solid reactivity */}
               <button
                 onClick={toggleTheme}
                 role="switch"
                 aria-checked={theme() === 'dark'}
                 aria-label="深色模式"
-                class="relative flex-shrink-0 w-[44px] h-[26px] rounded-[var(--borderRadiusCircular)] border-0 outline-none cursor-pointer transition-colors duration-[var(--durationFast)] focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]"
-                style={{
-                  'background-color':
-                    theme() === 'dark'
-                      ? 'var(--colorCompoundBrandBackground)'
-                      : 'var(--colorNeutralStrokeAccessible)',
+                class="relative flex-shrink-0 w-14 h-7 rounded-[var(--borderRadiusCircular)] border-0 outline-none cursor-pointer transition-colors duration-[var(--durationNormal)]"
+                classList={{
+                  'bg-[var(--colorCompoundBrandBackground)]': theme() === 'dark',
+                  'bg-[var(--colorNeutralStrokeAccessible)]': theme() !== 'dark',
                 }}
               >
                 <span
-                  class="absolute top-[3px] w-[20px] h-[20px] rounded-[var(--borderRadiusCircular)] shadow-[var(--elevation4)] transition-transform duration-[var(--durationFast)]"
-                  style={{
-                    'background-color': '#ffffff',
-                    transform:
-                      theme() === 'dark'
-                        ? 'translateX(20px)'
-                        : 'translateX(3px)',
+                  class="absolute top-0.5 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-all duration-[var(--durationNormal)]"
+                  classList={{
+                    'translate-x-[28px]': theme() === 'dark',
+                    'translate-x-0.5': theme() !== 'dark',
                   }}
                 />
               </button>
