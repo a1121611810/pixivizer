@@ -132,7 +132,7 @@ const SettingsSheet: Component = () => {
                 role="switch"
                 aria-checked={theme() === 'dark'}
                 aria-label="深色模式"
-                class="relative flex-shrink-0 w-[42px] h-[24px] rounded-[var(--borderRadiusCircular)] border-0 outline-none cursor-pointer transition-colors duration-[var(--durationFast)] focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]"
+                class="relative flex-shrink-0 w-[44px] h-[26px] rounded-[var(--borderRadiusCircular)] border-0 outline-none cursor-pointer transition-colors duration-[var(--durationFast)] focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]"
                 style={{
                   'background-color':
                     theme() === 'dark'
@@ -141,9 +141,9 @@ const SettingsSheet: Component = () => {
                 }}
               >
                 <span
-                  class="absolute top-[3px] w-[18px] h-[18px] rounded-[var(--borderRadiusCircular)] shadow-[var(--elevation4)] transition-transform duration-[var(--durationFast)]"
+                  class="absolute top-[3px] w-[20px] h-[20px] rounded-[var(--borderRadiusCircular)] shadow-[var(--elevation4)] transition-transform duration-[var(--durationFast)]"
                   style={{
-                    'background-color': 'var(--colorNeutralBackground1)',
+                    'background-color': '#ffffff',
                     transform:
                       theme() === 'dark'
                         ? 'translateX(20px)'
