@@ -5,9 +5,333 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Pixivizer</title>
     <style>
+      /* ═══════════════════════════════════════════════════════
+         Microsoft Fluent Design System 2 — Design Tokens
+         Based on @fluentui/tokens v9 + fluent2.microsoft.design
+         ═══════════════════════════════════════════════════════ */
+
+      :root {
+        /* ── Typography ── */
+        --fontFamilyBase: "Segoe UI", "Segoe UI Web (West European)", -apple-system,
+          BlinkMacSystemFont, Roboto, "Helvetica Neue", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+
+        /* ── Font sizes (Fluent type ramp) ── */
+        --fontSizeBase100: 10px;   /* Caption 2 */
+        --fontSizeBase200: 12px;   /* Caption 1 */
+        --fontSizeBase300: 14px;   /* Body 1 */
+        --fontSizeBase400: 16px;   /* Body 2 / Subtitle 2 */
+        --fontSizeBase500: 20px;   /* Subtitle 1 */
+        --fontSizeBase600: 24px;   /* Title 3 */
+        --fontSizeHero700: 28px;   /* Title 2 */
+        --fontSizeHero800: 32px;   /* Title 1 */
+        --fontSizeHero900: 40px;   /* Large Title */
+        --fontSizeHero1000: 68px;  /* Display */
+
+        /* ── Line heights ── */
+        --lineHeightBase100: 14px;
+        --lineHeightBase200: 16px;
+        --lineHeightBase300: 20px;
+        --lineHeightBase400: 22px;
+        --lineHeightBase500: 28px;
+        --lineHeightBase600: 32px;
+
+        /* ── Font weights ── */
+        --fontWeightRegular: 400;
+        --fontWeightMedium: 500;
+        --fontWeightSemibold: 600;
+        --fontWeightBold: 700;
+
+        /* ── Border radius ── */
+        --borderRadiusNone: 0;
+        --borderRadiusSmall: 2px;
+        --borderRadiusMedium: 4px;
+        --borderRadiusLarge: 6px;
+        --borderRadiusXLarge: 8px;
+        --borderRadius2XLarge: 12px;
+        --borderRadius3XLarge: 16px;
+        --borderRadius4XLarge: 24px;
+        --borderRadiusCircular: 10000px;
+
+        /* ── Stroke widths ── */
+        --strokeWidthThin: 1px;
+        --strokeWidthThick: 2px;
+        --strokeWidthThicker: 3px;
+
+        /* ── Spacing (4px base grid) ── */
+        --spacingHorizontalNone: 0;
+        --spacingHorizontalXXS: 2px;
+        --spacingHorizontalXS: 4px;
+        --spacingHorizontalSNudge: 6px;
+        --spacingHorizontalS: 8px;
+        --spacingHorizontalMNudge: 10px;
+        --spacingHorizontalM: 12px;
+        --spacingHorizontalL: 16px;
+        --spacingHorizontalXL: 20px;
+        --spacingHorizontalXXL: 24px;
+
+        --spacingVerticalNone: 0;
+        --spacingVerticalXXS: 2px;
+        --spacingVerticalXS: 4px;
+        --spacingVerticalSNudge: 6px;
+        --spacingVerticalS: 8px;
+        --spacingVerticalMNudge: 10px;
+        --spacingVerticalM: 12px;
+        --spacingVerticalL: 16px;
+        --spacingVerticalXL: 20px;
+        --spacingVerticalXXL: 24px;
+
+        /* ── Motion durations ── */
+        --durationUltraFast: 50ms;
+        --durationFaster: 100ms;
+        --durationFast: 150ms;
+        --durationNormal: 200ms;
+        --durationGentle: 250ms;
+        --durationSlow: 300ms;
+        --durationSlower: 400ms;
+        --durationUltraSlow: 500ms;
+
+        /* ── Motion easing curves ── */
+        --curveAccelerateMax: cubic-bezier(0.9, 0.1, 1, 0.2);
+        --curveAccelerateMid: cubic-bezier(1, 0, 1, 1);
+        --curveAccelerateMin: cubic-bezier(0.8, 0, 0.78, 1);
+        --curveDecelerateMax: cubic-bezier(0.1, 0.9, 0.2, 1);
+        --curveDecelerateMid: cubic-bezier(0, 0, 0, 1);
+        --curveDecelerateMin: cubic-bezier(0.33, 0, 0.1, 1);
+        --curveEasyEaseMax: cubic-bezier(0.8, 0, 0.2, 1);
+        --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
+        --curveLinear: cubic-bezier(0, 0, 1, 1);
+
+        /* ── Colors: Light theme ── */
+        --colorNeutralBackground1: #FFFFFF;
+        --colorNeutralBackground2: #FAFAFA;
+        --colorNeutralBackground3: #F5F5F5;
+        --colorNeutralBackground1Hover: #F5F5F5;
+        --colorNeutralBackground1Pressed: #EBEBEB;
+        --colorNeutralBackground1Selected: #EBEBEB;
+
+        --colorNeutralForeground1: #242424;
+        --colorNeutralForeground2: #424242;
+        --colorNeutralForeground3: #616161;
+        --colorNeutralForegroundDisabled: #BDBDBD;
+
+        --colorNeutralStroke1: #D1D1D1;
+        --colorNeutralStroke2: #E0E0E0;
+        --colorNeutralStrokeAccessible: #616161;
+        --colorNeutralStrokeDisabled: #E0E0E0;
+
+        --colorBrandBackground: #0078D4;
+        --colorBrandBackgroundHover: #106EBE;
+        --colorBrandBackgroundPressed: #005A9E;
+        --colorBrandBackgroundSelected: #005A9E;
+        --colorBrandForeground1: #0078D4;
+        --colorBrandForegroundLink: #106EBE;
+        --colorBrandForegroundLinkHover: #005A9E;
+        --colorBrandForegroundLinkPressed: #004578;
+        --colorBrandStroke1: #0078D4;
+        --colorBrandStroke2: #C2E0F4;
+
+        --colorCompoundBrandBackground: #0078D4;
+        --colorCompoundBrandBackgroundHover: #106EBE;
+        --colorCompoundBrandBackgroundPressed: #005A9E;
+        --colorCompoundBrandForeground1: #0078D4;
+        --colorCompoundBrandStroke1: #0078D4;
+
+        --colorNeutralBackgroundAlpha: rgba(255, 255, 255, 0.80);
+        --colorNeutralBackgroundAlpha2: rgba(255, 255, 255, 0.60);
+
+        /* ── Overlay scrim ── */
+        --colorScrim: rgba(0, 0, 0, 0.40);
+
+        /* ── Dual-layer shadows (ambient + key) — Light ── */
+        --shadowAmbient: rgba(0, 0, 0, 0.12);
+        --shadowKey: rgba(0, 0, 0, 0.14);
+        --shadowAmbientLighter: rgba(0, 0, 0, 0.06);
+        --shadowKeyLighter: rgba(0, 0, 0, 0.07);
+        --shadowAmbientDarker: rgba(0, 0, 0, 0.20);
+        --shadowKeyDarker: rgba(0, 0, 0, 0.24);
+
+        --elevation2: 0 0 2px var(--shadowAmbient), 0 1px 2px var(--shadowKey);
+        --elevation4: 0 0 2px var(--shadowAmbient), 0 2px 4px var(--shadowKey);
+        --elevation8: 0 0 2px var(--shadowAmbient), 0 4px 8px var(--shadowKey);
+        --elevation16: 0 0 2px var(--shadowAmbient), 0 8px 16px var(--shadowKey);
+        --elevation28: 0 0 8px var(--shadowAmbient), 0 14px 28px var(--shadowKey);
+        --elevation64: 0 0 8px var(--shadowAmbient), 0 32px 64px var(--shadowKey);
+
+        /* ── Focus indicator ── */
+        --colorStrokeFocus1: #FFFFFF;
+        --colorStrokeFocus2: #000000;
+
+        /* ── Status colors ── */
+        --colorStatusDangerBackground1: #C42B1C;
+        --colorStatusDangerForeground1: #C42B1C;
+        --colorStatusDangerBackground2: #FDE7E5;
+        --colorStatusSuccessBackground1: #107C10;
+        --colorStatusSuccessForeground1: #107C10;
+        --colorStatusSuccessBackground2: #DFF6DD;
+        --colorStatusWarningBackground1: #FF8C00;
+        --colorStatusWarningForeground1: #FF8C00;
+        --colorStatusWarningBackground2: #FFF4CE;
+      }
+
+      /* ── Dark theme ── */
+      :root.dark {
+        --colorNeutralBackground1: #292929;
+        --colorNeutralBackground2: #1F1F1F;
+        --colorNeutralBackground3: #141414;
+        --colorNeutralBackground1Hover: #333333;
+        --colorNeutralBackground1Pressed: #3D3D3D;
+        --colorNeutralBackground1Selected: #3D3D3D;
+
+        --colorNeutralForeground1: #FFFFFF;
+        --colorNeutralForeground2: #D6D6D6;
+        --colorNeutralForeground3: #ADADAD;
+        --colorNeutralForegroundDisabled: #5C5C5C;
+
+        --colorNeutralStroke1: #666666;
+        --colorNeutralStroke2: #4D4D4D;
+        --colorNeutralStrokeAccessible: #ADADAD;
+        --colorNeutralStrokeDisabled: #333333;
+
+        --colorBrandBackground: #106EBE;
+        --colorBrandBackgroundHover: #0078D4;
+        --colorBrandBackgroundPressed: #005A9E;
+        --colorBrandBackgroundSelected: #005A9E;
+        --colorBrandForeground1: #479EF5;
+        --colorBrandForegroundLink: #2899F5;
+        --colorBrandForegroundLinkHover: #479EF5;
+        --colorBrandForegroundLinkPressed: #60AAFF;
+        --colorBrandStroke1: #2899F5;
+        --colorBrandStroke2: #1A3A5C;
+
+        --colorCompoundBrandBackground: #0078D4;
+        --colorCompoundBrandBackgroundHover: #106EBE;
+        --colorCompoundBrandBackgroundPressed: #005A9E;
+        --colorCompoundBrandForeground1: #479EF5;
+        --colorCompoundBrandStroke1: #2899F5;
+
+        --colorNeutralBackgroundAlpha: rgba(41, 41, 41, 0.80);
+        --colorNeutralBackgroundAlpha2: rgba(41, 41, 41, 0.60);
+
+        /* ── Overlay scrim ── */
+        --colorScrim: rgba(0, 0, 0, 0.60);
+
+        /* Dual-layer shadows — Dark (same black, different opacity) */
+        --shadowAmbient: rgba(0, 0, 0, 0.24);
+        --shadowKey: rgba(0, 0, 0, 0.28);
+        --shadowAmbientLighter: rgba(0, 0, 0, 0.12);
+        --shadowKeyLighter: rgba(0, 0, 0, 0.14);
+        --shadowAmbientDarker: rgba(0, 0, 0, 0.32);
+        --shadowKeyDarker: rgba(0, 0, 0, 0.36);
+
+        --elevation2: 0 0 2px var(--shadowAmbient), 0 1px 2px var(--shadowKey);
+        --elevation4: 0 0 2px var(--shadowAmbient), 0 2px 4px var(--shadowKey);
+        --elevation8: 0 0 2px var(--shadowAmbient), 0 4px 8px var(--shadowKey);
+        --elevation16: 0 0 2px var(--shadowAmbient), 0 8px 16px var(--shadowKey);
+        --elevation28: 0 0 8px var(--shadowAmbient), 0 14px 28px var(--shadowKey);
+        --elevation64: 0 0 8px var(--shadowAmbient), 0 32px 64px var(--shadowKey);
+
+        --colorStrokeFocus1: #000000;
+        --colorStrokeFocus2: #FFFFFF;
+
+        --colorStatusDangerBackground2: #3E1D1A;
+        --colorStatusSuccessBackground2: #1A2E1A;
+        --colorStatusWarningBackground2: #3A2E0F;
+      }
+
+      /* ── Reset & Base ── */
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body, #root { width: 100%; height: 100%; }
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+      html, body, #root {
+        width: 100%;
+        height: 100%;
+      }
+
+      html {
+        background-color: var(--colorNeutralBackground3);
+        color: var(--colorNeutralForeground1);
+        transition: background-color var(--durationNormal) var(--curveEasyEase),
+                    color var(--durationNormal) var(--curveEasyEase);
+      }
+
+      body {
+        font-family: var(--fontFamilyBase);
+        font-size: var(--fontSizeBase300);
+        font-weight: var(--fontWeightRegular);
+        line-height: var(--lineHeightBase300);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* ── Scrollbar ── */
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb {
+        background: var(--colorNeutralStrokeAccessible);
+        border-radius: var(--borderRadiusCircular);
+      }
+
+      /* ── Selection ── */
+      ::selection {
+        background: var(--colorBrandStroke2);
+        color: var(--colorNeutralForeground1);
+      }
+
+      /* ═══════════════════════════════════════════════════════
+         Fluent Design 2 — Animation Keyframes
+         ═══════════════════════════════════════════════════════ */
+
+      /* Page / element entrance: fade + micro-slide-up */
+      @keyframes fluent-enter {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* List item staggered entrance */
+      @keyframes fluent-list-enter {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Dialog / overlay entrance: fade + scale-up */
+      @keyframes fluent-scale-enter {
+        from { opacity: 0; transform: scale(0.96); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+
+      /* Overlay exit */
+      @keyframes fluent-scale-exit {
+        from { opacity: 1; transform: scale(1); }
+        to   { opacity: 0; transform: scale(0.96); }
+      }
+
+      /* Sheet / panel entrance: slide down from top */
+      @keyframes fluent-slide-down {
+        from { opacity: 0; transform: translateY(-16px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Sheet / panel exit: slide up to top */
+      @keyframes fluent-slide-up {
+        from { opacity: 1; transform: translateY(0); }
+        to   { opacity: 0; transform: translateY(-16px); }
+      }
+
+      /* Skeleton shimmer loading */
+      @keyframes fluent-shimmer {
+        0%   { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+
+      /* Accessibility: respect reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
     </style>
   </head>
   <body>

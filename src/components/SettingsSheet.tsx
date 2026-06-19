@@ -57,7 +57,7 @@ const SettingsSheet: Component = () => {
         <div
           class="absolute inset-0 transition-opacity"
           style={{
-            'background-color': 'rgba(0, 0, 0, 0.4)',
+            'background-color': 'var(--colorScrim)',
             opacity: mounted() && !closing() ? 1 : 0,
             transition: `opacity var(--durationGentle) ${closing() ? 'var(--curveAccelerateMid)' : 'var(--curveDecelerateMid)'}`,
           }}
