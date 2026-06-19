@@ -5,6 +5,7 @@ export type Theme = 'dark' | 'light';
 
 const [currentTab, setCurrentTab] = createSignal<Tab>('recommended');
 const [theme, setTheme] = createSignal<Theme>('light');
+const [showSettingsSheet, setShowSettingsSheet] = createSignal(false);
 
 // Sync theme class to <html> whenever it changes
 createEffect(() => {
@@ -16,4 +17,8 @@ createEffect(() => {
   }
 });
 
-export { currentTab, setCurrentTab, theme, setTheme };
+// Log tab changes for debugging
+createEffect(() => {
+});
+
+export { currentTab, setCurrentTab, theme, setTheme, showSettingsSheet, setShowSettingsSheet };
