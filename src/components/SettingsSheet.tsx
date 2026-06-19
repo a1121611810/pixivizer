@@ -1,4 +1,4 @@
-import { type Component, Show, onMount, onCleanup, createSignal } from 'solid-js';
+import { type Component, Show, onMount, onCleanup, createSignal, createEffect } from 'solid-js';
 import {
   showSettingsSheet,
   setShowSettingsSheet,
@@ -10,18 +10,23 @@ const SettingsSheet: Component = () => {
   const [closing, setClosing] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
 
-  let closeTimer: ReturnType<typeof setTimeout> | undefined;
+  // Reset animation state each time the sheet is opened
+  createEffect(() => {
+    if (showSettingsSheet()) {
+      setMounted(false);
+      setClosing(false);
+      requestAnimationFrame(() => setMounted(true));
+    }
+  });
 
-  // Animate in on mount
+  // On mount: register back-button listener
   onMount(() => {
     (window as any).__settingsOpen = true;
-    requestAnimationFrame(() => setMounted(true));
 
     const handler = () => close();
     window.addEventListener('closeSettings', handler);
 
     onCleanup(() => {
-      if (closeTimer) clearTimeout(closeTimer);
       (window as any).__settingsOpen = false;
       window.removeEventListener('closeSettings', handler);
     });
@@ -29,10 +34,8 @@ const SettingsSheet: Component = () => {
 
   function close() {
     setClosing(true);
-    closeTimer = setTimeout(() => {
+    setTimeout(() => {
       setShowSettingsSheet(false);
-      setClosing(false);
-      setMounted(false);
     }, 250); // match --durationGentle
   }
 
