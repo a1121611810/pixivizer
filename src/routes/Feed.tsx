@@ -1,43 +1,92 @@
-import { type Component, createEffect } from 'solid-js';
+import { type Component, createEffect, onMount, onCleanup, untrack } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import {
   illusts,
   nextUrl,
   loading,
+  refreshing,
   error,
-  fetchRecommended,
-  fetchFollow,
+  feedMounted,
+  ensureLoaded,
   fetchMore,
+  refresh,
+  saveFeedScroll,
+  saveTabScroll,
+  markFeedMounted,
+  isFeedCached,
+  getFeedScrollY,
 } from '../stores/feedStore';
-import { currentTab } from '../stores/uiStore';
+import { currentTab, showSettingsSheet, setShowSettingsSheet } from '../stores/uiStore';
 import VirtualFeed from '../components/VirtualFeed';
 import NavBar from '../components/NavBar';
+import PageTransition from '../components/PageTransition';
+import SettingsSheet from '../components/SettingsSheet';
 
 const Feed: Component = () => {
   const navigate = useNavigate();
+  const cached = isFeedCached();
+  let prevTab = currentTab();
 
+  // Restore scroll when returning to a cached feed
+  onMount(() => {
+    if (cached) {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, getFeedScrollY());
+      });
+      markFeedMounted();
+    }
+  });
+
+  // Save scroll when leaving the feed page entirely
+  onCleanup(() => {
+    saveFeedScroll();
+    markFeedMounted();
+  });
+
+  // Tab change: save old tab's scroll, restore new tab's scroll, load data
   createEffect(() => {
-    if (currentTab() === 'recommended') fetchRecommended();
-    else fetchFollow();
+    const tab = currentTab();
+    // Save scroll for the tab we're leaving
+    if (tab !== prevTab && (prevTab === 'recommended' || prevTab === 'follow')) {
+      saveTabScroll(prevTab);
+    }
+    prevTab = tab;
+    // Restore scroll for the tab we're switching to
+    const savedY = getFeedScrollY();
+    if (savedY > 0) {
+      requestAnimationFrame(() => window.scrollTo(0, savedY));
+    }
+    untrack(() => ensureLoaded());
   });
 
   return (
-    <div class="pb-16">
-      <header class="sticky top-0 z-10 bg-dark-950/90 backdrop-blur-md px-4 py-3 border-b border-gray-800">
-        <h1 class="text-lg font-bold text-white">Pixivizer</h1>
-      </header>
+    <>
+    <PageTransition>
+      <div class="pb-16">
+        <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4">
+          <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
+            Pixivizer
+          </h1>
+        </header>
 
-      <VirtualFeed
-        illusts={illusts()}
-        loading={loading()}
-        error={error()}
-        hasMore={nextUrl() !== null}
-        onIllustClick={(id) => navigate(`/illust/${id}`)}
-        onLoadMore={fetchMore}
-      />
+        <VirtualFeed
+          illusts={illusts()}
+          loading={loading() || refreshing()}
+          error={error()}
+          hasMore={nextUrl() !== null}
+          onIllustClick={(id) => navigate(`/illust/${id}`)}
+          onLoadMore={fetchMore}
+          onRefresh={refresh}
+          onSettingsOpen={() => setShowSettingsSheet(true)}
+          skipAnimation={cached}
+        />
+      </div>
+    </PageTransition>
 
-      <NavBar />
-    </div>
+    <NavBar />
+
+    <SettingsSheet />
+    </>
   );
 };
 
