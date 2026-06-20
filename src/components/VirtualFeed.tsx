@@ -204,7 +204,7 @@ const VirtualFeed: Component<Props> = (props) => {
         {props.illusts.length > 0 && (
           <div ref={containerRef} class="flex gap-3">
             {columns().map((col) => (
-              <div class="flex-1 flex flex-col gap-3">
+              <div class="flex-1 flex flex-col gap-3 min-w-0">
                 {col.map((item) => (
                   <div
                     style={
