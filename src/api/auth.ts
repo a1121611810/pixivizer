@@ -1,13 +1,19 @@
+import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { setAccessToken } from "./client";
 import type { PixivAuthResponse } from "./types";
 import SparkMD5 from "spark-md5";
 
+// ─── 平台检测 ───
+const isNative = Capacitor.isNativePlatform();
+
+// ─── OAuth 端点 ───
+const PIXIV_AUTH_URL = "https://oauth.secure.pixiv.net/auth/token";
+
 // ─── Pixiv OAuth 凭证 ───
-// 注：Android 客户端 (KzEZED7...) 已被 Pixiv 停用，仅 iOS 可用
+// Android 客户端 (KzEZED7...) 已被 Pixiv 停用，仅 iOS 可用
 const CLIENT_ID = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
 const CLIENT_SECRET = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
 const HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
-// OAuth 直连 URL（client.ts 的 rewriteUrl 会在 web 模式自动转为 /pixiv-oauth/auth/token）
 
 /** 生成 Pixiv OAuth 所需的 X-Client-Time 和 X-Client-Hash */
 function makeClientHeaders(): Record<string, string> {
@@ -32,33 +38,53 @@ function extractAuth(data: any): { accessToken: string; refreshToken: string; us
   };
 }
 
+/** 发起 OAuth 请求 — native 用 CapacitorHttp，web 用 Vite 代理路径 */
+async function oauthRequest(body: Record<string, string>): Promise<any> {
+  const headers = makeClientHeaders();
+  const bodyStr = new URLSearchParams(body).toString();
+
+  if (isNative) {
+    // 原生模式：CapacitorHttp 直连 Pixiv（可设自定义 User-Agent）
+    const resp = await CapacitorHttp.request({
+      method: "POST",
+      url: PIXIV_AUTH_URL,
+      headers: { ...headers, "Content-Type": "application/x-www-form-urlencoded" },
+      data: bodyStr,
+    });
+    if (resp.status >= 400) {
+      const errText = typeof resp.data === "string" ? resp.data : JSON.stringify(resp.data);
+      throw new Error(`OAuth 失败 (HTTP ${resp.status}): ${errText.slice(0, 300)}`);
+    }
+    return resp.data;
+  } else {
+    // Web 模式：fetch 走 Vite 代理（同源无 CORS，代理覆盖 UA）
+    const resp = await fetch("/pixiv-oauth/auth/token", {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/x-www-form-urlencoded" },
+      body: bodyStr,
+      credentials: "omit",
+    });
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
+      throw new Error(`OAuth 失败 (HTTP ${resp.status}): ${text.slice(0, 300)}`);
+    }
+    return resp.json();
+  }
+}
+
 /** 用户名+密码登录 */
 export async function loginWithPassword(
   username: string,
   password: string,
 ): Promise<PixivAuthResponse> {
-  const headers = makeClientHeaders();
-  const body: Record<string, string> = {
+  const data = await oauthRequest({
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET,
     grant_type: "password",
     username,
     password,
     get_secure_url: "1",
-  };
-  // 使用 apiClient.post 但需要传入自定义 headers
-  // apiClient 不支持自定义 headers，直接构造请求
-  const resp = await fetch("/pixiv-oauth/auth/token", {
-    method: "POST",
-    headers: { ...headers, "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(body).toString(),
-    credentials: "omit",
   });
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => "");
-    throw new Error(`登录失败 (HTTP ${resp.status}): ${text.slice(0, 300)}`);
-  }
-  const data = await resp.json();
   const auth = extractAuth(data);
   setAccessToken(auth.accessToken);
   return data;
@@ -66,25 +92,13 @@ export async function loginWithPassword(
 
 /** Refresh Token 刷新 */
 export async function refreshToken(refreshToken: string): Promise<PixivAuthResponse> {
-  const headers = makeClientHeaders();
-  const body: Record<string, string> = {
+  const data = await oauthRequest({
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET,
     grant_type: "refresh_token",
     refresh_token: refreshToken,
     get_secure_url: "1",
-  };
-  const resp = await fetch("/pixiv-oauth/auth/token", {
-    method: "POST",
-    headers: { ...headers, "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(body).toString(),
-    credentials: "omit",
   });
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => "");
-    throw new Error(`Token 刷新失败 (HTTP ${resp.status}): ${text.slice(0, 300)}`);
-  }
-  const data = await resp.json();
   const auth = extractAuth(data);
   setAccessToken(auth.accessToken);
   return data;
