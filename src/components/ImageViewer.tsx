@@ -1,5 +1,5 @@
-import { createSignal, onCleanup } from 'solid-js';
-import type { Component } from 'solid-js';
+import { createSignal, onCleanup } from "solid-js";
+import type { Component } from "solid-js";
 
 interface Props {
   imageUrls: string[];
@@ -17,8 +17,8 @@ const ImageViewer: Component<Props> = (props) => {
   let lastDist = 0;
 
   const imgUrl = (url: string) => {
-    const parts = url.split('/');
-    return `/pixiv-img/${parts.slice(3).join('/')}`;
+    const parts = url.split("/");
+    return `/pixiv-img/${parts.slice(3).join("/")}`;
   };
 
   const handleTouchStart = (e: TouchEvent) => {
@@ -87,14 +87,15 @@ const ImageViewer: Component<Props> = (props) => {
 
   return (
     <div
-      class="fixed inset-0 z-50 bg-black touch-none select-none"
+      class="fixed inset-0 z-50 touch-none select-none"
+      style={{ "background-color": "var(--colorOverlayBackground)" }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onDblClick={handleDblClick}
     >
       <div
-        class="flex h-full transition-transform duration-200"
+        class="flex h-full transition-transform duration-[var(--durationNormal)]"
         style={{
           transform: `translateX(-${currentPage() * 100}%)`,
         }}
@@ -104,12 +105,12 @@ const ImageViewer: Component<Props> = (props) => {
             <img
               src={imgUrl(url)}
               alt={`page ${i + 1}`}
-              class="max-w-full max-h-full object-contain transition-transform duration-200"
+              class="max-w-full max-h-full object-contain transition-transform duration-[var(--durationNormal)]"
               style={{
                 transform:
                   i === currentPage()
                     ? `scale(${scale()}) translate(${position().x}px, ${position().y}px)`
-                    : 'none',
+                    : "none",
               }}
               draggable={false}
             />
@@ -121,8 +122,8 @@ const ImageViewer: Component<Props> = (props) => {
         <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
           {props.imageUrls.map((_, i) => (
             <div
-              class={`w-2 h-2 rounded-full transition-colors ${
-                i === currentPage() ? 'bg-white' : 'bg-white/30'
+              class={`w-2 h-2 rounded-[var(--borderRadiusCircular)] transition-colors ${
+                i === currentPage() ? 'bg-[var(--colorOverlayForeground)]' : 'bg-[var(--colorOverlaySurface)]'
               }`}
             />
           ))}
@@ -130,7 +131,7 @@ const ImageViewer: Component<Props> = (props) => {
       )}
 
       <button
-        class="absolute top-4 left-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white text-xl"
+        class="absolute top-4 left-4 w-10 h-10 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorOverlaySurface)] text-[var(--colorOverlayForeground)] text-xl"
         onClick={props.onClose}
       >
         ←

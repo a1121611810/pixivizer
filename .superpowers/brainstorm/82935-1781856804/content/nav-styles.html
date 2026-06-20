@@ -1,0 +1,300 @@
+<h2>底部导航栏 — 三种 Fluent 风格对比</h2>
+<p class="subtitle">点击你喜欢的方案（可多选元素）</p>
+
+<div class="split">
+  <!-- Style A: Teams / Clean -->
+  <div class="mockup">
+    <div class="mockup-header">A — Teams 风格（极简）</div>
+    <div class="mockup-body" style="padding: 0">
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          min-height: 320px;
+          background: #fafafa;
+          font-family: &quot;Segoe UI&quot;, sans-serif;
+        "
+      >
+        <div
+          style="
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8a8886;
+            font-size: 12px;
+          "
+        >
+          ← 内容区域 →
+        </div>
+        <div
+          style="
+            border-top: 1px solid #e0e0e0;
+            background: #fff;
+            display: flex;
+            justify-content: space-around;
+            padding: 6px 8px 2px;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 2px;
+              padding: 4px 16px;
+              color: #0078d4;
+            "
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#0078D4">
+              <path
+                d="M13.45 2.53a2.25 2.25 0 0 0-2.9 0L3.8 8.23A1.75 1.75 0 0 0 3 9.95v9.3C3 20.22 3.78 21 4.75 21h3c.97 0 1.75-.78 1.75-1.75V15.25c0-.68.54-1.23 1.22-1.25h2.56c.68.02 1.22.57 1.22 1.25v4c0 .97.78 1.75 1.75 1.75h3c.97 0 1.75-.78 1.75-1.75v-9.3c0-.67-.3-1.3-.8-1.72l-6.75-5.7z"
+              />
+            </svg>
+            <span style="font-size: 12px; font-weight: 600">推荐</span>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 2px;
+              padding: 4px 16px;
+              color: #8a8886;
+            "
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#8A8886">
+              <path
+                d="M5.5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0zM8 4a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4zm7.5 5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zM17 6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3zM4.25 14A2.25 2.25 0 0 0 2 16.25v.25S2 21 8 21s6-4.5 6-4.5v-.25A2.25 2.25 0 0 0 11.75 14h-7.5zm-.75 2.25a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 .75.75v.24a14.5 14.5 0 0 1-4.5.51 14.5 14.5 0 0 1-4.5-.51v-.24z"
+              />
+            </svg>
+            <span style="font-size: 12px; font-weight: 500">关注</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Style B: Outlook / Pill -->
+  <div class="mockup">
+    <div class="mockup-header">B — Outlook 风格（Pill 高亮）</div>
+    <div class="mockup-body" style="padding: 0">
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          min-height: 320px;
+          background: #fafafa;
+          font-family: &quot;Segoe UI&quot;, sans-serif;
+        "
+      >
+        <div
+          style="
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8a8886;
+            font-size: 12px;
+          "
+        >
+          ← 内容区域 →
+        </div>
+        <div
+          style="
+            border-top: 1px solid #e0e0e0;
+            background: #fff;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 12px;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 2px;
+              padding: 4px 20px;
+              color: #0078d4;
+              background: #e8f4fd;
+              border-radius: 8px;
+              position: relative;
+            "
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#0078D4">
+              <path
+                d="M13.45 2.53a2.25 2.25 0 0 0-2.9 0L3.8 8.23A1.75 1.75 0 0 0 3 9.95v9.3C3 20.22 3.78 21 4.75 21h3c.97 0 1.75-.78 1.75-1.75V15.25c0-.68.54-1.23 1.22-1.25h2.56c.68.02 1.22.57 1.22 1.25v4c0 .97.78 1.75 1.75 1.75h3c.97 0 1.75-.78 1.75-1.75v-9.3c0-.67-.3-1.3-.8-1.72l-6.75-5.7z"
+              />
+            </svg>
+            <span style="font-size: 12px; font-weight: 600">推荐</span>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 2px;
+              padding: 4px 20px;
+              color: #8a8886;
+              border-radius: 8px;
+            "
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#8A8886">
+              <path
+                d="M5.5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0zM8 4a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4zm7.5 5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zM17 6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3zM4.25 14A2.25 2.25 0 0 0 2 16.25v.25S2 21 8 21s6-4.5 6-4.5v-.25A2.25 2.25 0 0 0 11.75 14h-7.5zm-.75 2.25a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 .75.75v.24a14.5 14.5 0 0 1-4.5.51 14.5 14.5 0 0 1-4.5-.51v-.24z"
+              />
+            </svg>
+            <span style="font-size: 12px; font-weight: 500">关注</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Style C: Recommended Hybrid -->
+  <div class="mockup">
+    <div class="mockup-header">C — 推荐：Fluent 混合（选中态背景+微阴影）</div>
+    <div class="mockup-body" style="padding: 0">
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          min-height: 320px;
+          background: #fafafa;
+          font-family: &quot;Segoe UI&quot;, sans-serif;
+        "
+      >
+        <div
+          style="
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8a8886;
+            font-size: 12px;
+          "
+        >
+          ← 内容区域 →
+        </div>
+        <div style="display: flex; justify-content: center; padding: 0 16px 12px">
+          <div
+            style="
+              display: flex;
+              gap: 4px;
+              background: #fff;
+              border: 1px solid #e0e0e0;
+              border-radius: 16px;
+              padding: 4px;
+              box-shadow:
+                0 0 2px rgba(0, 0, 0, 0.06),
+                0 4px 8px rgba(0, 0, 0, 0.07);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                padding: 6px 24px;
+                color: #0078d4;
+                background: #e8f4fd;
+                border-radius: 12px;
+                transition: all 0.2s;
+              "
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#0078D4">
+                <path
+                  d="M13.45 2.53a2.25 2.25 0 0 0-2.9 0L3.8 8.23A1.75 1.75 0 0 0 3 9.95v9.3C3 20.22 3.78 21 4.75 21h3c.97 0 1.75-.78 1.75-1.75V15.25c0-.68.54-1.23 1.22-1.25h2.56c.68.02 1.22.57 1.22 1.25v4c0 .97.78 1.75 1.75 1.75h3c.97 0 1.75-.78 1.75-1.75v-9.3c0-.67-.3-1.3-.8-1.72l-6.75-5.7z"
+                />
+              </svg>
+              <span style="font-size: 11px; font-weight: 600">推荐</span>
+            </div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                padding: 6px 24px;
+                color: #8a8886;
+                border-radius: 12px;
+              "
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#8A8886">
+                <path
+                  d="M5.5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0zM8 4a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4zm7.5 5a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zM17 6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3zM4.25 14A2.25 2.25 0 0 0 2 16.25v.25S2 21 8 21s6-4.5 6-4.5v-.25A2.25 2.25 0 0 0 11.75 14h-7.5zm-.75 2.25a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 .75.75v.24a14.5 14.5 0 0 1-4.5.51 14.5 14.5 0 0 1-4.5-.51v-.24z"
+                />
+              </svg>
+              <span style="font-size: 11px; font-weight: 500">关注</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px">
+  <h3>关键区别</h3>
+  <table style="width: 100%; font-size: 13px; border-collapse: collapse">
+    <tr style="border-bottom: 1px solid #e0e0e0">
+      <th style="text-align: left; padding: 8px">特性</th>
+      <th style="text-align: center; padding: 8px">A · Teams</th>
+      <th style="text-align: center; padding: 8px">B · Outlook</th>
+      <th style="text-align: center; padding: 8px">C · 推荐</th>
+    </tr>
+    <tr style="border-bottom: 1px solid #e0e0e0">
+      <td style="padding: 8px">容器样式</td>
+      <td style="text-align: center; padding: 8px">全宽，贴底</td>
+      <td style="text-align: center; padding: 8px">全宽，贴底</td>
+      <td style="text-align: center; padding: 8px">浮动胶囊，左右有间距</td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e0e0e0">
+      <td style="padding: 8px">选中指示</td>
+      <td style="text-align: center; padding: 8px">仅图标+文字变色</td>
+      <td style="text-align: center; padding: 8px">圆角背景色块</td>
+      <td style="text-align: center; padding: 8px">圆角背景色块 + 微阴影</td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e0e0e0">
+      <td style="padding: 8px">图标大小</td>
+      <td style="text-align: center; padding: 8px">24px</td>
+      <td style="text-align: center; padding: 8px">24px</td>
+      <td style="text-align: center; padding: 8px">22px（稍精致）</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px">最接近的 App</td>
+      <td style="text-align: center; padding: 8px">Microsoft Teams</td>
+      <td style="text-align: center; padding: 8px">Outlook Mobile</td>
+      <td style="text-align: center; padding: 8px">现代 Microsoft 365</td>
+    </tr>
+  </table>
+</div>
+
+<div class="options" style="margin-top: 20px">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Teams 极简风</h3>
+      <p>简洁干净，纯色底+顶部分隔线，选中仅变色</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Outlook Pill 风</h3>
+      <p>选中项有圆角背景色块，全宽贴底</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>推荐：浮动胶囊混合风</h3>
+      <p>浮动容器+选中Pill背景+微阴影，最接近现代Microsoft 365设计语言</p>
+    </div>
+  </div>
+</div>

@@ -1,4 +1,4 @@
-import { type Component, Show, createSignal, createEffect, onCleanup } from 'solid-js';
+import { type Component, Show, createSignal, createEffect, onCleanup } from "solid-js";
 import {
   showSettingsSheet,
   setShowSettingsSheet,
@@ -9,7 +9,7 @@ import {
   detailQuality,
   setDetailQuality,
   type ImageQuality,
-} from '../stores/uiStore';
+} from "../stores/uiStore";
 
 const SettingsSheet: Component = () => {
   const [closing, setClosing] = createSignal(false);
@@ -21,7 +21,7 @@ const SettingsSheet: Component = () => {
       (window as any).__settingsOpen = true;
 
       const handler = () => close();
-      window.addEventListener('closeSettings', handler);
+      window.addEventListener("closeSettings", handler);
 
       setMounted(false);
       setClosing(false);
@@ -32,7 +32,7 @@ const SettingsSheet: Component = () => {
 
       onCleanup(() => {
         (window as any).__settingsOpen = false;
-        window.removeEventListener('closeSettings', handler);
+        window.removeEventListener("closeSettings", handler);
       });
     }
   });
@@ -45,7 +45,7 @@ const SettingsSheet: Component = () => {
   }
 
   function toggleTheme() {
-    setTheme(theme() === 'dark' ? 'light' : 'dark');
+    setTheme(theme() === "dark" ? "light" : "dark");
   }
 
   // Prevent body scroll when touching the scrim while sheet is open
@@ -64,9 +64,9 @@ const SettingsSheet: Component = () => {
           onClick={close}
           onTouchMove={handleScrimTouchMove}
           style={{
-            'background-color': 'var(--colorScrim)',
+            "background-color": "var(--colorScrim)",
             opacity: mounted() && !closing() ? 1 : 0,
-            transition: `opacity var(--durationGentle) ${closing() ? 'var(--curveAccelerateMid)' : 'var(--curveDecelerateMid)'}`,
+            transition: `opacity var(--durationGentle) ${closing() ? "var(--curveAccelerateMid)" : "var(--curveDecelerateMid)"}`,
           }}
         />
 
@@ -74,13 +74,11 @@ const SettingsSheet: Component = () => {
         <div
           class="absolute top-0 left-0 right-0 surface-appbar rounded-b-[var(--borderRadius4XLarge)] shadow-[var(--elevation28)]"
           style={{
-            'max-height': '50vh',
-            'overflow-y': 'auto',
-            transform: mounted() && !closing()
-              ? 'translateY(0)'
-              : 'translateY(-100%)',
+            "max-height": "50vh",
+            "overflow-y": "auto",
+            transform: mounted() && !closing() ? "translateY(0)" : "translateY(-100%)",
             opacity: mounted() && !closing() ? 1 : 0,
-            transition: `transform var(--durationGentle) ${closing() ? 'var(--curveAccelerateMid)' : 'var(--curveDecelerateMid)'}, opacity var(--durationNormal) ${closing() ? 'var(--curveAccelerateMid)' : 'var(--curveDecelerateMid)'}`,
+            transition: `transform var(--durationGentle) ${closing() ? "var(--curveAccelerateMid)" : "var(--curveDecelerateMid)"}, opacity var(--durationNormal) ${closing() ? "var(--curveAccelerateMid)" : "var(--curveDecelerateMid)"}`,
           }}
         >
           {/* Drag handle (visual affordance, non-functional in v1) */}
@@ -93,11 +91,7 @@ const SettingsSheet: Component = () => {
             <h2 class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
               设置
             </h2>
-            <button
-              class="btn-icon"
-              onClick={close}
-              aria-label="关闭设置"
-            >
+            <button class="btn-icon" onClick={close} aria-label="关闭设置">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path
                   d="M15.14 4.86a.67.67 0 0 0-.95 0L10 9.05 5.81 4.86a.67.67 0 0 0-.95.95L9.05 10l-4.19 4.19a.67.67 0 0 0 .95.95L10 10.95l4.19 4.19a.67.67 0 0 0 .95-.95L10.95 10l4.19-4.19a.67.67 0 0 0 0-.95z"
@@ -116,14 +110,14 @@ const SettingsSheet: Component = () => {
             <div class="flex items-center justify-between py-3">
               <div class="flex items-center gap-3">
                 <span class="text-2xl leading-none select-none">
-                  {theme() === 'dark' ? '🌙' : '☀️'}
+                  {theme() === "dark" ? "🌙" : "☀️"}
                 </span>
                 <div>
                   <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
                     深色模式
                   </p>
                   <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                    {theme() === 'dark' ? '已开启 · 点击关闭' : '已关闭 · 点击开启'}
+                    {theme() === "dark" ? "已开启 · 点击关闭" : "已关闭 · 点击开启"}
                   </p>
                 </div>
               </div>
@@ -132,19 +126,19 @@ const SettingsSheet: Component = () => {
               <button
                 onClick={toggleTheme}
                 role="switch"
-                aria-checked={theme() === 'dark'}
+                aria-checked={theme() === "dark"}
                 aria-label="深色模式"
                 class="relative flex-shrink-0 w-14 h-7 p-0 rounded-[var(--borderRadiusCircular)] appearance-none border-0 outline-none cursor-pointer transition-colors duration-[var(--durationNormal)]"
                 classList={{
-                  'bg-[var(--colorCompoundBrandBackground)]': theme() === 'dark',
-                  'bg-[var(--colorNeutralStrokeAccessible)]': theme() !== 'dark',
+                  "bg-[var(--colorCompoundBrandBackground)]": theme() === "dark",
+                  "bg-[var(--colorNeutralStrokeAccessible)]": theme() !== "dark",
                 }}
               >
                 <span
                   class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)]"
                   classList={{
-                    'translate-x-[28px]': theme() === 'dark',
-                    'translate-x-0.5': theme() !== 'dark',
+                    "translate-x-[28px]": theme() === "dark",
+                    "translate-x-0.5": theme() !== "dark",
                   }}
                 />
               </button>
@@ -158,17 +152,19 @@ const SettingsSheet: Component = () => {
               <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug mb-2">
                 🖼️ 列表画质
               </p>
-              <div class="flex [background-color:var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
-                {(['medium', 'large', 'original'] as ImageQuality[]).map((q) => (
+              <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
+                {(["medium", "large", "original"] as ImageQuality[]).map((q) => (
                   <button
                     class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                     classList={{
-                      '[background-color:var(--colorNeutralBackground1)] [color:var(--colorNeutralForeground1)] shadow-[var(--elevation2)]': listQuality() === q,
-                      '[background-color:transparent] [color:var(--colorNeutralForeground2)]': listQuality() !== q,
+                      "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
+                        listQuality() === q,
+                      "bg-transparent text-[var(--colorNeutralForeground2)]":
+                        listQuality() !== q,
                     }}
                     onClick={() => setListQuality(q)}
                   >
-                    {q === 'medium' ? '默认' : q === 'large' ? '高清' : '原图'}
+                    {q === "medium" ? "默认" : q === "large" ? "高清" : "原图"}
                   </button>
                 ))}
               </div>
@@ -179,17 +175,19 @@ const SettingsSheet: Component = () => {
               <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug mb-2">
                 🖼️ 详情画质
               </p>
-              <div class="flex [background-color:var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
-                {(['medium', 'large', 'original'] as ImageQuality[]).map((q) => (
+              <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
+                {(["medium", "large", "original"] as ImageQuality[]).map((q) => (
                   <button
                     class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                     classList={{
-                      '[background-color:var(--colorNeutralBackground1)] [color:var(--colorNeutralForeground1)] shadow-[var(--elevation2)]': detailQuality() === q,
-                      '[background-color:transparent] [color:var(--colorNeutralForeground2)]': detailQuality() !== q,
+                      "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
+                        detailQuality() === q,
+                      "bg-transparent text-[var(--colorNeutralForeground2)]":
+                        detailQuality() !== q,
                     }}
                     onClick={() => setDetailQuality(q)}
                   >
-                    {q === 'medium' ? '默认' : q === 'large' ? '高清' : '原图'}
+                    {q === "medium" ? "默认" : q === "large" ? "高清" : "原图"}
                   </button>
                 ))}
               </div>

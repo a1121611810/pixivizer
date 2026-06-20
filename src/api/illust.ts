@@ -1,59 +1,28 @@
-import { apiClient } from './client';
+import { apiClient } from "./client";
 import type {
   PixivIllustListResponse,
   PixivIllustDetailResponse,
+  PixivUgoiraMetadataResponse,
   ContentType,
   RestrictType,
-} from './types';
-
-// ─── Ugoira 动图 ───
-
-export interface UgoiraFrame {
-  file: string;
-  delay: number;
-}
-
-export interface UgoiraMetadata {
-  zip_urls: { medium: string };
-  frames: UgoiraFrame[];
-}
-
-interface UgoiraMetadataResponse {
-  ugoira_metadata: UgoiraMetadata;
-}
-
-export async function loadUgoiraMetadata(
-  illustId: number,
-): Promise<UgoiraMetadata> {
-  const res = await apiClient.get<UgoiraMetadataResponse>(
-    '/v1/ugoira/metadata',
-    { illust_id: String(illustId) },
-  );
-  return res.ugoira_metadata;
-}
-
-// ─── 作品列表 ───
+} from "./types";
 
 export function loadRecommended(
-  contentType: ContentType = 'illust',
+  contentType: ContentType = "illust",
 ): Promise<PixivIllustListResponse> {
-  return apiClient.get<PixivIllustListResponse>('/v1/illust/recommended', {
+  return apiClient.get<PixivIllustListResponse>("/v1/illust/recommended", {
     content_type: contentType,
   });
 }
 
-export function loadFollow(
-  restrict: RestrictType = 'public',
-): Promise<PixivIllustListResponse> {
-  return apiClient.get<PixivIllustListResponse>('/v1/illust/follow', {
+export function loadFollow(restrict: RestrictType = "public"): Promise<PixivIllustListResponse> {
+  return apiClient.get<PixivIllustListResponse>("/v1/illust/follow", {
     restrict,
   });
 }
 
-export function loadDetail(
-  illustId: number,
-): Promise<PixivIllustDetailResponse> {
-  return apiClient.get<PixivIllustDetailResponse>('/v1/illust/detail', {
+export function loadDetail(illustId: number): Promise<PixivIllustDetailResponse> {
+  return apiClient.get<PixivIllustDetailResponse>("/v1/illust/detail", {
     illust_id: String(illustId),
   });
 }
@@ -62,14 +31,21 @@ export function loadNext(url: string): Promise<PixivIllustListResponse> {
   return apiClient.get<PixivIllustListResponse>(url);
 }
 
-// ─── 收藏 ───
-
 export function loadBookmarks(
   userId: number,
-  restrict: RestrictType = 'public',
+  restrict: RestrictType = "public",
 ): Promise<PixivIllustListResponse> {
-  return apiClient.get<PixivIllustListResponse>('/v1/user/bookmarks/illust', {
+  return apiClient.get<PixivIllustListResponse>("/v1/user/bookmarks/illust", {
     user_id: String(userId),
     restrict,
   });
+}
+
+export async function loadUgoiraMetadata(
+  illustId: number,
+): Promise<PixivUgoiraMetadataResponse["ugoira_metadata"]> {
+  const res = await apiClient.get<PixivUgoiraMetadataResponse>("/v1/ugoira/metadata", {
+    illust_id: String(illustId),
+  });
+  return res.ugoira_metadata;
 }

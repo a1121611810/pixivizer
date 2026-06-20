@@ -1,5 +1,5 @@
-import { type Component, createEffect, onMount, onCleanup, untrack } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { type Component, createEffect, onMount, onCleanup, untrack } from "solid-js";
+import { useNavigate } from "@solidjs/router";
 import {
   illusts,
   nextUrl,
@@ -14,12 +14,12 @@ import {
   markFeedMounted,
   isFeedCached,
   getFeedScrollY,
-} from '../stores/feedStore';
-import { currentTab, setShowSettingsSheet } from '../stores/uiStore';
-import VirtualFeed from '../components/VirtualFeed';
-import NavBar from '../components/NavBar';
-import PageTransition from '../components/PageTransition';
-import SettingsSheet from '../components/SettingsSheet';
+} from "../stores/feedStore";
+import { currentTab, setShowSettingsSheet } from "../stores/uiStore";
+import VirtualFeed from "../components/VirtualFeed";
+import NavBar from "../components/NavBar";
+import PageTransition from "../components/PageTransition";
+import SettingsSheet from "../components/SettingsSheet";
 
 const Feed: Component = () => {
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ const Feed: Component = () => {
   createEffect(() => {
     const tab = currentTab();
     // Save scroll for the tab we're leaving
-    if (tab !== prevTab && (prevTab === 'recommended' || prevTab === 'follow')) {
+    if (tab !== prevTab && (prevTab === "recommended" || prevTab === "follow")) {
       saveTabScroll(prevTab);
     }
     prevTab = tab;
@@ -60,31 +60,31 @@ const Feed: Component = () => {
 
   return (
     <>
-    <PageTransition>
-      <div class="pb-16">
-        <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4">
-          <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
-            Pixivizer
-          </h1>
-        </header>
+      <PageTransition>
+        <div class="pb-16">
+          <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4">
+            <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
+              Pixivizer
+            </h1>
+          </header>
 
-        <VirtualFeed
-          illusts={illusts()}
-          loading={loading() || refreshing()}
-          error={error()}
-          hasMore={nextUrl() !== null}
-          onIllustClick={(id) => navigate(`/illust/${id}`)}
-          onLoadMore={fetchMore}
-          onRefresh={refresh}
-          onSettingsOpen={() => setShowSettingsSheet(true)}
-          skipAnimation={cached}
-        />
-      </div>
-    </PageTransition>
+          <VirtualFeed
+            illusts={illusts()}
+            loading={loading() || refreshing()}
+            error={error()}
+            hasMore={nextUrl() !== null}
+            onIllustClick={(id) => navigate(`/illust/${id}`)}
+            onLoadMore={fetchMore}
+            onRefresh={refresh}
+            onSettingsOpen={() => setShowSettingsSheet(true)}
+            skipAnimation={cached}
+          />
+        </div>
+      </PageTransition>
 
-    <NavBar />
+      <NavBar />
 
-    <SettingsSheet />
+      <SettingsSheet />
     </>
   );
 };

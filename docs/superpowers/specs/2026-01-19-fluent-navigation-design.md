@@ -23,22 +23,28 @@ Redesign the app's global navigation to fully comply with Microsoft Fluent Desig
 
 ## Design Decisions
 
-| Decision | Choice | Rationale |
-|---|---|---|
-| Nav visual style | Floating pill hybrid (Option C) | Modern M365 look, elevation8 shadow, rounded-2xl container, brand-color pill active indicator |
-| Number of tabs | 3 (推荐 / 关注 / 收藏) | Minimum for Fluent bottom nav; fills floating pill naturally |
-| Bookmarks page | Placeholder with "开发中" message | Enables the 3-tab layout now; real implementation deferred |
-| Top App Bar | Keep existing Acrylic 48px | User confirmed; no changes needed |
-| Icons | Fluent UI System Icons (Home 24, People 24, Bookmark 24), filled/regular crossfade | Authentic Microsoft icon paths, opacity transition between variants |
+| Decision         | Choice                                                                             | Rationale                                                                                     |
+| ---------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Nav visual style | Floating pill hybrid (Option C)                                                    | Modern M365 look, elevation8 shadow, rounded-2xl container, brand-color pill active indicator |
+| Number of tabs   | 3 (推荐 / 关注 / 收藏)                                                             | Minimum for Fluent bottom nav; fills floating pill naturally                                  |
+| Bookmarks page   | Placeholder with "开发中" message                                                  | Enables the 3-tab layout now; real implementation deferred                                    |
+| Top App Bar      | Keep existing Acrylic 48px                                                         | User confirmed; no changes needed                                                             |
+| Icons            | Fluent UI System Icons (Home 24, People 24, Bookmark 24), filled/regular crossfade | Authentic Microsoft icon paths, opacity transition between variants                           |
 
 ## Technical Specification
 
 ### 1. Bottom Navigation (`src/components/NavBar.tsx`)
 
 **Container:**
+
 ```css
-position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
-display: flex; justify-content: center;
+position: fixed;
+bottom: 0;
+left: 0;
+right: 0;
+z-index: 30;
+display: flex;
+justify-content: center;
 background: var(--colorNeutralBackground1);
 border: 1px solid var(--colorNeutralStroke2);
 border-radius: var(--borderRadius2XLarge); /* 12px */
@@ -47,11 +53,13 @@ margin: 0 16px 12px; /* mx-4 mb-3 */
 ```
 
 **Tab Items (3 tabs):**
+
 - Recommend (推荐) — Home icon
 - Follow (关注) — People icon
 - Bookmarks (收藏) — Bookmark icon
 
 **Each Tab:**
+
 - Min-width 80px, height 48px, rounded-xl
 - Column layout: icon (24x24 SVG) + label (Caption 1, 12px)
 - Active state: `colorCompoundBrandForeground1`, font-semibold
@@ -61,6 +69,7 @@ margin: 0 16px 12px; /* mx-4 mb-3 */
 - Hover (inactive): `fg2` text + `bg1Hover` background
 
 **Icons:**
+
 - Official Fluent UI System Icons SVG paths (sourced from microsoft/fluentui-system-icons)
 - Each icon renders two `<path>` elements: regular (outline) + filled (solid), stacked
 - Crossfade via CSS `opacity` transition (150ms, Fast duration)
@@ -77,16 +86,18 @@ margin: 0 16px 12px; /* mx-4 mb-3 */
 ### 3. Route Registration (`src/App.tsx`)
 
 Add:
+
 ```tsx
-import Bookmarks from './routes/Bookmarks';
-<Route path="/bookmarks" component={Bookmarks} />
+import Bookmarks from "./routes/Bookmarks";
+<Route path="/bookmarks" component={Bookmarks} />;
 ```
 
 ### 4. UI Store Extension (`src/stores/uiStore.ts`)
 
 Extend `Tab` type:
+
 ```ts
-type Tab = 'recommended' | 'follow' | 'bookmarks';
+type Tab = "recommended" | "follow" | "bookmarks";
 ```
 
 ### 5. Feed Integration (`src/routes/Feed.tsx`)
@@ -103,13 +114,13 @@ type Tab = 'recommended' | 'follow' | 'bookmarks';
 
 ## Files Changed
 
-| File | Change |
-|---|---|
+| File                        | Change                                                                   |
+| --------------------------- | ------------------------------------------------------------------------ |
 | `src/components/NavBar.tsx` | Complete rewrite: 3 tabs, floating pill, crossfade icons, active pill bg |
-| `src/routes/Bookmarks.tsx` | New file: placeholder page |
-| `src/App.tsx` | Add `/bookmarks` route |
-| `src/stores/uiStore.ts` | Extend Tab type to include `'bookmarks'` |
-| `src/routes/Feed.tsx` | Add navigate for bookmarks tab |
+| `src/routes/Bookmarks.tsx`  | New file: placeholder page                                               |
+| `src/App.tsx`               | Add `/bookmarks` route                                                   |
+| `src/stores/uiStore.ts`     | Extend Tab type to include `'bookmarks'`                                 |
+| `src/routes/Feed.tsx`       | Add navigate for bookmarks tab                                           |
 
 ## Verification
 

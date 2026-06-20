@@ -1,8 +1,8 @@
-import { createSignal } from 'solid-js';
-import { Preferences } from '@capacitor/preferences';
-import { setAccessToken, setOnUnauthorized } from '../api/client';
-import { loginWithPassword, refreshToken } from '../api/auth';
-import type { PixivUser } from '../api/types';
+import { createSignal } from "solid-js";
+import { Preferences } from "@capacitor/preferences";
+import { setAccessToken, setOnUnauthorized } from "../api/client";
+import { loginWithPassword, refreshToken } from "../api/auth";
+import type { PixivUser } from "../api/types";
 
 const [accessTokenSig, setAccessTokenSig] = createSignal<string | null>(null);
 const [refreshTokenSig, setRefreshTokenSig] = createSignal<string | null>(null);
@@ -19,7 +19,7 @@ function syncToken(token: string) {
 
 export async function initializeAuth() {
   setIsLoading(true);
-  const { value } = await Preferences.get({ key: 'refresh_token' });
+  const { value } = await Preferences.get({ key: "refresh_token" });
   if (value) {
     setRefreshTokenSig(value);
     setOnUnauthorized(async () => {
@@ -37,7 +37,7 @@ async function performRefresh(token: string) {
     setRefreshTokenSig(resp.refresh_token);
     setUser(resp.user);
     setIsLoggedIn(true);
-    await Preferences.set({ key: 'refresh_token', value: resp.refresh_token });
+    await Preferences.set({ key: "refresh_token", value: resp.refresh_token });
   } catch {
     await logout();
   }
@@ -49,13 +49,22 @@ export async function login(username: string, password: string) {
   setRefreshTokenSig(resp.refresh_token);
   setUser(resp.user);
   setIsLoggedIn(true);
-  await Preferences.set({ key: 'refresh_token', value: resp.refresh_token });
+  await Preferences.set({ key: "refresh_token", value: resp.refresh_token });
+}
+
+export async function loginWithToken(token: string) {
+  const resp = await refreshToken(token);
+  syncToken(resp.access_token);
+  setRefreshTokenSig(resp.refresh_token);
+  setUser(resp.user);
+  setIsLoggedIn(true);
+  await Preferences.set({ key: "refresh_token", value: resp.refresh_token });
 }
 
 export async function logout() {
-  syncToken('');
+  syncToken("");
   setRefreshTokenSig(null);
   setUser(null);
   setIsLoggedIn(false);
-  await Preferences.remove({ key: 'refresh_token' });
+  await Preferences.remove({ key: "refresh_token" });
 }

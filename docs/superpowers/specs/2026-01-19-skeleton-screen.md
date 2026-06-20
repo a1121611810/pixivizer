@@ -26,6 +26,7 @@ When switching to a tab that has no cached data, immediately clear old illusts a
 ### 1. SkeletonCard (`src/components/SkeletonCard.tsx`)
 
 Matches `ImageCard` layout exactly:
+
 - Container: `image-card` class for border/radius/shadow consistency
 - Image area: `aspect-ratio: 1/1` shimmer rectangle with `fluent-shimmer` animation (same gradient + timing as PixivImage placeholder)
 - Text area: two shimmer lines (title ~60% width, author ~40% width), `h-3 rounded` shapes, `p-2.5` padding matching ImageCard
@@ -33,6 +34,7 @@ Matches `ImageCard` layout exactly:
 ### 2. VirtualFeed (`src/components/VirtualFeed.tsx`)
 
 Props unchanged. Rendering logic:
+
 - `loading=true && illusts.length === 0` → render 10 `<SkeletonCard>` (no entrance animation)
 - `loading=true && illusts.length > 0` → existing: real cards + spinner at bottom
 - `!loading` → real cards
@@ -40,6 +42,7 @@ Props unchanged. Rendering logic:
 ### 3. feedStore (`src/stores/feedStore.ts`)
 
 `ensureLoaded()` uncached path:
+
 ```
 setIllusts([])  // ← NEW: clear old data immediately
 forceLoad()
@@ -53,11 +56,11 @@ Remove all `console.log` added for debugging in previous rounds.
 
 ## Files Changed
 
-| File | Change |
-|---|---|
-| `src/components/SkeletonCard.tsx` | New |
-| `src/components/VirtualFeed.tsx` | Render skeletons when loading + empty |
-| `src/stores/feedStore.ts` | Clear illusts on uncached tab switch; remove debug logs |
+| File                              | Change                                                  |
+| --------------------------------- | ------------------------------------------------------- |
+| `src/components/SkeletonCard.tsx` | New                                                     |
+| `src/components/VirtualFeed.tsx`  | Render skeletons when loading + empty                   |
+| `src/stores/feedStore.ts`         | Clear illusts on uncached tab switch; remove debug logs |
 
 ## Verification
 

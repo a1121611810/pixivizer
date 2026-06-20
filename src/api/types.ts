@@ -33,7 +33,7 @@ export interface PixivIllustTag {
 export interface PixivIllust {
   id: number;
   title: string;
-  type: 'illust' | 'manga';
+  type: "illust" | "manga";
   user: PixivUser;
   image_urls: PixivIllustImageUrls;
   width: number;
@@ -60,18 +60,34 @@ export interface PixivIllustDetailResponse {
   illust: PixivIllust;
 }
 
+export interface PixivUgoiraFrame {
+  file: string;
+  delay: number;
+}
+
+export interface PixivUgoiraMetadata {
+  zip_urls: {
+    medium: string;
+  };
+  frames: PixivUgoiraFrame[];
+}
+
+export interface PixivUgoiraMetadataResponse {
+  ugoira_metadata: PixivUgoiraMetadata;
+}
+
 // ─── 请求参数 ───
-export type ContentType = 'illust' | 'manga';
-export type RestrictType = 'public' | 'private';
+export type ContentType = "illust" | "manga";
+export type RestrictType = "public" | "private";
 
 // ─── 错误 ───
 export enum ApiErrorType {
-  NETWORK = 'NETWORK',
-  UNAUTHORIZED = 'UNAUTHORIZED',
-  FORBIDDEN = 'FORBIDDEN',
-  RATE_LIMIT = 'RATE_LIMIT',
-  SERVER = 'SERVER',
-  UNKNOWN = 'UNKNOWN',
+  NETWORK = "NETWORK",
+  UNAUTHORIZED = "UNAUTHORIZED",
+  FORBIDDEN = "FORBIDDEN",
+  RATE_LIMIT = "RATE_LIMIT",
+  SERVER = "SERVER",
+  UNKNOWN = "UNKNOWN",
 }
 
 export interface ApiError {

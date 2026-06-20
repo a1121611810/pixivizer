@@ -31,13 +31,14 @@ Add support for Pixiv ugoira (animated illustrations). These are ZIP archives co
 ### 2. API (`src/api/illust.ts`)
 
 New function:
+
 ```ts
 interface UgoiraMetadata {
-  zip_urls: { medium: string };  // ZIP download URL
-  frames: { file: string; delay: number }[];  // frame filenames + delays (ms)
+  zip_urls: { medium: string }; // ZIP download URL
+  frames: { file: string; delay: number }[]; // frame filenames + delays (ms)
 }
 
-export function loadUgoiraMetadata(illustId: number): Promise<UgoiraMetadata>
+export function loadUgoiraMetadata(illustId: number): Promise<UgoiraMetadata>;
 // calls GET /v1/ugoira/metadata?illust_id={id}
 ```
 
@@ -46,6 +47,7 @@ export function loadUgoiraMetadata(illustId: number): Promise<UgoiraMetadata>
 Props: `illustId: number`, `coverUrl: string` (thumbnail as fallback), `onClose: () => void`
 
 Behavior:
+
 1. Mount → show cover image + "加载动图中..." overlay
 2. `loadUgoiraMetadata(id)` → get zip URL + frame delays
 3. Fetch ZIP blob → `JSZip.loadAsync(blob)` → extract each frame's JPEG as base64 or blob URL
@@ -65,6 +67,7 @@ Cover image (for the "tap to view" area) remains `imageUrls()[0]` — for ugoira
 ### 5. Dependency
 
 Add `jszip` to `package.json`:
+
 ```bash
 pnpm add jszip
 ```
@@ -73,13 +76,13 @@ JSZip is ~100KB gzipped, zero dependencies, used by pixivpy and other Pixiv clie
 
 ## Files Changed
 
-| File | Change |
-|---|---|
-| `src/api/types.ts` | Extend type union |
-| `src/api/illust.ts` | Add `loadUgoiraMetadata` |
-| `src/components/UgoiraViewer.tsx` | New component |
-| `src/routes/IllustDetail.tsx` | Conditional render UgoiraViewer |
-| `package.json` | Add `jszip` dependency |
+| File                              | Change                          |
+| --------------------------------- | ------------------------------- |
+| `src/api/types.ts`                | Extend type union               |
+| `src/api/illust.ts`               | Add `loadUgoiraMetadata`        |
+| `src/components/UgoiraViewer.tsx` | New component                   |
+| `src/routes/IllustDetail.tsx`     | Conditional render UgoiraViewer |
+| `package.json`                    | Add `jszip` dependency          |
 
 ## Verification
 

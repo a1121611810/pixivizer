@@ -1,11 +1,11 @@
-import { onMount, onCleanup, createSignal, createEffect, createMemo } from 'solid-js';
-import type { Component } from 'solid-js';
-import ImageCard from './ImageCard';
-import LoadingSpinner from './LoadingSpinner';
-import SkeletonCard from './SkeletonCard';
-import PullIndicator from './PullIndicator';
-import type { PullZone } from './PullIndicator';
-import type { PixivIllust } from '../api/types';
+import { onMount, onCleanup, createSignal, createEffect, createMemo } from "solid-js";
+import type { Component } from "solid-js";
+import ImageCard from "./ImageCard";
+import LoadingSpinner from "./LoadingSpinner";
+import SkeletonCard from "./SkeletonCard";
+import PullIndicator from "./PullIndicator";
+import type { PullZone } from "./PullIndicator";
+import type { PixivIllust } from "../api/types";
 
 // ─── 列分配工具 ───
 
@@ -51,8 +51,7 @@ function distributeToColumns(
     const shortestCol = heights[0] <= heights[1] ? 0 : 1;
 
     // 估算该作品在此列的渲染高度
-    const estHeight =
-      columnWidth / (illust.width / illust.height) + CARD_PADDING;
+    const estHeight = columnWidth / (illust.width / illust.height) + CARD_PADDING;
 
     const item: ColumnItem = {
       illust,
@@ -88,13 +87,13 @@ const VirtualFeed: Component<Props> = (props) => {
   const SETTINGS_THRESHOLD = 130;
   const MAX_PULL = 200;
   const [pullDistance, setPullDistance] = createSignal(0);
-  const [pullPhase, setPullPhase] = createSignal<PullZone>('idle');
+  const [pullPhase, setPullPhase] = createSignal<PullZone>("idle");
   let touchStartY = 0;
 
   createEffect(() => {
-    if (pullPhase() === 'refreshing' && !props.loading) {
+    if (pullPhase() === "refreshing" && !props.loading) {
       setPullDistance(0);
-      setPullPhase('idle');
+      setPullPhase("idle");
     }
   });
 
@@ -102,52 +101,47 @@ const VirtualFeed: Component<Props> = (props) => {
     if (props.loading) return;
     if (window.scrollY > 5) return;
     touchStartY = e.touches[0].clientY;
-    setPullPhase('pulling');
+    setPullPhase("pulling");
   }
 
   function handleTouchMove(e: TouchEvent) {
-    if (pullPhase() === 'idle' || pullPhase() === 'refreshing') return;
+    if (pullPhase() === "idle" || pullPhase() === "refreshing") return;
     const deltaY = e.touches[0].clientY - touchStartY;
     if (deltaY < 0) {
       setPullDistance(0);
-      setPullPhase('idle');
+      setPullPhase("idle");
       return;
     }
     const damped = Math.min(deltaY * 0.5, MAX_PULL);
     setPullDistance(damped);
     if (damped >= SETTINGS_THRESHOLD) {
-      setPullPhase('settings-ready');
+      setPullPhase("settings-ready");
     } else if (damped >= PULL_THRESHOLD) {
-      setPullPhase('refresh-ready');
+      setPullPhase("refresh-ready");
     } else {
-      setPullPhase('pulling');
+      setPullPhase("pulling");
     }
   }
 
   function handleTouchEnd() {
-    if (pullPhase() === 'settings-ready') {
+    if (pullPhase() === "settings-ready") {
       setPullDistance(0);
-      setPullPhase('idle');
+      setPullPhase("idle");
       props.onSettingsOpen?.();
-    } else if (pullPhase() === 'refresh-ready') {
-      setPullPhase('refreshing');
+    } else if (pullPhase() === "refresh-ready") {
+      setPullPhase("refreshing");
       setPullDistance(PULL_THRESHOLD * 0.6);
       props.onRefresh();
     } else {
       setPullDistance(0);
-      setPullPhase('idle');
+      setPullPhase("idle");
     }
   }
 
   // 列宽和列分配
-  const columnWidth = () =>
-    containerWidth() > 0
-      ? (containerWidth() - GAP_PX) / COLUMN_COUNT
-      : 0;
+  const columnWidth = () => (containerWidth() > 0 ? (containerWidth() - GAP_PX) / COLUMN_COUNT : 0);
 
-  const columns = createMemo(() =>
-    distributeToColumns(props.illusts, columnWidth()),
-  );
+  const columns = createMemo(() => distributeToColumns(props.illusts, columnWidth()));
 
   onMount(() => {
     // IntersectionObserver — 加载更多
@@ -157,7 +151,7 @@ const VirtualFeed: Component<Props> = (props) => {
           props.onLoadMore();
         }
       },
-      { rootMargin: '200px' },
+      { rootMargin: "200px" },
     );
     if (sentinel) observer.observe(sentinel);
 
@@ -180,11 +174,7 @@ const VirtualFeed: Component<Props> = (props) => {
   });
 
   return (
-    <div
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {/* Pull-to-refresh indicator */}
       <PullIndicator
         zone={pullPhase()}
@@ -196,21 +186,13 @@ const VirtualFeed: Component<Props> = (props) => {
       {/* Content */}
       <div class="px-3 py-4">
         {props.error && (
-          <div
-            class="text-center py-4 px-4 mb-3 rounded-[var(--borderRadiusMedium)] mx-3"
-            classList={{
-              'bg-[var(--colorStatusDangerBackground2)] text-[var(--colorStatusDangerForeground1)]':
-                props.error.includes('失败') || props.error.includes('错误') || props.error.includes('登录') || props.error.includes('网络') || props.error.includes('权限'),
-              'bg-[var(--colorBrandStroke2)] text-[var(--colorNeutralForeground1)]':
-                !(props.error.includes('失败') || props.error.includes('错误') || props.error.includes('登录') || props.error.includes('网络') || props.error.includes('权限')),
-            }}
-          >
+          <div class="text-center py-4 px-4 mb-3 rounded-[var(--borderRadiusMedium)] mx-3 bg-[var(--colorStatusDangerBackground2)] text-[var(--colorStatusDangerForeground1)]">
             <p class="[font-size:var(--fontSizeBase200)] leading-relaxed">{props.error}</p>
           </div>
         )}
 
         {/* Skeleton cards — shown when loading an uncached tab */}
-        {props.loading && props.illusts.length === 0 && pullPhase() !== 'refreshing' && (
+        {props.loading && props.illusts.length === 0 && pullPhase() !== "refreshing" && (
           <div class="columns-2 sm:columns-3 gap-3">
             {Array.from({ length: 10 }).map(() => (
               <SkeletonCard />
@@ -225,18 +207,16 @@ const VirtualFeed: Component<Props> = (props) => {
               <div class="flex-1 flex flex-col gap-3">
                 {col.map((item) => (
                   <div
-                    style={props.skipAnimation
-                      ? {}
-                      : {
-                          animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
-                          'animation-delay': `${item.rowIndex * 60}ms`,
-                        }
+                    style={
+                      props.skipAnimation
+                        ? {}
+                        : {
+                            animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
+                            "animation-delay": `${item.rowIndex * 60}ms`,
+                          }
                     }
                   >
-                    <ImageCard
-                      illust={item.illust}
-                      onClick={props.onIllustClick}
-                    />
+                    <ImageCard illust={item.illust} onClick={props.onIllustClick} />
                   </div>
                 ))}
               </div>
@@ -244,7 +224,9 @@ const VirtualFeed: Component<Props> = (props) => {
           </div>
         )}
 
-        {props.loading && props.illusts.length > 0 && pullPhase() !== 'refreshing' && <LoadingSpinner text="加载中..." />}
+        {props.loading && props.illusts.length > 0 && pullPhase() !== "refreshing" && (
+          <LoadingSpinner text="加载中..." />
+        )}
 
         {!props.hasMore && props.illusts.length > 0 && (
           <p class="text-[var(--colorNeutralForeground3)] text-center py-4 [font-size:var(--fontSizeBase200)]">

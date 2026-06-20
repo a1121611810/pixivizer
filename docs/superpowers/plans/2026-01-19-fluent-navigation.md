@@ -21,18 +21,20 @@
 ### Task 1: Extend UI Store Tab Type
 
 **Files:**
+
 - Modify: `src/stores/uiStore.ts`
 
 **Interfaces:**
+
 - Produces: `Tab = 'recommended' | 'follow' | 'bookmarks'` — consumed by NavBar, Feed, feedStore
 
 - [ ] **Step 1: Add `'bookmarks'` to the Tab type**
 
 ```ts
 // src/stores/uiStore.ts — change line 3 from:
-type Tab = 'recommended' | 'follow';
+type Tab = "recommended" | "follow";
 // to:
-type Tab = 'recommended' | 'follow' | 'bookmarks';
+type Tab = "recommended" | "follow" | "bookmarks";
 ```
 
 - [ ] **Step 2: Verify build**
@@ -52,23 +54,31 @@ git commit -m "feat: extend Tab type with bookmarks"
 ### Task 2: Create Bookmarks Placeholder Page
 
 **Files:**
+
 - Create: `src/routes/Bookmarks.tsx`
 
 **Interfaces:**
+
 - Produces: `Bookmarks` component (default export) — used by App.tsx route registration
 
 - [ ] **Step 1: Write the page component**
 
 ```tsx
 // src/routes/Bookmarks.tsx
-import type { Component } from 'solid-js';
-import PageTransition from '../components/PageTransition';
+import type { Component } from "solid-js";
+import PageTransition from "../components/PageTransition";
 
 const Bookmarks: Component = () => (
   <PageTransition>
     <div class="page flex flex-col items-center justify-center gap-4 px-6 min-h-screen">
       <div class="surface-card p-8 flex flex-col items-center gap-4 max-w-sm w-full text-center">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="var(--colorBrandForeground1)" aria-hidden="true">
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="var(--colorBrandForeground1)"
+          aria-hidden="true"
+        >
           <path d="M6.19 21.85a.75.75 0 0 1-.94-1.13l6.26-5.2a.5.5 0 0 1 .59 0l6.26 5.2a.75.75 0 0 1-.93 1.13L12 16.65l-5.81 5.2zM5 6.25C5 4.45 6.46 3 8.25 3h7.5C17.55 3 19 4.45 19 6.25v15c0 .61-.69.96-1.19.61L12 17.67l-5.81 4.18A.75.75 0 0 1 5 21.25v-15z" />
         </svg>
         <h2 class="text-[var(--colorNeutralForeground1)] font-semibold [font-size:var(--fontSizeBase400)]">
@@ -105,9 +115,11 @@ git commit -m "feat: add bookmarks placeholder page"
 ### Task 3: Register Bookmarks Route
 
 **Files:**
+
 - Modify: `src/App.tsx`
 
 **Interfaces:**
+
 - Consumes: `Bookmarks` component from `src/routes/Bookmarks.tsx`
 - Produces: `/bookmarks` route — used by NavBar navigation
 
@@ -116,7 +128,7 @@ git commit -m "feat: add bookmarks placeholder page"
 In `src/App.tsx`, add after the DebugImage import line:
 
 ```tsx
-import Bookmarks from './routes/Bookmarks';
+import Bookmarks from "./routes/Bookmarks";
 ```
 
 Then add after the existing routes:
@@ -126,6 +138,7 @@ Then add after the existing routes:
 ```
 
 Full routes block should be:
+
 ```tsx
 <Route path="/login" component={Login} />
 <Route path="/feed" component={Feed} />
@@ -152,9 +165,11 @@ git commit -m "feat: register /bookmarks route"
 ### Task 4: Rewrite NavBar with Floating Pill + 3 Tabs + Crossfade Icons
 
 **Files:**
+
 - Modify: `src/components/NavBar.tsx` (complete rewrite)
 
 **Interfaces:**
+
 - Consumes: `currentTab`, `setCurrentTab` from `../stores/uiStore`
 - Consumes: `useNavigate` from `@solidjs/router`
 - Produces: NavBar component — renders floating pill with 3 tabs
@@ -163,9 +178,9 @@ git commit -m "feat: register /bookmarks route"
 
 ```tsx
 // src/components/NavBar.tsx
-import type { Component } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
-import { currentTab, setCurrentTab } from '../stores/uiStore';
+import type { Component } from "solid-js";
+import { useNavigate } from "@solidjs/router";
+import { currentTab, setCurrentTab } from "../stores/uiStore";
 
 /* ═══════════════════════════════════════════════════════
    Fluent UI System Icons — official Microsoft paths
@@ -173,7 +188,9 @@ import { currentTab, setCurrentTab } from '../stores/uiStore';
    with crossfade by opacity transition.
    ═══════════════════════════════════════════════════════ */
 
-interface IconProps { active: boolean }
+interface IconProps {
+  active: boolean;
+}
 
 /** Home 24 */
 const IconHome: Component<IconProps> = (props) => (
@@ -237,15 +254,15 @@ const IconBookmark: Component<IconProps> = (props) => (
    ═══════════════════════════════════════════════════════ */
 
 const tabs = [
-  { key: 'recommended' as const, label: '推荐', icon: IconHome, route: '/feed' },
-  { key: 'follow' as const, label: '关注', icon: IconPeople, route: '/feed' },
-  { key: 'bookmarks' as const, label: '收藏', icon: IconBookmark, route: '/bookmarks' },
+  { key: "recommended" as const, label: "推荐", icon: IconHome, route: "/feed" },
+  { key: "follow" as const, label: "关注", icon: IconPeople, route: "/feed" },
+  { key: "bookmarks" as const, label: "收藏", icon: IconBookmark, route: "/bookmarks" },
 ];
 
 const NavBar: Component = () => {
   const navigate = useNavigate();
 
-  const handleTabClick = (tab: typeof tabs[number]) => {
+  const handleTabClick = (tab: (typeof tabs)[number]) => {
     setCurrentTab(tab.key);
     navigate(tab.route);
   };
@@ -259,8 +276,9 @@ const NavBar: Component = () => {
             <button
               class="relative flex flex-col items-center justify-center gap-0.5 min-w-[80px] h-12 px-3 rounded-[var(--borderRadiusXLarge)] transition-all duration-[var(--durationFast)] select-none active:scale-95"
               classList={{
-                'text-[var(--colorCompoundBrandForeground1)]': active,
-                'text-[var(--colorNeutralForeground3)] hover:text-[var(--colorNeutralForeground2)]': !active,
+                "text-[var(--colorCompoundBrandForeground1)]": active,
+                "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorNeutralForeground2)]":
+                  !active,
               }}
               onClick={() => handleTabClick(tab)}
             >
@@ -272,7 +290,7 @@ const NavBar: Component = () => {
               <div class="relative z-10">{tab.icon({ active })}</div>
               <span
                 class="relative z-10 [font-size:var(--fontSizeBase200)] font-medium transition-all duration-[var(--durationFast)]"
-                classList={{ 'font-semibold': active }}
+                classList={{ "font-semibold": active }}
               >
                 {tab.label}
               </span>
@@ -304,25 +322,30 @@ git commit -m "feat: rebuild NavBar with Fluent floating pill, 3 tabs, crossfade
 ### Task 5: Update Feed to Handle Bookmarks Tab Navigation
 
 **Files:**
+
 - Modify: `src/routes/Feed.tsx`
 
 **Interfaces:**
+
 - Consumes: `currentTab` from `../stores/uiStore` — when it changes to 'bookmarks', redirect
 
 - [ ] **Step 1: Add bookmarks redirect in createEffect**
 
 Change the `createEffect` in Feed.tsx from:
+
 ```tsx
 createEffect(() => {
   void currentTab();
   ensureLoaded();
 });
 ```
+
 to:
+
 ```tsx
 createEffect(() => {
   const tab = currentTab();
-  if (tab === 'bookmarks') return; // handled by NavBar navigation
+  if (tab === "bookmarks") return; // handled by NavBar navigation
   ensureLoaded();
 });
 ```
@@ -352,6 +375,7 @@ npx vite build
 ```
 
 Expected:
+
 - Build passes with zero errors
 - CSS includes elevation8 shadow, rounded-2xl, active pill bg classes
 - JS includes all three icon paths (Home, People, Bookmark)
@@ -360,6 +384,7 @@ Expected:
 - [ ] **Step 2: Quick visual inspection**
 
 Verify the generated CSS contains:
+
 - `.shadow-\[var\(--elevation8\)\]` — floating pill shadow
 - `.rounded-\[var\(--borderRadius2XLarge\)\]` — 12px container radius
 - `.rounded-\[var\(--borderRadiusXLarge\)\]` — 8px tab button radius

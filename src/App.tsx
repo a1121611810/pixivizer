@@ -1,29 +1,29 @@
-import { type Component, onMount, Show } from 'solid-js';
-import { Route, Router, useNavigate } from '@solidjs/router';
-import type { RouteSectionProps } from '@solidjs/router';
-import { isLoggedIn, isLoading, initializeAuth } from './stores/authStore';
-import { App as CapApp } from '@capacitor/app';
-import Login from './routes/Login';
-import Feed from './routes/Feed';
-import IllustDetail from './routes/IllustDetail';
-import DebugImage from './routes/DebugImage';
-import Bookmarks from './routes/Bookmarks';
-import LoadingSpinner from './components/LoadingSpinner';
+import { type Component, onMount, Show } from "solid-js";
+import { Route, Router, useNavigate } from "@solidjs/router";
+import type { RouteSectionProps } from "@solidjs/router";
+import { isLoggedIn, isLoading, initializeAuth } from "./stores/authStore";
+import { App as CapApp } from "@capacitor/app";
+import Login from "./routes/Login";
+import Feed from "./routes/Feed";
+import IllustDetail from "./routes/IllustDetail";
+import DebugImage from "./routes/DebugImage";
+import Bookmarks from "./routes/Bookmarks";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
   const navigate = useNavigate();
 
   onMount(async () => {
     // Handle Android back button / gesture
-    CapApp.addListener('backButton', ({ canGoBack }) => {
+    CapApp.addListener("backButton", ({ canGoBack }) => {
       // If settings sheet is open, close it instead of navigating back
       if ((window as any).__settingsOpen) {
-        window.dispatchEvent(new CustomEvent('closeSettings'));
+        window.dispatchEvent(new CustomEvent("closeSettings"));
         return;
       }
       // If image viewer is open, close it instead of navigating back
       if ((window as any).__viewerOpen) {
-        window.dispatchEvent(new CustomEvent('closeViewer'));
+        window.dispatchEvent(new CustomEvent("closeViewer"));
         return;
       }
       if (canGoBack) {
@@ -35,9 +35,9 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
 
     await initializeAuth();
     if (isLoggedIn()) {
-      navigate('/feed', { replace: true });
+      navigate("/feed", { replace: true });
     } else {
-      navigate('/login', { replace: true });
+      navigate("/login", { replace: true });
     }
   });
 
