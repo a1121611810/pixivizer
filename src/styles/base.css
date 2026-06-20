@@ -1,0 +1,150 @@
+/* ═══════════════════════════════════════════════════════
+   Layer 2: Base Styles
+   html/body root, scrollbar, selection, keyframes, reduced-motion
+   ═══════════════════════════════════════════════════════ */
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+html {
+  background-color: var(--colorNeutralBackground3);
+  color: var(--colorNeutralForeground1);
+  transition:
+    background-color var(--durationNormal) var(--curveEasyEase),
+    color var(--durationNormal) var(--curveEasyEase);
+}
+
+body {
+  font-family: var(--fontFamilyBase);
+  font-size: var(--fontSizeBase300);
+  font-weight: var(--fontWeightRegular);
+  line-height: var(--lineHeightBase300);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Override modern-css-reset: restore font rendering quality ── */
+body {
+  text-rendering: auto;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--colorNeutralStrokeAccessible);
+  border-radius: var(--borderRadiusCircular);
+}
+
+/* ── Selection ── */
+::selection {
+  background: var(--colorBrandStroke2);
+  color: var(--colorNeutralForeground1);
+}
+
+/* ═══════════════════════════════════════════════════════
+   Fluent Design 2 — Animation Keyframes
+   ═══════════════════════════════════════════════════════ */
+
+/* Page / element entrance: fade + micro-slide-up */
+@keyframes fluent-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* List item staggered entrance */
+@keyframes fluent-list-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dialog / overlay entrance: fade + scale-up */
+@keyframes fluent-scale-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Overlay exit */
+@keyframes fluent-scale-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Sheet / panel entrance: slide down from top */
+@keyframes fluent-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Sheet / panel exit: slide up to top */
+@keyframes fluent-slide-up {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+
+/* Skeleton shimmer loading */
+@keyframes fluent-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Accessibility: respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

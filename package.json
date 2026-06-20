@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.0",
+    "modern-css-reset": "^1.4.0",
     "typescript": "^6.0.3",
     "unocss": "^66.7.2",
     "vite": "^8.0.16",
