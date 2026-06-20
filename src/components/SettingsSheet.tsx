@@ -44,10 +44,6 @@ const SettingsSheet: Component = () => {
     }, 250); // match --durationGentle
   }
 
-  function handleScrimClick(e: MouseEvent) {
-    if (e.target === e.currentTarget) close();
-  }
-
   function toggleTheme() {
     setTheme(theme() === 'dark' ? 'light' : 'dark');
   }
@@ -61,10 +57,11 @@ const SettingsSheet: Component = () => {
 
   return (
     <Show when={showSettingsSheet()}>
-      <div class="fixed inset-0 z-50" onClick={handleScrimClick}>
-        {/* Scrim */}
+      <div class="fixed inset-0 z-50">
+        {/* Scrim — click to close */}
         <div
-          class="absolute inset-0 transition-opacity"
+          class="absolute inset-0 transition-opacity cursor-pointer"
+          onClick={close}
           onTouchMove={handleScrimTouchMove}
           style={{
             'background-color': 'var(--colorScrim)',
