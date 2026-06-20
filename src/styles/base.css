@@ -51,6 +51,11 @@ body {
   color: var(--colorNeutralForeground1);
 }
 
+/* ── Safe-area bottom inset for notched devices ── */
+.nav-safe-bottom {
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
 /* ═══════════════════════════════════════════════════════
    Fluent Design 2 — Animation Keyframes
    ═══════════════════════════════════════════════════════ */

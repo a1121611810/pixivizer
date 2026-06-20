@@ -1,47 +1,53 @@
-import { type Component, createSignal, onMount } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
-import { login, loginWithToken, isLoggedIn } from '../stores/authStore';
+import { type Component, createSignal, onMount } from "solid-js";
+import { useNavigate } from "@solidjs/router";
+import { login, loginWithToken, isLoggedIn } from "../stores/authStore";
 
-type LoginMode = 'token' | 'password' | 'smart';
+type LoginMode = "token" | "password" | "smart";
 
 function looksLikeToken(input: string): boolean {
   return input.trim().length >= 30 && /^[a-zA-Z0-9_-]+$/.test(input.trim());
 }
 
 const S = {
-  page: 'min-height:100vh;display:flex;align-items:center;justify-content:center;padding:0 24px;background-color:var(--colorNeutralBackground3);color:var(--colorNeutralForeground1)',
-  form: 'width:100%;max-width:384px;display:flex;flex-direction:column;gap:20px',
-  title: 'text-align:center;margin-bottom:16px',
-  h1: 'font-size:var(--fontSizeHero800);font-weight:700;color:var(--colorNeutralForeground1)',
-  sub: 'color:var(--colorNeutralForeground2);font-size:var(--fontSizeBase300);margin-top:4px',
-  segOuter: 'display:flex;flex-direction:row;background-color:var(--colorNeutralBackground2);border-radius:var(--borderRadiusMedium);padding:6px;gap:4px',
-  segBtn: 'flex:1 1 0%;padding:8px 12px;border-radius:var(--borderRadiusSmall);font-size:var(--fontSizeBase200);font-weight:600;text-align:center;cursor:pointer;user-select:none;transition:all 0.15s',
-  segActive: 'background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);box-shadow:var(--elevation2)',
-  segInactive: 'background-color:transparent;color:var(--colorNeutralForeground2)',
-  input: 'width:100%;padding:6px 10px;border-radius:var(--borderRadiusMedium);background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);font-size:var(--fontSizeBase300);border:1px solid var(--colorNeutralStroke1);outline:none;box-sizing:border-box',
-  textarea: 'width:100%;padding:6px 10px;border-radius:var(--borderRadiusMedium);background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);font-size:var(--fontSizeBase300);border:1px solid var(--colorNeutralStroke1);outline:none;resize:vertical;box-sizing:border-box',
-  btn: 'width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-radius:var(--borderRadiusMedium);font-size:var(--fontSizeBase300);font-weight:600;background-color:var(--colorBrandBackground);color:#fff;border:none;cursor:pointer',
-  error: 'color:var(--colorStatusDangerForeground1);font-size:var(--fontSizeBase200);text-align:center;background-color:var(--colorStatusDangerBackground2);padding:8px;border-radius:var(--borderRadiusMedium)',
-  label: 'font-size:var(--fontSizeBase200);color:var(--colorNeutralForeground2);font-weight:400',
-  divider: 'display:flex;align-items:center;gap:8px',
-  dividerLine: 'flex:1;border-top:1px solid var(--colorNeutralStroke2)',
-  dividerText: 'font-size:var(--fontSizeBase100);color:var(--colorNeutralForeground3)',
+  page: "min-height:100vh;display:flex;align-items:center;justify-content:center;padding:0 24px;background-color:var(--colorNeutralBackground3);color:var(--colorNeutralForeground1)",
+  form: "width:100%;max-width:384px;display:flex;flex-direction:column;gap:20px",
+  title: "text-align:center;margin-bottom:16px",
+  h1: "font-size:var(--fontSizeHero800);font-weight:700;color:var(--colorNeutralForeground1)",
+  sub: "color:var(--colorNeutralForeground2);font-size:var(--fontSizeBase300);margin-top:4px",
+  segOuter:
+    "display:flex;flex-direction:row;background-color:var(--colorNeutralBackground2);border-radius:var(--borderRadiusMedium);padding:6px;gap:4px",
+  segBtn:
+    "flex:1 1 0%;padding:8px 12px;border-radius:var(--borderRadiusSmall);font-size:var(--fontSizeBase200);font-weight:600;text-align:center;cursor:pointer;user-select:none;transition:all 0.15s",
+  segActive:
+    "background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);box-shadow:var(--elevation2)",
+  segInactive: "background-color:transparent;color:var(--colorNeutralForeground2)",
+  input:
+    "width:100%;padding:6px 10px;border-radius:var(--borderRadiusMedium);background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);font-size:var(--fontSizeBase300);border:1px solid var(--colorNeutralStroke1);outline:none;box-sizing:border-box",
+  textarea:
+    "width:100%;padding:6px 10px;border-radius:var(--borderRadiusMedium);background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);font-size:var(--fontSizeBase300);border:1px solid var(--colorNeutralStroke1);outline:none;resize:vertical;box-sizing:border-box",
+  btn: "width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-radius:var(--borderRadiusMedium);font-size:var(--fontSizeBase300);font-weight:600;background-color:var(--colorBrandBackground);color:#fff;border:none;cursor:pointer",
+  error:
+    "color:var(--colorStatusDangerForeground1);font-size:var(--fontSizeBase200);text-align:center;background-color:var(--colorStatusDangerBackground2);padding:8px;border-radius:var(--borderRadiusMedium)",
+  label: "font-size:var(--fontSizeBase200);color:var(--colorNeutralForeground2);font-weight:400",
+  divider: "display:flex;align-items:center;gap:8px",
+  dividerLine: "flex:1;border-top:1px solid var(--colorNeutralStroke2)",
+  dividerText: "font-size:var(--fontSizeBase100);color:var(--colorNeutralForeground3)",
 };
 
 const Login: Component = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = createSignal<LoginMode>('smart');
-  const [tokenInput, setTokenInput] = createSignal('');
-  const [username, setUsername] = createSignal('');
-  const [password, setPassword] = createSignal('');
-  const [smartToken, setSmartToken] = createSignal('');
-  const [smartUsername, setSmartUsername] = createSignal('');
-  const [smartPassword, setSmartPassword] = createSignal('');
+  const [mode, setMode] = createSignal<LoginMode>("smart");
+  const [tokenInput, setTokenInput] = createSignal("");
+  const [username, setUsername] = createSignal("");
+  const [password, setPassword] = createSignal("");
+  const [smartToken, setSmartToken] = createSignal("");
+  const [smartUsername, setSmartUsername] = createSignal("");
+  const [smartPassword, setSmartPassword] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
   onMount(() => {
-    if (isLoggedIn()) navigate('/feed', { replace: true });
+    if (isLoggedIn()) navigate("/feed", { replace: true });
   });
 
   const handleSubmit = async (e: Event) => {
@@ -49,9 +55,9 @@ const Login: Component = () => {
     setSubmitting(true);
     setError(null);
     try {
-      if (mode() === 'token') {
+      if (mode() === "token") {
         await loginWithToken(tokenInput().trim());
-      } else if (mode() === 'password') {
+      } else if (mode() === "password") {
         await login(username().trim(), password());
       } else {
         const st = smartToken().trim();
@@ -60,21 +66,20 @@ const Login: Component = () => {
         } else if (smartUsername().trim() && smartPassword()) {
           await login(smartUsername().trim(), smartPassword());
         } else if (st) {
-          throw new Error('请输入密码');
+          throw new Error("请输入密码");
         } else {
-          throw new Error('请输入 refresh_token 或账号密码');
+          throw new Error("请输入 refresh_token 或账号密码");
         }
       }
-      navigate('/feed', { replace: true });
+      navigate("/feed", { replace: true });
     } catch (err) {
-      setError((err as { message?: string }).message ?? '登录失败');
+      setError((err as { message?: string }).message ?? "登录失败");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const segBtnStyle = (active: boolean) =>
-    S.segBtn + ';' + (active ? S.segActive : S.segInactive);
+  const segBtnStyle = (active: boolean) => S.segBtn + ";" + (active ? S.segActive : S.segInactive);
 
   return (
     <div style={S.page}>
@@ -87,16 +92,22 @@ const Login: Component = () => {
 
         {/* 模式切换 — 水平 tabs */}
         <div style={S.segOuter}>
-          <div style={segBtnStyle(mode() === 'token')} onClick={() => setMode('token')}>Token</div>
-          <div style={segBtnStyle(mode() === 'password')} onClick={() => setMode('password')}>密码</div>
-          <div style={segBtnStyle(mode() === 'smart')} onClick={() => setMode('smart')}>智能</div>
+          <div style={segBtnStyle(mode() === "token")} onClick={() => setMode("token")}>
+            Token
+          </div>
+          <div style={segBtnStyle(mode() === "password")} onClick={() => setMode("password")}>
+            密码
+          </div>
+          <div style={segBtnStyle(mode() === "smart")} onClick={() => setMode("smart")}>
+            智能
+          </div>
         </div>
 
-        {mode() === 'token' && (
+        {mode() === "token" && (
           <div style="display:flex;flex-direction:column;gap:16px">
             <p style={S.label}>粘贴你的 Pixiv refresh_token</p>
             <textarea
-              style={S.textarea + ';min-height:96px'}
+              style={S.textarea + ";min-height:96px"}
               placeholder="粘贴 refresh_token..."
               value={tokenInput()}
               onInput={(e) => setTokenInput(e.currentTarget.value)}
@@ -107,7 +118,7 @@ const Login: Component = () => {
           </div>
         )}
 
-        {mode() === 'password' && (
+        {mode() === "password" && (
           <div style="display:flex;flex-direction:column;gap:16px">
             <input
               style={S.input}
@@ -130,12 +141,12 @@ const Login: Component = () => {
           </div>
         )}
 
-        {mode() === 'smart' && (
+        {mode() === "smart" && (
           <div style="display:flex;flex-direction:column;gap:16px">
             <div style="display:flex;flex-direction:column;gap:8px">
               <p style={S.label}>refresh_token（优先）</p>
               <textarea
-                style={S.textarea + ';min-height:80px'}
+                style={S.textarea + ";min-height:80px"}
                 placeholder="粘贴 refresh_token..."
                 value={smartToken()}
                 onInput={(e) => setSmartToken(e.currentTarget.value)}
@@ -173,7 +184,7 @@ const Login: Component = () => {
         {error() && <div style={S.error}>{error()}</div>}
 
         <button type="submit" disabled={submitting()} style={S.btn}>
-          {submitting() ? '登录中...' : '登录'}
+          {submitting() ? "登录中..." : "登录"}
         </button>
       </form>
     </div>

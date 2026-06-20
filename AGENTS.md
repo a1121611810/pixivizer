@@ -106,19 +106,19 @@ src/
 
 ### 禁止清单
 
-| 禁止                               | 必须使用                                             |
-| ---------------------------------- | ---------------------------------------------------- |
-| 硬编码颜色值（`#xxx`、`rgb()`）    | `var(--colorXxx)`                                    |
-| 硬编码圆角值（`8px`、`0.5rem`）    | `var(--borderRadiusXxx)`                             |
-| 硬编码阴影值                       | `var(--elevationN)`                                  |
-| 非 Fluent 缓动曲线                 | Fluent 标准曲线（见上表）                            |
-| 非标准动画时长                     | Fluent duration（见上表）                            |
-| 自定义字体大小（`15px`、`1.2rem`） | `var(--fontSizeBaseXxx)` 或 `var(--fontSizeHeroXxx)` |
-| 裸 `:focus` 伪类                   | `:focus-visible`                                     |
-| `[color:var(--colorXxx)]` 形式     | `text-[var(--colorXxx)]`                             |
-| `[background-color:var(--colorXxx)]` 形式 | `bg-[var(--colorXxx)]`                         |
-| `duration-200` / `duration-300` 等 | `duration-[var(--durationNormal)]` 等                |
-| `bg-black` / `text-white` 硬编码   | 使用 overlay token（`--colorOverlay*`）              |
+| 禁止                                      | 必须使用                                             |
+| ----------------------------------------- | ---------------------------------------------------- |
+| 硬编码颜色值（`#xxx`、`rgb()`）           | `var(--colorXxx)`                                    |
+| 硬编码圆角值（`8px`、`0.5rem`）           | `var(--borderRadiusXxx)`                             |
+| 硬编码阴影值                              | `var(--elevationN)`                                  |
+| 非 Fluent 缓动曲线                        | Fluent 标准曲线（见上表）                            |
+| 非标准动画时长                            | Fluent duration（见上表）                            |
+| 自定义字体大小（`15px`、`1.2rem`）        | `var(--fontSizeBaseXxx)` 或 `var(--fontSizeHeroXxx)` |
+| 裸 `:focus` 伪类                          | `:focus-visible`                                     |
+| `[color:var(--colorXxx)]` 形式            | `text-[var(--colorXxx)]`                             |
+| `[background-color:var(--colorXxx)]` 形式 | `bg-[var(--colorXxx)]`                               |
+| `duration-200` / `duration-300` 等        | `duration-[var(--durationNormal)]` 等                |
+| `bg-black` / `text-white` 硬编码          | 使用 overlay token（`--colorOverlay*`）              |
 
 ## 约定
 

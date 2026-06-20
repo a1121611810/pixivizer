@@ -1,9 +1,9 @@
-import { Capacitor } from '@capacitor/core';
-import { ApiErrorType, type ApiError } from './types';
+import { Capacitor } from "@capacitor/core";
+import { ApiErrorType, type ApiError } from "./types";
 
 // ─── 端点 ───
-const PIXIV_API_BASE = 'https://app-api.pixiv.net';
-const PIXIV_AUTH_URL = 'https://oauth.secure.pixiv.net/auth/token';
+const PIXIV_API_BASE = "https://app-api.pixiv.net";
+const PIXIV_AUTH_URL = "https://oauth.secure.pixiv.net/auth/token";
 
 // ─── 平台检测 ───
 const isNative = Capacitor.isNativePlatform();
@@ -15,7 +15,7 @@ export interface PixivApiClient {
 }
 
 // ─── 状态 ───
-let accessToken = '';
+let accessToken = "";
 let onUnauthorized: (() => Promise<void>) | null = null;
 let isRetryingAfter401 = false; // 防止 401 → refresh 失败 → 401 无限循环
 
@@ -29,40 +29,62 @@ export function setOnUnauthorized(handler: () => Promise<void>) {
 
 /** 尝试从 Pixiv 错误响应体中提取人类可读的错误消息 */
 function extractPixivErrorMessage(data: unknown): string | null {
-  if (!data || typeof data !== 'object') return null;
+  if (!data || typeof data !== "object") return null;
   const d = data as Record<string, unknown>;
-  if (d.errors && typeof d.errors === 'object') {
+  if (d.errors && typeof d.errors === "object") {
     const errors = d.errors as Record<string, unknown>;
     const sys = errors.system;
-    if (sys && typeof sys === 'object') {
+    if (sys && typeof sys === "object") {
       const { message, code } = sys as Record<string, unknown>;
-      if (typeof message === 'string') {
+      if (typeof message === "string") {
         return code ? `[${code}] ${message}` : message;
       }
     }
   }
-  if (typeof d.message === 'string') return d.message;
-  if (typeof d.error === 'string') return d.error;
+  if (typeof d.message === "string") return d.message;
+  if (typeof d.error === "string") return d.error;
   return null;
 }
 
 function classifyError(status: number, error: unknown, responseBody?: unknown): ApiError {
   if (!status && error instanceof TypeError) {
-    return { type: ApiErrorType.NETWORK, message: '网络不可用，请检查连接' };
+    return { type: ApiErrorType.NETWORK, message: "网络不可用，请检查连接" };
   }
   // 尝试提取 Pixiv 错误消息
   const pixivMsg = responseBody ? extractPixivErrorMessage(responseBody) : null;
-  const suffix = pixivMsg ? ` (${pixivMsg})` : '';
+  const suffix = pixivMsg ? ` (${pixivMsg})` : "";
   switch (status) {
     case 401:
-      return { type: ApiErrorType.UNAUTHORIZED, message: `登录已过期 (HTTP 401)${suffix ? `: ${pixivMsg}` : ''}`, status: 401 };
+      return {
+        type: ApiErrorType.UNAUTHORIZED,
+        message: `登录已过期 (HTTP 401)${suffix ? `: ${pixivMsg}` : ""}`,
+        status: 401,
+      };
     case 403:
-      return { type: ApiErrorType.FORBIDDEN, message: `没有权限访问 (HTTP 403)${suffix}`, status: 403 };
+      return {
+        type: ApiErrorType.FORBIDDEN,
+        message: `没有权限访问 (HTTP 403)${suffix}`,
+        status: 403,
+      };
     case 429:
-      return { type: ApiErrorType.RATE_LIMIT, message: '请求过于频繁，请稍后重试 (HTTP 429)', status: 429 };
+      return {
+        type: ApiErrorType.RATE_LIMIT,
+        message: "请求过于频繁，请稍后重试 (HTTP 429)",
+        status: 429,
+      };
     default:
-      if (status >= 500) return { type: ApiErrorType.SERVER, message: `服务器错误 (HTTP ${status})${suffix}`, status };
-      if (status > 0) return { type: ApiErrorType.UNKNOWN, message: `请求失败 (HTTP ${status})${suffix}`, status };
+      if (status >= 500)
+        return {
+          type: ApiErrorType.SERVER,
+          message: `服务器错误 (HTTP ${status})${suffix}`,
+          status,
+        };
+      if (status > 0)
+        return {
+          type: ApiErrorType.UNKNOWN,
+          message: `请求失败 (HTTP ${status})${suffix}`,
+          status,
+        };
       return { type: ApiErrorType.UNKNOWN, message: `未知错误${suffix}`, status };
   }
 }
@@ -73,15 +95,15 @@ function classifyError(status: number, error: unknown, responseBody?: unknown): 
  */
 function rewriteUrl(path: string): string {
   // 已经是本地代理路径，直接返回
-  if (path.startsWith('/pixiv-')) return path;
+  if (path.startsWith("/pixiv-")) return path;
   // 已经是 http(s) URL
-  if (path.startsWith('http')) {
+  if (path.startsWith("http")) {
     if (!isNative) {
       if (path.startsWith(PIXIV_API_BASE)) {
-        return path.replace(PIXIV_API_BASE, '/pixiv-api');
+        return path.replace(PIXIV_API_BASE, "/pixiv-api");
       }
       if (path.startsWith(PIXIV_AUTH_URL)) {
-        return '/pixiv-oauth/auth/token';
+        return "/pixiv-oauth/auth/token";
       }
     }
     return path;
@@ -92,47 +114,47 @@ function rewriteUrl(path: string): string {
 }
 
 async function request<T>(
-  method: 'GET' | 'POST',
+  method: "GET" | "POST",
   path: string,
   data?: Record<string, string>,
 ): Promise<T> {
   const url = rewriteUrl(path);
   const headers: Record<string, string> = {
-    'User-Agent': 'PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)',
-    Referer: 'https://app-api.pixiv.net/',
+    "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+    Referer: "https://app-api.pixiv.net/",
   };
   if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
+    headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
   try {
     let response;
     if (isNative) {
       // 原生模式：CapacitorHttp 直连 Pixiv
-      const { Http } = await import('@capacitor/http');
-      if (method === 'GET') {
-        response = await Http.request({ method: 'GET', url, headers, params: data as any });
+      const { Http } = await import("@capacitor/http");
+      if (method === "GET") {
+        response = await Http.request({ method: "GET", url, headers, params: data as any });
       } else {
-        const body = data ? new URLSearchParams(data).toString() : '';
-        headers['Content-Type'] = 'application/x-www-form-urlencoded';
-        response = await Http.request({ method: 'POST', url, headers, data: body });
+        const body = data ? new URLSearchParams(data).toString() : "";
+        headers["Content-Type"] = "application/x-www-form-urlencoded";
+        response = await Http.request({ method: "POST", url, headers, data: body });
       }
     } else {
       // Web 模式：fetch 走 Vite 代理（同源，无 CORS 问题）
-      if (method === 'GET') {
-        const params = data ? '?' + new URLSearchParams(data).toString() : '';
-        const res = await fetch(url + params, { method: 'GET', headers });
+      if (method === "GET") {
+        const params = data ? "?" + new URLSearchParams(data).toString() : "";
+        const res = await fetch(url + params, { method: "GET", headers });
         response = { status: res.status, data: await res.json() };
       } else {
-        const body = data ? new URLSearchParams(data).toString() : '';
-        headers['Content-Type'] = 'application/x-www-form-urlencoded';
-        const res = await fetch(url, { method: 'POST', headers, body });
+        const body = data ? new URLSearchParams(data).toString() : "";
+        headers["Content-Type"] = "application/x-www-form-urlencoded";
+        const res = await fetch(url, { method: "POST", headers, body });
         // 先尝试 JSON，失败则读文本（处理 Cloudflare HTML 拦截）
-        const contentType = res.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
           response = { status: res.status, data: await res.json() };
         } else {
-          const text = await res.text().catch(() => '');
+          const text = await res.text().catch(() => "");
           throw new Error(`服务器返回非 JSON (HTTP ${res.status}): ${text.slice(0, 300)}`);
         }
       }
@@ -173,12 +195,12 @@ async function request<T>(
   } catch (e) {
     if ((e as ApiError).type) throw e;
     // 保留原始错误信息，传递给 classifyError
-    const errMsg = e instanceof Error ? e.message : String(e ?? '');
+    const errMsg = e instanceof Error ? e.message : String(e ?? "");
     throw classifyError(0, e, { message: errMsg });
   }
 }
 
 export const apiClient: PixivApiClient = {
-  get: <T>(path: string, params?: Record<string, string>) => request<T>('GET', path, params),
-  post: <T>(path: string, body: Record<string, string>) => request<T>('POST', path, body),
+  get: <T>(path: string, params?: Record<string, string>) => request<T>("GET", path, params),
+  post: <T>(path: string, body: Record<string, string>) => request<T>("POST", path, body),
 };

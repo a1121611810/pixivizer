@@ -159,8 +159,7 @@ const SettingsSheet: Component = () => {
                     classList={{
                       "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
                         listQuality() === q,
-                      "bg-transparent text-[var(--colorNeutralForeground2)]":
-                        listQuality() !== q,
+                      "bg-transparent text-[var(--colorNeutralForeground2)]": listQuality() !== q,
                     }}
                     onClick={() => setListQuality(q)}
                   >
@@ -182,8 +181,7 @@ const SettingsSheet: Component = () => {
                     classList={{
                       "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
                         detailQuality() === q,
-                      "bg-transparent text-[var(--colorNeutralForeground2)]":
-                        detailQuality() !== q,
+                      "bg-transparent text-[var(--colorNeutralForeground2)]": detailQuality() !== q,
                     }}
                     onClick={() => setDetailQuality(q)}
                   >

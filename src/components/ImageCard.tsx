@@ -33,15 +33,9 @@ const ImageCard: Component<Props> = (props) => {
           loading="eager"
           class="w-full h-auto block"
         />
-        {isUgoira() && (
-          <div class="absolute top-1.5 right-1.5 badge-overlay">
-            ▶ 动图
-          </div>
-        )}
+        {isUgoira() && <div class="absolute top-1.5 right-1.5 badge-overlay">▶ 动图</div>}
         {props.illust.page_count > 1 && (
-          <div class="absolute bottom-1.5 left-1.5 badge-overlay">
-            📄 {props.illust.page_count}
-          </div>
+          <div class="absolute bottom-1.5 left-1.5 badge-overlay">📄 {props.illust.page_count}</div>
         )}
       </div>
       <div class="p-2.5">

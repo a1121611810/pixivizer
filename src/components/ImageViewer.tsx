@@ -123,7 +123,9 @@ const ImageViewer: Component<Props> = (props) => {
           {props.imageUrls.map((_, i) => (
             <div
               class={`w-2 h-2 rounded-[var(--borderRadiusCircular)] transition-colors ${
-                i === currentPage() ? 'bg-[var(--colorOverlayForeground)]' : 'bg-[var(--colorOverlaySurface)]'
+                i === currentPage()
+                  ? "bg-[var(--colorOverlayForeground)]"
+                  : "bg-[var(--colorOverlaySurface)]"
               }`}
             />
           ))}

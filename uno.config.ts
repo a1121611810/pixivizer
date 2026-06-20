@@ -71,5 +71,23 @@ export default defineConfig({
     // ── Image badge overlay (card corner label) ──
     "badge-overlay":
       "flex items-center gap-1 bg-[var(--colorImageBadgeBackground)] backdrop-blur-sm rounded-[var(--borderRadiusSmall)] px-1.5 py-0.5 text-[var(--colorImageBadgeForeground)] [font-size:var(--fontSizeBase100)] font-medium select-none pointer-events-none",
+
+    // ── Bottom Navigation Bar (Fluent 2 floating pill pattern) ──
+    "bottom-nav": "fixed bottom-0 left-0 right-0 z-30 flex justify-center px-4 select-none",
+    "bottom-nav-container":
+      "flex relative bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadius2XLarge)] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation8)]",
+    "bottom-nav-pill":
+      "absolute top-[var(--spacingVerticalS)] bottom-[var(--spacingVerticalS)] rounded-[var(--borderRadiusLarge)] bg-[var(--colorBrandStroke2)] opacity-0 transition-all duration-[var(--durationFast)] ease-[var(--curveDecelerateMid)]",
+    "bottom-nav-item":
+      "relative flex flex-col items-center justify-center gap-[var(--spacingHorizontalXXS)] min-w-20 h-12 px-[var(--spacingHorizontalL)] rounded-[var(--borderRadiusMedium)] text-[var(--fontSizeBase200)] font-medium leading-none border-none outline-none appearance-none cursor-pointer select-none transition-colors duration-[var(--durationFast)] ease-[var(--curveEasyEase)] focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]",
+    "bottom-nav-item-inactive":
+      "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground1Hover)] active:bg-[var(--colorNeutralBackground1Pressed)] active:scale-[0.96]",
+    "bottom-nav-item-active":
+      "text-[var(--colorCompoundBrandForeground1)] font-semibold active:scale-[0.97]",
+    // ── Nav icon crossfade helpers ──
+    "nav-icon-regular":
+      "absolute inset-0 transition-opacity duration-[var(--durationFast)] ease-[var(--curveEasyEase)]",
+    "nav-icon-filled":
+      "absolute inset-0 transition-opacity duration-[var(--durationFast)] ease-[var(--curveEasyEase)]",
   },
 });
