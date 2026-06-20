@@ -1,9 +1,13 @@
-import { type Component, createSignal, onMount } from 'solid-js';
+import { type Component, createSignal, onMount, onCleanup } from 'solid-js';
 import { useParams, useNavigate } from '@solidjs/router';
 import { loadDetail } from '../api/illust';
 import type { PixivIllust } from '../api/types';
 import ImageViewer from '../components/ImageViewer';
+import UgoiraViewer from '../components/UgoiraViewer';
+import PixivImage from '../components/PixivImage';
 import LoadingSpinner from '../components/LoadingSpinner';
+import PageTransition from '../components/PageTransition';
+import { detailQuality } from '../stores/uiStore';
 
 const IllustDetail: Component = () => {
   const params = useParams<{ id: string }>();
@@ -12,6 +16,24 @@ const IllustDetail: Component = () => {
   const [viewerOpen, setViewerOpen] = createSignal(false);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
+
+  // Open/close viewer with global flag for Capacitor back-button handling
+  function openViewer() {
+    (window as any).__viewerOpen = true;
+    setViewerOpen(true);
+  }
+
+  function closeViewer() {
+    (window as any).__viewerOpen = false;
+    setViewerOpen(false);
+  }
+
+  onMount(() => {
+    // Listen for system back when viewer is open
+    const onCloseViewer = () => setViewerOpen(false);
+    window.addEventListener('closeViewer', onCloseViewer);
+    onCleanup(() => window.removeEventListener('closeViewer', onCloseViewer));
+  });
 
   onMount(async () => {
     try {
@@ -24,6 +46,16 @@ const IllustDetail: Component = () => {
     }
   });
 
+  function coverUrl(): string {
+    const i = illust();
+    if (!i) return '';
+    const q = detailQuality();
+    if (q === 'medium') return i.image_urls.medium;
+    if (q === 'large') return i.image_urls.large;
+    // original: use original_image_url if available, fallback to large
+    return i.meta_single_page?.original_image_url ?? i.image_urls.large;
+  }
+
   const imageUrls = () => {
     const i = illust();
     if (!i) return [];
@@ -34,13 +66,14 @@ const IllustDetail: Component = () => {
   };
 
   return (
-    <div class="page">
+    <PageTransition>
+      <div class="page">
       {loading() && <LoadingSpinner text="加载作品中..." />}
 
       {error() && (
         <div class="flex flex-col items-center justify-center h-screen gap-4 px-6">
-          <p class="text-red-400">{error()}</p>
-          <button class="btn" onClick={() => navigate('/feed')}>
+          <p class="text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase300)]">{error()}</p>
+          <button class="btn-secondary" onClick={() => navigate('/feed')}>
             返回
           </button>
         </div>
@@ -48,77 +81,111 @@ const IllustDetail: Component = () => {
 
       {illust() && !viewerOpen() && (
         <>
-          {/* 顶部栏 */}
-          <header class="flex items-center gap-4 px-4 py-3 border-b border-gray-800">
-            <button onClick={() => navigate(-1)} class="text-gray-300 text-xl">
+          {/* App bar header */}
+          <header class="flex items-center gap-3 px-4 py-3 surface-appbar sticky top-0 z-10">
+            <button
+              onClick={() => navigate(-1)}
+              class="btn-icon text-lg"
+              aria-label="返回"
+            >
               ←
             </button>
-            <h2 class="text-white font-medium truncate flex-1">
+            <h2 class="text-[var(--colorNeutralForeground1)] font-semibold truncate flex-1 [font-size:var(--fontSizeBase300)]">
               {illust()!.title}
             </h2>
           </header>
 
-          {/* 封面图（点击进入查看器） */}
+          {/* Cover image (tap → viewer) */}
           <div
-            class="flex justify-center bg-dark-900 cursor-pointer"
-            onClick={() => setViewerOpen(true)}
+            class="flex justify-center bg-[var(--colorNeutralBackground2)] cursor-pointer border-b border-[var(--colorNeutralStroke2)]"
+            onClick={() => openViewer()}
           >
-            <img
-              src={`/pixiv-img/${imageUrls()[0].split('/').slice(3).join('/')}`}
+            <PixivImage
+              src={coverUrl()}
               alt={illust()!.title}
-              class="max-h-[60vh] object-contain"
+              width={illust()!.width}
+              height={illust()!.height}
+              loading="eager"
+              class="max-h-[60vh] object-contain cursor-pointer"
             />
           </div>
 
-          {/* 信息区 */}
-          <div class="px-4 py-4 space-y-3">
+          {/* Info section */}
+          <div class="px-4 py-4 space-y-4">
+            {/* User info */}
             <div class="flex items-center gap-3">
-              <img
-                src={`/pixiv-img/${illust()!.user.profile_image_urls.medium.split('/').slice(3).join('/')}`}
+              <PixivImage
+                src={illust()!.user.profile_image_urls.medium}
                 alt={illust()!.user.name}
-                class="w-10 h-10 rounded-full object-cover"
+                width={40}
+                height={40}
+                class="w-10 h-10 rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
               />
               <div>
-                <p class="text-white font-medium">{illust()!.user.name}</p>
-                <p class="text-gray-400 text-xs">@{illust()!.user.account}</p>
+                <p class="text-[var(--colorNeutralForeground1)] font-semibold [font-size:var(--fontSizeBase300)]">
+                  {illust()!.user.name}
+                </p>
+                <p class="text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase200)]">
+                  @{illust()!.user.account}
+                </p>
               </div>
             </div>
 
-            <div class="flex gap-4 text-sm text-gray-400">
-              <span>♡ {illust()!.total_bookmarks}</span>
+            {/* Stats */}
+            <div class="flex gap-4 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground2)]">
+              <span class="flex items-center gap-1"><span>♡</span><span>{illust()!.total_bookmarks}</span></span>
               {illust()!.total_view !== undefined && (
-                <span>👁 {illust()!.total_view}</span>
+                <span class="flex items-center gap-1"><span>👁</span><span>{illust()!.total_view}</span></span>
               )}
               {illust()!.page_count > 1 && (
-                <span>📄 {illust()!.page_count}P</span>
+                <span class="flex items-center gap-1"><span>📄</span><span>{illust()!.page_count}P</span></span>
               )}
             </div>
 
-            <div class="flex flex-wrap gap-2">
+            {/* Tags */}
+            <div class="flex flex-wrap gap-1.5">
               {illust()!.tags.map((tag) => (
-                <span class="text-xs px-2 py-1 rounded-full bg-dark-800 text-gray-300">
+                <span class="badge">
                   {tag.translated_name || tag.name}
                 </span>
               ))}
             </div>
+
+            {/* Caption */}
+            {illust()!.caption && (
+              <p class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground2)] leading-relaxed whitespace-pre-wrap">
+                {illust()!.caption}
+              </p>
+            )}
           </div>
 
-          {/* 打开查看器提示 */}
+          {/* Viewer hint — different text for ugoira */}
           <div class="px-4 pb-8">
-            <p class="text-center text-gray-500 text-xs">
-              点击图片查看原图 · 双指缩放 · 左右滑动翻页
+            <p class="text-center text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase200)]">
+              {illust()!.type === 'ugoira'
+                ? '点击图片播放动图'
+                : '点击图片查看原图 · 双指缩放 · 左右滑动翻页'}
             </p>
           </div>
         </>
       )}
 
-      {viewerOpen() && (
+      {viewerOpen() && illust()!.type === 'ugoira' && (
+        <UgoiraViewer
+          illustId={illust()!.id}
+          coverUrl={imageUrls()[0]}
+          onClose={closeViewer}
+        />
+      )}
+
+      {viewerOpen() && illust()!.type !== 'ugoira' && (
         <ImageViewer
           imageUrls={imageUrls()}
-          onClose={() => setViewerOpen(false)}
+          onClose={closeViewer}
         />
       )}
     </div>
+    </PageTransition>
   );
 };
 
