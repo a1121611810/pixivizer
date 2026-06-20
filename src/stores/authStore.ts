@@ -17,14 +17,24 @@ function syncToken(token: string) {
   setAccessToken(token);
 }
 
+/** 安装 onUnauthorized 处理器，始终使用最新的 refreshTokenSig */
+function setupUnauthorizedHandler() {
+  setOnUnauthorized(async () => {
+    const latest = refreshTokenSig();
+    if (latest) {
+      await performRefresh(latest);
+    } else {
+      await logout();
+    }
+  });
+}
+
 export async function initializeAuth() {
   setIsLoading(true);
   const { value } = await Preferences.get({ key: "refresh_token" });
   if (value) {
     setRefreshTokenSig(value);
-    setOnUnauthorized(async () => {
-      await performRefresh(value);
-    });
+    setupUnauthorizedHandler();
     await performRefresh(value);
   }
   setIsLoading(false);
@@ -49,6 +59,7 @@ export async function login(username: string, password: string) {
   setRefreshTokenSig(resp.refresh_token);
   setUser(resp.user);
   setIsLoggedIn(true);
+  setupUnauthorizedHandler();
   await Preferences.set({ key: "refresh_token", value: resp.refresh_token });
 }
 
@@ -58,6 +69,7 @@ export async function loginWithToken(token: string) {
   setRefreshTokenSig(resp.refresh_token);
   setUser(resp.user);
   setIsLoggedIn(true);
+  setupUnauthorizedHandler();
   await Preferences.set({ key: "refresh_token", value: resp.refresh_token });
 }
 
