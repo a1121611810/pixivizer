@@ -16,7 +16,7 @@ export function loadRecommended(
 }
 
 export function loadFollow(restrict: RestrictType = "public"): Promise<PixivIllustListResponse> {
-  return apiClient.get<PixivIllustListResponse>("/v1/illust/follow", {
+  return apiClient.get<PixivIllustListResponse>("/v2/illust/follow", {
     restrict,
   });
 }
