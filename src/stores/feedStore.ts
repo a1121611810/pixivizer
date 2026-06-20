@@ -20,16 +20,25 @@ export { illusts, nextUrl, loading, refreshing, error };
 
 export function ensureLoaded() {
   const tab = currentTab();
-  if (tabLoaded[tab]) return;
+  if (tabLoaded[tab]) {
+    // Already loaded — restore this tab's cached data
+    if (tabIllusts[tab]) {
+      setIllusts(tabIllusts[tab]);
+      setNextUrl(tabNextUrl[tab] || null);
+    }
+    return;
+  }
 
-  // 恢复该 Tab 的缓存数据
+  // Restore cached data if available (return visit)
   if (tabIllusts[tab]) {
     setIllusts(tabIllusts[tab]);
-    setNextUrl(tabNextUrl[tab]);
+    setNextUrl(tabNextUrl[tab] || null);
     tabLoaded[tab] = true;
     return;
   }
 
+  // Fresh load — clear old data first to show skeleton
+  setIllusts([]);
   if (tab === "recommended") {
     fetchRecommended();
   } else if (tab === "follow") {
@@ -82,8 +91,13 @@ export async function fetchRecommended(contentType: ContentType = "illust") {
   setError(null);
   try {
     const data = await loadRecommended(contentType);
-    setIllusts(data.illusts);
-    setNextUrl(data.next_url);
+    // Always cache, but only update illusts if still on this tab
+    tabIllusts["recommended"] = data.illusts;
+    tabNextUrl["recommended"] = data.next_url;
+    if (currentTab() === "recommended") {
+      setIllusts(data.illusts);
+      setNextUrl(data.next_url);
+    }
   } catch (e) {
     setError((e as { message?: string }).message ?? "加载失败");
   } finally {
@@ -96,8 +110,13 @@ export async function fetchFollow(restrict: RestrictType = "public") {
   setError(null);
   try {
     const data = await loadFollow(restrict);
-    setIllusts(data.illusts);
-    setNextUrl(data.next_url);
+    // Always cache, but only update illusts if still on this tab
+    tabIllusts["follow"] = data.illusts;
+    tabNextUrl["follow"] = data.next_url;
+    if (currentTab() === "follow") {
+      setIllusts(data.illusts);
+      setNextUrl(data.next_url);
+    }
   } catch (e) {
     setError((e as { message?: string }).message ?? "加载失败");
   } finally {

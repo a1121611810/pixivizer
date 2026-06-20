@@ -130,8 +130,10 @@ const NavBar: Component = () => {
                 setCurrentTab(tab.key);
                 if (tab.key === "bookmarks") {
                   navigate("/bookmarks");
+                } else if (tab.key === "follow") {
+                  navigate("/following");
                 } else {
-                  navigate("/feed");
+                  navigate("/recommended");
                 }
               }}
               aria-current={isActive() ? "page" : undefined}

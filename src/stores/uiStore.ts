@@ -1,6 +1,7 @@
 import { createSignal, createEffect } from "solid-js";
 
 type Tab = "recommended" | "follow" | "bookmarks";
+export type { Tab };
 export type Theme = "dark" | "light";
 export type ImageQuality = "medium" | "large" | "original";
 
