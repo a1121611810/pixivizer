@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 import UnoCSS from "unocss/vite";
 import { HttpsProxyAgent } from "https-proxy-agent";
+import postcssPxToRem from "postcss-pxtorem";
 
 // 系统代理（中国大陆需要代理访问 Pixiv）
 const proxyUrl =
@@ -15,6 +16,17 @@ const proxyAgent = new HttpsProxyAgent(proxyUrl);
 
 export default defineConfig({
   plugins: [solid(), UnoCSS()],
+  css: {
+    postcss: {
+      plugins: [
+        postcssPxToRem({
+          rootValue: 16,
+          propList: ['font-size'],
+          minPixelValue: 2,
+        }),
+      ],
+    },
+  },
   server: {
     proxy: {
       "/pixiv-img": {
