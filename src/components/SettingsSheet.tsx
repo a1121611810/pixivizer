@@ -161,12 +161,13 @@ const SettingsSheet: Component = () => {
               <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug mb-2">
                 🖼️ 列表画质
               </p>
-              <div class="segmented">
+              <div class="flex [background-color:var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
                 {(['medium', 'large', 'original'] as ImageQuality[]).map((q) => (
                   <button
+                    class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                     classList={{
-                      'segmented-item-active': listQuality() === q,
-                      'segmented-item-inactive': listQuality() !== q,
+                      '[background-color:var(--colorNeutralBackground1)] [color:var(--colorNeutralForeground1)] shadow-[var(--elevation2)]': listQuality() === q,
+                      '[background-color:transparent] [color:var(--colorNeutralForeground2)]': listQuality() !== q,
                     }}
                     onClick={() => setListQuality(q)}
                   >
@@ -181,12 +182,13 @@ const SettingsSheet: Component = () => {
               <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug mb-2">
                 🖼️ 详情画质
               </p>
-              <div class="segmented">
+              <div class="flex [background-color:var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
                 {(['medium', 'large', 'original'] as ImageQuality[]).map((q) => (
                   <button
+                    class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                     classList={{
-                      'segmented-item-active': detailQuality() === q,
-                      'segmented-item-inactive': detailQuality() !== q,
+                      '[background-color:var(--colorNeutralBackground1)] [color:var(--colorNeutralForeground1)] shadow-[var(--elevation2)]': detailQuality() === q,
+                      '[background-color:transparent] [color:var(--colorNeutralForeground2)]': detailQuality() !== q,
                     }}
                     onClick={() => setDetailQuality(q)}
                   >
