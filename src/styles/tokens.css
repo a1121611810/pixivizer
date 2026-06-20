@@ -16,18 +16,18 @@
   --fontSizeBase400: 16px; /* Body 2 / Subtitle 2 */
   --fontSizeBase500: 20px; /* Subtitle 1 */
   --fontSizeBase600: 24px; /* Title 3 */
-  --fontSizeHero700: 28px; /* Title 2 */
-  --fontSizeHero800: 32px; /* Title 1 */
-  --fontSizeHero900: 40px; /* Large Title */
-  --fontSizeHero1000: 68px; /* Display */
+  --fontSizeHero700: clamp(24px, 1.2vw + 20px, 28px); /* Title 2 */
+  --fontSizeHero800: clamp(28px, 1.5vw + 22px, 32px); /* Title 1 */
+  --fontSizeHero900: clamp(32px, 2vw + 24px, 40px);   /* Large Title */
+  --fontSizeHero1000: clamp(50px, 4vw + 32px, 68px);  /* Display */
 
-  /* ── Line heights ── */
-  --lineHeightBase100: 14px;
-  --lineHeightBase200: 16px;
-  --lineHeightBase300: 20px;
-  --lineHeightBase400: 22px;
-  --lineHeightBase500: 28px;
-  --lineHeightBase600: 32px;
+  /* ── Line heights (unitless ratio = px / font-size) ── */
+  --lineHeightBase100: 1.4;      /* 14/10 */
+  --lineHeightBase200: 1.333;    /* 16/12 */
+  --lineHeightBase300: 1.4286;   /* 20/14 */
+  --lineHeightBase400: 1.375;    /* 22/16 */
+  --lineHeightBase500: 1.4;      /* 28/20 */
+  --lineHeightBase600: 1.333;    /* 32/24 */
 
   /* ── Font weights ── */
   --fontWeightRegular: 400;
