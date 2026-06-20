@@ -1,6 +1,5 @@
 import { type Component, createEffect, createSignal, onMount } from "solid-js";
 import { currentTab, setCurrentTab } from "../stores/uiStore";
-import { useNavigate } from "@solidjs/router";
 
 // ── Fluent UI System Icons (24px) — SVG path data ──
 // Sourced from microsoft/fluentui-system-icons via Iconify API
@@ -72,7 +71,6 @@ const [pillWidth, setPillWidth] = createSignal(0);
 const [pillVisible, setPillVisible] = createSignal(false);
 
 const NavBar: Component = () => {
-  const navigate = useNavigate();
   let containerRef!: HTMLDivElement;
   const tabEls: Record<string, HTMLButtonElement> = {};
 
@@ -128,13 +126,6 @@ const NavBar: Component = () => {
               }}
               onClick={() => {
                 setCurrentTab(tab.key);
-                if (tab.key === "bookmarks") {
-                  navigate("/bookmarks");
-                } else if (tab.key === "follow") {
-                  navigate("/following");
-                } else {
-                  navigate("/recommended");
-                }
               }}
               aria-current={isActive() ? "page" : undefined}
               aria-label={tab.label}
