@@ -5,10 +5,10 @@
 ## 项目概览
 
 - **技术栈**: SolidJS + TypeScript (strict) + Vite + UnoCSS + Capacitor
-- **入口**: `src/main.tsx` → `src/App.tsx`（Solid Router 定义路由）
+- **入口**: `src/main.tsx` → `src/App.tsx`（Solid Router，路由 `/recommended` `/following` `/illust/:id` `/bookmarks` `/login`）
 - **设计系统**: **强制** Microsoft Fluent Design System 2 — 所有视觉和交互决策基于 Fluent 令牌和规范（详见「Fluent Design 规范」章节）
-- **Pixiv API**: 自建 HTTP 客户端 (`src/api/client.ts`) 含多凭证策略自动降级，同时封装 `@book000/pixivts`
-- **代理**: 开发时 Vite 代理 `/pixiv-img`、`/pixiv-api`、`/pixiv-oauth` 到 Pixiv 服务器
+- **Pixiv API**: 自建 HTTP 客户端 (`src/api/client.ts`)，双模式（Web: fetch + Vite 代理 / Native: CapacitorHttp 直连），iOS OAuth 凭证策略（Android 已弃用）
+- **CSS 架构**: 分层加载 `reset.css` → `tokens.css` → `base.css` → `virtual:uno.css`
 
 ## 命令
 
@@ -18,7 +18,6 @@
 | `pnpm build`            | TypeScript 检查 + Vite 构建到 `dist/`               |
 | `pnpm check`            | 仅 TypeScript 类型检查                              |
 | `pnpm preview`          | 预览生产构建                                        |
-| `pnpm build:android`    | 构建 Web + Capacitor 同步 + Gradle 编译 Android APK |
 | `pnpm cap:sync`         | 同步 Web 产物和 Capacitor 配置到 Android 项目       |
 | `pnpm cap:open:android` | 在 Android Studio 中打开 `android/` 项目            |
 
@@ -27,22 +26,27 @@
 ```
 src/
 ├── api/            # Pixiv API 层
-│   ├── auth.ts     # 认证流程：OAuth 登录、token 刷新、自动恢复
-│   ├── client.ts   # HTTP 客户端：多凭证策略（iOS/Android × refresh_token/password）
-│   ├── illust.ts   # 作品相关 API（推荐、关注、下一页、详情、收藏）
-│   └── types.ts    # 类型定义（PixivIllust、PixivUser、ApiError 等）
+│   ├── auth.ts     # OAuth 认证（iOS 凭证、spark-md5 哈希、password/refresh_token）
+│   ├── client.ts   # HTTP 客户端（PixivApiClient 接口、Web fetch / Native CapacitorHttp 双模式、URL 重写、401 自动刷新防死循环）
+│   ├── illust.ts   # 作品 API：推荐、关注、下一页、详情、收藏、ugoira 元数据
+│   └── types.ts    # 类型定义（PixivIllust、PixivUser、ApiError、PixivAuthResponse 等）
+├── styles/         # CSS 分层（main.tsx 中按序导入）
+│   ├── reset.css   # modern-css-reset 定制
+│   ├── tokens.css  # Fluent Design System 2 设计令牌
+│   └── base.css    # 根样式、滚动条、选中色、动画关键帧、reduced-motion
+├── types/          # 环境类型声明
+│   └── spark-md5.d.ts
 ├── stores/         # SolidJS 响应式状态（createSignal 导出）
-│   ├── authStore.ts   # 登录状态（isLoggedIn、user、error）
-│   ├── feedStore.ts   # Feed 数据（illusts、分页、Tab 缓存、滚动位置）
+│   ├── authStore.ts   # 登录状态（isLoggedIn、user、token、自动恢复、onUnauthorized 处理器）
+│   ├── feedStore.ts   # Feed 数据（illusts、分页、按 Tab 缓存、滚动位置）
 │   └── uiStore.ts     # UI 状态（当前 Tab、设置面板开关）
-├── services/       # 服务封装
-│   └── pixiv.ts    # PixivClient 单例管理（@book000/pixivts）
 ├── routes/         # 页面组件
-│   ├── Login.tsx       # 登录页（refresh_token / 用户名密码 / 智能登录）
-│   ├── Feed.tsx        # 首页瀑布流（推荐 / 关注 Tab）
-│   ├── IllustDetail.tsx # 作品详情（大图查看、多页、动图播放）
-│   ├── Bookmarks.tsx   # 收藏页
-│   └── DebugImage.tsx  # 图片调试页
+│   ├── Login.tsx          # 登录页（refresh_token / 用户名密码）
+│   ├── TabFeedPage.tsx    # Tab 容器（recommended / follow），委托 Feed 渲染
+│   ├── Feed.tsx           # 瀑布流内容（虚拟滚动、下拉刷新、无限加载）
+│   ├── IllustDetail.tsx   # 作品详情（大图查看、多页、动图播放）
+│   ├── Bookmarks.tsx      # 收藏页
+│   └── DebugImage.tsx     # 图片调试页
 ├── components/     # 可复用 UI 组件
 │   ├── ImageCard.tsx       # Feed 卡片
 │   ├── PixivImage.tsx      # 图片组件（CDN + 尺寸优化）
@@ -55,6 +59,8 @@ src/
 │   ├── PullIndicator.tsx   # 下拉刷新指示器
 │   ├── LoadingSpinner.tsx  # 加载动画
 │   └── PageTransition.tsx  # 页面过渡动画
+├── services/       # 服务封装
+│   └── pixiv.ts    # PixivClient 单例（@book000/pixivts，辅助用途）
 └── utils/
     └── imageLoader.ts  # 图片加载与缓存工具
 ```
@@ -65,9 +71,9 @@ src/
 
 ### 设计令牌
 
-- 颜色、间距、圆角、阴影、字体大小**必须**使用 `index.html` `:root` 中定义的 CSS 变量
+- 颜色、间距、圆角、阴影、字体大小**必须**使用 `src/styles/tokens.css` 中定义的 CSS 变量
 - **禁止**硬编码具体值（`#xxx`、`rgb()`、`px`/`rem` 字面量）
-- 确需新增令牌时，来源必须是 [Fluent 2 官方设计令牌](https://fluent2.microsoft.design/design-tokens)，在 `:root` 中声明后使用
+- 确需新增令牌时，来源必须是 [Fluent 2 官方设计令牌](https://fluent2.microsoft.design/design-tokens)，在 `src/styles/tokens.css` 的 `:root` 中声明后使用
 - UnoCSS shortcuts 统一在 `uno.config.ts` 中定义
 
 ### 动画与动效
@@ -94,7 +100,7 @@ src/
 | 500ms | slow   | 大幅过渡（页面切换、展开）    |
 
 - 页面过渡统一使用 `PageTransition.tsx`
-- 组件内动效优先使用 Fluent motion tokens（如 `--durationNormal` 等，若已定义）
+- 组件内动效优先使用 Fluent motion tokens（`--durationNormal`、`--curveEasyEase` 等，定义在 `src/styles/tokens.css`）
 
 ### 交互状态
 
@@ -129,7 +135,7 @@ src/
 - **样式与交互**：见「Fluent Design 规范」章节，不得例外
 - **注释**：中文注释为主，API 层和类型定义处偏英文
 - **文件命名**：组件 PascalCase、工具/API camelCase
-- **Android**：`android/` 目录在 `.gitignore` 中忽略，不提交到版本控制
+- **Android**：`android/` 目录在 `.gitignore` 中忽略，不提交到版本控制。构建 APK 需手动运行 `pnpm build && pnpm cap:sync && cd android && ./gradlew assembleDebug`
 
 ## 注意事项
 
