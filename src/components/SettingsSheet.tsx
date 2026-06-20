@@ -4,6 +4,11 @@ import {
   setShowSettingsSheet,
   theme,
   setTheme,
+  listQuality,
+  setListQuality,
+  detailQuality,
+  setDetailQuality,
+  type ImageQuality,
 } from '../stores/uiStore';
 
 const SettingsSheet: Component = () => {
@@ -146,6 +151,49 @@ const SettingsSheet: Component = () => {
                   }}
                 />
               </button>
+            </div>
+
+            {/* Divider before quality settings */}
+            <div class="divider my-1" />
+
+            {/* List image quality */}
+            <div class="py-2">
+              <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug mb-2">
+                🖼️ 列表画质
+              </p>
+              <div class="segmented">
+                {(['medium', 'large', 'original'] as ImageQuality[]).map((q) => (
+                  <button
+                    classList={{
+                      'segmented-item-active': listQuality() === q,
+                      'segmented-item-inactive': listQuality() !== q,
+                    }}
+                    onClick={() => setListQuality(q)}
+                  >
+                    {q === 'medium' ? '默认' : q === 'large' ? '高清' : '原图'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Detail image quality */}
+            <div class="py-2">
+              <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug mb-2">
+                🖼️ 详情画质
+              </p>
+              <div class="segmented">
+                {(['medium', 'large', 'original'] as ImageQuality[]).map((q) => (
+                  <button
+                    classList={{
+                      'segmented-item-active': detailQuality() === q,
+                      'segmented-item-inactive': detailQuality() !== q,
+                    }}
+                    onClick={() => setDetailQuality(q)}
+                  >
+                    {q === 'medium' ? '默认' : q === 'large' ? '高清' : '原图'}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
