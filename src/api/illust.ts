@@ -61,3 +61,15 @@ export function loadDetail(
 export function loadNext(url: string): Promise<PixivIllustListResponse> {
   return apiClient.get<PixivIllustListResponse>(url);
 }
+
+// ─── 收藏 ───
+
+export function loadBookmarks(
+  userId: number,
+  restrict: RestrictType = 'public',
+): Promise<PixivIllustListResponse> {
+  return apiClient.get<PixivIllustListResponse>('/v1/user/bookmarks/illust', {
+    user_id: String(userId),
+    restrict,
+  });
+}
