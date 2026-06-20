@@ -22,6 +22,11 @@ function cacheGet(key: string): Blob | undefined {
   return undefined;
 }
 
+/** 同步检查缓存中是否存在指定图片（不触发加载） */
+export function checkImageCache(originalUrl: string): Blob | undefined {
+  return cacheGet(originalUrl);
+}
+
 /** 存入缓存，超出容量时淘汰最旧的条目 */
 function cacheSet(key: string, blob: Blob) {
   // 淘汰最旧条目

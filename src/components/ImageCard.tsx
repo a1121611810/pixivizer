@@ -30,7 +30,7 @@ const ImageCard: Component<Props> = (props) => {
           alt={props.illust.title}
           width={w()}
           height={h()}
-          loading="eager"
+          loading="lazy"
           class="w-full h-auto block"
         />
         {isUgoira() && <div class="absolute top-1.5 right-1.5 badge-overlay">▶ 动图</div>}

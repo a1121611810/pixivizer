@@ -1,5 +1,5 @@
 import { type Component, createSignal, onMount, onCleanup } from "solid-js";
-import { loadImage } from "../utils/imageLoader";
+import { loadImage, checkImageCache } from "../utils/imageLoader";
 
 interface PixivImageProps {
   src: string;
@@ -14,7 +14,16 @@ interface PixivImageProps {
 }
 
 const PixivImage: Component<PixivImageProps> = (props) => {
-  const [displayUrl, setDisplayUrl] = createSignal("");
+  // 同步检查 LRU 缓存：命中则直出图片，跳过 shimmer
+  let syncBlobUrl: string | null = null;
+  if (props.src) {
+    const cached = checkImageCache(props.src);
+    if (cached) {
+      syncBlobUrl = URL.createObjectURL(cached);
+    }
+  }
+
+  const [displayUrl, setDisplayUrl] = createSignal(syncBlobUrl || "");
   const [failed, setFailed] = createSignal(false);
   let cleanupFn: (() => void) | null = null;
 
@@ -22,6 +31,12 @@ const PixivImage: Component<PixivImageProps> = (props) => {
   const aspectRatio = props.width && props.height ? `${props.width} / ${props.height}` : undefined;
 
   onMount(() => {
+    // 同步缓存命中：注册 Blob URL 清理，跳过异步加载
+    if (syncBlobUrl) {
+      const url = syncBlobUrl;
+      cleanupFn = () => URL.revokeObjectURL(url);
+      return;
+    }
     if (!props.src) return;
     load();
   });
