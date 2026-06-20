@@ -131,13 +131,18 @@ async function request<T>(
     let response;
     if (isNative) {
       // 原生模式：CapacitorHttp 直连 Pixiv
-      const { Http } = await import("@capacitor/http");
+      const { CapacitorHttp } = await import("@capacitor/core");
       if (method === "GET") {
-        response = await Http.request({ method: "GET", url, headers, params: data as any });
+        response = await CapacitorHttp.request({
+          method: "GET",
+          url,
+          headers,
+          params: data as any,
+        });
       } else {
         const body = data ? new URLSearchParams(data).toString() : "";
         headers["Content-Type"] = "application/x-www-form-urlencoded";
-        response = await Http.request({ method: "POST", url, headers, data: body });
+        response = await CapacitorHttp.request({ method: "POST", url, headers, data: body });
       }
     } else {
       // Web 模式：fetch 走 Vite 代理（同源，无 CORS 问题）

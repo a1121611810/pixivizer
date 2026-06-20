@@ -12,12 +12,13 @@
     "cap:add:android": "npx cap add android",
     "cap:copy": "npx cap copy",
     "cap:sync": "npx cap sync",
-    "cap:open:android": "npx cap open android"
+    "cap:open:android": "npx cap open android",
+    "build:android": "pnpm run build && pnpm run cap:sync && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
     "@capacitor/app": "^8.1.0",
     "@capacitor/core": "^8.4.0",
-    "@capacitor/http": "^0.0.2",
     "@capacitor/preferences": "^8.0.1",
     "@solidjs/router": "^0.16.1",
     "https-proxy-agent": "^9.1.0",

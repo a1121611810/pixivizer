@@ -8,15 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@capacitor/android':
+        specifier: ^8.4.0
+        version: 8.4.1(@capacitor/core@8.4.0)
       '@capacitor/app':
         specifier: ^8.1.0
         version: 8.1.0(@capacitor/core@8.4.0)
       '@capacitor/core':
         specifier: ^8.4.0
         version: 8.4.0
-      '@capacitor/http':
-        specifier: ^0.0.2
-        version: 0.0.2
       '@capacitor/preferences':
         specifier: ^8.0.1
         version: 8.0.1(@capacitor/core@8.4.0)
@@ -141,6 +141,11 @@ packages:
     resolution: {integrity: sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==}
     engines: {node: '>=6.9.0'}
 
+  '@capacitor/android@8.4.1':
+    resolution: {integrity: sha512-igtDCJ7QQn0P2qHFD9p4KXaa6V1b2PRNt+MxjVwtjTm/BJvqmiazOJq6rPjwFSZnfHm6iFoZk8TfzHd44pyBGw==}
+    peerDependencies:
+      '@capacitor/core': ^8.4.0
+
   '@capacitor/app@8.1.0':
     resolution: {integrity: sha512-MlmttTOWHDedr/G4SrhNRxsXMqY+R75S4MM4eIgzsgCzOYhb/MpCkA5Q3nuOCfL1oHm26xjUzqZ5aupbOwdfYg==}
     peerDependencies:
@@ -153,13 +158,6 @@ packages:
 
   '@capacitor/core@8.4.0':
     resolution: {integrity: sha512-LrS1xPIrqLtJABBIPDGXxxKmI9OyesrzWw8DiHbxhSC9JoiLUleUAJlX1a0LWIVLRbuY4Szgf9huFeRqYH2SAQ==}
-
-  '@capacitor/core@8.4.1':
-    resolution: {integrity: sha512-xqhOGLbTAYeOWK+IDUNSjQJAPapQjRHrIcgk9PYp52or9zFTaaMko31uNi16N6W+CRJ8VrRram6fOYILkBG2Hg==}
-
-  '@capacitor/http@0.0.2':
-    resolution: {integrity: sha512-3UPqYOmVkAQjCWWowSDGPnBkXY7znbPE7lNs8nhwTmE2E5fXTvjHM8PV15zOyn+nenY7zEu9Air49fGjrX+Tjg==}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@capacitor/preferences@8.0.1':
     resolution: {integrity: sha512-T6no3ebi79XJCk91U3Jp/liJUwgBdvHR+s6vhvPkPxSuch7z3zx5Rv1bdWM6sWruNx+pViuEGqZvbfCdyBvcHQ==}
@@ -1530,6 +1528,10 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
+  '@capacitor/android@8.4.1(@capacitor/core@8.4.0)':
+    dependencies:
+      '@capacitor/core': 8.4.0
+
   '@capacitor/app@8.1.0(@capacitor/core@8.4.0)':
     dependencies:
       '@capacitor/core': 8.4.0
@@ -1559,14 +1561,6 @@ snapshots:
   '@capacitor/core@8.4.0':
     dependencies:
       tslib: 2.8.1
-
-  '@capacitor/core@8.4.1':
-    dependencies:
-      tslib: 2.8.1
-
-  '@capacitor/http@0.0.2':
-    dependencies:
-      '@capacitor/core': 8.4.1
 
   '@capacitor/preferences@8.0.1(@capacitor/core@8.4.0)':
     dependencies:
