@@ -1,5 +1,7 @@
-node_modules
-.pnpm-store
-dist
-android
+node_modules/*
+.pnpm-store/*
+dist/*
+android/*
 *.local
+.playwright-cli/*
+.reasonix/*
