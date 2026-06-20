@@ -115,6 +115,10 @@ src/
 | 非标准动画时长                     | Fluent duration（见上表）                            |
 | 自定义字体大小（`15px`、`1.2rem`） | `var(--fontSizeBaseXxx)` 或 `var(--fontSizeHeroXxx)` |
 | 裸 `:focus` 伪类                   | `:focus-visible`                                     |
+| `[color:var(--colorXxx)]` 形式     | `text-[var(--colorXxx)]`                             |
+| `[background-color:var(--colorXxx)]` 形式 | `bg-[var(--colorXxx)]`                         |
+| `duration-200` / `duration-300` 等 | `duration-[var(--durationNormal)]` 等                |
+| `bg-black` / `text-white` 硬编码   | 使用 overlay token（`--colorOverlay*`）              |
 
 ## 约定
 
