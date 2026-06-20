@@ -4,8 +4,10 @@ import type { RouteSectionProps } from "@solidjs/router";
 import { isLoggedIn, isLoading, initializeAuth } from "./stores/authStore";
 import { App as CapApp } from "@capacitor/app";
 import Login from "./routes/Login";
+import IllustDetail from "./routes/IllustDetail";
 import DebugImage from "./routes/DebugImage";
-import MainShell from "./components/MainShell";
+import Bookmarks from "./routes/Bookmarks";
+import TabFeedPage from "./routes/TabFeedPage";
 import LoadingSpinner from "./components/LoadingSpinner";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
@@ -21,7 +23,12 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
       }
       // Root pages — exit app
       const path = window.location.pathname;
-      if (path === "/feed" || path === "/login") {
+      if (
+        path === "/recommended" ||
+        path === "/following" ||
+        path === "/bookmarks" ||
+        path === "/login"
+      ) {
         CapApp.exitApp();
       } else {
         window.history.back();
@@ -30,7 +37,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
 
     await initializeAuth();
     if (isLoggedIn()) {
-      navigate("/feed", { replace: true });
+      navigate("/recommended", { replace: true });
     } else {
       navigate("/login", { replace: true });
     }
@@ -49,9 +56,11 @@ const App: Component = () => {
   return (
     <Router root={RootLayout}>
       <Route path="/login" component={Login} />
-      <Route path="/feed" component={MainShell} />
-      <Route path="/illust/:id" component={MainShell} />
+      <Route path="/recommended" component={() => <TabFeedPage tab="recommended" />} />
+      <Route path="/following" component={() => <TabFeedPage tab="follow" />} />
+      <Route path="/illust/:id" component={IllustDetail} />
       <Route path="/debug" component={DebugImage} />
+      <Route path="/bookmarks" component={Bookmarks} />
       <Route path="*" component={Login} />
     </Router>
   );

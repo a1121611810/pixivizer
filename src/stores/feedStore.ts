@@ -1,7 +1,7 @@
-import { createSignal, createEffect } from "solid-js";
+import { createSignal } from "solid-js";
 import { loadRecommended, loadFollow, loadNext } from "../api/illust";
 import type { PixivIllust, ContentType, RestrictType } from "../api/types";
-import { currentTab, listQuality } from "./uiStore";
+import { currentTab } from "./uiStore";
 
 const [illusts, setIllusts] = createSignal<PixivIllust[]>([]);
 const [nextUrl, setNextUrl] = createSignal<string | null>(null);
@@ -137,19 +137,3 @@ export async function fetchMore() {
     setLoading(false);
   }
 }
-
-// 监听列表画质变化：画质改变时自动刷新当前活跃 Tab
-let lastListQuality = listQuality();
-createEffect(() => {
-  const q = listQuality();
-  if (q !== lastListQuality) {
-    lastListQuality = q;
-    const tab = currentTab();
-    if (tab === "recommended" || tab === "follow") {
-      // 强制重新加载以获取新画质图片
-      setIllusts([]);
-      if (tab === "recommended") fetchRecommended();
-      else fetchFollow();
-    }
-  }
-});

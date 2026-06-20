@@ -1,0 +1,110 @@
+import { type Component, createEffect, onMount, onCleanup } from "solid-js";
+import { useNavigate } from "@solidjs/router";
+import {
+  illusts,
+  nextUrl,
+  loading,
+  error,
+  restrict,
+  ensureLoaded,
+  fetchMore,
+  refresh,
+  setRestrict,
+  saveBookmarkScroll,
+  getBookmarkScrollY,
+} from "../stores/bookmarkStore";
+import { user } from "../stores/authStore";
+import { setShowSettingsSheet, setCurrentTab } from "../stores/uiStore";
+import VirtualFeed from "../components/VirtualFeed";
+import NavBar from "../components/NavBar";
+import PageTransition from "../components/PageTransition";
+import SettingsSheet from "../components/SettingsSheet";
+
+const Bookmarks: Component = () => {
+  const navigate = useNavigate();
+
+  // Restore scroll position when returning to this page
+  onMount(() => {
+    setCurrentTab("bookmarks");
+    const savedY = getBookmarkScrollY();
+    if (savedY > 0) {
+      requestAnimationFrame(() => window.scrollTo(0, savedY));
+    }
+  });
+
+  // Save scroll position when leaving
+  onCleanup(() => {
+    saveBookmarkScroll();
+  });
+
+  // Load data when restrict changes or when user becomes available
+  createEffect(() => {
+    const u = user();
+    restrict(); // track restrict changes
+    if (u) {
+      ensureLoaded();
+    }
+  });
+
+  return (
+    <>
+      <PageTransition>
+        <div class="pb-16">
+          <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4">
+            <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
+              Pixivizer
+            </h1>
+          </header>
+
+          {/* Segmented: 公开收藏 / 非公开收藏 */}
+          <div class="flex justify-center py-3 px-4">
+            <div
+              class="inline-flex rounded-[var(--borderRadiusMedium)] p-0.5"
+              style={{ background: "var(--colorNeutralBackground2)" }}
+            >
+              <button
+                class="px-4 py-1.5 rounded-[var(--borderRadiusSmall)] text-sm font-medium transition-colors"
+                classList={{
+                  "bg-[var(--colorBrandBackground)] text-white": restrict() === "public",
+                  "text-[var(--colorNeutralForeground2)]": restrict() !== "public",
+                }}
+                onClick={() => setRestrict("public")}
+              >
+                公开收藏
+              </button>
+              <button
+                class="px-4 py-1.5 rounded-[var(--borderRadiusSmall)] text-sm font-medium transition-colors"
+                classList={{
+                  "bg-[var(--colorBrandBackground)] text-white": restrict() === "private",
+                  "text-[var(--colorNeutralForeground2)]": restrict() !== "private",
+                }}
+                onClick={() => setRestrict("private")}
+              >
+                非公开收藏
+              </button>
+            </div>
+          </div>
+
+          <VirtualFeed
+            illusts={illusts()}
+            loading={loading()}
+            error={error()}
+            hasMore={nextUrl() !== null}
+            onIllustClick={(id) => navigate(`/illust/${id}`)}
+            onLoadMore={fetchMore}
+            onRefresh={refresh}
+            onSettingsOpen={() => setShowSettingsSheet(true)}
+            emptyText={restrict() === "public" ? "公开收藏夹为空" : "非公开收藏夹为空"}
+            skipAnimation={true}
+          />
+        </div>
+      </PageTransition>
+
+      <NavBar />
+
+      <SettingsSheet />
+    </>
+  );
+};
+
+export default Bookmarks;
