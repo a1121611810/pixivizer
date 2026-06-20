@@ -47,7 +47,7 @@ const Login: Component = () => {
   const [error, setError] = createSignal<string | null>(null);
 
   onMount(() => {
-    if (isLoggedIn()) navigate("/feed", { replace: true });
+    if (isLoggedIn()) navigate("/recommended", { replace: true });
   });
 
   const handleSubmit = async (e: Event) => {
@@ -71,7 +71,7 @@ const Login: Component = () => {
           throw new Error("请输入 refresh_token 或账号密码");
         }
       }
-      navigate("/feed", { replace: true });
+      navigate("/recommended", { replace: true });
     } catch (err) {
       setError((err as { message?: string }).message ?? "登录失败");
     } finally {
