@@ -25,13 +25,22 @@ const S = {
     "width:100%;padding:6px 10px;border-radius:var(--borderRadiusMedium);background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);font-size:var(--fontSizeBase300);border:1px solid var(--colorNeutralStroke1);outline:none;box-sizing:border-box",
   textarea:
     "width:100%;padding:6px 10px;border-radius:var(--borderRadiusMedium);background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);font-size:var(--fontSizeBase300);border:1px solid var(--colorNeutralStroke1);outline:none;resize:vertical;box-sizing:border-box",
-  btn: "width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-radius:var(--borderRadiusMedium);font-size:var(--fontSizeBase300);font-weight:600;background-color:var(--colorBrandBackground);color:#fff;border:none;cursor:pointer",
+  btn: "width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-radius:var(--borderRadiusMedium);font-size:var(--fontSizeBase300);font-weight:600;background-color:var(--colorBrandBackground);color:var(--colorNeutralForegroundOnBrand);border:none;cursor:pointer",
   error:
     "color:var(--colorStatusDangerForeground1);font-size:var(--fontSizeBase200);text-align:center;background-color:var(--colorStatusDangerBackground2);padding:8px;border-radius:var(--borderRadiusMedium)",
   label: "font-size:var(--fontSizeBase200);color:var(--colorNeutralForeground2);font-weight:400",
   divider: "display:flex;align-items:center;gap:8px",
   dividerLine: "flex:1;border-top:1px solid var(--colorNeutralStroke2)",
   dividerText: "font-size:var(--fontSizeBase100);color:var(--colorNeutralForeground3)",
+  // 新增：emoji + 表单间距
+  emoji: "font-size:var(--fontSizeHero900);margin-bottom:var(--spacingVerticalS)",
+  fieldGroup: "display:flex;flex-direction:column;gap:var(--spacingVerticalL)",
+  fieldGroupSmall: "display:flex;flex-direction:column;gap:var(--spacingVerticalS)",
+  fieldGroupTight: "display:flex;flex-direction:column;gap:var(--spacingVerticalM)",
+  textareaToken:
+    "width:100%;padding:6px 10px;border-radius:var(--borderRadiusMedium);background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);font-size:var(--fontSizeBase300);border:1px solid var(--colorNeutralStroke1);outline:none;resize:vertical;box-sizing:border-box;min-height:96px",
+  textareaSmart:
+    "width:100%;padding:6px 10px;border-radius:var(--borderRadiusMedium);background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);font-size:var(--fontSizeBase300);border:1px solid var(--colorNeutralStroke1);outline:none;resize:vertical;box-sizing:border-box;min-height:80px",
 };
 
 const Login: Component = () => {
@@ -85,7 +94,7 @@ const Login: Component = () => {
     <div style={S.page}>
       <form onSubmit={handleSubmit} style={S.form}>
         <div style={S.title}>
-          <div style="font-size:36px;margin-bottom:8px">🎨</div>
+          <div style={S.emoji}>🎨</div>
           <h1 style={S.h1}>Pixivizer</h1>
           <p style={S.sub}>登录你的 Pixiv 账号</p>
         </div>
@@ -104,10 +113,10 @@ const Login: Component = () => {
         </div>
 
         {mode() === "token" && (
-          <div style="display:flex;flex-direction:column;gap:16px">
+          <div style={S.fieldGroup}>
             <p style={S.label}>粘贴你的 Pixiv refresh_token</p>
             <textarea
-              style={S.textarea + ";min-height:96px"}
+              style={S.textareaToken}
               placeholder="粘贴 refresh_token..."
               value={tokenInput()}
               onInput={(e) => setTokenInput(e.currentTarget.value)}
@@ -119,7 +128,7 @@ const Login: Component = () => {
         )}
 
         {mode() === "password" && (
-          <div style="display:flex;flex-direction:column;gap:16px">
+          <div style={S.fieldGroup}>
             <input
               style={S.input}
               type="text"
@@ -142,11 +151,11 @@ const Login: Component = () => {
         )}
 
         {mode() === "smart" && (
-          <div style="display:flex;flex-direction:column;gap:16px">
-            <div style="display:flex;flex-direction:column;gap:8px">
+          <div style={S.fieldGroup}>
+            <div style={S.fieldGroupSmall}>
               <p style={S.label}>refresh_token（优先）</p>
               <textarea
-                style={S.textarea + ";min-height:80px"}
+                style={S.textareaSmart}
                 placeholder="粘贴 refresh_token..."
                 value={smartToken()}
                 onInput={(e) => setSmartToken(e.currentTarget.value)}
@@ -159,7 +168,7 @@ const Login: Component = () => {
               <span style={S.dividerText}>或</span>
               <div style={S.dividerLine} />
             </div>
-            <div style="display:flex;flex-direction:column;gap:12px">
+            <div style={S.fieldGroupTight}>
               <p style={S.label}>账号密码</p>
               <input
                 style={S.input}

@@ -18,16 +18,16 @@
   --fontSizeBase600: 24px; /* Title 3 */
   --fontSizeHero700: clamp(24px, 1.2vw + 20px, 28px); /* Title 2 */
   --fontSizeHero800: clamp(28px, 1.5vw + 22px, 32px); /* Title 1 */
-  --fontSizeHero900: clamp(32px, 2vw + 24px, 40px);   /* Large Title */
-  --fontSizeHero1000: clamp(50px, 4vw + 32px, 68px);  /* Display */
+  --fontSizeHero900: clamp(32px, 2vw + 24px, 40px); /* Large Title */
+  --fontSizeHero1000: clamp(50px, 4vw + 32px, 68px); /* Display */
 
   /* ── Line heights (unitless ratio = px / font-size) ── */
-  --lineHeightBase100: 1.4;      /* 14/10 */
-  --lineHeightBase200: 1.333;    /* 16/12 */
-  --lineHeightBase300: 1.4286;   /* 20/14 */
-  --lineHeightBase400: 1.375;    /* 22/16 */
-  --lineHeightBase500: 1.4;      /* 28/20 */
-  --lineHeightBase600: 1.333;    /* 32/24 */
+  --lineHeightBase100: 1.4; /* 14/10 */
+  --lineHeightBase200: 1.333; /* 16/12 */
+  --lineHeightBase300: 1.4286; /* 20/14 */
+  --lineHeightBase400: 1.375; /* 22/16 */
+  --lineHeightBase500: 1.4; /* 28/20 */
+  --lineHeightBase600: 1.333; /* 32/24 */
 
   /* ── Font weights ── */
   --fontWeightRegular: 400;
@@ -123,6 +123,7 @@
   --colorBrandForegroundLinkPressed: #004578;
   --colorBrandStroke1: #0078d4;
   --colorBrandStroke2: #c2e0f4;
+  --colorNeutralForegroundOnBrand: #ffffff; /* text on brand bg */
 
   --colorCompoundBrandBackground: #0078d4;
   --colorCompoundBrandBackgroundHover: #106ebe;
@@ -206,6 +207,7 @@
   --colorBrandForegroundLinkPressed: #60aaff;
   --colorBrandStroke1: #2899f5;
   --colorBrandStroke2: #1a3a5c;
+  --colorNeutralForegroundOnBrand: #ffffff; /* text on brand bg — white in both themes */
 
   --colorCompoundBrandBackground: #0078d4;
   --colorCompoundBrandBackgroundHover: #106ebe;
