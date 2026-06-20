@@ -6,6 +6,34 @@ import type {
   RestrictType,
 } from './types';
 
+// ─── Ugoira 动图 ───
+
+export interface UgoiraFrame {
+  file: string;
+  delay: number;
+}
+
+export interface UgoiraMetadata {
+  zip_urls: { medium: string };
+  frames: UgoiraFrame[];
+}
+
+interface UgoiraMetadataResponse {
+  ugoira_metadata: UgoiraMetadata;
+}
+
+export async function loadUgoiraMetadata(
+  illustId: number,
+): Promise<UgoiraMetadata> {
+  const res = await apiClient.get<UgoiraMetadataResponse>(
+    '/v1/ugoira/metadata',
+    { illust_id: String(illustId) },
+  );
+  return res.ugoira_metadata;
+}
+
+// ─── 作品列表 ───
+
 export function loadRecommended(
   contentType: ContentType = 'illust',
 ): Promise<PixivIllustListResponse> {
