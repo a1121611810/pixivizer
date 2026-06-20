@@ -1,4 +1,4 @@
-import { onMount, onCleanup, createSignal, createEffect } from 'solid-js';
+import { onMount, onCleanup, createSignal, createEffect, createMemo } from 'solid-js';
 import type { Component } from 'solid-js';
 import ImageCard from './ImageCard';
 import LoadingSpinner from './LoadingSpinner';
@@ -81,6 +81,8 @@ interface Props {
 
 const VirtualFeed: Component<Props> = (props) => {
   let sentinel: HTMLDivElement | undefined;
+  let containerRef: HTMLDivElement | undefined;
+  const [containerWidth, setContainerWidth] = createSignal(0);
 
   const PULL_THRESHOLD = 60;
   const SETTINGS_THRESHOLD = 130;
@@ -137,7 +139,18 @@ const VirtualFeed: Component<Props> = (props) => {
     }
   }
 
+  // 列宽和列分配
+  const columnWidth = () =>
+    containerWidth() > 0
+      ? (containerWidth() - GAP_PX) / COLUMN_COUNT
+      : 0;
+
+  const columns = createMemo(() =>
+    distributeToColumns(props.illusts, columnWidth()),
+  );
+
   onMount(() => {
+    // IntersectionObserver — 加载更多
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && props.hasMore && !props.loading) {
@@ -147,7 +160,23 @@ const VirtualFeed: Component<Props> = (props) => {
       { rootMargin: '200px' },
     );
     if (sentinel) observer.observe(sentinel);
-    onCleanup(() => observer.disconnect());
+
+    // ResizeObserver — 容器宽度（列分配用）
+    let resizeObserver: ResizeObserver | undefined;
+    if (containerRef) {
+      resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (entry) {
+          setContainerWidth(entry.contentRect.width);
+        }
+      });
+      resizeObserver.observe(containerRef);
+    }
+
+    onCleanup(() => {
+      observer.disconnect();
+      resizeObserver?.disconnect();
+    });
   });
 
   return (
@@ -189,23 +218,31 @@ const VirtualFeed: Component<Props> = (props) => {
           </div>
         )}
 
-        {/* Real cards */}
-        <div class="columns-2 sm:columns-3 gap-3">
-          {props.illusts.map((illust, i) => (
-            <div
-              class="break-inside-avoid"
-              style={props.skipAnimation
-                ? {}
-                : {
-                    animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
-                    'animation-delay': `${i * 40}ms`,
-                  }
-              }
-            >
-              <ImageCard illust={illust} onClick={props.onIllustClick} />
-            </div>
-          ))}
-        </div>
+        {/* Real cards — JS 最短列分布 + 按排 stagger 动画 */}
+        {props.illusts.length > 0 && (
+          <div ref={containerRef} class="flex gap-3">
+            {columns().map((col) => (
+              <div class="flex-1 flex flex-col gap-3">
+                {col.map((item) => (
+                  <div
+                    style={props.skipAnimation
+                      ? {}
+                      : {
+                          animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
+                          'animation-delay': `${item.rowIndex * 60}ms`,
+                        }
+                    }
+                  >
+                    <ImageCard
+                      illust={item.illust}
+                      onClick={props.onIllustClick}
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
 
         {props.loading && props.illusts.length > 0 && pullPhase() !== 'refreshing' && <LoadingSpinner text="加载中..." />}
 

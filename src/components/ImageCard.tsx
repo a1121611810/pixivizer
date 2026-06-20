@@ -24,7 +24,7 @@ const ImageCard: Component<Props> = (props) => {
 
   return (
     <div
-      class="image-card break-inside-avoid mb-3"
+      class="image-card"
       onClick={() => props.onClick(props.illust.id)}
     >
       <div class="relative">
