@@ -68,7 +68,10 @@ const Feed: Component = () => {
             </h1>
             <button
               class="btn-icon"
-              onClick={() => setShowSettingsSheet(true)}
+              onClick={() => {
+                console.log("[Feed] gear icon clicked → calling setShowSettingsSheet(true)");
+                setShowSettingsSheet(true);
+              }}
               aria-label="设置"
             >
               ⚙️
@@ -83,7 +86,10 @@ const Feed: Component = () => {
             onIllustClick={(id) => navigate(`/illust/${id}`)}
             onLoadMore={fetchMore}
             onRefresh={refresh}
-            onSettingsOpen={() => setShowSettingsSheet(true)}
+            onSettingsOpen={() => {
+              console.log("[Feed] VirtualFeed onSettingsOpen → calling setShowSettingsSheet(true)");
+              setShowSettingsSheet(true);
+            }}
             skipAnimation={cached}
           />
         </div>

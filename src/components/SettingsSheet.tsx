@@ -20,7 +20,10 @@ const SettingsSheet: Component = () => {
 
   // Reset animation state and register back-button listener each time opened
   createEffect(() => {
-    if (showSettingsSheet()) {
+    const v = showSettingsSheet();
+    console.log("[SettingsSheet] effect running, showSettingsSheet =", v, "mounted =", mounted(), "closing =", closing());
+    if (v) {
+      console.log("[SettingsSheet] opening — setting up animation and listeners");
       (window as any).__settingsOpen = true;
 
       const handler = () => close();
@@ -41,8 +44,10 @@ const SettingsSheet: Component = () => {
   });
 
   function close() {
+    console.log("[SettingsSheet] close() called, closing =", closing());
     setClosing(true);
     setTimeout(() => {
+      console.log("[SettingsSheet] close timeout — setting showSettingsSheet = false");
       setShowSettingsSheet(false);
     }, 250); // match --durationGentle
   }
