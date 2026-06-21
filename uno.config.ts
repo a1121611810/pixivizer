@@ -69,7 +69,7 @@ export default defineConfig({
 
     // ── Spinner (Fluent ProgressRing: thick neutral stroke + brand top edge) ──
     spinner:
-      "border-[var(--strokeWidthThicker)] border-[var(--colorNeutralStroke2)] border-t-[var(--colorBrandStroke1)] rounded-[var(--borderRadiusCircular)] animate-spin",
+      "[border-width:var(--strokeWidthThicker)] border-solid [border-color:var(--colorNeutralStroke2)] [border-top-color:var(--colorBrandStroke1)] rounded-[var(--borderRadiusCircular)] animate-spin",
 
     // ── Image badge overlay (card corner label) ──
     "badge-overlay":

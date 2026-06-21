@@ -143,6 +143,28 @@ body {
   }
 }
 
+/* Splash screen entrance: fade-in only, no movement */
+@keyframes splash-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Splash text entrance: fade + micro-slide-up */
+@keyframes splash-fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Accessibility: respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
