@@ -195,7 +195,7 @@ const SettingsSheet: Component = () => {
           </div>
 
           {/* Divider before cache size */}
-          <div class="divider my-3" />
+          <div class="divider my-1" />
 
           {/* Image cache size */}
           <div class="px-5 py-2">
