@@ -4,6 +4,7 @@ import { loadDetail } from "../api/illust";
 import type { PixivIllust } from "../api/types";
 import ImageViewer from "../components/ImageViewer";
 import UgoiraViewer from "../components/UgoiraViewer";
+import LazyDetailImage from "../components/LazyDetailImage";
 import PixivImage from "../components/PixivImage";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PageTransition from "../components/PageTransition";
@@ -14,12 +15,19 @@ const IllustDetail: Component = () => {
   const navigate = useNavigate();
   const [illust, setIllust] = createSignal<PixivIllust | null>(null);
   const [viewerOpen, setViewerOpen] = createSignal(false);
+  const [viewerStartPage, setViewerStartPage] = createSignal(0);
+  const [currentVisiblePage, setCurrentVisiblePage] = createSignal(0);
+  const [showBackToTop, setShowBackToTop] = createSignal(false);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
 
+  // Guard flag — suppress IntersectionObserver during programmatic scrollToPage
+  let ignorePageObserver = false;
+
   // Open/close viewer with global flag for Capacitor back-button handling
-  function openViewer() {
+  function openViewer(startPage = 0) {
     (window as any).__viewerOpen = true;
+    setViewerStartPage(startPage);
     setViewerOpen(true);
   }
 
@@ -46,6 +54,44 @@ const IllustDetail: Component = () => {
     }
   });
 
+  // IntersectionObserver — track which page is currently visible for staircase
+  onMount(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let best: { index: number; ratio: number } | null = null;
+        for (const entry of entries) {
+          if (entry.intersectionRatio > 0) {
+            const idx = Number((entry.target as HTMLElement).dataset.pageIndex);
+            if (!Number.isNaN(idx) && entry.intersectionRatio > (best?.ratio ?? 0)) {
+              best = { index: idx, ratio: entry.intersectionRatio };
+            }
+          }
+        }
+        if (best && !ignorePageObserver) setCurrentVisiblePage(best.index);
+      },
+      { threshold: [0, 0.25, 0.5, 0.75] },
+    );
+
+    // Observe LazyDetailImage containers once they appear in DOM
+    requestAnimationFrame(() => {
+      const containers = document.querySelectorAll("[data-page-index]");
+      containers.forEach((el) => observer.observe(el));
+    });
+
+    onCleanup(() => observer.disconnect());
+  });
+
+  // Scroll listener — show back-to-top FAB after scrolling down
+  onMount(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    // Run once to set initial state
+    handleScroll();
+    onCleanup(() => window.removeEventListener("scroll", handleScroll));
+  });
+
   function coverUrl(): string {
     const i = illust();
     if (!i) return "";
@@ -64,6 +110,16 @@ const IllustDetail: Component = () => {
     }
     return [i.meta_single_page.original_image_url ?? i.image_urls.large];
   };
+
+  function scrollToPage(index: number) {
+    setCurrentVisiblePage(index);
+    ignorePageObserver = true;
+    setTimeout(() => {
+      ignorePageObserver = false;
+    }, 600);
+    const el = document.querySelector(`[data-page-index="${index}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <PageTransition>
@@ -93,20 +149,35 @@ const IllustDetail: Component = () => {
               </h2>
             </header>
 
-            {/* Cover image (tap → viewer) */}
-            <div
-              class="flex justify-center bg-[var(--colorNeutralBackground2)] cursor-pointer border-b border-[var(--colorNeutralStroke2)]"
-              onClick={() => openViewer()}
-            >
-              <PixivImage
-                src={coverUrl()}
-                alt={illust()!.title}
-                width={illust()!.width}
-                height={illust()!.height}
-                loading="eager"
-                class="max-h-[60vh] object-contain cursor-pointer"
-              />
-            </div>
+            {/* Images — multi-page: vertical stack; single: cover + tap */}
+            {illust()!.page_count > 1 ? (
+              <div class="flex flex-col px-3" style={{ gap: "var(--spacingVerticalS)" }}>
+                {imageUrls().map((url, i) => (
+                  <LazyDetailImage
+                    src={url}
+                    pageIndex={i}
+                    totalPages={imageUrls().length}
+                    width={illust()!.width}
+                    height={illust()!.height}
+                    onClick={() => openViewer(i)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div
+                class="flex justify-center bg-[var(--colorNeutralBackground2)] cursor-pointer border-b border-[var(--colorNeutralStroke2)]"
+                onClick={() => openViewer(0)}
+              >
+                <PixivImage
+                  src={coverUrl()}
+                  alt={illust()!.title}
+                  width={illust()!.width}
+                  height={illust()!.height}
+                  loading="eager"
+                  class="max-h-[60vh] object-contain cursor-pointer"
+                />
+              </div>
+            )}
 
             {/* Info section */}
             <div class="px-4 py-4 space-y-4">
@@ -164,14 +235,83 @@ const IllustDetail: Component = () => {
               )}
             </div>
 
-            {/* Viewer hint — different text for ugoira */}
-            <div class="px-4 pb-8">
-              <p class="text-center text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase200)]">
-                {illust()!.type === "ugoira"
-                  ? "点击图片播放动图"
-                  : "点击图片查看原图 · 双指缩放 · 左右滑动翻页"}
-              </p>
-            </div>
+            {/* Viewer hint — only for single page */}
+            {illust()!.page_count === 1 && (
+              <div class="px-4 pb-8">
+                <p class="text-center text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase200)]">
+                  {illust()!.type === "ugoira"
+                    ? "点击图片播放动图"
+                    : "点击图片查看原图 · 双指缩放 · 左右滑动翻页"}
+                </p>
+              </div>
+            )}
+
+            {/* ── Multi-page: back-to-top FAB ── */}
+            {illust()!.page_count > 1 && (
+              <button
+                class="rounded-[var(--borderRadiusCircular)] w-10 h-10 flex items-center justify-center text-[var(--colorOverlayForeground)] text-lg transition-all duration-[var(--durationFast)] bg-[var(--colorOverlaySurface)] backdrop-blur-[30px] backdrop-saturate-[125%] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] hover:bg-[var(--colorOverlaySurfaceHover)] active:bg-[var(--colorOverlaySurfaceHover)] active:scale-90 focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]"
+                style={{
+                  position: "fixed",
+                  bottom: "calc(var(--spacingVerticalXXL) + 64px)",
+                  right: "var(--spacingHorizontalL)",
+                  opacity: showBackToTop() ? 1 : 0,
+                  "pointer-events": showBackToTop() ? "auto" : "none",
+                  "z-index": "20",
+                }}
+                onClick={() => {
+                  setCurrentVisiblePage(0);
+                  ignorePageObserver = true;
+                  setTimeout(() => {
+                    ignorePageObserver = false;
+                  }, 600);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                aria-label="回顶"
+              >
+                ↑
+              </button>
+            )}
+
+            {/* ── Multi-page: staircase (right-side page strip) ── */}
+            {illust()!.page_count > 1 && (
+              <nav
+                class="backdrop-blur-[30px] backdrop-saturate-[125%] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] rounded-[var(--borderRadiusXLarge)] flex flex-col items-center z-20"
+                style={{
+                  "background-color": "transparent",
+                  position: "fixed",
+                  top: "50%",
+                  right: "var(--spacingHorizontalS)",
+                  transform: "translateY(-50%)",
+                  gap: "var(--spacingVerticalXXS)",
+                  padding: "var(--spacingVerticalS) var(--spacingHorizontalXS)",
+                  "max-height": imageUrls().length > 20 ? "60vh" : "none",
+                  "overflow-y": imageUrls().length > 20 ? "auto" : "visible",
+                }}
+                aria-label="页面导航"
+              >
+                {imageUrls().map((_, i) => (
+                  <button
+                    class="flex items-center justify-center rounded-[var(--borderRadiusCircular)] [font-size:var(--fontSizeBase200)] font-medium transition-all duration-[var(--durationFast)]"
+                    classList={{
+                      "bg-[var(--colorNeutralBackground1Selected)] text-[var(--colorNeutralForeground1)] font-semibold":
+                        i === currentVisiblePage(),
+                      "text-white/85 hover:text-white": i !== currentVisiblePage(),
+                    }}
+                    style={{
+                      "min-width": "36px",
+                      "min-height": "36px",
+                      "text-shadow":
+                        i !== currentVisiblePage() ? "0 1px 3px rgba(0,0,0,0.6)" : "none",
+                    }}
+                    onClick={() => scrollToPage(i)}
+                    aria-label={`第 ${i + 1} 页`}
+                    aria-current={i === currentVisiblePage() ? "true" : undefined}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </nav>
+            )}
           </>
         )}
 
@@ -180,7 +320,11 @@ const IllustDetail: Component = () => {
         )}
 
         {viewerOpen() && illust()!.type !== "ugoira" && (
-          <ImageViewer imageUrls={imageUrls()} onClose={closeViewer} />
+          <ImageViewer
+            imageUrls={imageUrls()}
+            initialPage={viewerStartPage()}
+            onClose={closeViewer}
+          />
         )}
       </div>
     </PageTransition>
