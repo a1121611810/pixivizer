@@ -8,7 +8,7 @@
 - **入口**: `src/main.tsx` → `src/App.tsx`（Solid Router，路由 `/recommended` `/following` `/illust/:id` `/bookmarks` `/login`）
 - **设计系统**: **强制** Microsoft Fluent Design System 2 — 所有视觉和交互决策基于 Fluent 令牌和规范（详见「Fluent Design 规范」章节）
 - **Pixiv API**: 自建 HTTP 客户端 (`src/api/client.ts`)，双模式（Web: fetch + Vite 代理 / Native: CapacitorHttp 直连），iOS OAuth 凭证策略（Android 已弃用）
-- **CSS 架构**: 分层加载 `reset.css` → `tokens.css` → `base.css` → `virtual:uno.css`
+- **CSS 架构**: 分层加载 `reset.css` → `tokens.css` → `base.css` → `virtual:uno.css`；PostCSS `postcss-pxtorem` 自动转换字号为 rem
 
 ## 命令
 
@@ -18,6 +18,7 @@
 | `pnpm build`            | TypeScript 检查 + Vite 构建到 `dist/`         |
 | `pnpm check`            | 仅 TypeScript 类型检查                        |
 | `pnpm preview`          | 预览生产构建                                  |
+| `pnpm build:android`    | 构建 Web + Capacitor 同步 + Gradle 编译 APK   |
 | `pnpm cap:sync`         | 同步 Web 产物和 Capacitor 配置到 Android 项目 |
 | `pnpm cap:open:android` | 在 Android Studio 中打开 `android/` 项目      |
 
