@@ -21,7 +21,7 @@ export default defineConfig({
       plugins: [
         postcssPxToRem({
           rootValue: 16,
-          propList: ['font-size'],
+          propList: ["font-size", "--fontSize*"],
           minPixelValue: 2,
         }),
       ],
