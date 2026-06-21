@@ -198,7 +198,7 @@ const SettingsSheet: Component = () => {
           <div class="divider my-3" />
 
           {/* Image cache size */}
-          <div class="py-2">
+          <div class="px-5 py-2">
             <div class="flex items-center justify-between mb-2">
               <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
                 💾 图片缓存数
