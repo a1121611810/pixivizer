@@ -31,7 +31,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
       ) {
         CapApp.exitApp();
       } else {
-        window.history.back();
+        navigate(-1);
       }
     });
 

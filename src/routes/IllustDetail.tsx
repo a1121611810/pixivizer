@@ -75,7 +75,7 @@ const IllustDetail: Component = () => {
             <p class="text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase300)]">
               {error()}
             </p>
-            <button class="btn-secondary" onClick={() => navigate("/feed")}>
+            <button class="btn-secondary" onClick={() => navigate(-1)}>
               返回
             </button>
           </div>
