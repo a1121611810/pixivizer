@@ -6,24 +6,25 @@ const isNative = Capacitor.isNativePlatform();
 
 interface CacheEntry {
   blob: Blob;
+  blobUrl: string;
   lastAccess: number;
 }
 
 let maxCacheSize = 600;
 const cache = new Map<string, CacheEntry>();
 
-/** 从缓存获取 Blob，同时更新 LRU 访问时间 */
-function cacheGet(key: string): Blob | undefined {
+/** 从缓存获取持久 Blob URL，同时更新 LRU 访问时间 */
+function cacheGet(key: string): string | undefined {
   const entry = cache.get(key);
   if (entry) {
     entry.lastAccess = Date.now();
-    return entry.blob;
+    return entry.blobUrl;
   }
   return undefined;
 }
 
-/** 同步检查缓存中是否存在指定图片（不触发加载） */
-export function checkImageCache(originalUrl: string): Blob | undefined {
+/** 同步检查缓存中是否存在指定图片（不触发加载），返回持久 Blob URL */
+export function checkImageCache(originalUrl: string): string | undefined {
   return cacheGet(originalUrl);
 }
 
@@ -40,6 +41,8 @@ export function setMaxCacheSize(n: number): void {
       }
     }
     if (oldestKey) {
+      const old = cache.get(oldestKey);
+      if (old) URL.revokeObjectURL(old.blobUrl);
       cache.delete(oldestKey);
     } else {
       break;
@@ -47,9 +50,8 @@ export function setMaxCacheSize(n: number): void {
   }
 }
 
-/** 存入缓存，超出容量时淘汰最旧的条目 */
+/** 存入缓存，创建持久 Blob URL；超出容量时淘汰并释放最旧条目 */
 function cacheSet(key: string, blob: Blob) {
-  // 淘汰最旧条目
   if (cache.size >= maxCacheSize) {
     let oldestKey = "";
     let oldestTime = Infinity;
@@ -59,13 +61,21 @@ function cacheSet(key: string, blob: Blob) {
         oldestKey = k;
       }
     }
-    if (oldestKey) cache.delete(oldestKey);
+    if (oldestKey) {
+      const old = cache.get(oldestKey);
+      if (old) URL.revokeObjectURL(old.blobUrl);
+      cache.delete(oldestKey);
+    }
   }
-  cache.set(key, { blob, lastAccess: Date.now() });
+  const blobUrl = URL.createObjectURL(blob);
+  cache.set(key, { blob, blobUrl, lastAccess: Date.now() });
 }
 
-/** 清空缓存 */
+/** 清空缓存，释放所有 Blob URL */
 export function clearImageCache() {
+  for (const entry of cache.values()) {
+    URL.revokeObjectURL(entry.blobUrl);
+  }
   cache.clear();
 }
 
@@ -96,27 +106,24 @@ export interface LoadedImage {
 }
 
 /**
- * 加载 Pixiv 图片（带 LRU 缓存）。
+ * 加载 Pixiv 图片（带 LRU 缓存 + 持久 Blob URL）。
  *
- * - 命中缓存：直接从缓存的 Blob 创建新 Blob URL（极快）
- * - 未命中：请求图片 → 缓存 Blob → 返回 Blob URL
+ * - 命中缓存：直接返回持久 Blob URL（浏览器瞬间识别，零解码延迟）
+ * - 未命中：请求图片 → 存入缓存（创建持久 Blob URL）→ 返回
  *
- * 返回 { url, cleanup }，调用 cleanup() 释放本次的 Blob URL
- * （底层 Blob 保留在缓存中，下次访问仍然可用）。
+ * 返回 { url, cleanup }。
+ * Blob URL 由缓存持有，只在淘汰/清空时 revoke。
+ * cleanup() 为兼容保留，实际是 no-op。
  */
 export async function loadImage(originalUrl: string): Promise<LoadedImage> {
   if (!originalUrl) {
     return { url: "", cleanup: () => {} };
   }
 
-  // 1. 检查缓存
-  const cached = cacheGet(originalUrl);
-  if (cached) {
-    const blobUrl = URL.createObjectURL(cached);
-    return {
-      url: blobUrl,
-      cleanup: () => URL.revokeObjectURL(blobUrl),
-    };
+  // 1. 检查缓存 — 返回持久 Blob URL，浏览器瞬间识别
+  const cachedUrl = cacheGet(originalUrl);
+  if (cachedUrl) {
+    return { url: cachedUrl, cleanup: () => {} };
   }
 
   // 2. 加载图片
@@ -129,18 +136,17 @@ export async function loadImage(originalUrl: string): Promise<LoadedImage> {
       blob = await fetchWeb(originalUrl);
     }
 
-    // 3. 存入缓存
+    // 3. 存入缓存（cacheSet 创建持久 Blob URL）
     cacheSet(originalUrl, blob);
 
-    // 4. 创建 Blob URL
-    const blobUrl = URL.createObjectURL(blob);
+    // 4. 从缓存读取持久 URL
+    const url = cacheGet(originalUrl);
     return {
-      url: blobUrl,
-      cleanup: () => URL.revokeObjectURL(blobUrl),
+      url: url ?? "",
+      cleanup: () => {}, // 持久 URL 由缓存管理，无需手动 revoke
     };
   } catch (e) {
     console.warn(`[ImageCache] Load failed: ${originalUrl}`, e);
-    // 失败时回退到代理 URL（浏览器自身缓存可能会命中）
     return {
       url: resolveImageUrl(originalUrl),
       cleanup: () => {},

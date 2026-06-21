@@ -14,12 +14,12 @@ interface PixivImageProps {
 }
 
 const PixivImage: Component<PixivImageProps> = (props) => {
-  // 同步检查 LRU 缓存：命中则直出图片，跳过 shimmer
+  // 同步检查 LRU 缓存：命中则直接使用持久 Blob URL，浏览器瞬间识别
   let syncBlobUrl: string | null = null;
   if (props.src) {
-    const cached = checkImageCache(props.src);
-    if (cached) {
-      syncBlobUrl = URL.createObjectURL(cached);
+    const cachedUrl = checkImageCache(props.src);
+    if (cachedUrl) {
+      syncBlobUrl = cachedUrl; // 持久 Blob URL，缓存管理生命周期
     }
   }
 
@@ -31,10 +31,9 @@ const PixivImage: Component<PixivImageProps> = (props) => {
   const aspectRatio = props.width && props.height ? `${props.width} / ${props.height}` : undefined;
 
   onMount(() => {
-    // 同步缓存命中：注册 Blob URL 清理，跳过异步加载
+    // 同步缓存命中：已显示持久 Blob URL，跳过异步加载
     if (syncBlobUrl) {
-      const url = syncBlobUrl;
-      cleanupFn = () => URL.revokeObjectURL(url);
+      cleanupFn = () => {}; // 持久 URL 由缓存管理，无需 revoke
       return;
     }
     if (!props.src) return;
