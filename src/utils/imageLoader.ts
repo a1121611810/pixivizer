@@ -9,7 +9,7 @@ interface CacheEntry {
   lastAccess: number;
 }
 
-const MAX_CACHE_SIZE = 600;
+let maxCacheSize = 600;
 const cache = new Map<string, CacheEntry>();
 
 /** 从缓存获取 Blob，同时更新 LRU 访问时间 */
@@ -27,10 +27,30 @@ export function checkImageCache(originalUrl: string): Blob | undefined {
   return cacheGet(originalUrl);
 }
 
+/** Update the cache size limit. If lowered, evict oldest entries immediately. */
+export function setMaxCacheSize(n: number): void {
+  maxCacheSize = n;
+  while (cache.size > maxCacheSize) {
+    let oldestKey = "";
+    let oldestTime = Infinity;
+    for (const [k, v] of cache) {
+      if (v.lastAccess < oldestTime) {
+        oldestTime = v.lastAccess;
+        oldestKey = k;
+      }
+    }
+    if (oldestKey) {
+      cache.delete(oldestKey);
+    } else {
+      break;
+    }
+  }
+}
+
 /** 存入缓存，超出容量时淘汰最旧的条目 */
 function cacheSet(key: string, blob: Blob) {
   // 淘汰最旧条目
-  if (cache.size >= MAX_CACHE_SIZE) {
+  if (cache.size >= maxCacheSize) {
     let oldestKey = "";
     let oldestTime = Infinity;
     for (const [k, v] of cache) {
