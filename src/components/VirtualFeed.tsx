@@ -1,5 +1,6 @@
 import { onMount, onCleanup, createSignal, createEffect, createMemo } from "solid-js";
 import type { Component } from "solid-js";
+import ImageCard from "./ImageCard";
 import LazyImageCard from "./LazyImageCard";
 import LoadingSpinner from "./LoadingSpinner";
 import SkeletonCard from "./SkeletonCard";
@@ -205,7 +206,10 @@ const VirtualFeed: Component<Props> = (props) => {
           <div ref={containerRef} class="flex gap-3">
             {columns().map((col) => (
               <div class="flex-1 flex flex-col gap-3 min-w-0">
-                {col.map((item) => (
+                {col.map((item) => {
+                  // 前 4 排（~8张）直接渲染 ImageCard，避免 IntersectionObserver 异步延迟
+                  const eager = item.rowIndex < 4;
+                  return (
                   <div
                     style={
                       props.skipAnimation
@@ -216,9 +220,13 @@ const VirtualFeed: Component<Props> = (props) => {
                           }
                     }
                   >
-                    <LazyImageCard illust={item.illust} onClick={props.onIllustClick} />
+                    {eager ? (
+                      <ImageCard illust={item.illust} onClick={props.onIllustClick} />
+                    ) : (
+                      <LazyImageCard illust={item.illust} onClick={props.onIllustClick} />
+                    )}
                   </div>
-                ))}
+                )})}
               </div>
             ))}
           </div>
