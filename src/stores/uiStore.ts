@@ -10,6 +10,9 @@ export type CacheSize = 200 | 400 | 600 | 1000;
 const [currentTab, setCurrentTab] = createSignal<Tab>("recommended");
 const [theme, setTheme] = createSignal<Theme>("light");
 const [showSettingsSheet, setShowSettingsSheet] = createSignal(false);
+createEffect(() => {
+  console.log("[uiStore] showSettingsSheet =", showSettingsSheet());
+});
 const [listQuality, setListQuality] = createSignal<ImageQuality>("medium");
 const [detailQuality, setDetailQuality] = createSignal<ImageQuality>("medium");
 const [cacheSize, setCacheSize] = createSignal<CacheSize>(600);

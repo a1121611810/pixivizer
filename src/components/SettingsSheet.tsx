@@ -18,6 +18,16 @@ const SettingsSheet: Component = () => {
   const [closing, setClosing] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
 
+  // [DIAGNOSTIC]
+  createEffect(() => {
+    const v = showSettingsSheet();
+    const m = mounted();
+    const c = closing();
+    if (v) {
+      console.log("[SettingsSheet] showSettingsSheet=true mounted=", m, "closing=", c);
+    }
+  });
+
   // Reset animation state and register back-button listener each time opened
   createEffect(() => {
     if (showSettingsSheet()) {

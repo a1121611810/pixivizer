@@ -83,7 +83,10 @@ const Feed: Component = () => {
             onIllustClick={(id) => navigate(`/illust/${id}`)}
             onLoadMore={fetchMore}
             onRefresh={refresh}
-            onSettingsOpen={() => setShowSettingsSheet(true)}
+            onSettingsOpen={() => {
+              console.log("[Feed] onSettingsOpen → setShowSettingsSheet(true)");
+              setShowSettingsSheet(true);
+            }}
             skipAnimation={cached}
           />
         </div>

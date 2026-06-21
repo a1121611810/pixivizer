@@ -126,6 +126,7 @@ const VirtualFeed: Component<Props> = (props) => {
 
   function handleTouchEnd() {
     if (pullPhase() === "settings-ready") {
+      console.log("[VirtualFeed] settings-ready → opening settings");
       setPullDistance(0);
       setPullPhase("idle");
       props.onSettingsOpen?.();
