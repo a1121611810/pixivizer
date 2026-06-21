@@ -126,15 +126,9 @@ const VirtualFeed: Component<Props> = (props) => {
 
   function handleTouchEnd() {
     if (pullPhase() === "settings-ready") {
-      console.log("[VirtualFeed] settings-ready | onSettingsOpen =", typeof props.onSettingsOpen);
       setPullDistance(0);
       setPullPhase("idle");
-      if (props.onSettingsOpen) {
-        console.log("[VirtualFeed] calling onSettingsOpen()");
-        props.onSettingsOpen();
-      } else {
-        console.log("[VirtualFeed] onSettingsOpen is UNDEFINED!");
-      }
+      props.onSettingsOpen?.();
     } else if (pullPhase() === "refresh-ready") {
       setPullPhase("refreshing");
       setPullDistance(PULL_THRESHOLD * 0.6);
