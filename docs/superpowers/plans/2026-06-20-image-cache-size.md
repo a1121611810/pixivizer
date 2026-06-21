@@ -21,9 +21,11 @@
 ### Task 1: Make imageLoader cache limit dynamic
 
 **Files:**
+
 - Modify: `src/utils/imageLoader.ts`
 
 **Interfaces:**
+
 - Produces: `setMaxCacheSize(n: number): void` — exported function
 - Consumes: nothing from other tasks
 
@@ -34,12 +36,14 @@
 In `src/utils/imageLoader.ts`, make these changes:
 
 **Change 1 — Replace const with mutable variable:**
+
 ```diff
 -const MAX_CACHE_SIZE = 600;
 +let maxCacheSize = 600;
 ```
 
 **Change 2 — Add setter + eviction function:**
+
 ```typescript
 /** Update the cache size limit. If lowered, evict oldest entries immediately. */
 export function setMaxCacheSize(n: number): void {
@@ -66,6 +70,7 @@ export function setMaxCacheSize(n: number): void {
 ```
 
 **Change 3 — Update cacheSet to use the variable:**
+
 ```diff
 -  if (cache.size >= MAX_CACHE_SIZE) {
 +  if (cache.size >= maxCacheSize) {
@@ -88,9 +93,11 @@ git commit -m "feat: make image cache limit dynamic with setMaxCacheSize()"
 ### Task 2: Add cacheSize signal and sync to imageLoader
 
 **Files:**
+
 - Modify: `src/stores/uiStore.ts`
 
 **Interfaces:**
+
 - Consumes: `setMaxCacheSize` from `src/utils/imageLoader.ts` (Task 1)
 - Produces: `CacheSize` type, `cacheSize` signal, `setCacheSize` setter
 
@@ -101,12 +108,14 @@ git commit -m "feat: make image cache limit dynamic with setMaxCacheSize()"
 Apply these edits to `src/stores/uiStore.ts`:
 
 **Edit 1 — Add import:**
+
 ```diff
  import { createSignal, createEffect } from "solid-js";
 +import { setMaxCacheSize } from "../utils/imageLoader";
 ```
 
 **Edit 2 — Add type and signal:**
+
 ```diff
  export type ImageQuality = "medium" | "large" | "original";
 +export type CacheSize = 200 | 400 | 600 | 1000;
@@ -120,6 +129,7 @@ Apply these edits to `src/stores/uiStore.ts`:
 ```
 
 **Edit 3 — Add sync effect (after existing effects):**
+
 ```diff
 +// Sync cache size limit to imageLoader whenever it changes
 +createEffect(() => {
@@ -128,6 +138,7 @@ Apply these edits to `src/stores/uiStore.ts`:
 ```
 
 **Edit 4 — Update export:**
+
 ```diff
  export {
    currentTab, setCurrentTab,
@@ -156,9 +167,11 @@ git commit -m "feat: add cacheSize signal synced to imageLoader"
 ### Task 3: Add cache size row to SettingsSheet
 
 **Files:**
+
 - Modify: `src/components/SettingsSheet.tsx`
 
 **Interfaces:**
+
 - Consumes: `cacheSize`, `setCacheSize`, `CacheSize` from uiStore (Task 2)
 
 ---
@@ -182,32 +195,38 @@ In `src/components/SettingsSheet.tsx`, update the uiStore import:
 Insert after the detail quality row's closing `</div>` (before the `{/* Divider */}` that precedes the version footer):
 
 ```tsx
-            {/* Divider before cache size */}
-            <div class="divider my-3" />
+{
+  /* Divider before cache size */
+}
+<div class="divider my-3" />;
 
-            {/* Image cache size */}
-            <div class="py-2">
-              <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug mb-2">
-                💾 图片缓存数
-              </p>
-              <div class="flex [background-color:var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
-                {([200, 400, 600, 1000] as CacheSize[]).map((n) => (
-                  <button
-                    class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
-                    classList={{
-                      '[background-color:var(--colorNeutralBackground1)] [color:var(--colorNeutralForeground1)] shadow-[var(--elevation2)]': cacheSize() === n,
-                      '[background-color:transparent] [color:var(--colorNeutralForeground2)]': cacheSize() !== n,
-                    }}
-                    onClick={() => setCacheSize(n)}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-              <p class="mt-1 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                缓存数越大，图片加载越快，但占用的内存也越多。推荐 400~600。
-              </p>
-            </div>
+{
+  /* Image cache size */
+}
+<div class="py-2">
+  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug mb-2">
+    💾 图片缓存数
+  </p>
+  <div class="flex [background-color:var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
+    {([200, 400, 600, 1000] as CacheSize[]).map((n) => (
+      <button
+        class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
+        classList={{
+          "[background-color:var(--colorNeutralBackground1)] [color:var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
+            cacheSize() === n,
+          "[background-color:transparent] [color:var(--colorNeutralForeground2)]":
+            cacheSize() !== n,
+        }}
+        onClick={() => setCacheSize(n)}
+      >
+        {n}
+      </button>
+    ))}
+  </div>
+  <p class="mt-1 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+    缓存数越大，图片加载越快，但占用的内存也越多。推荐 400~600。
+  </p>
+</div>;
 ```
 
 - [ ] **Step 3: Verify compilation**

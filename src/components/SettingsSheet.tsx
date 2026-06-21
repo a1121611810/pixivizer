@@ -68,12 +68,18 @@ const FluentIcon: Component<{ name: IconName; size?: number; active?: boolean }>
       <path
         d={paths.regular}
         fill="currentColor"
-        style={{ opacity: active ? 0 : 1, transition: "opacity var(--durationFast) var(--curveEasyEase)" }}
+        style={{
+          opacity: active ? 0 : 1,
+          transition: "opacity var(--durationFast) var(--curveEasyEase)",
+        }}
       />
       <path
         d={paths.filled}
         fill="currentColor"
-        style={{ opacity: active ? 1 : 0, transition: "opacity var(--durationFast) var(--curveEasyEase)" }}
+        style={{
+          opacity: active ? 1 : 0,
+          transition: "opacity var(--durationFast) var(--curveEasyEase)",
+        }}
       />
     </svg>
   );
@@ -178,10 +184,34 @@ const SettingsSheet: Component = () => {
             <div class="flex items-center justify-between py-3">
               <div class="flex items-center gap-3">
                 <div class="relative w-6 h-6 flex-shrink-0">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", inset: 0, opacity: theme() === "dark" ? 0 : 1, transition: "opacity var(--durationFast) var(--curveEasyEase)" }}>
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      opacity: theme() === "dark" ? 0 : 1,
+                      transition: "opacity var(--durationFast) var(--curveEasyEase)",
+                    }}
+                  >
                     <path d={iconPaths.weatherSunny.filled} fill="currentColor" />
                   </svg>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ position: "absolute", inset: 0, opacity: theme() === "dark" ? 1 : 0, transition: "opacity var(--durationFast) var(--curveEasyEase)" }}>
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      opacity: theme() === "dark" ? 1 : 0,
+                      transition: "opacity var(--durationFast) var(--curveEasyEase)",
+                    }}
+                  >
                     <path d={iconPaths.weatherMoon.filled} fill="currentColor" />
                   </svg>
                 </div>
@@ -288,7 +318,9 @@ const SettingsSheet: Component = () => {
               </span>
             </div>
             <div class="flex items-center gap-3">
-              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">100</span>
+              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">
+                100
+              </span>
               <input
                 type="range"
                 min="100"
@@ -301,7 +333,9 @@ const SettingsSheet: Component = () => {
                   "accent-color": "var(--colorCompoundBrandBackground)",
                 }}
               />
-              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">1000</span>
+              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">
+                1000
+              </span>
             </div>
             <p class="mt-2 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
               缓存数越大，图片加载越快，但占用的内存也越多。推荐 400~600。

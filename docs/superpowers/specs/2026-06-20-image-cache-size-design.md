@@ -68,12 +68,12 @@ To avoid importing Solid reactivity into a plain module: export a
 
 ## Files Changed
 
-| File | Change |
-|------|--------|
-| `src/stores/uiStore.ts` | Add `CacheSize` type, `cacheSize` signal, `setCacheSize` |
-| `src/components/SettingsSheet.tsx` | Add cache size row with hint text |
-| `src/utils/imageLoader.ts` | Replace `MAX_CACHE_SIZE` const with dynamic limit + `setMaxCacheSize()` |
-| `src/stores/uiStore.ts` | Add `createEffect` that calls `setMaxCacheSize(cacheSize())` on change |
+| File                               | Change                                                                  |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| `src/stores/uiStore.ts`            | Add `CacheSize` type, `cacheSize` signal, `setCacheSize`                |
+| `src/components/SettingsSheet.tsx` | Add cache size row with hint text                                       |
+| `src/utils/imageLoader.ts`         | Replace `MAX_CACHE_SIZE` const with dynamic limit + `setMaxCacheSize()` |
+| `src/stores/uiStore.ts`            | Add `createEffect` that calls `setMaxCacheSize(cacheSize())` on change  |
 
 ## Non-Goals
 
