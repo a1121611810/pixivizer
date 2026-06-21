@@ -48,6 +48,19 @@ export default defineConfig({
           Referer: "https://app-api.pixiv.net/",
         },
         agent: proxyAgent,
+        configure: (proxy) => {
+          proxy.on("error", (_err, _req, res) => {
+            if (res && !res.headersSent) {
+              res.writeHead(502, { "Content-Type": "application/json" });
+              res.end(
+                JSON.stringify({
+                  error: "proxy_error",
+                  message: "代理连接失败，请检查网络或代理状态",
+                }),
+              );
+            }
+          });
+        },
       },
       "/pixiv-oauth": {
         target: "https://oauth.secure.pixiv.net",
