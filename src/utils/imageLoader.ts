@@ -9,7 +9,7 @@ interface CacheEntry {
   lastAccess: number;
 }
 
-const MAX_CACHE_SIZE = 200;
+const MAX_CACHE_SIZE = 600;
 const cache = new Map<string, CacheEntry>();
 
 /** 从缓存获取 Blob，同时更新 LRU 访问时间 */

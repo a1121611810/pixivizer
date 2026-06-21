@@ -1,6 +1,6 @@
 import { onMount, onCleanup, createSignal, createEffect, createMemo } from "solid-js";
 import type { Component } from "solid-js";
-import ImageCard from "./ImageCard";
+import LazyImageCard from "./LazyImageCard";
 import LoadingSpinner from "./LoadingSpinner";
 import SkeletonCard from "./SkeletonCard";
 import PullIndicator from "./PullIndicator";
@@ -216,7 +216,7 @@ const VirtualFeed: Component<Props> = (props) => {
                           }
                     }
                   >
-                    <ImageCard illust={item.illust} onClick={props.onIllustClick} />
+                    <LazyImageCard illust={item.illust} onClick={props.onIllustClick} />
                   </div>
                 ))}
               </div>
