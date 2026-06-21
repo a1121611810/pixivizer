@@ -30,6 +30,10 @@ const Bookmarks: Component = () => {
     if (savedY > 0) {
       requestAnimationFrame(() => window.scrollTo(0, savedY));
     }
+    // 返回收藏页时静默刷新（已有数据后台更新，无数据由 effect 处理）
+    if (illusts().length > 0 && !loading()) {
+      refresh();
+    }
   });
 
   // Save scroll position when leaving

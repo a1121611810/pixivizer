@@ -76,6 +76,7 @@ interface Props {
   onLoadMore: () => void;
   onRefresh: () => Promise<void> | void;
   onSettingsOpen?: () => void;
+  emptyText?: string;
   skipAnimation?: boolean;
 }
 
@@ -249,7 +250,7 @@ const VirtualFeed: Component<Props> = (props) => {
 
         {props.illusts.length === 0 && !props.loading && !props.error && (
           <p class="text-[var(--colorNeutralForeground2)] text-center py-16 [font-size:var(--fontSizeBase300)]">
-            暂无新作品
+            {props.emptyText ?? "暂无新作品"}
           </p>
         )}
 

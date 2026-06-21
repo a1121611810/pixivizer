@@ -1,6 +1,6 @@
 import { type Component, createSignal, onMount, onCleanup } from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
-import { loadDetail } from "../api/illust";
+import { loadDetail, addBookmark, deleteBookmark } from "../api/illust";
 import type { PixivIllust } from "../api/types";
 import ImageViewer from "../components/ImageViewer";
 import UgoiraViewer from "../components/UgoiraViewer";
@@ -20,6 +20,46 @@ const IllustDetail: Component = () => {
   const [showBackToTop, setShowBackToTop] = createSignal(false);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
+  const [bookmarking, setBookmarking] = createSignal(false);
+
+  let longPressTimer: ReturnType<typeof setTimeout>;
+
+  async function toggleBookmark(privateBookmark = false) {
+    const i = illust();
+    if (!i || bookmarking()) return;
+    setBookmarking(true);
+    try {
+      if (i.is_bookmarked) {
+        await deleteBookmark(i.id);
+      } else {
+        await addBookmark(i.id, privateBookmark ? "private" : "public");
+      }
+      setIllust({
+        ...i,
+        is_bookmarked: !i.is_bookmarked,
+        total_bookmarks: i.is_bookmarked ? i.total_bookmarks - 1 : i.total_bookmarks + 1,
+      });
+    } catch (e) {
+      console.error("Bookmark toggle failed:", e);
+    } finally {
+      setBookmarking(false);
+    }
+  }
+
+  function onBookmarkPointerDown(e: PointerEvent) {
+    longPressTimer = setTimeout(() => {
+      toggleBookmark(true); // private
+      longPressTimer = 0 as any;
+    }, 500);
+  }
+
+  function onBookmarkPointerUp(e: PointerEvent) {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = 0 as any;
+      toggleBookmark(false); // public
+    }
+  }
 
   // Guard flag — suppress IntersectionObserver during programmatic scrollToPage
   let ignorePageObserver = false;
@@ -219,6 +259,26 @@ const IllustDetail: Component = () => {
                   </span>
                 )}
               </div>
+
+              {/* Bookmark toggle */}
+              <button
+                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--borderRadiusMedium)] text-[var(--fontSizeBase200)] font-medium transition-all active:scale-95 select-none ${
+                  illust()!.is_bookmarked
+                    ? "bg-[var(--colorStatusDangerBackground2)] text-[var(--colorStatusDangerForeground1)]"
+                    : "bg-[var(--colorBrandStroke2)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorBrandBackground)] hover:text-white"
+                }`}
+                onPointerDown={onBookmarkPointerDown}
+                onPointerUp={onBookmarkPointerUp}
+                onPointerLeave={() => {
+                  if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = 0 as any;
+                  }
+                }}
+                disabled={bookmarking()}
+              >
+                {illust()!.is_bookmarked ? "♥ 已收藏" : "♡ 收藏"}
+              </button>
 
               {/* Tags */}
               <div class="flex flex-wrap gap-1.5">

@@ -49,3 +49,16 @@ export async function loadUgoiraMetadata(
   });
   return res.ugoira_metadata;
 }
+
+export function addBookmark(illustId: number, restrict: RestrictType = "public"): Promise<void> {
+  return apiClient.post("/v2/illust/bookmark/add", {
+    illust_id: String(illustId),
+    restrict,
+  });
+}
+
+export function deleteBookmark(illustId: number): Promise<void> {
+  return apiClient.post("/v1/illust/bookmark/delete", {
+    illust_id: String(illustId),
+  });
+}
