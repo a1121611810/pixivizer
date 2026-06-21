@@ -11,7 +11,6 @@ import {
   type ImageQuality,
   cacheSize,
   setCacheSize,
-  type CacheSize,
 } from "../stores/uiStore";
 
 const SettingsSheet: Component = () => {
@@ -200,22 +199,30 @@ const SettingsSheet: Component = () => {
 
           {/* Image cache size */}
           <div class="py-2">
-            <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug mb-2">
-              💾 图片缓存数
-            </p>
-            <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
-              {([200, 400, 600, 1000] as CacheSize[]).map((n) => (
-                <button
-                  class="flex-1 py-[var(--spacingVerticalS)] px-1 rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
-                  classList={{
-                    "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]": cacheSize() === n,
-                    "bg-transparent text-[var(--colorNeutralForeground2)]": cacheSize() !== n,
-                  }}
-                  onClick={() => setCacheSize(n)}
-                >
-                  {n}
-                </button>
-              ))}
+            <div class="flex items-center justify-between mb-1">
+              <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                💾 图片缓存数
+              </p>
+              <span class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorCompoundBrandForeground1)] tabular-nums">
+                {cacheSize()}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="100"
+              max="1000"
+              step="100"
+              value={cacheSize()}
+              onInput={(e) => setCacheSize(Number(e.currentTarget.value))}
+              class="w-full h-2 rounded-[var(--borderRadiusCircular)] appearance-none cursor-pointer"
+              style={{
+                "accent-color": "var(--colorCompoundBrandBackground)",
+                background: `linear-gradient(to right, var(--colorCompoundBrandBackground) ${((cacheSize() - 100) / 900) * 100}%, var(--colorNeutralStrokeAccessible) ${((cacheSize() - 100) / 900) * 100}%)`,
+              }}
+            />
+            <div class="flex justify-between mt-0.5">
+              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)]">100</span>
+              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)]">1000</span>
             </div>
             <p class="mt-1 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
               缓存数越大，图片加载越快，但占用的内存也越多。推荐 400~600。

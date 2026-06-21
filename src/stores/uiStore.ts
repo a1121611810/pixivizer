@@ -5,7 +5,7 @@ type Tab = "recommended" | "follow" | "bookmarks";
 export type { Tab };
 export type Theme = "dark" | "light";
 export type ImageQuality = "medium" | "large" | "original";
-export type CacheSize = 200 | 400 | 600 | 1000;
+export type CacheSize = number;
 
 const [currentTab, setCurrentTab] = createSignal<Tab>("recommended");
 const [theme, setTheme] = createSignal<Theme>("light");
