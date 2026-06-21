@@ -162,7 +162,11 @@ const VirtualFeed: Component<Props> = (props) => {
       resizeObserver = new ResizeObserver((entries) => {
         const entry = entries[0];
         if (entry) {
-          setContainerWidth(entry.contentRect.width);
+          const w = entry.contentRect.width;
+          // Only update if width changed by >1px to prevent layout oscillation loops
+          if (Math.abs(w - containerWidth()) > 1) {
+            setContainerWidth(w);
+          }
         }
       });
       resizeObserver.observe(containerRef);
