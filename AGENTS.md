@@ -50,6 +50,7 @@ src/
 │   └── DebugImage.tsx     # 图片调试页
 ├── components/     # 可复用 UI 组件
 │   ├── ImageCard.tsx       # Feed 卡片
+│   ├── LazyImageCard.tsx   # 轻量虚拟化卡片包裹（进入视口才渲染 ImageCard）
 │   ├── PixivImage.tsx      # 图片组件（CDN + 尺寸优化）
 │   ├── ImageViewer.tsx     # 全屏图片查看器（缩放/拖拽/滑动翻页）
 │   ├── UgoiraViewer.tsx    # 动图（Ugoira）播放器
