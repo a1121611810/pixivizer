@@ -52,61 +52,78 @@ const HeartBurstEffect: Component<Props> = (props) => {
     if (initPromise) return initPromise;
 
     initPromise = (async () => {
-      const appInstance = new Application();
-      await appInstance.init({
-        width: CANVAS_SIZE,
-        height: CANVAS_SIZE,
-        backgroundAlpha: 0,
-        antialias: true,
-        resolution: window.devicePixelRatio || 1,
-        autoDensity: true,
-      });
+      let appInstance: Application | undefined;
+      try {
+        appInstance = new Application();
+        await appInstance.init({
+          width: CANVAS_SIZE,
+          height: CANVAS_SIZE,
+          backgroundAlpha: 0,
+          antialias: true,
+          resolution: window.devicePixelRatio || 1,
+          autoDensity: true,
+        });
 
-      if (!mounted) {
-        appInstance.destroy(true, { children: true, texture: true, textureSource: true });
-        return;
-      }
-
-      if (wrapperRef) {
-        wrapperRef.appendChild(appInstance.canvas as unknown as HTMLCanvasElement);
-      }
-
-      app = appInstance;
-      texture = createHeartTexture(appInstance);
-      particleContainer = new ParticleContainer({
-        texture,
-        dynamicProperties: {
-          position: true,
-          rotation: true,
-          vertex: true,
-          color: true,
-        },
-      });
-      appInstance.stage.addChild(particleContainer);
-
-      appInstance.ticker.add((ticker) => {
-        const dt = ticker.deltaMS / 1000;
-        for (let i = activeParticles.length - 1; i >= 0; i--) {
-          const p = activeParticles[i];
-          p.life -= ticker.deltaMS;
-          p.x += p.vx * dt;
-          p.y += p.vy * dt;
-          p.rotation += p.rotationSpeed * dt;
-
-          const progress = Math.max(0, p.life / p.maxLife);
-          p.particle.x = p.x;
-          p.particle.y = p.y;
-          p.particle.rotation = p.rotation;
-          p.particle.alpha = progress;
-          p.particle.scaleX = p.scale * progress;
-          p.particle.scaleY = p.scale * progress;
-
-          if (p.life <= 0) {
-            particleContainer?.removeParticle(p.particle);
-            activeParticles.splice(i, 1);
-          }
+        if (!mounted) {
+          appInstance.destroy(true, { children: true, texture: true, textureSource: true });
+          return;
         }
-      });
+
+        if (wrapperRef) {
+          wrapperRef.appendChild(appInstance.canvas as unknown as HTMLCanvasElement);
+        }
+
+        const newTexture = createHeartTexture(appInstance);
+        const newParticleContainer = new ParticleContainer({
+          texture: newTexture,
+          dynamicProperties: {
+            position: true,
+            rotation: true,
+            vertex: true,
+            color: true,
+          },
+        });
+        appInstance.stage.addChild(newParticleContainer);
+
+        const DAMPING = 0.98;
+        appInstance.ticker.add((ticker) => {
+          const dt = ticker.deltaMS / 1000;
+          for (let i = activeParticles.length - 1; i >= 0; i--) {
+            const p = activeParticles[i];
+            p.life -= ticker.deltaMS;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.rotation += p.rotationSpeed * dt;
+            p.vx *= DAMPING;
+            p.vy *= DAMPING;
+
+            const progress = Math.max(0, p.life / p.maxLife);
+            p.particle.x = p.x;
+            p.particle.y = p.y;
+            p.particle.rotation = p.rotation;
+            p.particle.alpha = progress;
+            p.particle.scaleX = p.scale * progress;
+            p.particle.scaleY = p.scale * progress;
+
+            if (p.life <= 0) {
+              newParticleContainer.removeParticle(p.particle);
+              activeParticles.splice(i, 1);
+            }
+          }
+        });
+
+        app = appInstance;
+        texture = newTexture;
+        particleContainer = newParticleContainer;
+      } catch (err) {
+        console.error("HeartBurstEffect init failed:", err);
+        appInstance?.destroy(true, { children: true, texture: true, textureSource: true });
+        app = undefined;
+        texture = undefined;
+        particleContainer = undefined;
+        initPromise = undefined;
+        throw err;
+      }
     })();
 
     return initPromise;
@@ -146,8 +163,8 @@ const HeartBurstEffect: Component<Props> = (props) => {
       .then(() => {
         emit();
       })
-      .catch((err) => {
-        console.error("HeartBurstEffect init failed:", err);
+      .catch(() => {
+        // Initialization errors are logged inside initApp; state is reset so the next trigger can retry.
       });
   });
 

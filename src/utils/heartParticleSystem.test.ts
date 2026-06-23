@@ -13,6 +13,18 @@ describe("cssHexToNumber", () => {
   it("returns fallback for empty string", () => {
     expect(cssHexToNumber("", 0xff0000)).toBe(0xff0000);
   });
+
+  it("trims whitespace around the value", () => {
+    expect(cssHexToNumber("  #c42b1c  ")).toBe(0xc42b1c);
+  });
+
+  it("converts shorthand hex", () => {
+    expect(cssHexToNumber("#c42")).toBe(0xcc4422);
+  });
+
+  it("converts shorthand hex without hash", () => {
+    expect(cssHexToNumber("c42")).toBe(0xcc4422);
+  });
 });
 
 describe("createParticleStates", () => {

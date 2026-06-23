@@ -21,9 +21,17 @@ export interface ParticleInitOptions {
 }
 
 export function cssHexToNumber(hex: string, fallback = 0xff0000): number {
-  const cleaned = hex.replace("#", "").trim();
-  if (!/^[0-9a-fA-F]{6}$/.test(cleaned)) return fallback;
-  return parseInt(cleaned, 16);
+  const cleaned = hex.trim().replace("#", "");
+  const match = cleaned.match(/^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+  if (!match) return fallback;
+
+  const digits = match[1];
+  if (digits.length === 3) {
+    const [r, g, b] = digits;
+    return parseInt(`${r}${r}${g}${g}${b}${b}`, 16);
+  }
+
+  return parseInt(digits, 16);
 }
 
 export function createParticleStates(options: ParticleInitOptions): ParticleState[] {
