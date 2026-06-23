@@ -73,11 +73,13 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    globals: true,
     environment: "node",
+    passWithNoTests: true,
   },
 });
 ```
+
+> **Note:** Tests use explicit imports from `vitest` (e.g. `import { describe, it, expect } from "vitest"`) to avoid leaking test globals into production code.
 
 - [ ] **Step 3: Add test script**
 
@@ -308,7 +310,7 @@ const HeartBurstEffect: Component<Props> = (props) => {
 
     app = appInstance;
     texture = createHeartTexture(appInstance);
-    particleContainer = new ParticleContainer({ maxSize: PARTICLE_COUNT * 2 });
+    particleContainer = new ParticleContainer({});
     appInstance.stage.addChild(particleContainer as unknown as Container);
 
     appInstance.ticker.add((ticker) => {
@@ -396,6 +398,8 @@ export default HeartBurstEffect;
 ```
 
 Note: `ParticleContainer.addChild` type may need coercion because PixiJS v8 types expect `Container` children. Verify against installed PixiJS types and adjust.
+
+`ParticleContainer` auto-grows in PixiJS v8, so `maxSize` is not a valid constructor option. The total particle count is bounded by the `PARTICLE_COUNT` constant per burst and the particle lifetime; dead particles are removed each frame. The ticker applies velocity damping (`DAMPING = 0.98`) every frame to give a natural deceleration effect, approximating the Fluent deceleration curve.
 
 - [ ] **Step 2: Verify TypeScript compiles**
 

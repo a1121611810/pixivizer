@@ -19,6 +19,7 @@ const PARTICLE_COUNT = 10;
 const CANVAS_SIZE = 200;
 
 const HeartBurstEffect: Component<Props> = (props) => {
+  // eslint-disable-next-line no-unassigned-vars
   let wrapperRef: HTMLDivElement | undefined;
   let app: Application | undefined;
   let texture: Texture | undefined;
@@ -82,7 +83,6 @@ const HeartBurstEffect: Component<Props> = (props) => {
             position: true,
             rotation: true,
             vertex: true,
-            color: true,
           },
         });
         appInstance.stage.addChild(newParticleContainer);
@@ -135,6 +135,7 @@ const HeartBurstEffect: Component<Props> = (props) => {
 
   function emit() {
     if (!app || !texture || !particleContainer || !ParticleClass) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const centerX = CANVAS_SIZE / 2;
     const centerY = CANVAS_SIZE / 2;
     const states = createParticleStates({
