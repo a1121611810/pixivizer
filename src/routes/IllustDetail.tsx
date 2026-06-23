@@ -8,6 +8,7 @@ import LazyDetailImage from "../components/LazyDetailImage";
 import PixivImage from "../components/PixivImage";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PageTransition from "../components/PageTransition";
+import HeartBurstEffect from "../components/HeartBurstEffect";
 import { detailQuality } from "../stores/uiStore";
 
 const IllustDetail: Component = () => {
@@ -21,6 +22,7 @@ const IllustDetail: Component = () => {
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
   const [bookmarking, setBookmarking] = createSignal(false);
+  const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
 
   let longPressTimer: ReturnType<typeof setTimeout>;
 
@@ -39,6 +41,10 @@ const IllustDetail: Component = () => {
         is_bookmarked: !i.is_bookmarked,
         total_bookmarks: i.is_bookmarked ? i.total_bookmarks - 1 : i.total_bookmarks + 1,
       });
+
+      if (!i.is_bookmarked) {
+        setBookmarkBurstTrigger((n) => n + 1);
+      }
     } catch (e) {
       console.error("Bookmark toggle failed:", e);
     } finally {
@@ -261,24 +267,27 @@ const IllustDetail: Component = () => {
               </div>
 
               {/* Bookmark toggle */}
-              <button
-                class={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--borderRadiusMedium)] text-[var(--fontSizeBase200)] font-medium transition-all active:scale-95 select-none ${
-                  illust()!.is_bookmarked
-                    ? "bg-[var(--colorStatusDangerBackground2)] text-[var(--colorStatusDangerForeground1)]"
-                    : "bg-[var(--colorBrandStroke2)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorBrandBackground)] hover:text-white"
-                }`}
-                onPointerDown={onBookmarkPointerDown}
-                onPointerUp={onBookmarkPointerUp}
-                onPointerLeave={() => {
-                  if (longPressTimer) {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = 0 as any;
-                  }
-                }}
-                disabled={bookmarking()}
-              >
-                {illust()!.is_bookmarked ? "♥ 已收藏" : "♡ 收藏"}
-              </button>
+              <div class="relative inline-flex">
+                <button
+                  class={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--borderRadiusMedium)] text-[var(--fontSizeBase200)] font-medium transition-all active:scale-95 select-none ${
+                    illust()!.is_bookmarked
+                      ? "bg-[var(--colorStatusDangerBackground2)] text-[var(--colorStatusDangerForeground1)]"
+                      : "bg-[var(--colorBrandStroke2)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorBrandBackground)] hover:text-white"
+                  }`}
+                  onPointerDown={onBookmarkPointerDown}
+                  onPointerUp={onBookmarkPointerUp}
+                  onPointerLeave={() => {
+                    if (longPressTimer) {
+                      clearTimeout(longPressTimer);
+                      longPressTimer = 0 as any;
+                    }
+                  }}
+                  disabled={bookmarking()}
+                >
+                  {illust()!.is_bookmarked ? "♥ 已收藏" : "♡ 收藏"}
+                </button>
+                <HeartBurstEffect trigger={bookmarkBurstTrigger} />
+              </div>
 
               {/* Tags */}
               <div class="flex flex-wrap gap-1.5">
