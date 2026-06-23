@@ -18,6 +18,7 @@ export interface ParticleInitOptions {
   maxLife?: number;
   speedMin?: number;
   speedMax?: number;
+  speedScale?: number;
 }
 
 export function cssHexToNumber(hex: string, fallback = 0xff0000): number {
@@ -43,6 +44,7 @@ export function createParticleStates(options: ParticleInitOptions): ParticleStat
     maxLife = 700,
     speedMin = 60,
     speedMax = 120,
+    speedScale = 1,
   } = options;
 
   const particles: ParticleState[] = [];
@@ -50,7 +52,7 @@ export function createParticleStates(options: ParticleInitOptions): ParticleStat
 
   for (let i = 0; i < count; i++) {
     const angle = angleStep * i + Math.random() * angleStep * 0.5;
-    const speed = speedMin + Math.random() * (speedMax - speedMin);
+    const speed = (speedMin + Math.random() * (speedMax - speedMin)) * speedScale;
     const life = minLife + Math.random() * (maxLife - minLife);
 
     particles.push({

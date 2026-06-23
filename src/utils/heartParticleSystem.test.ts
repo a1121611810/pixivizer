@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { cssHexToNumber, createParticleStates } from "./heartParticleSystem";
 
 describe("cssHexToNumber", () => {
@@ -42,5 +42,33 @@ describe("createParticleStates", () => {
   it("assigns positive maxLife", () => {
     const particles = createParticleStates({ count: 1, centerX: 0, centerY: 0 });
     expect(particles[0].maxLife).toBeGreaterThan(0);
+  });
+});
+
+describe("createParticleStates speed scaling", () => {
+  it("scales speed down with speedScale", () => {
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
+
+    const defaultParticles = createParticleStates({ count: 1, centerX: 0, centerY: 0 });
+    const scaledParticles = createParticleStates({
+      count: 1,
+      centerX: 0,
+      centerY: 0,
+      speedScale: 0.4,
+    });
+
+    randomSpy.mockRestore();
+
+    const defaultSpeed = Math.sqrt(defaultParticles[0].vx ** 2 + defaultParticles[0].vy ** 2);
+    const scaledSpeed = Math.sqrt(scaledParticles[0].vx ** 2 + scaledParticles[0].vy ** 2);
+
+    expect(scaledSpeed).toBeCloseTo(defaultSpeed * 0.4, 0);
+  });
+
+  it("defaults to speedScale 1 when not provided", () => {
+    const particles = createParticleStates({ count: 1, centerX: 0, centerY: 0 });
+    const speed = Math.sqrt(particles[0].vx ** 2 + particles[0].vy ** 2);
+    expect(speed).toBeGreaterThanOrEqual(60);
+    expect(speed).toBeLessThanOrEqual(120);
   });
 });
