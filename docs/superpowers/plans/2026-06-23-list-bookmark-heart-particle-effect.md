@@ -12,18 +12,19 @@
 
 ## File Structure
 
-| File | Responsibility |
-|------|----------------|
-| `src/utils/heartParticleSystem.ts` | Pure particle state generation; add optional speed scaling support |
-| `src/utils/heartParticleSystem.test.ts` | Tests for new scaling behavior |
-| `src/components/HeartBurstEffect.tsx` | Render PixiJS burst; accept `size` and `particleCount` props |
-| `src/components/ImageCard.tsx` | Trigger the effect when bookmark succeeds |
+| File                                    | Responsibility                                                     |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| `src/utils/heartParticleSystem.ts`      | Pure particle state generation; add optional speed scaling support |
+| `src/utils/heartParticleSystem.test.ts` | Tests for new scaling behavior                                     |
+| `src/components/HeartBurstEffect.tsx`   | Render PixiJS burst; accept `size` and `particleCount` props       |
+| `src/components/ImageCard.tsx`          | Trigger the effect when bookmark succeeds                          |
 
 ---
 
 ### Task 1: Add speed scaling support to particle utilities
 
 **Files:**
+
 - Modify: `src/utils/heartParticleSystem.ts`
 - Modify: `src/utils/heartParticleSystem.test.ts`
 
@@ -44,12 +45,8 @@ describe("createParticleStates speed scaling", () => {
       speedScale: 0.4,
     });
 
-    const defaultSpeed = Math.sqrt(
-      defaultParticles[0].vx ** 2 + defaultParticles[0].vy ** 2,
-    );
-    const scaledSpeed = Math.sqrt(
-      scaledParticles[0].vx ** 2 + scaledParticles[0].vy ** 2,
-    );
+    const defaultSpeed = Math.sqrt(defaultParticles[0].vx ** 2 + defaultParticles[0].vy ** 2);
+    const scaledSpeed = Math.sqrt(scaledParticles[0].vx ** 2 + scaledParticles[0].vy ** 2);
 
     expect(scaledSpeed).toBeCloseTo(defaultSpeed * 0.4, 0);
   });
@@ -143,6 +140,7 @@ pnpm test && git commit -m "feat(utils): add speedScale option to particle syste
 ### Task 2: Extend HeartBurstEffect with size and particleCount props
 
 **Files:**
+
 - Modify: `src/components/HeartBurstEffect.tsx`
 
 - [ ] **Step 1: Update the Props interface**
@@ -261,6 +259,7 @@ pnpm check && git commit -m "feat(heart-burst): support size and particleCount p
 ### Task 3: Integrate effect into ImageCard
 
 **Files:**
+
 - Modify: `src/components/ImageCard.tsx`
 
 - [ ] **Step 1: Add import and trigger signal**
@@ -300,11 +299,7 @@ Find the bookmark button (around line 87) and wrap it in a `relative` container:
   >
     {bookmarked() ? "♥" : "♡"}
   </button>
-  <HeartBurstEffect
-    trigger={bookmarkBurstTrigger}
-    size={80}
-    particleCount={6}
-  />
+  <HeartBurstEffect trigger={bookmarkBurstTrigger} size={80} particleCount={6} />
 </div>
 ```
 
@@ -388,13 +383,13 @@ Open `http://localhost:5173`, navigate to Feed and Bookmarks, then:
 
 ### Spec coverage
 
-| Spec requirement | Implementing task |
-|------------------|-------------------|
-| Reuse `HeartBurstEffect` | Task 2 + Task 3 |
-| Scale down for list | Task 2 (`size`, `particleCount`, `speedScale`) |
-| Cover Feed and Bookmarks | Task 3 (`ImageCard` is used by both) |
-| Trigger only on successful bookmark | Task 3 |
-| Preserve existing interactions | Task 3 |
+| Spec requirement                    | Implementing task                              |
+| ----------------------------------- | ---------------------------------------------- |
+| Reuse `HeartBurstEffect`            | Task 2 + Task 3                                |
+| Scale down for list                 | Task 2 (`size`, `particleCount`, `speedScale`) |
+| Cover Feed and Bookmarks            | Task 3 (`ImageCard` is used by both)           |
+| Trigger only on successful bookmark | Task 3                                         |
+| Preserve existing interactions      | Task 3                                         |
 
 ### Placeholder scan
 
