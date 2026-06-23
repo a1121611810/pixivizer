@@ -154,7 +154,13 @@ const HeartBurstEffect: Component<Props> = (props) => {
     });
 
     for (const state of states) {
-      const particle = new ParticleClass({ texture, spriteScale: state.scale });
+      const particle = new ParticleClass({
+        texture,
+        anchorX: 0.5,
+        anchorY: 0.5,
+        scaleX: state.scale,
+        scaleY: state.scale,
+      });
       particle.x = state.x;
       particle.y = state.y;
       particle.rotation = state.rotation;
