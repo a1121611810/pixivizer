@@ -12,18 +12,19 @@
 
 ## File Structure
 
-| File | Responsibility |
-|------|----------------|
-| `src/utils/heartParticleSystem.ts` | Pure functions: color conversion, particle state initialization, heart texture generation |
-| `src/components/HeartBurstEffect.tsx` | SolidJS component that owns the PixiJS `Application`, `ParticleContainer`, and ticker lifecycle |
-| `src/routes/IllustDetail.tsx` | Wrap the bookmark button with `HeartBurstEffect` and pass a trigger counter |
-| `src/utils/heartParticleSystem.test.ts` | Unit tests for pure particle/color functions (Vitest) |
+| File                                    | Responsibility                                                                                  |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `src/utils/heartParticleSystem.ts`      | Pure functions: color conversion, particle state initialization, heart texture generation       |
+| `src/components/HeartBurstEffect.tsx`   | SolidJS component that owns the PixiJS `Application`, `ParticleContainer`, and ticker lifecycle |
+| `src/routes/IllustDetail.tsx`           | Wrap the bookmark button with `HeartBurstEffect` and pass a trigger counter                     |
+| `src/utils/heartParticleSystem.test.ts` | Unit tests for pure particle/color functions (Vitest)                                           |
 
 ---
 
 ### Task 1: Install PixiJS dependency
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: Add `pixi.js`**
@@ -52,6 +53,7 @@ git commit -m "deps: add pixi.js for particle effects"
 ### Task 2: Add minimal Vitest test harness
 
 **Files:**
+
 - Create: `vitest.config.ts`
 - Modify: `package.json`
 
@@ -98,6 +100,7 @@ git commit -m "chore: add vitest for unit tests"
 ### Task 3: Write pure particle utilities with tests
 
 **Files:**
+
 - Create: `src/utils/heartParticleSystem.ts`
 - Create: `src/utils/heartParticleSystem.test.ts`
 
@@ -238,20 +241,20 @@ git commit -m "feat(utils): add heart particle system utilities with tests"
 ### Task 4: Create `HeartBurstEffect` component
 
 **Files:**
+
 - Create: `src/components/HeartBurstEffect.tsx`
 
 - [ ] **Step 1: Write component skeleton**
 
 ```tsx
 // src/components/HeartBurstEffect.tsx
-import {
-  type Component,
-  type Accessor,
-  onCleanup,
-  createEffect,
-} from "solid-js";
+import { type Component, type Accessor, onCleanup, createEffect } from "solid-js";
 import { Application, Container, Graphics, ParticleContainer, Sprite, Texture } from "pixi.js";
-import { createParticleStates, cssHexToNumber, type ParticleState } from "../utils/heartParticleSystem";
+import {
+  createParticleStates,
+  cssHexToNumber,
+  type ParticleState,
+} from "../utils/heartParticleSystem";
 
 interface Props {
   trigger: Accessor<number>;
@@ -414,6 +417,7 @@ git commit -m "feat(components): add HeartBurstEffect PixiJS component"
 ### Task 5: Integrate effect into `IllustDetail`
 
 **Files:**
+
 - Modify: `src/routes/IllustDetail.tsx`
 
 - [ ] **Step 1: Add import and trigger signal**
@@ -533,17 +537,17 @@ Install the debug APK and verify the effect runs on device.
 
 ### Spec coverage
 
-| Spec requirement | Implementing task |
-|------------------|-------------------|
-| Center burst effect from bookmark button | Task 4 + Task 5 |
-| 8–12 particles | Task 3 (`count` option, default 10) |
-| 500–700ms lifetime | Task 3 (`minLife`/`maxLife`) |
-| Fluent Design easing/duration | Task 3 (physics uses delta time; lifecycle matches `--durationUltraSlow`) |
-| Trigger only on successful bookmark | Task 5 (increment after state update, only when `!i.is_bookmarked`) |
-| `pointer-events: none` overlay | Task 4 |
-| Preserve existing button style/interaction | Task 5 (button unchanged except wrapper) |
-| Graceful degradation | Task 4 (lazy init, destroy on cleanup) |
-| Performance: ParticleContainer, max 12 particles | Task 4 |
+| Spec requirement                                 | Implementing task                                                         |
+| ------------------------------------------------ | ------------------------------------------------------------------------- |
+| Center burst effect from bookmark button         | Task 4 + Task 5                                                           |
+| 8–12 particles                                   | Task 3 (`count` option, default 10)                                       |
+| 500–700ms lifetime                               | Task 3 (`minLife`/`maxLife`)                                              |
+| Fluent Design easing/duration                    | Task 3 (physics uses delta time; lifecycle matches `--durationUltraSlow`) |
+| Trigger only on successful bookmark              | Task 5 (increment after state update, only when `!i.is_bookmarked`)       |
+| `pointer-events: none` overlay                   | Task 4                                                                    |
+| Preserve existing button style/interaction       | Task 5 (button unchanged except wrapper)                                  |
+| Graceful degradation                             | Task 4 (lazy init, destroy on cleanup)                                    |
+| Performance: ParticleContainer, max 12 particles | Task 4                                                                    |
 
 ### Placeholder scan
 
