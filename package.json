@@ -8,6 +8,8 @@
     "build": "vp build",
     "check": "vp check",
     "preview": "vp preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "cap:init": "npx cap init pixivizer com.pixivizer.app",
     "cap:add:android": "npx cap add android",
     "cap:copy": "npx cap copy",
@@ -34,6 +36,7 @@
     "typescript": "^6.0.3",
     "unocss": "^66.7.2",
     "vite": "^8.0.16",
-    "vite-plugin-solid": "^2.11.12"
+    "vite-plugin-solid": "^2.11.12",
+    "vitest": "^4.1.9"
   }
 }
