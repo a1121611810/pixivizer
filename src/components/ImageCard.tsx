@@ -3,6 +3,7 @@ import type { PixivIllust } from "../api/types";
 import { listQuality } from "../stores/uiStore";
 import { addBookmark, deleteBookmark } from "../api/illust";
 import PixivImage from "./PixivImage";
+import HeartBurstEffect from "./HeartBurstEffect";
 
 function resolveUrl(illust: PixivIllust): string {
   const q = listQuality();
@@ -25,6 +26,7 @@ const ImageCard: Component<Props> = (props) => {
   const [bookmarked, setBookmarked] = createSignal(props.illust.is_bookmarked);
   const [totalBookmarks, setTotalBookmarks] = createSignal(props.illust.total_bookmarks);
   const [privateHint, setPrivateHint] = createSignal(false);
+  const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
 
   let longPressTimer: ReturnType<typeof setTimeout>;
   let hintTimer: ReturnType<typeof setTimeout>;
@@ -46,6 +48,7 @@ const ImageCard: Component<Props> = (props) => {
         await addBookmark(props.illust.id, privateBookmark ? "private" : "public");
         setBookmarked(true);
         setTotalBookmarks((t) => t + 1);
+        setBookmarkBurstTrigger((n) => n + 1);
         if (privateBookmark) showPrivateToast();
       }
     } catch {
@@ -84,25 +87,28 @@ const ImageCard: Component<Props> = (props) => {
           <div class="absolute bottom-1.5 left-1.5 badge-overlay">📄 {props.illust.page_count}</div>
         )}
         {/* Bookmark heart — bottom-right */}
-        <button
-          class="absolute bottom-1.5 right-1.5 w-7 h-7 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-sm transition-all active:scale-90 select-none"
-          classList={{
-            "text-red-400": bookmarked(),
-            "text-white/70 hover:text-red-300": !bookmarked(),
-          }}
-          onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp}
-          onPointerLeave={() => {
-            if (longPressTimer) {
-              clearTimeout(longPressTimer);
-              longPressTimer = 0 as any;
-            }
-          }}
-          onClick={(e) => e.stopPropagation()}
-          aria-label={bookmarked() ? "取消收藏" : "收藏"}
-        >
-          {bookmarked() ? "♥" : "♡"}
-        </button>
+        <div class="absolute bottom-1.5 right-1.5">
+          <button
+            class="w-7 h-7 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-sm transition-all active:scale-90 select-none"
+            classList={{
+              "text-red-400": bookmarked(),
+              "text-white/70 hover:text-red-300": !bookmarked(),
+            }}
+            onPointerDown={onPointerDown}
+            onPointerUp={onPointerUp}
+            onPointerLeave={() => {
+              if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = 0 as any;
+              }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={bookmarked() ? "取消收藏" : "收藏"}
+          >
+            {bookmarked() ? "♥" : "♡"}
+          </button>
+          <HeartBurstEffect trigger={bookmarkBurstTrigger} size={80} particleCount={6} />
+        </div>
         {privateHint() && (
           <div class="absolute inset-0 flex items-center justify-center bg-black/60 rounded-[var(--borderRadiusMedium)] pointer-events-none z-10">
             <span class="text-white [font-size:var(--fontSizeBase200)] font-medium">
