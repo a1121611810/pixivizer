@@ -9,25 +9,31 @@ import {
 
 interface Props {
   trigger: Accessor<number>;
+  size?: number;
+  particleCount?: number;
 }
 
 interface ActiveParticleState extends ParticleState {
   particle: Particle;
 }
 
-const PARTICLE_COUNT = 10;
-const CANVAS_SIZE = 200;
+const DEFAULT_SIZE = 200;
+const DEFAULT_PARTICLE_COUNT = 10;
 
 const HeartBurstEffect: Component<Props> = (props) => {
+  const size = () => props.size ?? DEFAULT_SIZE;
+  const particleCount = () => props.particleCount ?? DEFAULT_PARTICLE_COUNT;
+  const speedScale = () => size() / DEFAULT_SIZE;
+
   // eslint-disable-next-line no-unassigned-vars
   let wrapperRef: HTMLDivElement | undefined;
   let app: Application | undefined;
   let texture: Texture | undefined;
   let particleContainer: ParticleContainer | undefined;
+  let ParticleClass: typeof Particle | undefined;
   let activeParticles: ActiveParticleState[] = [];
   let initPromise: Promise<void> | undefined;
   let mounted = true;
-  let ParticleClass: typeof Particle | undefined;
 
   function readHeartColor(): number {
     const hex = getComputedStyle(document.documentElement).getPropertyValue(
@@ -59,8 +65,8 @@ const HeartBurstEffect: Component<Props> = (props) => {
       try {
         appInstance = new Application();
         await appInstance.init({
-          width: CANVAS_SIZE,
-          height: CANVAS_SIZE,
+          width: size(),
+          height: size(),
           backgroundAlpha: 0,
           antialias: true,
           resolution: window.devicePixelRatio || 1,
@@ -136,26 +142,23 @@ const HeartBurstEffect: Component<Props> = (props) => {
   function emit() {
     if (!app || !texture || !particleContainer || !ParticleClass) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const centerX = CANVAS_SIZE / 2;
-    const centerY = CANVAS_SIZE / 2;
+
+    const currentSize = size();
+    const centerX = currentSize / 2;
+    const centerY = currentSize / 2;
     const states = createParticleStates({
-      count: PARTICLE_COUNT,
+      count: particleCount(),
       centerX,
       centerY,
+      speedScale: speedScale(),
     });
 
     for (const state of states) {
-      const particle = new ParticleClass({
-        texture,
-        anchorX: 0.5,
-        anchorY: 0.5,
-        x: state.x,
-        y: state.y,
-        scaleX: state.scale,
-        scaleY: state.scale,
-        rotation: state.rotation,
-        alpha: 1,
-      });
+      const particle = new ParticleClass({ texture, spriteScale: state.scale });
+      particle.x = state.x;
+      particle.y = state.y;
+      particle.rotation = state.rotation;
+      particle.alpha = 1;
       particleContainer.addParticle(particle);
       activeParticles.push({ ...state, particle });
     }
@@ -192,8 +195,8 @@ const HeartBurstEffect: Component<Props> = (props) => {
       ref={wrapperRef}
       class="absolute pointer-events-none"
       style={{
-        width: `${CANVAS_SIZE}px`,
-        height: `${CANVAS_SIZE}px`,
+        width: `${size()}px`,
+        height: `${size()}px`,
         top: "50%",
         left: "50%",
         transform: "translate(-50%, -50%)",
