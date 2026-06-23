@@ -50,7 +50,7 @@ export default defineConfig({
         agent: proxyAgent,
         configure: (proxy) => {
           proxy.on("error", (_err, _req, res) => {
-            if (res && !res.headersSent) {
+            if (res && "headersSent" in res && !res.headersSent) {
               res.writeHead(502, { "Content-Type": "application/json" });
               res.end(
                 JSON.stringify({
