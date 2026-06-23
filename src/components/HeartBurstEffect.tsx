@@ -75,7 +75,6 @@ const HeartBurstEffect: Component<Props> = (props) => {
       texture = createHeartTexture(appInstance);
       particleContainer = new ParticleContainer({
         texture,
-        maxSize: PARTICLE_COUNT * 2,
         dynamicProperties: {
           position: true,
           rotation: true,
