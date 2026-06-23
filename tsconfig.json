@@ -13,8 +13,7 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] },
-    "types": ["vitest/globals"]
+    "paths": { "@/*": ["src/*"] }
   },
   "include": ["src"]
 }
