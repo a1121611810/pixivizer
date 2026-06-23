@@ -5,3 +5,4 @@ android/*
 *.local
 .playwright-cli/*
 .reasonix/*
+.codegraph/*

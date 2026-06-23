@@ -141,4 +141,5 @@ src/
 
 ## 注意事项
 
--
+- **代码搜索优先用 MCP Codegraph**：本机已安装 [codegraph](https://github.com/colbymchenry/codegraph)，搜索代码结构、函数调用关系、符号定义等时，优先使用 `mcp__codegraph__*` 系列工具。已通过项目级 `reasonix.toml` 配置 `--path`，调用时无需手动传 `projectPath`。
+- **Web API / 浏览器兼容性查询优先用 MCP MDN**：需要查 HTML、CSS、JS 标准 API 语法或浏览器兼容性时，优先使用 `mcp__mdn__*` 系列工具（`get-doc` / `search` / `get-compat`），这是 MDN 官方提供的 MCP 接口。
