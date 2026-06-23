@@ -1,6 +1,6 @@
 // src/components/HeartBurstEffect.tsx
 import { type Component, type Accessor, onCleanup, createEffect } from "solid-js";
-import { Application, Graphics, Particle, ParticleContainer, Texture } from "pixi.js";
+import type { Application, Graphics, Particle, ParticleContainer, Texture } from "pixi.js";
 import {
   createParticleStates,
   cssHexToNumber,
@@ -26,6 +26,7 @@ const HeartBurstEffect: Component<Props> = (props) => {
   let activeParticles: ActiveParticleState[] = [];
   let initPromise: Promise<void> | undefined;
   let mounted = true;
+  let ParticleClass: typeof Particle | undefined;
 
   function readHeartColor(): number {
     const hex = getComputedStyle(document.documentElement).getPropertyValue(
@@ -34,8 +35,8 @@ const HeartBurstEffect: Component<Props> = (props) => {
     return cssHexToNumber(hex, 0xc42b1c);
   }
 
-  function createHeartTexture(appInstance: Application): Texture {
-    const g = new Graphics();
+  function createHeartTexture(appInstance: Application, GraphicsClass: typeof Graphics): Texture {
+    const g = new GraphicsClass();
     const s = 16;
     const color = readHeartColor();
     g.moveTo(0, s / 4)
@@ -52,6 +53,7 @@ const HeartBurstEffect: Component<Props> = (props) => {
     if (initPromise) return initPromise;
 
     initPromise = (async () => {
+      const { Application, Graphics, Particle, ParticleContainer } = await import("pixi.js");
       let appInstance: Application | undefined;
       try {
         appInstance = new Application();
@@ -73,7 +75,7 @@ const HeartBurstEffect: Component<Props> = (props) => {
           wrapperRef.appendChild(appInstance.canvas as unknown as HTMLCanvasElement);
         }
 
-        const newTexture = createHeartTexture(appInstance);
+        const newTexture = createHeartTexture(appInstance, Graphics);
         const newParticleContainer = new ParticleContainer({
           texture: newTexture,
           dynamicProperties: {
@@ -115,12 +117,14 @@ const HeartBurstEffect: Component<Props> = (props) => {
         app = appInstance;
         texture = newTexture;
         particleContainer = newParticleContainer;
+        ParticleClass = Particle;
       } catch (err) {
         console.error("HeartBurstEffect init failed:", err);
         appInstance?.destroy(true, { children: true, texture: true, textureSource: true });
         app = undefined;
         texture = undefined;
         particleContainer = undefined;
+        ParticleClass = undefined;
         initPromise = undefined;
         throw err;
       }
@@ -130,7 +134,7 @@ const HeartBurstEffect: Component<Props> = (props) => {
   }
 
   function emit() {
-    if (!app || !texture || !particleContainer) return;
+    if (!app || !texture || !particleContainer || !ParticleClass) return;
     const centerX = CANVAS_SIZE / 2;
     const centerY = CANVAS_SIZE / 2;
     const states = createParticleStates({
@@ -140,7 +144,7 @@ const HeartBurstEffect: Component<Props> = (props) => {
     });
 
     for (const state of states) {
-      const particle = new Particle({
+      const particle = new ParticleClass({
         texture,
         anchorX: 0.5,
         anchorY: 0.5,
@@ -178,6 +182,7 @@ const HeartBurstEffect: Component<Props> = (props) => {
     app = undefined;
     texture = undefined;
     particleContainer = undefined;
+    ParticleClass = undefined;
     initPromise = undefined;
   });
 
