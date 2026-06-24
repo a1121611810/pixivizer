@@ -77,6 +77,8 @@ const NavBar: Component = () => {
   const tabEls: Record<string, HTMLButtonElement> = {};
 
   const [hidden, setHidden] = createSignal(false);
+  let lastScrollY = 0;
+  let accumulatedDelta = 0;
 
   // Measure and position the sliding pill whenever active tab changes
   const updatePill = () => {
@@ -95,8 +97,8 @@ const NavBar: Component = () => {
     requestAnimationFrame(updatePill);
 
     // ── Scroll-driven NavBar hide/show ──
-    let lastScrollY = window.scrollY;
-    let accumulatedDelta = 0;
+    lastScrollY = window.scrollY;
+    accumulatedDelta = 0;
     const HIDE_THRESHOLD = 30;
     const TOP_ZONE = 100;
     let scrollTicking = false;
@@ -148,10 +150,14 @@ const NavBar: Component = () => {
     });
   });
 
-  // Tab change → slide pill
+  // Tab change → slide pill + reset scroll tracking
   createEffect(() => {
     // Track currentTab() to trigger re-measurement
     currentTab();
+    // Reset scroll tracking state on tab switch
+    lastScrollY = window.scrollY;
+    accumulatedDelta = 0;
+    setHidden(false);
     requestAnimationFrame(updatePill);
   });
 
