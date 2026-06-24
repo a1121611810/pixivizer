@@ -13,6 +13,11 @@ const [followersNextUrl, setFollowersNextUrl] = createSignal<string | null>(null
 const [loading, setLoading] = createSignal(false);
 const [error, setError] = createSignal<string | null>(null);
 const [activeTab, setActiveTab] = createSignal<"following" | "followers">("following");
+let currentUserId = 0;
+
+// 缓存已加载的用户数据，避免返回时重复请求
+const profileCache = new Map<number, { profile: PixivProfile; user: PixivUser }>();
+const followingCache = new Map<number, { list: PixivUserPreview[]; nextUrl: string | null }>();
 
 export {
   profile,
@@ -29,10 +34,18 @@ export {
 export async function loadProfile(userId?: number) {
   const id = userId ?? user()?.id;
   if (!id) return;
+  // 命中缓存则直接恢复
+  const cached = profileCache.get(Number(id));
+  if (cached) {
+    setProfile(cached.profile);
+    setViewedUser(cached.user);
+    return;
+  }
   try {
     const data = await getUserDetail(id);
     setProfile(data.profile);
     setViewedUser(data.user);
+    profileCache.set(Number(id), { profile: data.profile, user: data.user });
   } catch (e) {
     console.warn("[userStore] Failed to load profile", e);
   }
@@ -41,12 +54,21 @@ export async function loadProfile(userId?: number) {
 export async function loadFollowing(userId?: number) {
   const id = userId ?? user()?.id;
   if (!id) return;
+  // 命中缓存则直接恢复
+  const cached = followingCache.get(Number(id));
+  if (cached) {
+    setFollowingList(cached.list);
+    setFollowingNextUrl(cached.nextUrl);
+    setLoading(false);
+    return;
+  }
   setLoading(true);
   setError(null);
   try {
     const data = await getUserFollowing(id);
     setFollowingList(data.user_previews);
     setFollowingNextUrl(data.next_url);
+    followingCache.set(Number(id), { list: data.user_previews, nextUrl: data.next_url });
   } catch (e) {
     setError((e as { message?: string }).message ?? "加载失败");
   } finally {
@@ -139,6 +161,7 @@ export function switchTab(tab: "following" | "followers") {
 }
 
 export function resetData() {
+  currentUserId = 0;
   setProfile(null);
   setViewedUser(null);
   setFollowingList([]);
@@ -146,4 +169,5 @@ export function resetData() {
   setFollowingNextUrl(null);
   setFollowersNextUrl(null);
   setError(null);
+  setLoading(false);
 }

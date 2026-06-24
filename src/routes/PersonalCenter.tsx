@@ -95,9 +95,12 @@ const PersonalCenter: Component<Props> = (props) => {
     onCleanup(() => window.removeEventListener("scroll", onScrollRaf));
   });
 
-  // 用户切换时重新加载（前进/后退/点击列表项）
+  // 用户切换时加载，缓存命中则跳过请求
+  let prevUid = 0;
   createEffect(() => {
     const uid = targetUserId();
+    if (uid === prevUid) return;
+    prevUid = uid;
     resetData();
     loadProfile(uid);
     loadFollowing(uid);
