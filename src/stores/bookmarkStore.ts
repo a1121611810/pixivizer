@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 import { loadBookmarks, loadNext } from "../api/illust";
 import { user } from "./authStore";
 import type { PixivIllust, RestrictType } from "../api/types";
+import { filterR18 } from "../utils/r18Filter";
 
 // ── Signals ──
 const [illusts, setIllusts] = createSignal<PixivIllust[]>([]);
@@ -44,7 +45,7 @@ async function forceLoad() {
   setError(null);
   try {
     const data = await loadBookmarks(userId, restrict());
-    setIllusts(data.illusts);
+    setIllusts(filterR18(data.illusts));
     setNextUrl(data.next_url);
     setLoading(false);
     loaded = true;
@@ -78,7 +79,7 @@ export async function fetchMore() {
   setLoading(true);
   try {
     const data = await loadNext(nextUrl()!);
-    setIllusts([...illusts(), ...data.illusts]);
+    setIllusts([...illusts(), ...filterR18(data.illusts)]);
     setNextUrl(data.next_url);
     setLoading(false);
   } catch (e) {
@@ -100,7 +101,7 @@ export async function refresh() {
       return;
     }
     const data = await loadBookmarks(userId, restrict());
-    setIllusts(data.illusts);
+    setIllusts(filterR18(data.illusts));
     setNextUrl(data.next_url);
     setLoading(false);
     loaded = true;

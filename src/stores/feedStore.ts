@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 import { loadRecommended, loadFollow, loadNext } from "../api/illust";
 import type { PixivIllust, ContentType, RestrictType } from "../api/types";
 import { currentTab } from "./uiStore";
+import { filterR18 } from "../utils/r18Filter";
 
 const [illusts, setIllusts] = createSignal<PixivIllust[]>([]);
 const [nextUrl, setNextUrl] = createSignal<string | null>(null);
@@ -95,7 +96,7 @@ export async function fetchRecommended(contentType: ContentType = "illust") {
     tabIllusts["recommended"] = data.illusts;
     tabNextUrl["recommended"] = data.next_url;
     if (currentTab() === "recommended") {
-      setIllusts(data.illusts);
+      setIllusts(filterR18(data.illusts));
       setNextUrl(data.next_url);
     }
   } catch (e) {
@@ -114,7 +115,7 @@ export async function fetchFollow(restrict: RestrictType = "public") {
     tabIllusts["follow"] = data.illusts;
     tabNextUrl["follow"] = data.next_url;
     if (currentTab() === "follow") {
-      setIllusts(data.illusts);
+      setIllusts(filterR18(data.illusts));
       setNextUrl(data.next_url);
     }
   } catch (e) {
@@ -129,7 +130,7 @@ export async function fetchMore() {
   setLoading(true);
   try {
     const data = await loadNext(nextUrl()!);
-    setIllusts([...illusts(), ...data.illusts]);
+    setIllusts([...illusts(), ...filterR18(data.illusts)]);
     setNextUrl(data.next_url);
   } catch (e) {
     setError((e as { message?: string }).message ?? "加载失败");

@@ -21,11 +21,13 @@ const [cacheSize, setCacheSize] = createSignal<CacheSize>(600);
 
 const PREF_KEY_USE_PREDICTIVE_BACK = "use_predictive_back";
 const PREF_KEY_AUTO_HIDE_NAV_BAR = "auto_hide_nav_bar";
+const PREF_KEY_SHOW_R18 = "show_r18";
 const ANDROID_16_API_LEVEL = 36;
 
 const [usePredictiveBack, setUsePredictiveBackSig] = createSignal<boolean>(false);
 const [isPredictiveBackSupported, setIsPredictiveBackSupportedSig] = createSignal<boolean>(false);
 const [autoHideNavBar, setAutoHideNavBarSig] = createSignal<boolean>(true);
+const [showR18, setShowR18Sig] = createSignal<boolean>(true);
 
 async function applyPredictiveBackState(enabled: boolean): Promise<void> {
   try {
@@ -128,6 +130,26 @@ async function loadAutoHideNavBarPreference(): Promise<void> {
   }
 }
 
+async function setShowR18(enabled: boolean): Promise<void> {
+  setShowR18Sig(enabled);
+  try {
+    await Preferences.set({ key: PREF_KEY_SHOW_R18, value: String(enabled) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist showR18", e);
+  }
+}
+
+async function loadShowR18Preference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_SHOW_R18 });
+    if (value !== null) {
+      setShowR18Sig(value === "true");
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load showR18 preference", e);
+  }
+}
+
 export {
   currentTab,
   setCurrentTab,
@@ -148,4 +170,7 @@ export {
   autoHideNavBar,
   setAutoHideNavBar,
   loadAutoHideNavBarPreference,
+  showR18,
+  setShowR18,
+  loadShowR18Preference,
 };

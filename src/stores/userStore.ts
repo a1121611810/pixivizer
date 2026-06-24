@@ -3,6 +3,7 @@ import { getUserDetail, getUserFollowing, getUserFollowers } from "../api/user";
 import { followUser, unfollowUser } from "../api/illust";
 import type { PixivProfile, PixivUserPreview, PixivUser } from "../api/types";
 import { user } from "./authStore";
+import { filterUserPreviews } from "../utils/r18Filter";
 
 const [profile, setProfile] = createSignal<PixivProfile | null>(null);
 const [viewedUser, setViewedUser] = createSignal<PixivUser | null>(null);
@@ -66,9 +67,12 @@ export async function loadFollowing(userId?: number) {
   setError(null);
   try {
     const data = await getUserFollowing(id);
-    setFollowingList(data.user_previews);
+    setFollowingList(filterUserPreviews(data.user_previews));
     setFollowingNextUrl(data.next_url);
-    followingCache.set(Number(id), { list: data.user_previews, nextUrl: data.next_url });
+    followingCache.set(Number(id), {
+      list: filterUserPreviews(data.user_previews),
+      nextUrl: data.next_url,
+    });
   } catch (e) {
     setError((e as { message?: string }).message ?? "加载失败");
   } finally {
