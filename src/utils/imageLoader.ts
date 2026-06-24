@@ -175,28 +175,18 @@ async function fetchNative(originalUrl: string): Promise<Blob> {
       Referer: "https://app-api.pixiv.net/",
       "User-Agent": "PixivIOSApp/7.16.9 (iOS 16.4.1; iPad13,4)",
     },
+    responseType: "arraybuffer",
   } as any);
 
   if (resp.status !== 200) throw new Error(`HTTP ${resp.status}`);
 
-  const raw = resp.data;
-  let bytes: Uint8Array;
-
-  if (typeof raw === "string") {
-    const base64 = raw.includes(",") ? raw.split(",")[1] : raw;
-    const byteChars = atob(base64);
-    bytes = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) {
-      bytes[i] = byteChars.charCodeAt(i);
-    }
-  } else if (raw instanceof ArrayBuffer) {
-    bytes = new Uint8Array(raw);
-  } else {
-    bytes = new Uint8Array(raw);
-  }
-
   const contentType =
     resp.headers?.["Content-Type"] || resp.headers?.["content-type"] || "image/jpeg";
 
-  return new Blob([bytes as any], { type: contentType });
+  // Capacitor 将 arraybuffer 响应编码为 base64 字符串返回（无 data: 前缀）
+  // 使用 data: URL + fetch 解码 — 浏览器内置能力，比 atob() 更可靠
+  const dataUrl = `data:${contentType};base64,${resp.data}`;
+  const decoded = await fetch(dataUrl);
+  if (!decoded.ok) throw new Error(`Failed to decode image: HTTP ${decoded.status}`);
+  return decoded.blob();
 }
