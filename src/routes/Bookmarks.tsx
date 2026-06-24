@@ -54,7 +54,10 @@ const Bookmarks: Component = () => {
     <>
       <PageTransition>
         <div class="pb-16">
-          <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4">
+          <header
+            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4"
+            onDblClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          >
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
               Pixivizer
             </h1>
