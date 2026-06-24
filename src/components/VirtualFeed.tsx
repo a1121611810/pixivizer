@@ -8,21 +8,6 @@ import PullIndicator from "./PullIndicator";
 import type { PullZone } from "./PullIndicator";
 import type { PixivIllust } from "../api/types";
 
-// ─── 稳定列映射：卡片首次分配列号后永不变 ───
-const columnMap = new Map<number, 1 | 2>();
-const colHeights = [0, 0];
-
-function assignColumn(illust: PixivIllust): 1 | 2 {
-  const existing = columnMap.get(illust.id);
-  if (existing) return existing;
-
-  const cardEstHeight = 300 / (illust.width / illust.height) + 60;
-  const col = colHeights[0] <= colHeights[1] ? 1 : 2;
-  colHeights[col - 1] += cardEstHeight;
-  columnMap.set(illust.id, col as 1 | 2);
-  return col as 1 | 2;
-}
-
 interface Props {
   illusts: PixivIllust[];
   loading: boolean;
@@ -124,7 +109,7 @@ const VirtualFeed: Component<Props> = (props) => {
         )}
 
         {props.loading && props.illusts.length === 0 && pullPhase() !== "refreshing" && (
-          <div class="grid grid-cols-2 gap-3">
+          <div class="columns-2 gap-3">
             {Array.from({ length: 10 }).map(() => (
               <SkeletonCard />
             ))}
@@ -132,22 +117,21 @@ const VirtualFeed: Component<Props> = (props) => {
         )}
 
         {props.illusts.length > 0 && (
-          <div class="grid grid-cols-2 gap-3 items-start">
+          <div class="columns-2 gap-3">
             <For each={props.illusts}>
               {(illust, index) => {
                 const eager = index() < 4;
-                const col = assignColumn(illust);
                 return (
                   <div
-                    style={{
-                      "grid-column": String(col),
-                      ...(props.skipAnimation
+                    class="break-inside-avoid mb-3"
+                    style={
+                      props.skipAnimation
                         ? {}
                         : {
                             animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
                             "animation-delay": `${index() * 60}ms`,
-                          }),
-                    }}
+                          }
+                    }
                   >
                     {eager ? (
                       <ImageCard illust={illust} onClick={props.onIllustClick} />
