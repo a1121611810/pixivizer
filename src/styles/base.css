@@ -165,6 +165,19 @@ body {
   }
 }
 
+/* Heart burst: fly outward + fade + shrink */
+@keyframes heart-burst {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(var(--hb-tx, 0), var(--hb-ty, 0))
+      rotate(var(--hb-rot, 0deg)) scale(var(--hb-scale, 0.5));
+  }
+}
+
 /* Accessibility: respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
