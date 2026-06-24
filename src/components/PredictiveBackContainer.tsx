@@ -39,7 +39,7 @@ const PredictiveBackContainer: Component<PredictiveBackContainerProps> = (props)
 
   return (
     <div
-      class="relative w-full h-full overflow-hidden predictive-back-stage"
+      class="relative w-full h-full overflow-clip predictive-back-stage"
       style={{
         "--pb-progress": String(progress()),
         "--pb-sign": String(sign()),
