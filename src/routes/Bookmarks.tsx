@@ -1,4 +1,4 @@
-import { type Component, createEffect, onMount, onCleanup } from "solid-js";
+import { type Component, createEffect, onMount, onCleanup, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
   illusts,
@@ -13,7 +13,7 @@ import {
   saveBookmarkScroll,
   getBookmarkScrollY,
 } from "../stores/bookmarkStore";
-import { user } from "../stores/authStore";
+import { user, isLoggedIn } from "../stores/authStore";
 import { setShowSettingsSheet, setCurrentTab } from "../stores/uiStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
@@ -58,8 +58,15 @@ const Bookmarks: Component = () => {
             class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4"
             onDblClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
-              Pixivizer
+            <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0">
+              <Show when={isLoggedIn() && user()} fallback={<>Pixivizer</>}>
+                <img
+                  src={user()!.profile_image_urls.medium}
+                  alt={user()!.name}
+                  class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
+                />
+                <span class="truncate max-w-[120px]">{user()!.name}</span>
+              </Show>
             </h1>
           </header>
 
