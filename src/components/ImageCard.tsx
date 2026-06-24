@@ -141,6 +141,11 @@ const ImageCard: Component<Props> = (props) => {
           />
         )}
         {isUgoira() && <div class="absolute top-1.5 right-1.5 badge-overlay">▶ 动图</div>}
+        {props.illust.x_restrict === 1 && (
+          <div class="absolute top-1.5 left-1.5 badge-overlay text-[var(--colorStatusDangerForeground1)]">
+            R-18
+          </div>
+        )}
         {props.illust.page_count > 1 && (
           <div class="absolute bottom-1.5 left-1.5 badge-overlay">📄 {props.illust.page_count}</div>
         )}
