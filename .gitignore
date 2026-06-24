@@ -5,5 +5,5 @@ dist/*
 .playwright-cli/*
 .reasonix/*
 .codegraph/*
-.worktrees/*
+.worktrees/
 .DS_Store
