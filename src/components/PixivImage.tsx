@@ -80,7 +80,6 @@ const PixivImage: Component<PixivImageProps> = (props) => {
           draggable={props.draggable}
           onClick={props.onClick}
           onError={handleError}
-          style={{ height: "auto" }}
         />
       ) : failed() ? (
         <div

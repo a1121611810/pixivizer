@@ -80,7 +80,7 @@ const ImageCard: Component<Props> = (props) => {
           width={w()}
           height={h()}
           loading="lazy"
-          class="w-full h-auto block"
+          class={isUgoira() ? "w-full h-auto block object-cover" : "w-full h-auto block"}
         />
         {isUgoira() && <div class="absolute top-1.5 right-1.5 badge-overlay">▶ 动图</div>}
         {props.illust.page_count > 1 && (
