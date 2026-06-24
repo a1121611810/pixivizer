@@ -21,7 +21,8 @@ const PredictiveBackContainer: Component<PredictiveBackContainerProps> = (props)
   const showPreview = () => isPredictiveBackActive() && target()?.type === "navigateBack";
   const sign = () => (edge() === "left" ? 1 : -1);
   const originX = () => (edge() === "left" ? "right" : "left");
-  const isTransformed = () => isPredictiveBackActive() || progress() > 0;
+  const isTransformed = () =>
+    (isPredictiveBackActive() || progress() > 0) && target()?.type !== "finishActivity";
 
   // 调试用：监控手势状态变化
   createEffect(() => {
