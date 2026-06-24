@@ -27,6 +27,29 @@ const ImageCard: Component<Props> = (props) => {
   const [totalBookmarks, setTotalBookmarks] = createSignal(props.illust.total_bookmarks);
   const [privateHint, setPrivateHint] = createSignal(false);
   const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
+  const [ugoiraHeight, setUgoiraHeight] = createSignal(Math.round(h() * 0.75));
+
+  /** 分析 ugoira 静态帧底部黑边，返回内容实际高度 */
+  function measureUgoiraContent(e: Event) {
+    const img = e.target as HTMLImageElement;
+    if (img.naturalHeight === 0) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(img, 0, 0);
+    // 从底部向上扫描，找第一个亮度 > 15 的像素行
+    const midX = Math.floor(img.naturalWidth / 2);
+    for (let y = img.naturalHeight - 1; y >= 0; y--) {
+      const p = ctx.getImageData(midX, y, 1, 1).data;
+      if ((p[0] + p[1] + p[2]) / 3 > 15) {
+        // 内容结束行 + 2px 安全余量
+        setUgoiraHeight(Math.min(y + 2, img.naturalHeight));
+        return;
+      }
+    }
+  }
 
   let longPressTimer: ReturnType<typeof setTimeout>;
   let hintTimer: ReturnType<typeof setTimeout>;
@@ -75,10 +98,7 @@ const ImageCard: Component<Props> = (props) => {
     <div class="image-card" onClick={() => props.onClick(props.illust.id)}>
       <div class="relative">
         {isUgoira() ? (
-          <div
-            style={{ "aspect-ratio": `${w()} / ${Math.round(h() * 0.75)}` }}
-            class="overflow-hidden"
-          >
+          <div style={{ "aspect-ratio": `${w()} / ${ugoiraHeight()}` }} class="overflow-hidden">
             <PixivImage
               src={img()}
               alt={props.illust.title}
@@ -86,6 +106,7 @@ const ImageCard: Component<Props> = (props) => {
               height={h()}
               loading="lazy"
               class="w-full h-full object-cover object-top"
+              onLoad={measureUgoiraContent}
             />
           </div>
         ) : (

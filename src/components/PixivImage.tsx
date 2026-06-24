@@ -11,6 +11,7 @@ interface PixivImageProps {
   loading?: "lazy" | "eager";
   draggable?: boolean;
   onClick?: (e: MouseEvent) => void;
+  onLoad?: (e: Event) => void;
 }
 
 const PixivImage: Component<PixivImageProps> = (props) => {
@@ -79,6 +80,7 @@ const PixivImage: Component<PixivImageProps> = (props) => {
           loading={props.loading || "lazy"}
           draggable={props.draggable}
           onClick={props.onClick}
+          onLoad={props.onLoad}
           onError={handleError}
         />
       ) : failed() ? (
