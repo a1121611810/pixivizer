@@ -187,33 +187,35 @@ const VirtualFeed: Component<Props> = (props) => {
         {/* Real cards — JS 最短列分布 + 按排 stagger 动画 */}
         {props.illusts.length > 0 && (
           <div ref={containerRef} class="flex gap-3">
-            {columns().map((col) => (
-              <div class="flex-1 flex flex-col gap-3 min-w-0">
-                <For each={col}>
-                  {(illust, index) => {
-                    const eager = index() < 4;
-                    return (
-                      <div
-                        style={
-                          props.skipAnimation
-                            ? {}
-                            : {
-                                animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
-                                "animation-delay": `${index() * 60}ms`,
-                              }
-                        }
-                      >
-                        {eager ? (
-                          <ImageCard illust={illust} onClick={props.onIllustClick} />
-                        ) : (
-                          <LazyImageCard illust={illust} onClick={props.onIllustClick} />
-                        )}
-                      </div>
-                    );
-                  }}
-                </For>
-              </div>
-            ))}
+            <For each={columns()}>
+              {(col) => (
+                <div class="flex-1 flex flex-col gap-3 min-w-0">
+                  <For each={col}>
+                    {(illust, index) => {
+                      const eager = index() < 4;
+                      return (
+                        <div
+                          style={
+                            props.skipAnimation
+                              ? {}
+                              : {
+                                  animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
+                                  "animation-delay": `${index() * 60}ms`,
+                                }
+                          }
+                        >
+                          {eager ? (
+                            <ImageCard illust={illust} onClick={props.onIllustClick} />
+                          ) : (
+                            <LazyImageCard illust={illust} onClick={props.onIllustClick} />
+                          )}
+                        </div>
+                      );
+                    }}
+                  </For>
+                </div>
+              )}
+            </For>
           </div>
         )}
 
