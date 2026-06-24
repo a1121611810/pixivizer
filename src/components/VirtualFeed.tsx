@@ -138,12 +138,13 @@ const VirtualFeed: Component<Props> = (props) => {
         )}
 
         {props.illusts.length > 0 && (
-          <div ref={gridRef} class="grid grid-cols-2 gap-3" style={{ "grid-auto-rows": "1px" }}>
+          <div ref={gridRef} class="grid grid-cols-2 gap-x-3" style={{ "grid-auto-rows": "1px" }}>
             <For each={props.illusts}>
               {(illust, index) => {
                 const eager = index() < 4;
                 return (
                   <div
+                    class="mb-3"
                     style={{
                       "grid-row-end": `span ${calcSpan(illust.width, illust.height)}`,
                       ...(props.skipAnimation
