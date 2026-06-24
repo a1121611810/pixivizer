@@ -14,12 +14,6 @@ const COLUMN_COUNT = 2;
 const GAP_PX = 12; // gap-3 = 12px
 const CARD_PADDING = 60; // 补偿卡片 margin/padding，近似值
 
-interface ColumnItem {
-  illust: PixivIllust;
-  colIndex: number;
-  rowIndex: number;
-}
-
 /**
  * 贪心最短列分配算法。
  * columnWidth = 单列内容的像素宽度（已扣除 gap）。
@@ -28,39 +22,23 @@ interface ColumnItem {
 function distributeToColumns(
   illusts: PixivIllust[],
   columnWidth: number,
-): [ColumnItem[], ColumnItem[]] {
+): [PixivIllust[], PixivIllust[]] {
   if (columnWidth <= 0) {
-    // 宽度未知时，简单交替分配（fallback）
-    const left: ColumnItem[] = [];
-    const right: ColumnItem[] = [];
+    const left: PixivIllust[] = [];
+    const right: PixivIllust[] = [];
     illusts.forEach((illust, i) => {
-      const item: ColumnItem = {
-        illust,
-        colIndex: i % COLUMN_COUNT,
-        rowIndex: Math.floor(i / COLUMN_COUNT),
-      };
-      (i % COLUMN_COUNT === 0 ? left : right).push(item);
+      (i % COLUMN_COUNT === 0 ? left : right).push(illust);
     });
     return [left, right];
   }
 
-  const columns: [ColumnItem[], ColumnItem[]] = [[], []];
+  const columns: [PixivIllust[], PixivIllust[]] = [[], []];
   const heights = [0, 0];
 
   for (const illust of illusts) {
-    // 找到当前最短的列
     const shortestCol = heights[0] <= heights[1] ? 0 : 1;
-
-    // 估算该作品在此列的渲染高度
     const estHeight = columnWidth / (illust.width / illust.height) + CARD_PADDING;
-
-    const item: ColumnItem = {
-      illust,
-      colIndex: shortestCol,
-      rowIndex: columns[shortestCol].length,
-    };
-
-    columns[shortestCol].push(item);
+    columns[shortestCol].push(illust);
     heights[shortestCol] += estHeight;
   }
 
