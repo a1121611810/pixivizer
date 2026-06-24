@@ -122,6 +122,12 @@ const NavBar: Component = () => {
       const delta = currentY - lastScrollY;
       lastScrollY = currentY;
 
+      // 程序化滚动跳转（页面切换恢复位置等），重置跟踪状态，不触发显隐
+      if (Math.abs(delta) > 200) {
+        accumulatedDelta = 0;
+        return;
+      }
+
       accumulatedDelta += delta;
 
       if (accumulatedDelta > HIDE_THRESHOLD) {
