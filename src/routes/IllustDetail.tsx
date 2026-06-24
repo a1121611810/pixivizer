@@ -228,7 +228,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
                   width={illust()!.width}
                   height={illust()!.height}
                   loading="eager"
-                  class="max-h-[60vh] object-contain cursor-pointer"
+                  class="max-h-[60vh] object-cover cursor-pointer"
                 />
               </div>
             )}

@@ -134,7 +134,7 @@ const UgoiraViewer: Component<Props> = (props) => {
           src={props.coverUrl}
           alt="cover"
           loading="eager"
-          class="max-w-full max-h-full object-contain"
+          class="max-w-full max-h-full object-cover"
           draggable={false}
         />
       )}
