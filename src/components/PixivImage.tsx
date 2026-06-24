@@ -82,6 +82,7 @@ const PixivImage: Component<PixivImageProps> = (props) => {
           onClick={props.onClick}
           onLoad={props.onLoad}
           onError={handleError}
+          style={{ "aspect-ratio": aspectRatio }}
         />
       ) : failed() ? (
         <div
