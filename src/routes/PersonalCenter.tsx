@@ -28,6 +28,17 @@ function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: stri
   return resolveImageUrl(src);
 }
 
+const shimmerStyle = {
+  background:
+    "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+  "background-size": "200% 100%",
+  animation: "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+};
+
+function Shimmer(props: { class?: string; style?: Record<string, string | number> }) {
+  return <div class={props.class || ""} style={{ ...shimmerStyle, ...props.style }} />;
+}
+
 import {
   profile,
   viewedUser,
@@ -162,7 +173,17 @@ const PersonalCenter: Component<Props> = (props) => {
             </span>
           </header>
 
-          <Show when={displayUser()}>
+          <Show
+            when={displayUser()}
+            fallback={
+              /* Profile skeleton */
+              <div class="flex flex-col items-center px-4 pt-6 pb-3">
+                <Shimmer class="w-20 h-20 rounded-[var(--borderRadiusCircular)]" />
+                <Shimmer class="mt-2 h-5 rounded w-24" />
+                <Shimmer class="mt-1 h-4 rounded w-16" />
+              </div>
+            }
+          >
             {/* User info */}
             <div class="flex flex-col items-center px-4 pt-6 pb-3">
               <div class="relative w-20 h-20">
@@ -301,6 +322,27 @@ const PersonalCenter: Component<Props> = (props) => {
                 )}
               </div>
             ))}
+
+            {loading() && list().length === 0 && (
+              <div class="flex flex-col" style={{ gap: "var(--spacingVerticalS)" }}>
+                {Array.from({ length: 5 }).map(() => (
+                  <div class="surface-card rounded-[var(--borderRadiusMedium)] p-3">
+                    <div class="flex items-center gap-3">
+                      <Shimmer class="w-10 h-10 rounded-[var(--borderRadiusCircular)] flex-shrink-0" />
+                      <div class="flex-1 flex flex-col gap-1.5">
+                        <Shimmer class="h-4 rounded w-24" />
+                        <Shimmer class="h-3 rounded w-16" />
+                      </div>
+                    </div>
+                    <div class="flex gap-1.5 mt-2">
+                      <Shimmer class="h-12 aspect-square rounded-[var(--borderRadiusSmall)]" />
+                      <Shimmer class="h-12 aspect-square rounded-[var(--borderRadiusSmall)]" />
+                      <Shimmer class="h-12 aspect-square rounded-[var(--borderRadiusSmall)]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {loading() && <LoadingSpinner text="加载中..." />}
 
