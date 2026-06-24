@@ -14,6 +14,7 @@ import {
   getBookmarkScrollY,
 } from "../stores/bookmarkStore";
 import { user, isLoggedIn } from "../stores/authStore";
+import { resolveImageUrl } from "../utils/imageLoader";
 import { setShowSettingsSheet, setCurrentTab } from "../stores/uiStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
@@ -61,7 +62,7 @@ const Bookmarks: Component = () => {
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0">
               <Show when={isLoggedIn() && user()} fallback={<>Pixivizer</>}>
                 <img
-                  src={user()!.profile_image_urls.medium}
+                  src={resolveImageUrl(user()!.profile_image_urls.medium)}
                   alt={user()!.name}
                   class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
                 />

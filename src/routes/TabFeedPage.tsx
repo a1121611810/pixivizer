@@ -16,6 +16,7 @@ import {
 import { setCurrentTab, setShowSettingsSheet } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import { user, isLoggedIn } from "../stores/authStore";
+import { resolveImageUrl } from "../utils/imageLoader";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
@@ -58,7 +59,7 @@ const TabFeedPage: Component<Props> = (props) => {
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0">
               <Show when={isLoggedIn() && user()} fallback={<>Pixivizer</>}>
                 <img
-                  src={user()!.profile_image_urls.medium}
+                  src={resolveImageUrl(user()!.profile_image_urls.medium)}
                   alt={user()!.name}
                   class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
                 />
