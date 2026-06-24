@@ -137,3 +137,13 @@ export function switchTab(tab: "following" | "followers") {
     loadFollowers();
   }
 }
+
+export function resetData() {
+  setProfile(null);
+  setViewedUser(null);
+  setFollowingList([]);
+  setFollowersList([]);
+  setFollowingNextUrl(null);
+  setFollowersNextUrl(null);
+  setError(null);
+}

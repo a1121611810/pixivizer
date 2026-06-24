@@ -54,6 +54,7 @@ import {
   loadMoreFollowers,
   toggleUserFollow,
   switchTab,
+  resetData,
 } from "../stores/userStore";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
@@ -76,6 +77,7 @@ const PersonalCenter: Component<Props> = (props) => {
   onMount(() => {
     setCurrentTab("me");
     const uid = targetUserId();
+    resetData();
     loadProfile(uid);
     loadFollowing(uid);
 
