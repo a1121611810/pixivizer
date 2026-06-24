@@ -1,4 +1,4 @@
-import { type Component, onMount, Show } from "solid-js";
+import { type Component, onMount, onCleanup, createSignal, Show } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
@@ -27,6 +27,7 @@ function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: stri
   const src = urls.medium || urls.px_170x170 || urls.px_50x50 || "";
   return resolveImageUrl(src);
 }
+
 import {
   profile,
   viewedUser,
@@ -57,15 +58,34 @@ const PersonalCenter: Component<Props> = (props) => {
   const params = useParams<{ id: string }>();
   const targetUserId = () => Number(props.userId || params.id || user()?.id || 0);
   const isSelf = () => targetUserId() === (user()?.id ?? 0);
+  const displayUser = () => (isSelf() ? user() : viewedUser());
+  const [collapsed, setCollapsed] = createSignal(false);
+  const COLLAPSE_THRESHOLD = 140;
 
   onMount(() => {
     setCurrentTab("me");
     const uid = targetUserId();
     loadProfile(uid);
     loadFollowing(uid);
+
+    // ── Scroll-driven header collapse ──
+    let scrollTicking = false;
+    function onScroll() {
+      setCollapsed(window.scrollY > COLLAPSE_THRESHOLD);
+    }
+    function onScrollRaf() {
+      if (!scrollTicking) {
+        scrollTicking = true;
+        requestAnimationFrame(() => {
+          onScroll();
+          scrollTicking = false;
+        });
+      }
+    }
+    window.addEventListener("scroll", onScrollRaf, { passive: true });
+    onCleanup(() => window.removeEventListener("scroll", onScrollRaf));
   });
 
-  // 统计数字格式化
   function fmtNum(n: number | undefined): string {
     if (n == null) return "—";
     if (n >= 10000) return `${(n / 10000).toFixed(1)}万`;
@@ -96,33 +116,67 @@ const PersonalCenter: Component<Props> = (props) => {
         <div class="pb-16">
           {/* Header */}
           <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3">
-            <button onClick={() => navigate(-1)} class="btn-icon" aria-label="返回">
+            <button onClick={() => navigate(-1)} class="btn-icon flex-shrink-0" aria-label="返回">
               ←
             </button>
-            <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
-              个人中心
-            </h1>
-          </header>
 
-          <Show when={user()}>
-            {/* User info */}
-            <div class="flex flex-col items-center px-4 pt-6 pb-3">
-              <div class="relative w-20 h-20">
-                <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
-                <Show when={isSelf() ? user() : viewedUser()}>
+            {/* 收起态：小头像 + 名称 */}
+            <span
+              class="flex items-center gap-2 min-w-0 flex-1 transition-opacity duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+              style={{
+                opacity: collapsed() ? "1" : "0",
+                "pointer-events": collapsed() ? "auto" : "none",
+              }}
+              aria-hidden={!collapsed()}
+            >
+              <div class="relative w-6 h-6 flex-shrink-0">
+                <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
+                <Show when={displayUser()}>
                   <img
-                    src={avatarUrl((isSelf() ? user() : viewedUser())!.profile_image_urls)}
-                    alt={(isSelf() ? user() : viewedUser())!.name}
-                    class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)] z-10"
+                    src={avatarUrl(displayUser()!.profile_image_urls)}
+                    alt={displayUser()!.name}
+                    class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover z-10"
                     onError={(e) => ((e.target as HTMLElement).style.display = "none")}
                   />
                 </Show>
               </div>
+              <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
+                {displayUser()?.name}
+              </span>
+            </span>
+
+            {/* 展开态：标题 */}
+            <span
+              class="flex-1 min-w-0 transition-opacity duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+              style={{
+                opacity: collapsed() ? "0" : "1",
+                "pointer-events": collapsed() ? "none" : "auto",
+              }}
+              aria-hidden={collapsed()}
+            >
+              <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
+                个人中心
+              </h1>
+            </span>
+          </header>
+
+          <Show when={displayUser()}>
+            {/* User info */}
+            <div class="flex flex-col items-center px-4 pt-6 pb-3">
+              <div class="relative w-20 h-20">
+                <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
+                <img
+                  src={avatarUrl(displayUser()!.profile_image_urls)}
+                  alt={displayUser()!.name}
+                  class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)] z-10"
+                  onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                />
+              </div>
               <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
-                {(isSelf() ? user() : viewedUser())?.name}
+                {displayUser()!.name}
               </h2>
               <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
-                @{(isSelf() ? user() : viewedUser())?.account}
+                @{displayUser()!.account}
               </p>
             </div>
 
@@ -157,8 +211,8 @@ const PersonalCenter: Component<Props> = (props) => {
             </div>
           </Show>
 
-          {/* Segmented control */}
-          <div class="px-4 pb-3">
+          {/* Segmented control — sticky below header */}
+          <div class="sticky top-12 z-10 px-4 pb-3 bg-[var(--colorNeutralBackground3)]">
             <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
               <button
                 classList={{
