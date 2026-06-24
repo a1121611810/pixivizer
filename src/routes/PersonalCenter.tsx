@@ -208,6 +208,39 @@ const PersonalCenter: Component<Props> = (props) => {
               <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
                 @{displayUser()!.account}
               </p>
+              {!isSelf() && (
+                <button
+                  class="inline-flex items-center justify-center gap-[var(--spacingHorizontalXS)] rounded-[var(--borderRadiusMedium)] font-semibold [font-size:var(--fontSizeBase200)] min-h-8 px-[var(--spacingHorizontalM)] border transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] active:scale-[0.97] select-none cursor-pointer focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)] mt-2"
+                  classList={{
+                    "bg-[var(--colorBrandBackground)] text-white border-[var(--colorBrandBackground)] hover:bg-[var(--colorBrandBackgroundHover)] active:bg-[var(--colorBrandBackgroundPressed)]":
+                      !(viewedUser()?.is_followed ?? false),
+                    "bg-transparent text-[var(--colorNeutralForeground2)] border-[var(--colorNeutralStroke2)] hover:text-[var(--colorStatusDangerForeground1)] hover:border-[var(--colorStatusDangerForeground1)]":
+                      viewedUser()?.is_followed ?? false,
+                  }}
+                  onClick={async () => {
+                    const vu = viewedUser();
+                    if (!vu) return;
+                    const prev = vu.is_followed ?? false;
+                    vu.is_followed = !prev;
+                    // trigger reactive update
+                    loadProfile(vu.id);
+                    try {
+                      if (prev) {
+                        const { unfollowUser } = await import("../api/illust");
+                        await unfollowUser(vu.id);
+                      } else {
+                        const { followUser } = await import("../api/illust");
+                        await followUser(vu.id);
+                      }
+                    } catch {
+                      vu.is_followed = prev;
+                      loadProfile(vu.id);
+                    }
+                  }}
+                >
+                  {viewedUser()?.is_followed ? "已关注" : "关注"}
+                </button>
+              )}
             </div>
 
             {/* Stats card */}

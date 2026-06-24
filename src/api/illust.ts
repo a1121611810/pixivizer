@@ -76,9 +76,12 @@ export function unfollowUser(userId: number): Promise<void> {
   });
 }
 
-export function loadUserIllusts(userId: number): Promise<PixivIllustListResponse> {
+export function loadUserIllusts(
+  userId: number,
+  type: ContentType = "illust",
+): Promise<PixivIllustListResponse> {
   return apiClient.get<PixivIllustListResponse>("/v1/user/illusts", {
     user_id: String(userId),
-    type: "illust",
+    type,
   });
 }

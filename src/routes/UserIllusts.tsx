@@ -1,8 +1,16 @@
-import { type Component, onMount, createEffect } from "solid-js";
+import { type Component, createEffect } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import { user } from "../stores/authStore";
-import { setCurrentTab } from "../stores/uiStore";
-import { illusts, nextUrl, loading, error, load, loadMore } from "../stores/userIllustsStore";
+import {
+  illusts,
+  nextUrl,
+  loading,
+  error,
+  contentType,
+  load,
+  loadMore,
+  switchType,
+} from "../stores/userIllustsStore";
 import { viewedUser, loadProfile } from "../stores/userStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
@@ -17,7 +25,7 @@ const UserIllusts: Component = () => {
   createEffect(() => {
     const uid = userId();
     if (uid) {
-      load(uid);
+      load(uid, contentType());
       loadProfile(uid);
     }
   });
@@ -35,6 +43,36 @@ const UserIllusts: Component = () => {
             </h1>
           </header>
 
+          {/* Segmented: 插画 / 漫画 */}
+          <div class="px-4 py-3">
+            <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
+              <button
+                classList={{
+                  "segmented-item-active": contentType() === "illust",
+                  "segmented-item-inactive": contentType() !== "illust",
+                }}
+                onClick={() => {
+                  switchType("illust");
+                  load(userId(), "illust");
+                }}
+              >
+                插画
+              </button>
+              <button
+                classList={{
+                  "segmented-item-active": contentType() === "manga",
+                  "segmented-item-inactive": contentType() !== "manga",
+                }}
+                onClick={() => {
+                  switchType("manga");
+                  load(userId(), "manga");
+                }}
+              >
+                漫画
+              </button>
+            </div>
+          </div>
+
           <VirtualFeed
             illusts={illusts()}
             loading={loading()}
@@ -44,7 +82,7 @@ const UserIllusts: Component = () => {
             onLoadMore={loadMore}
             onRefresh={async () => {
               const uid = userId();
-              if (uid) await load(uid);
+              if (uid) await load(uid, contentType());
             }}
           />
         </div>
