@@ -74,14 +74,30 @@ const ImageCard: Component<Props> = (props) => {
   return (
     <div class="image-card" onClick={() => props.onClick(props.illust.id)}>
       <div class="relative">
-        <PixivImage
-          src={img()}
-          alt={props.illust.title}
-          width={w()}
-          height={h()}
-          loading="lazy"
-          class={isUgoira() ? "w-full h-auto block object-cover" : "w-full h-auto block"}
-        />
+        {isUgoira() ? (
+          <div
+            style={{ "aspect-ratio": `${w()} / ${Math.round(h() * 0.75)}` }}
+            class="overflow-hidden"
+          >
+            <PixivImage
+              src={img()}
+              alt={props.illust.title}
+              width={w()}
+              height={h()}
+              loading="lazy"
+              class="w-full h-full object-cover object-top"
+            />
+          </div>
+        ) : (
+          <PixivImage
+            src={img()}
+            alt={props.illust.title}
+            width={w()}
+            height={h()}
+            loading="lazy"
+            class="w-full h-auto block"
+          />
+        )}
         {isUgoira() && <div class="absolute top-1.5 right-1.5 badge-overlay">▶ 动图</div>}
         {props.illust.page_count > 1 && (
           <div class="absolute bottom-1.5 left-1.5 badge-overlay">📄 {props.illust.page_count}</div>
