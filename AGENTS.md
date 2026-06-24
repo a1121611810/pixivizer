@@ -137,7 +137,7 @@ src/
 - **样式与交互**：见「Fluent Design 规范」章节，不得例外
 - **注释**：中文注释为主，API 层和类型定义处偏英文
 - **文件命名**：组件 PascalCase、工具/API camelCase
-- **Android**：`android/` 目录在 `.gitignore` 中忽略，不提交到版本控制。构建 APK 需手动运行 `pnpm build && pnpm cap:sync && cd android && ./gradlew assembleDebug`
+- **Android**：`android/` 源码与关键配置纳入版本控制，`android/.gitignore` 负责忽略构建产物（`.gradle/`、`build/` 等）和 Capacitor 自动生成文件（`capacitor.config.json`、`capacitor.settings.gradle`、`app/capacitor.build.gradle`、复制的 `app/src/main/assets/public` 等）。构建 APK 仍需运行 `pnpm build && pnpm cap:sync && cd android && ./gradlew assembleDebug`（或 `pnpm build:android`）。
 
 ## 注意事项
 
