@@ -69,7 +69,7 @@ export function saveTabScroll(tab: string) {
   // 保存当前数据到该 Tab 缓存
   tabIllusts[tab] = illusts();
   tabNextUrl[tab] = nextUrl();
-  tabScrollY[tab] = currentScrollY;
+  tabScrollY[tab] = window.scrollY;
 }
 
 export function markFeedMounted() {
