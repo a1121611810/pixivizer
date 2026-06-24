@@ -120,43 +120,45 @@ const PersonalCenter: Component<Props> = (props) => {
               ←
             </button>
 
-            {/* 收起态：小头像 + 名称 */}
-            <span
-              class="flex items-center gap-2 min-w-0 flex-1 transition-opacity duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-              style={{
-                opacity: collapsed() ? "1" : "0",
-                "pointer-events": collapsed() ? "auto" : "none",
-              }}
-              aria-hidden={!collapsed()}
-            >
-              <div class="relative w-6 h-6 flex-shrink-0">
-                <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
-                <Show when={displayUser()}>
-                  <img
-                    src={avatarUrl(displayUser()!.profile_image_urls)}
-                    alt={displayUser()!.name}
-                    class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover z-10"
-                    onError={(e) => ((e.target as HTMLElement).style.display = "none")}
-                  />
-                </Show>
-              </div>
-              <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
-                {displayUser()?.name}
+            <span class="relative flex-1 min-w-0 h-full flex items-center">
+              {/* 收起态：小头像 + 名称 (absolute overlay) */}
+              <span
+                class="absolute inset-0 flex items-center gap-2 min-w-0 transition-opacity duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                style={{
+                  opacity: collapsed() ? "1" : "0",
+                  "pointer-events": collapsed() ? "auto" : "none",
+                }}
+                aria-hidden={!collapsed()}
+              >
+                <div class="relative w-6 h-6 flex-shrink-0">
+                  <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
+                  <Show when={displayUser()}>
+                    <img
+                      src={avatarUrl(displayUser()!.profile_image_urls)}
+                      alt={displayUser()!.name}
+                      class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover z-10"
+                      onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                    />
+                  </Show>
+                </div>
+                <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
+                  {displayUser()?.name}
+                </span>
               </span>
-            </span>
 
-            {/* 展开态：标题 */}
-            <span
-              class="flex-1 min-w-0 transition-opacity duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-              style={{
-                opacity: collapsed() ? "0" : "1",
-                "pointer-events": collapsed() ? "none" : "auto",
-              }}
-              aria-hidden={collapsed()}
-            >
-              <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
-                个人中心
-              </h1>
+              {/* 展开态：标题 */}
+              <span
+                class="transition-opacity duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                style={{
+                  opacity: collapsed() ? "0" : "1",
+                  "pointer-events": collapsed() ? "none" : "auto",
+                }}
+                aria-hidden={collapsed()}
+              >
+                <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
+                  个人中心
+                </h1>
+              </span>
             </span>
           </header>
 
