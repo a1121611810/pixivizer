@@ -3,7 +3,7 @@ import { Route, Router, useNavigate, useLocation, useBeforeLeave } from "@solidj
 import type { RouteSectionProps } from "@solidjs/router";
 import { App as CapApp } from "@capacitor/app";
 import { isLoggedIn, isLoading, initializeAuth } from "./stores/authStore";
-import { loadPredictiveBackPreference } from "./stores/uiStore";
+import { loadPredictiveBackPreference, loadAutoHideNavBarPreference } from "./stores/uiStore";
 import {
   initPredictiveBack,
   setPredictiveBackEnabled,
@@ -48,6 +48,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     // Initialize predictive back coordinator before auth
     initPredictiveBack(navigate);
     await loadPredictiveBackPreference();
+    await loadAutoHideNavBarPreference();
 
     // Initialize route stack tracking
     clearRouteStack();

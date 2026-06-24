@@ -20,10 +20,12 @@ const [detailQuality, setDetailQuality] = createSignal<ImageQuality>("medium");
 const [cacheSize, setCacheSize] = createSignal<CacheSize>(600);
 
 const PREF_KEY_USE_PREDICTIVE_BACK = "use_predictive_back";
+const PREF_KEY_AUTO_HIDE_NAV_BAR = "auto_hide_nav_bar";
 const ANDROID_16_API_LEVEL = 36;
 
 const [usePredictiveBack, setUsePredictiveBackSig] = createSignal<boolean>(false);
 const [isPredictiveBackSupported, setIsPredictiveBackSupportedSig] = createSignal<boolean>(false);
+const [autoHideNavBar, setAutoHideNavBarSig] = createSignal<boolean>(true);
 
 async function applyPredictiveBackState(enabled: boolean): Promise<void> {
   try {
@@ -106,6 +108,26 @@ createEffect(() => {
   setMaxCacheSize(cacheSize());
 });
 
+async function setAutoHideNavBar(enabled: boolean): Promise<void> {
+  setAutoHideNavBarSig(enabled);
+  try {
+    await Preferences.set({ key: PREF_KEY_AUTO_HIDE_NAV_BAR, value: String(enabled) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist autoHideNavBar", e);
+  }
+}
+
+async function loadAutoHideNavBarPreference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_AUTO_HIDE_NAV_BAR });
+    if (value !== null) {
+      setAutoHideNavBarSig(value === "true");
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load autoHideNavBar preference", e);
+  }
+}
+
 export {
   currentTab,
   setCurrentTab,
@@ -123,4 +145,7 @@ export {
   setUsePredictiveBack,
   isPredictiveBackSupported,
   loadPredictiveBackPreference,
+  autoHideNavBar,
+  setAutoHideNavBar,
+  loadAutoHideNavBarPreference,
 };

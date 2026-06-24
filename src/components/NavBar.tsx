@@ -1,5 +1,5 @@
-import { type Component, createEffect, createSignal, onMount } from "solid-js";
-import { currentTab, setCurrentTab } from "../stores/uiStore";
+import { type Component, createEffect, createSignal, onMount, onCleanup } from "solid-js";
+import { currentTab, setCurrentTab, autoHideNavBar } from "../stores/uiStore";
 import { useNavigate } from "@solidjs/router";
 
 // ── Fluent UI System Icons (24px) — SVG path data ──
@@ -76,6 +76,8 @@ const NavBar: Component = () => {
   let containerRef!: HTMLDivElement;
   const tabEls: Record<string, HTMLButtonElement> = {};
 
+  const [hidden, setHidden] = createSignal(false);
+
   // Measure and position the sliding pill whenever active tab changes
   const updatePill = () => {
     const tabKey = currentTab();
@@ -91,6 +93,59 @@ const NavBar: Component = () => {
   // Initial layout → measure pill position
   onMount(() => {
     requestAnimationFrame(updatePill);
+
+    // ── Scroll-driven NavBar hide/show ──
+    let lastScrollY = window.scrollY;
+    let accumulatedDelta = 0;
+    const HIDE_THRESHOLD = 30;
+    const TOP_ZONE = 100;
+    let scrollTicking = false;
+
+    function onScroll() {
+      if (!autoHideNavBar()) {
+        setHidden(false);
+        return;
+      }
+
+      const currentY = window.scrollY;
+
+      // 顶部区域始终显示
+      if (currentY < TOP_ZONE) {
+        setHidden(false);
+        accumulatedDelta = 0;
+        lastScrollY = currentY;
+        return;
+      }
+
+      const delta = currentY - lastScrollY;
+      lastScrollY = currentY;
+
+      accumulatedDelta += delta;
+
+      if (accumulatedDelta > HIDE_THRESHOLD) {
+        setHidden(true);
+        accumulatedDelta = 0;
+      } else if (accumulatedDelta < -HIDE_THRESHOLD) {
+        setHidden(false);
+        accumulatedDelta = 0;
+      }
+    }
+
+    function onScrollRaf() {
+      if (!scrollTicking) {
+        scrollTicking = true;
+        requestAnimationFrame(() => {
+          onScroll();
+          scrollTicking = false;
+        });
+      }
+    }
+
+    window.addEventListener("scroll", onScrollRaf, { passive: true });
+
+    onCleanup(() => {
+      window.removeEventListener("scroll", onScrollRaf);
+    });
   });
 
   // Tab change → slide pill
@@ -101,7 +156,16 @@ const NavBar: Component = () => {
   });
 
   return (
-    <nav class="bottom-nav select-none nav-safe-bottom" aria-label="主导航">
+    <nav
+      class="bottom-nav select-none nav-safe-bottom"
+      aria-label="主导航"
+      style={{
+        transform: hidden()
+          ? "translateY(calc(100% + 12px + env(safe-area-inset-bottom, 0px)))"
+          : "translateY(0)",
+        transition: `transform var(--durationNormal) var(--curveEasyEase)`,
+      }}
+    >
       <div ref={containerRef} class="bottom-nav-container relative">
         {/* Sliding active pill indicator */}
         <div

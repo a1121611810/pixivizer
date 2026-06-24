@@ -14,6 +14,8 @@ import {
   usePredictiveBack,
   setUsePredictiveBack,
   isPredictiveBackSupported,
+  autoHideNavBar,
+  setAutoHideNavBar,
 } from "../stores/uiStore";
 import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 
@@ -249,6 +251,52 @@ const SettingsSheet: Component = () => {
                     "translate-x-0.5": theme() !== "dark",
                   }}
                 />
+              </button>
+            </div>
+
+            {/* 自动隐藏导航栏开关行 */}
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M3.75 5.25a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75zm0 4.5a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75zm0 4.5a.75.75 0 0 0 0 1.5h11.5a.75.75 0 0 0 0-1.5H3.75z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                    自动隐藏导航栏
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                    页面向下滚动时收起导航栏，上滑时重新显示
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setAutoHideNavBar(!autoHideNavBar())}
+                role="switch"
+                aria-checked={autoHideNavBar()}
+                aria-label="自动隐藏导航栏"
+                class="relative flex-shrink-0 w-14 min-h-10 px-0 py-[var(--spacingVerticalSNudge)] appearance-none border-0 outline-none rounded-[var(--borderRadiusCircular)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)] flex items-center justify-center active:scale-[0.98] cursor-pointer"
+              >
+                <span
+                  class="relative block w-14 h-7 rounded-[var(--borderRadiusCircular)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                  classList={{
+                    "bg-[var(--colorCompoundBrandBackground)]": autoHideNavBar(),
+                    "bg-[var(--colorNeutralStrokeAccessible)]": !autoHideNavBar(),
+                  }}
+                >
+                  <span
+                    class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                    classList={{
+                      "translate-x-[28px]": autoHideNavBar(),
+                      "translate-x-0.5": !autoHideNavBar(),
+                    }}
+                  />
+                </span>
               </button>
             </div>
 
