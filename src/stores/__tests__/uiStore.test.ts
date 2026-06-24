@@ -3,9 +3,14 @@ import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { Device } from "@capacitor/device";
 import { App } from "@capacitor/app";
+import { setPredictiveBackEnabled } from "../../services/predictiveBack";
 
 vi.mock("@capacitor/core", () => ({
   Capacitor: { getPlatform: vi.fn(), isNativePlatform: vi.fn(() => false) },
+}));
+
+vi.mock("../../services/predictiveBack", () => ({
+  setPredictiveBackEnabled: vi.fn(),
 }));
 
 vi.mock("@capacitor/preferences", () => ({
@@ -129,6 +134,7 @@ describe("usePredictiveBack", () => {
     expect(App.toggleBackButtonHandler).toHaveBeenLastCalledWith({
       enabled: true,
     });
+    expect(setPredictiveBackEnabled).toHaveBeenLastCalledWith(false);
   });
 
   it("setUsePredictiveBack does not call native handler on non-Android", async () => {
@@ -139,5 +145,6 @@ describe("usePredictiveBack", () => {
 
     expect(Preferences.set).not.toHaveBeenCalled();
     expect(App.toggleBackButtonHandler).not.toHaveBeenCalled();
+    expect(setPredictiveBackEnabled).not.toHaveBeenCalled();
   });
 });

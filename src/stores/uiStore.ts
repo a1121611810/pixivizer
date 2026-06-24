@@ -4,6 +4,7 @@ import { Preferences } from "@capacitor/preferences";
 import { App } from "@capacitor/app";
 import { Device } from "@capacitor/device";
 import { setMaxCacheSize } from "../utils/imageLoader";
+import { setPredictiveBackEnabled } from "../services/predictiveBack";
 
 type Tab = "recommended" | "follow" | "bookmarks";
 export type { Tab };
@@ -24,6 +25,19 @@ const ANDROID_16_API_LEVEL = 36;
 const [usePredictiveBack, setUsePredictiveBackSig] = createSignal<boolean>(false);
 const [isPredictiveBackSupported, setIsPredictiveBackSupportedSig] = createSignal<boolean>(false);
 
+async function applyPredictiveBackState(enabled: boolean): Promise<void> {
+  try {
+    await App.toggleBackButtonHandler({ enabled: !enabled });
+  } catch (e) {
+    console.warn("[uiStore] Failed to toggle back button handler", e);
+  }
+  try {
+    await setPredictiveBackEnabled(enabled);
+  } catch (e) {
+    console.warn("[uiStore] Failed to set predictive back enabled state", e);
+  }
+}
+
 async function loadPredictiveBackPreference(): Promise<void> {
   // 预测返回仅在 Android 原生层有意义，Web/iOS 直接保持未启用
   const platform = Capacitor.getPlatform();
@@ -42,36 +56,38 @@ async function loadPredictiveBackPreference(): Promise<void> {
     const { value } = await Preferences.get({ key: PREF_KEY_USE_PREDICTIVE_BACK });
     if (value !== null) {
       setUsePredictiveBackSig(value === "true");
-      return;
+    } else {
+      // 首次启动无持久化值时，默认与系统支持情况保持一致
+      setUsePredictiveBackSig(supported);
+      await Preferences.set({ key: PREF_KEY_USE_PREDICTIVE_BACK, value: String(supported) });
     }
-
-    // 首次启动无持久化值时，默认与系统支持情况保持一致
-    setUsePredictiveBackSig(supported);
-    await Preferences.set({ key: PREF_KEY_USE_PREDICTIVE_BACK, value: String(supported) });
   } catch (e) {
     console.warn("[uiStore] Failed to load predictive back preference", e);
     setUsePredictiveBackSig(false);
     setIsPredictiveBackSupportedSig(false);
   }
+
+  await applyPredictiveBackState(usePredictiveBack());
 }
 
 async function setUsePredictiveBack(enabled: boolean): Promise<void> {
   // 非 Android 平台不调用原生返回处理，避免 unimplemented warning
   if (Capacitor.getPlatform() !== "android") return;
 
+  const previous = usePredictiveBack();
   setUsePredictiveBackSig(enabled);
 
   try {
     await Preferences.set({ key: PREF_KEY_USE_PREDICTIVE_BACK, value: String(enabled) });
+    await applyPredictiveBackState(enabled);
   } catch (e) {
-    console.warn("[uiStore] Failed to save predictive back preference", e);
-  }
-
-  try {
-    // 开启预测返回时，需要关闭 Capacitor 对返回键的默认拦截，让系统手势接管
-    await App.toggleBackButtonHandler({ enabled: !enabled });
-  } catch (e) {
-    console.warn("[uiStore] Failed to toggle back button handler", e);
+    console.warn("[uiStore] Failed to apply predictive back state, reverting UI toggle", e);
+    setUsePredictiveBackSig(previous);
+    try {
+      await applyPredictiveBackState(previous);
+    } catch (rollbackErr) {
+      console.warn("[uiStore] Failed to rollback predictive back native state", rollbackErr);
+    }
   }
 }
 
@@ -89,9 +105,6 @@ createEffect(() => {
 createEffect(() => {
   setMaxCacheSize(cacheSize());
 });
-
-// Log tab changes for debugging
-createEffect(() => {});
 
 export {
   currentTab,

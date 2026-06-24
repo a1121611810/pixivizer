@@ -15,6 +15,7 @@ import {
   setUsePredictiveBack,
   isPredictiveBackSupported,
 } from "../stores/uiStore";
+import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 
 // ── Fluent UI System Icons (24px) — SVG path data ──
 // Sourced from microsoft/fluentui-system-icons
@@ -91,6 +92,7 @@ const FluentIcon: Component<{ name: IconName; size?: number; active?: boolean }>
 const SettingsSheet: Component = () => {
   const [closing, setClosing] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
+  const pbStyle = usePredictiveBackOverlayStyle();
 
   // Reset animation state and register back-button listener each time opened
   createEffect(() => {
@@ -134,7 +136,7 @@ const SettingsSheet: Component = () => {
 
   return (
     <Show when={showSettingsSheet()}>
-      <div class="fixed inset-0 z-50">
+      <div class="fixed inset-0 z-50" style={pbStyle()}>
         {/* Scrim — click to close */}
         <div
           class="absolute inset-0 transition-opacity cursor-pointer"

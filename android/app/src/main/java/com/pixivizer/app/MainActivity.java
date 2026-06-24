@@ -1,5 +1,6 @@
 package com.pixivizer.app;
 
+import android.os.Bundle;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -7,7 +8,10 @@ import android.webkit.WebViewClient;
 
 import com.getcapacitor.BridgeActivity;
 
+import com.pixivizer.app.PredictiveBackPlugin;
+
 import java.io.ByteArrayOutputStream;
+
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -17,6 +21,12 @@ import java.net.URL;
  * 注入 Referer 头绕过 Pixiv 防盗链。
  */
 public class MainActivity extends BridgeActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(PredictiveBackPlugin.class);
+        super.onCreate(savedInstanceState);
+    }
 
     @Override
     public void onStart() {

@@ -11,8 +11,13 @@ import PageTransition from "../components/PageTransition";
 import HeartBurstEffect from "../components/HeartBurstEffect";
 import { detailQuality } from "../stores/uiStore";
 
-const IllustDetail: Component = () => {
+interface IllustDetailProps {
+  illustId?: string;
+}
+
+const IllustDetail: Component<IllustDetailProps> = (props) => {
   const params = useParams<{ id: string }>();
+  const illustId = () => props.illustId ?? params.id;
   const navigate = useNavigate();
   const [illust, setIllust] = createSignal<PixivIllust | null>(null);
   const [viewerOpen, setViewerOpen] = createSignal(false);
@@ -94,7 +99,7 @@ const IllustDetail: Component = () => {
 
   onMount(async () => {
     try {
-      const data = await loadDetail(Number(params.id));
+      const data = await loadDetail(Number(illustId()));
       setIllust(data.illust);
     } catch (e) {
       setError((e as { message?: string }).message ?? "加载失败");

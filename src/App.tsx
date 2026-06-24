@@ -1,31 +1,57 @@
 import { type Component, onMount, Show, createSignal, onCleanup } from "solid-js";
-import { Route, Router, useNavigate } from "@solidjs/router";
+import { Route, Router, useNavigate, useLocation, useBeforeLeave } from "@solidjs/router";
 import type { RouteSectionProps } from "@solidjs/router";
-import { isLoggedIn, isLoading, initializeAuth } from "./stores/authStore";
-import { usePredictiveBack, loadPredictiveBackPreference } from "./stores/uiStore";
 import { App as CapApp } from "@capacitor/app";
+import { isLoggedIn, isLoading, initializeAuth } from "./stores/authStore";
+import { loadPredictiveBackPreference } from "./stores/uiStore";
+import {
+  initPredictiveBack,
+  setPredictiveBackEnabled,
+  pushRoute,
+  popRoute,
+  clearRouteStack,
+} from "./services/predictiveBack";
 import Login from "./routes/Login";
 import IllustDetail from "./routes/IllustDetail";
 import DebugImage from "./routes/DebugImage";
 import Bookmarks from "./routes/Bookmarks";
 import TabFeedPage from "./routes/TabFeedPage";
+import PredictiveBackContainer from "./components/PredictiveBackContainer";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showExitHint, setShowExitHint] = createSignal(false);
   let exitHintTimer: ReturnType<typeof setTimeout>;
 
-  onMount(async () => {
-    // Initialize persisted predictive back state and sync native handler
-    await loadPredictiveBackPreference();
-    const current = usePredictiveBack();
-    try {
-      await CapApp.toggleBackButtonHandler({ enabled: !current });
-    } catch (e) {
-      console.warn("[App] Failed to sync predictive back state on mount", e);
+  useBeforeLeave((e) => {
+    const to = e.to;
+    if (typeof to === "string") {
+      if (e.options?.replace) {
+        // Replace current top
+        popRoute();
+        pushRoute(to);
+      } else {
+        pushRoute(to);
+      }
+    } else if (typeof to === "number") {
+      // Back/forward navigation: pop for back, we can't reliably push for forward
+      if (to < 0) {
+        for (let i = 0; i < Math.abs(to); i++) {
+          popRoute();
+        }
+      }
     }
+  });
 
-    let lastBackTime = 0;
+  onMount(async () => {
+    // Initialize predictive back coordinator before auth
+    initPredictiveBack(navigate);
+    await loadPredictiveBackPreference();
+
+    // Initialize route stack tracking
+    clearRouteStack();
+    pushRoute(location.pathname);
 
     // Show "press again to exit" toast
     const onExitHint = () => {
@@ -34,43 +60,58 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
       exitHintTimer = setTimeout(() => setShowExitHint(false), 2000);
     };
     window.addEventListener("exitHint", onExitHint);
-    onCleanup(() => window.removeEventListener("exitHint", onExitHint));
 
-    // Handle Android back button / gesture
-    CapApp.addListener("backButton", () => {
-      // If viewer is open, close it first
-      if ((window as any).__viewerOpen) {
+    // Fallback JS back-button handler: registered unconditionally, but only receives
+    // events when the native predictive back plugin is disabled (or unavailable).
+    const rootPaths = ["/recommended", "/following", "/bookmarks", "/login"];
+    let lastBackTime = 0;
+    const backButtonListener = await CapApp.addListener("backButton", () => {
+      if (window.__viewerOpen) {
         window.dispatchEvent(new CustomEvent("closeViewer"));
         return;
       }
-      // Non-root pages — navigate back
-      const path = window.location.pathname;
-      if (
-        path !== "/recommended" &&
-        path !== "/following" &&
-        path !== "/bookmarks" &&
-        path !== "/login"
-      ) {
+
+      if (window.__settingsOpen) {
+        window.dispatchEvent(new CustomEvent("closeSettings"));
+        return;
+      }
+
+      const currentPath = location.pathname;
+      if (!rootPaths.includes(currentPath)) {
         navigate(-1);
         return;
       }
-      // Root pages — double-press to exit
-      const now = Date.now();
-      if (now - lastBackTime < 2000) {
+
+      if (Date.now() - lastBackTime < 2000) {
         CapApp.exitApp();
       } else {
-        lastBackTime = now;
-        // Dispatch a toast-like event or just let the user know via a simple visual cue
+        lastBackTime = Date.now();
         window.dispatchEvent(new CustomEvent("exitHint"));
       }
     });
 
-    await initializeAuth();
-    if (isLoggedIn()) {
-      navigate("/recommended", { replace: true });
-    } else {
-      navigate("/login", { replace: true });
+    onCleanup(() => {
+      window.removeEventListener("exitHint", onExitHint);
+      clearTimeout(exitHintTimer);
+      backButtonListener.remove();
+    });
+
+    try {
+      await initializeAuth();
+      if (isLoggedIn()) {
+        navigate("/recommended", { replace: true });
+      } else {
+        navigate("/login", { replace: true });
+      }
+    } catch (e) {
+      console.error("[App] Auth initialization failed", e);
     }
+  });
+
+  onCleanup(() => {
+    setPredictiveBackEnabled(false).catch((e) =>
+      console.warn("[App] Failed to disable predictive back on unmount", e),
+    );
   });
 
   return (
@@ -118,7 +159,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
           </div>
         }
       >
-        {props.children}
+        <PredictiveBackContainer>{props.children}</PredictiveBackContainer>
       </Show>
 
       {/* Exit hint toast */}
@@ -131,13 +172,17 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
   );
 };
 
+const IllustDetailRoute: Component<RouteSectionProps> = () => {
+  return <IllustDetail />;
+};
+
 const App: Component = () => {
   return (
     <Router root={RootLayout}>
       <Route path="/login" component={Login} />
       <Route path="/recommended" component={() => <TabFeedPage tab="recommended" />} />
       <Route path="/following" component={() => <TabFeedPage tab="follow" />} />
-      <Route path="/illust/:id" component={IllustDetail} />
+      <Route path="/illust/:id" component={IllustDetailRoute} />
       <Route path="/debug" component={DebugImage} />
       <Route path="/bookmarks" component={Bookmarks} />
       <Route path="*" component={Login} />

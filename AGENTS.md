@@ -22,14 +22,14 @@
 
 ### 典型使用场景
 
-| 场景 | 首选工具 | 说明/示例 |
-|---|---|---|
-| 接到功能或 Bug 任务，不确定入口 | `mcp__codegraph__codegraph_context` | “登录态自动恢复逻辑从哪里开始？” |
-| 追踪函数/组件调用关系 | `mcp__codegraph__codegraph_trace` / `mcp__codegraph__codegraph_explore` | `handleLogin` 被谁调用、又调用了谁 |
-| 路由到处理函数的映射 | `mcp__codegraph__codegraph_explore` | `/illust/:id` 路由对应哪个组件 |
-| 按名称定位符号 | `mcp__codegraph__codegraph_search` | 搜索 `useAuthStore`、`ImageCard` |
-| 读取特定符号的源码 | `mcp__codegraph__codegraph_node` | 获取某个函数/类的完整源码及行号 |
-| 针对任务构建上下文 | `mcp__codegraph__codegraph_context` | 让 CodeGraph 判断与任务相关的代码区域 |
+| 场景                            | 首选工具                                                                | 说明/示例                             |
+| ------------------------------- | ----------------------------------------------------------------------- | ------------------------------------- |
+| 接到功能或 Bug 任务，不确定入口 | `mcp__codegraph__codegraph_context`                                     | “登录态自动恢复逻辑从哪里开始？”      |
+| 追踪函数/组件调用关系           | `mcp__codegraph__codegraph_trace` / `mcp__codegraph__codegraph_explore` | `handleLogin` 被谁调用、又调用了谁    |
+| 路由到处理函数的映射            | `mcp__codegraph__codegraph_explore`                                     | `/illust/:id` 路由对应哪个组件        |
+| 按名称定位符号                  | `mcp__codegraph__codegraph_search`                                      | 搜索 `useAuthStore`、`ImageCard`      |
+| 读取特定符号的源码              | `mcp__codegraph__codegraph_node`                                        | 获取某个函数/类的完整源码及行号       |
+| 针对任务构建上下文              | `mcp__codegraph__codegraph_context`                                     | 让 CodeGraph 判断与任务相关的代码区域 |
 
 ### 禁止的默认行为
 
@@ -76,7 +76,7 @@ src/
 ├── stores/         # SolidJS 响应式状态（createSignal 导出）
 │   ├── authStore.ts   # 登录状态（isLoggedIn、user、token、自动恢复、onUnauthorized 处理器）
 │   ├── feedStore.ts   # Feed 数据（illusts、分页、按 Tab 缓存、滚动位置）
-│   └── uiStore.ts     # UI 状态（当前 Tab、设置面板开关）
+│   └── uiStore.ts     # UI 状态（当前 Tab、设置面板开关、预测返回手势开关）
 ├── routes/         # 页面组件
 │   ├── Login.tsx          # 登录页（refresh_token / 用户名密码）
 │   ├── TabFeedPage.tsx    # Tab 容器（recommended / follow），委托 Feed 渲染
@@ -85,20 +85,25 @@ src/
 │   ├── Bookmarks.tsx      # 收藏页
 │   └── DebugImage.tsx     # 图片调试页
 ├── components/     # 可复用 UI 组件
-│   ├── ImageCard.tsx       # Feed 卡片
-│   ├── LazyImageCard.tsx   # 轻量虚拟化卡片包裹（进入视口才渲染 ImageCard）
-│   ├── PixivImage.tsx      # 图片组件（CDN + 尺寸优化）
-│   ├── ImageViewer.tsx     # 全屏图片查看器（缩放/拖拽/滑动翻页）
-│   ├── UgoiraViewer.tsx    # 动图（Ugoira）播放器
-│   ├── VirtualFeed.tsx     # 虚拟滚动 Feed
-│   ├── NavBar.tsx          # 顶部导航栏
-│   ├── SettingsSheet.tsx   # 设置面板
-│   ├── SkeletonCard.tsx    # 骨架屏占位卡片
-│   ├── PullIndicator.tsx   # 下拉刷新指示器
-│   ├── LoadingSpinner.tsx  # 加载动画
-│   └── PageTransition.tsx  # 页面过渡动画
+│   ├── ImageCard.tsx            # Feed 卡片
+│   ├── LazyImageCard.tsx        # 轻量虚拟化卡片包裹（进入视口才渲染 ImageCard）
+│   ├── PixivImage.tsx           # 图片组件（CDN + 尺寸优化）
+│   ├── ImageViewer.tsx          # 全屏图片查看器（缩放/拖拽/滑动翻页）
+│   ├── UgoiraViewer.tsx         # 动图（Ugoira）播放器
+│   ├── VirtualFeed.tsx          # 虚拟滚动 Feed
+│   ├── NavBar.tsx               # 顶部导航栏
+│   ├── SettingsSheet.tsx        # 设置面板
+│   ├── PredictiveBackContainer.tsx  # Android 预测返回手势：路由级动画容器
+│   ├── RoutePreview.tsx         # Android 预测返回手势：目标页预览渲染
+│   ├── SkeletonCard.tsx         # 骨架屏占位卡片
+│   ├── PullIndicator.tsx        # 下拉刷新指示器
+│   ├── LoadingSpinner.tsx       # 加载动画
+│   └── PageTransition.tsx       # 页面过渡动画
+├── native/         # 自定义 Capacitor 插件 JS 定义
+│   └── PredictiveBack.ts  # PredictiveBackPlugin 类型定义与 registerPlugin
 ├── services/       # 服务封装
-│   └── pixiv.ts    # PixivClient 单例（@book000/pixivts，辅助用途）
+│   ├── pixiv.ts    # PixivClient 单例（@book000/pixivts，辅助用途）
+│   └── predictiveBack.ts  # Android 预测返回手势：导航栈、目标判定、事件状态机
 └── utils/
     └── imageLoader.ts  # 图片加载与缓存工具
 ```
@@ -173,7 +178,7 @@ src/
 - **样式与交互**：见「Fluent Design 规范」章节，不得例外
 - **注释**：中文注释为主，API 层和类型定义处偏英文
 - **文件命名**：组件 PascalCase、工具/API camelCase
-- **Android**：`android/` 源码与关键配置纳入版本控制，`android/.gitignore` 负责忽略构建产物（`.gradle/`、`build/` 等）和 Capacitor 自动生成文件（`capacitor.config.json`、`capacitor.settings.gradle`、`app/capacitor.build.gradle`、复制的 `app/src/main/assets/public` 等）。构建 APK 仍需运行 `pnpm build && pnpm cap:sync && cd android && ./gradlew assembleDebug`（或 `pnpm build:android`）。
+- **Android**：`android/` 源码与关键配置纳入版本控制，`android/.gitignore` 负责忽略构建产物（`.gradle/`、`build/` 等）和 Capacitor 自动生成文件（`capacitor.config.json`、`capacitor.settings.gradle`、`app/capacitor.build.gradle`、复制的 `app/src/main/assets/public` 等）。自定义 Capacitor 插件在 `MainActivity.java` 中通过 `registerPlugin()` 注册。构建 APK 仍需运行 `pnpm build && pnpm cap:sync && cd android && ./gradlew assembleDebug`（或 `pnpm build:android`）。
 - **代码探索**：使用 CodeGraph 作为默认代码理解工具，普通搜索工具仅作 fallback
 
 ## 注意事项

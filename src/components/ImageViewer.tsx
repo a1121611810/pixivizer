@@ -1,5 +1,6 @@
 import { createSignal, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
+import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 
 interface Props {
   imageUrls: string[];
@@ -12,6 +13,7 @@ const ImageViewer: Component<Props> = (props) => {
   const [position, setPosition] = createSignal({ x: 0, y: 0 });
   const [currentPage, setCurrentPage] = createSignal(props.initialPage ?? 0);
   const [animating, setAnimating] = createSignal(false);
+  const pbStyle = usePredictiveBackOverlayStyle();
 
   let touchStart = { x: 0, y: 0, dist: 0, time: 0 };
   let lastDist = 0;
@@ -88,7 +90,7 @@ const ImageViewer: Component<Props> = (props) => {
   return (
     <div
       class="fixed inset-0 z-50 touch-none select-none"
-      style={{ "background-color": "var(--colorOverlayBackground)" }}
+      style={{ "background-color": "var(--colorOverlayBackground)", ...pbStyle() }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
