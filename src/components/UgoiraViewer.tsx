@@ -144,7 +144,7 @@ const UgoiraViewer: Component<Props> = (props) => {
         <img
           src={frames()[currentFrame()].url}
           alt={`frame ${currentFrame() + 1}`}
-          class="max-w-full max-h-full object-contain"
+          class="max-w-full max-h-full object-contain object-top"
           draggable={false}
         />
       )}
