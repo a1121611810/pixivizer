@@ -1,7 +1,8 @@
-import { type Component, onMount, Show, createEffect } from "solid-js";
+import { type Component, onMount, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
+import { resolveImageUrl } from "../utils/imageLoader";
 import {
   profile,
   followingList,
@@ -17,7 +18,6 @@ import {
   toggleUserFollow,
   switchTab,
 } from "../stores/userStore";
-import PixivImage from "../components/PixivImage";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsSheet from "../components/SettingsSheet";
@@ -74,11 +74,9 @@ const PersonalCenter: Component = () => {
           <Show when={user()}>
             {/* User info */}
             <div class="flex flex-col items-center px-4 pt-6 pb-3">
-              <PixivImage
-                src={user()!.profile_image_urls.px_170x170}
+              <img
+                src={resolveImageUrl(user()!.profile_image_urls.px_170x170)}
                 alt={user()!.name}
-                width={80}
-                height={80}
                 class="w-20 h-20 rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
               />
               <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
@@ -122,7 +120,7 @@ const PersonalCenter: Component = () => {
 
           {/* Segmented control */}
           <div class="px-4 pb-3">
-            <div class="segmented">
+            <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
               <button
                 classList={{
                   "segmented-item-active": activeTab() === "following",
@@ -154,11 +152,9 @@ const PersonalCenter: Component = () => {
 
             {list().map((preview) => (
               <div class="surface-card rounded-[var(--borderRadiusMedium)] p-3 flex items-center gap-3 transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none">
-                <PixivImage
-                  src={preview.user.profile_image_urls.px_170x170}
+                <img
+                  src={resolveImageUrl(preview.user.profile_image_urls.px_170x170)}
                   alt={preview.user.name}
-                  width={40}
-                  height={40}
                   class="w-10 h-10 rounded-[var(--borderRadiusCircular)] object-cover flex-shrink-0"
                 />
                 <div class="flex-1 min-w-0">
