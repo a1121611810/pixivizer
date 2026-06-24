@@ -2,6 +2,7 @@ import { type Component, onMount, Show, createSignal, onCleanup } from "solid-js
 import { Route, Router, useNavigate } from "@solidjs/router";
 import type { RouteSectionProps } from "@solidjs/router";
 import { isLoggedIn, isLoading, initializeAuth } from "./stores/authStore";
+import { usePredictiveBack, loadPredictiveBackPreference } from "./stores/uiStore";
 import { App as CapApp } from "@capacitor/app";
 import Login from "./routes/Login";
 import IllustDetail from "./routes/IllustDetail";
@@ -15,6 +16,15 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
   let exitHintTimer: ReturnType<typeof setTimeout>;
 
   onMount(async () => {
+    // Initialize persisted predictive back state and sync native handler
+    await loadPredictiveBackPreference();
+    const current = usePredictiveBack();
+    try {
+      await CapApp.toggleBackButtonHandler({ enabled: !current });
+    } catch (e) {
+      console.warn("[App] Failed to sync predictive back state on mount", e);
+    }
+
     let lastBackTime = 0;
 
     // Show "press again to exit" toast
