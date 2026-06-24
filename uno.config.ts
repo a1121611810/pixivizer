@@ -28,7 +28,7 @@ export default defineConfig({
 
     // ── Image card (feed thumbnail) ──
     "image-card":
-      "bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] overflow-hidden shadow-[var(--elevation2)] border border-[var(--colorNeutralStroke2)] cursor-pointer transition-all active:scale-[0.98] select-none",
+      "bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] overflow-hidden shadow-[var(--elevation2)] border border-[var(--colorNeutralStroke2)] cursor-pointer transition-all active:scale-[0.98] select-none max-w-full",
 
     // ── Buttons (Fluent 2 anatomy: 14px/600, 32px min-height, 4px radius, 16px h-pad) ──
     btn: "inline-flex items-center justify-center gap-[var(--spacingHorizontalXS)] rounded-[var(--borderRadiusMedium)] font-semibold [font-size:var(--fontSizeBase300)] [line-height:var(--lineHeightBase300)] min-h-8 px-[var(--spacingHorizontalL)] border border-[var(--colorNeutralStroke1)] transition-all active:scale-[0.97] select-none appearance-none outline-none cursor-pointer focus-visible:outline-none focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]",
