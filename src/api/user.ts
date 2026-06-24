@@ -4,6 +4,7 @@ import type { PixivUserDetailResponse, PixivUserFollowingResponse, RestrictType 
 export function getUserDetail(userId: number): Promise<PixivUserDetailResponse> {
   return apiClient.get<PixivUserDetailResponse>("/v1/user/detail", {
     user_id: String(userId),
+    filter: "for_ios",
   });
 }
 
