@@ -17,6 +17,7 @@ import DebugImage from "./routes/DebugImage";
 import Bookmarks from "./routes/Bookmarks";
 import TabFeedPage from "./routes/TabFeedPage";
 import PersonalCenter from "./routes/PersonalCenter";
+import UserIllusts from "./routes/UserIllusts";
 import PredictiveBackContainer from "./components/PredictiveBackContainer";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
@@ -188,6 +189,7 @@ const App: Component = () => {
       <Route path="/debug" component={DebugImage} />
       <Route path="/bookmarks" component={Bookmarks} />
       <Route path="/me" component={PersonalCenter} />
+      <Route path="/user/:id/illusts" component={UserIllusts} />
       <Route path="/user/:id" component={PersonalCenter} />
       <Route path="*" component={Login} />
     </Router>

@@ -213,7 +213,13 @@ const PersonalCenter: Component<Props> = (props) => {
             {/* Stats card */}
             <div class="px-4 pb-4">
               <div class="surface-card rounded-[var(--borderRadiusMedium)] px-4 py-3 flex">
-                <div class="flex-1 text-center">
+                <div
+                  class="flex-1 text-center cursor-pointer rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
+                  onClick={() => navigate(`/user/${targetUserId()}/illusts`)}
+                  role="button"
+                  tabindex="0"
+                  aria-label="查看作品"
+                >
                   <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
                     {fmtNum(profile()?.total_illusts)}
                   </p>
