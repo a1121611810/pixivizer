@@ -8,6 +8,17 @@ function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: stri
   const src = urls.medium || urls.px_170x170 || urls.px_50x50 || "";
   return resolveImageUrl(src);
 }
+
+const DEFAULT_AVATAR =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="%23e0e0e0"/><circle cx="20" cy="15" r="7" fill="%23bdbdbd"/><path d="M8 34c0-7 5.4-12 12-12s12 5 12 12" fill="%23bdbdbd"/></svg>`,
+  );
+
+function onAvatarError(e: Event) {
+  const img = e.target as HTMLImageElement;
+  if (img.src !== DEFAULT_AVATAR) img.src = DEFAULT_AVATAR;
+}
 import {
   profile,
   followingList,
@@ -83,6 +94,7 @@ const PersonalCenter: Component = () => {
                 src={avatarUrl(user()!.profile_image_urls)}
                 alt={user()!.name}
                 class="w-20 h-20 rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
+                onError={onAvatarError}
               />
               <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
                 {user()!.name}
@@ -161,6 +173,7 @@ const PersonalCenter: Component = () => {
                   src={avatarUrl(preview.user.profile_image_urls)}
                   alt={preview.user.name}
                   class="w-10 h-10 rounded-[var(--borderRadiusCircular)] object-cover flex-shrink-0"
+                  onError={onAvatarError}
                 />
                 <div class="flex-1 min-w-0">
                   <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
