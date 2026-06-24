@@ -43,11 +43,17 @@ const TabFeedPage: Component<Props> = (props) => {
     }
   });
 
-  // Save scroll on unmount
+  // Save scroll + R18 自动刷新
   onCleanup(() => {
     saveTabScroll(props.tab);
   });
 
+  // R18 开关切换时自动刷新列表
+  onMount(() => {
+    const handler = () => refresh();
+    window.addEventListener("r18Changed", handler);
+    onCleanup(() => window.removeEventListener("r18Changed", handler));
+  });
   return (
     <>
       <PageTransition>

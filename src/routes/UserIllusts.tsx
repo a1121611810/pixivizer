@@ -1,4 +1,4 @@
-import { type Component, createEffect } from "solid-js";
+import { type Component, createEffect, onMount, onCleanup } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import { user } from "../stores/authStore";
 import {
@@ -28,6 +28,16 @@ const UserIllusts: Component = () => {
       load(uid, contentType());
       loadProfile(uid);
     }
+  });
+
+  // R18 开关切换时自动刷新
+  onMount(() => {
+    const handler = () => {
+      const uid = userId();
+      if (uid) load(uid, contentType());
+    };
+    window.addEventListener("r18Changed", handler);
+    onCleanup(() => window.removeEventListener("r18Changed", handler));
   });
 
   return (

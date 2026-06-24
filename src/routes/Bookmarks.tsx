@@ -35,6 +35,11 @@ const Bookmarks: Component = () => {
     if (illusts().length > 0 && !loading()) {
       refresh();
     }
+
+    // R18 开关切换时自动刷新
+    const r18Handler = () => refresh();
+    window.addEventListener("r18Changed", r18Handler);
+    onCleanup(() => window.removeEventListener("r18Changed", r18Handler));
   });
 
   // Save scroll position when leaving

@@ -137,6 +137,7 @@ async function setShowR18(enabled: boolean): Promise<void> {
   } catch (e) {
     console.warn("[uiStore] Failed to persist showR18", e);
   }
+  window.dispatchEvent(new CustomEvent("r18Changed"));
 }
 
 async function loadShowR18Preference(): Promise<void> {

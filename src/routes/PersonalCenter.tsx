@@ -129,6 +129,16 @@ const PersonalCenter: Component<Props> = (props) => {
     return () => observer.disconnect();
   });
 
+  // R18 开关切换时自动刷新关注列表
+  onMount(() => {
+    const handler = () => {
+      const uid = targetUserId();
+      loadFollowing(uid);
+    };
+    window.addEventListener("r18Changed", handler);
+    onCleanup(() => window.removeEventListener("r18Changed", handler));
+  });
+
   const list = () => (activeTab() === "following" ? followingList() : followersList());
 
   return (
