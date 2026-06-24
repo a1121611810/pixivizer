@@ -12,6 +12,7 @@ export interface PixivUser {
   name: string;
   account: string;
   profile_image_urls: { px_16x16: string; px_50x50: string; px_170x170: string };
+  is_followed?: boolean;
 }
 
 // ─── 作品 ───

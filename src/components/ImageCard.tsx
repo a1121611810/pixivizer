@@ -1,7 +1,7 @@
 import { type Component, createSignal } from "solid-js";
 import type { PixivIllust } from "../api/types";
 import { listQuality } from "../stores/uiStore";
-import { addBookmark, deleteBookmark } from "../api/illust";
+import { addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import PixivImage from "./PixivImage";
 import HeartBurstEffect from "./HeartBurstEffect";
 
@@ -28,6 +28,27 @@ const ImageCard: Component<Props> = (props) => {
   const [privateHint, setPrivateHint] = createSignal(false);
   const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
   const [ugoiraHeight, setUgoiraHeight] = createSignal(Math.round(h() * 0.75));
+  const [isFollowed, setIsFollowed] = createSignal(props.illust.user.is_followed ?? false);
+  const [following, setFollowing] = createSignal(false);
+
+  const toggleFollow = async (e: MouseEvent) => {
+    e.stopPropagation();
+    if (following()) return;
+    const prev = isFollowed();
+    setIsFollowed(!prev);
+    setFollowing(true);
+    try {
+      if (prev) {
+        await unfollowUser(props.illust.user.id);
+      } else {
+        await followUser(props.illust.user.id);
+      }
+    } catch {
+      setIsFollowed(prev);
+    } finally {
+      setFollowing(false);
+    }
+  };
 
   /** 分析 ugoira 静态帧底部黑边，返回内容实际高度 */
   function measureUgoiraContent(e: Event) {
@@ -158,8 +179,25 @@ const ImageCard: Component<Props> = (props) => {
         <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground1)] truncate font-semibold">
           {props.illust.title}
         </p>
-        <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground2)] truncate mt-0.5">
-          @{props.illust.user.name}
+        <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground2)] truncate mt-0.5 flex items-baseline gap-1">
+          <span class="truncate">@{props.illust.user.name}</span>
+          <span class="text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0 select-none">
+            ·
+          </span>
+          <button
+            class="inline-flex items-center min-h-[40px] font-semibold [font-size:var(--fontSizeBase100)] cursor-pointer select-none transition-colors duration-[var(--durationFast)] ease-[var(--curveEasyEase)] active:scale-[0.95] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)] appearance-none border-none bg-transparent p-0 flex-shrink-0"
+            classList={{
+              "text-[var(--colorBrandForeground1)] hover:text-[var(--colorBrandForeground1Hover)]":
+                !isFollowed(),
+              "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerForeground2)]":
+                isFollowed(),
+            }}
+            onClick={(e) => toggleFollow(e)}
+            disabled={following()}
+            aria-label={isFollowed() ? "取消关注" : "关注"}
+          >
+            {following() ? "…" : isFollowed() ? "已关注" : "关注"}
+          </button>
         </p>
       </div>
     </div>

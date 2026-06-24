@@ -1,6 +1,6 @@
 import { type Component, createSignal, onMount, onCleanup } from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
-import { loadDetail, addBookmark, deleteBookmark } from "../api/illust";
+import { loadDetail, addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import type { PixivIllust } from "../api/types";
 import ImageViewer from "../components/ImageViewer";
 import UgoiraViewer from "../components/UgoiraViewer";
@@ -29,6 +29,28 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
   const [bookmarking, setBookmarking] = createSignal(false);
   const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
   const [ugoiraCoverHeight, setUgoiraCoverHeight] = createSignal(0);
+  const [isFollowed, setIsFollowed] = createSignal(false);
+  const [following, setFollowing] = createSignal(false);
+
+  async function toggleFollow() {
+    const i = illust();
+    if (!i || following()) return;
+    const prev = isFollowed();
+    setIsFollowed(!prev);
+    setFollowing(true);
+    try {
+      if (prev) {
+        await unfollowUser(i.user.id);
+      } else {
+        await followUser(i.user.id);
+      }
+      setIllust({ ...i, user: { ...i.user, is_followed: !prev } });
+    } catch {
+      setIsFollowed(prev);
+    } finally {
+      setFollowing(false);
+    }
+  }
 
   function measureCoverContent(e: Event) {
     const img = e.target as HTMLImageElement;
@@ -121,6 +143,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     try {
       const data = await loadDetail(Number(illustId()));
       setIllust(data.illust);
+      setIsFollowed(data.illust.user.is_followed ?? false);
     } catch (e) {
       setError((e as { message?: string }).message ?? "加载失败");
     } finally {
@@ -294,6 +317,20 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
                     @{illust()!.user.account}
                   </p>
                 </div>
+                <button
+                  class="inline-flex items-center justify-center gap-[var(--spacingHorizontalXS)] rounded-[var(--borderRadiusMedium)] font-semibold [font-size:var(--fontSizeBase200)] [line-height:var(--lineHeightBase200)] min-h-8 px-[var(--spacingHorizontalM)] border transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] active:scale-[0.97] select-none appearance-none outline-none cursor-pointer focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)] flex-shrink-0 ml-auto"
+                  classList={{
+                    "bg-[var(--colorBrandBackground)] text-white border-[var(--colorBrandBackground)] hover:bg-[var(--colorBrandBackgroundHover)] active:bg-[var(--colorBrandBackgroundPressed)]":
+                      !isFollowed(),
+                    "bg-transparent text-[var(--colorNeutralForeground2)] border-[var(--colorNeutralStroke2)] hover:text-[var(--colorStatusDangerForeground1)] hover:border-[var(--colorStatusDangerForeground1)]":
+                      isFollowed(),
+                  }}
+                  onClick={toggleFollow}
+                  disabled={following()}
+                  aria-label={isFollowed() ? "取消关注" : "关注"}
+                >
+                  {following() ? "…" : isFollowed() ? "已关注" : "关注"}
+                </button>
               </div>
 
               {/* Stats */}

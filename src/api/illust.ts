@@ -62,3 +62,16 @@ export function deleteBookmark(illustId: number): Promise<void> {
     illust_id: String(illustId),
   });
 }
+
+export function followUser(userId: number, restrict?: "public" | "private"): Promise<void> {
+  return apiClient.post("/v1/user/follow/add", {
+    user_id: String(userId),
+    restrict: restrict ?? "public",
+  });
+}
+
+export function unfollowUser(userId: number): Promise<void> {
+  return apiClient.post("/v1/user/follow/delete", {
+    user_id: String(userId),
+  });
+}
