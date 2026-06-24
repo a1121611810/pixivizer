@@ -137,46 +137,50 @@ const VirtualFeed: Component<Props> = (props) => {
 
         {props.illusts.length > 0 && (
           <div class="flex gap-3">
-            <For each={columns()[0]}>
-              {(illust, index) => (
-                <div
-                  style={
-                    props.skipAnimation
-                      ? {}
-                      : {
-                          animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
-                          "animation-delay": `${index() * 60}ms`,
-                        }
-                  }
-                >
-                  {index() < 4 ? (
-                    <ImageCard illust={illust} onClick={props.onIllustClick} />
-                  ) : (
-                    <LazyImageCard illust={illust} onClick={props.onIllustClick} />
-                  )}
-                </div>
-              )}
-            </For>
-            <For each={columns()[1]}>
-              {(illust, index) => (
-                <div
-                  style={
-                    props.skipAnimation
-                      ? {}
-                      : {
-                          animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
-                          "animation-delay": `${index() * 60}ms`,
-                        }
-                  }
-                >
-                  {index() < 4 ? (
-                    <ImageCard illust={illust} onClick={props.onIllustClick} />
-                  ) : (
-                    <LazyImageCard illust={illust} onClick={props.onIllustClick} />
-                  )}
-                </div>
-              )}
-            </For>
+            <div class="flex-1 flex flex-col gap-3">
+              <For each={columns()[0]}>
+                {(illust, index) => (
+                  <div
+                    style={
+                      props.skipAnimation
+                        ? {}
+                        : {
+                            animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
+                            "animation-delay": `${index() * 60}ms`,
+                          }
+                    }
+                  >
+                    {index() < 4 ? (
+                      <ImageCard illust={illust} onClick={props.onIllustClick} />
+                    ) : (
+                      <LazyImageCard illust={illust} onClick={props.onIllustClick} />
+                    )}
+                  </div>
+                )}
+              </For>
+            </div>
+            <div class="flex-1 flex flex-col gap-3">
+              <For each={columns()[1]}>
+                {(illust, index) => (
+                  <div
+                    style={
+                      props.skipAnimation
+                        ? {}
+                        : {
+                            animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
+                            "animation-delay": `${index() * 60}ms`,
+                          }
+                    }
+                  >
+                    {index() < 4 ? (
+                      <ImageCard illust={illust} onClick={props.onIllustClick} />
+                    ) : (
+                      <LazyImageCard illust={illust} onClick={props.onIllustClick} />
+                    )}
+                  </div>
+                )}
+              </For>
+            </div>
           </div>
         )}
 
