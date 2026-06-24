@@ -99,13 +99,13 @@ const PersonalCenter: Component = () => {
             {/* User info */}
             <div class="flex flex-col items-center px-4 pt-6 pb-3">
               <div class="relative w-20 h-20">
+                <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
                 <img
                   src={avatarUrl(user()!.profile_image_urls)}
                   alt={user()!.name}
-                  class="relative w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
+                  class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)] z-10"
                   onError={(e) => ((e.target as HTMLElement).style.display = "none")}
                 />
-                <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
               </div>
               <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
                 {user()!.name}
