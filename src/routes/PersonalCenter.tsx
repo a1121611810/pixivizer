@@ -181,13 +181,13 @@ const PersonalCenter: Component = () => {
             {list().map((preview) => (
               <div class="surface-card rounded-[var(--borderRadiusMedium)] p-3 flex items-center gap-3 transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none">
                 <div class="relative w-10 h-10 flex-shrink-0">
+                  <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
                   <img
                     src={avatarUrl(preview.user.profile_image_urls)}
                     alt={preview.user.name}
-                    class="relative w-full h-full rounded-[var(--borderRadiusCircular)] object-cover"
+                    class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover z-10"
                     onError={(e) => ((e.target as HTMLElement).style.display = "none")}
                   />
-                  <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
