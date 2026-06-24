@@ -69,7 +69,7 @@ const PersonalCenter: Component<Props> = (props) => {
   const navigate = useNavigate();
   const params = useParams<{ id: string }>();
   const targetUserId = () => Number(props.userId || params.id || user()?.id || 0);
-  const isSelf = () => targetUserId() === (user()?.id ?? 0);
+  const isSelf = () => targetUserId() === Number(user()?.id ?? 0);
   const displayUser = () => (isSelf() ? user() : viewedUser());
   const [collapsed, setCollapsed] = createSignal(false);
   const COLLAPSE_THRESHOLD = 140;
