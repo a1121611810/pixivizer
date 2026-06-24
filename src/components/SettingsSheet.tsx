@@ -11,6 +11,9 @@ import {
   type ImageQuality,
   cacheSize,
   setCacheSize,
+  usePredictiveBack,
+  setUsePredictiveBack,
+  isPredictiveBackSupported,
 } from "../stores/uiStore";
 
 // ── Fluent UI System Icons (24px) — SVG path data ──
@@ -244,6 +247,69 @@ const SettingsSheet: Component = () => {
                     "translate-x-0.5": theme() !== "dark",
                   }}
                 />
+              </button>
+            </div>
+
+            {/* 预测性返回手势开关行 */}
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm3.78 5.22a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0l-2-2a.75.75 0 0 1 1.06-1.06l1.47 1.47 3.72-3.72a.75.75 0 0 1 1.06 0z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                    预测性返回手势
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                    {isPredictiveBackSupported()
+                      ? "使用 Android 16 系统级侧滑返回预览"
+                      : "仅 Android 16 及以上系统可用"}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() =>
+                  isPredictiveBackSupported() && setUsePredictiveBack(!usePredictiveBack())
+                }
+                role="switch"
+                aria-checked={usePredictiveBack()}
+                aria-label="预测性返回手势"
+                disabled={!isPredictiveBackSupported()}
+                class="relative flex-shrink-0 w-14 min-h-10 px-0 py-[var(--spacingVerticalSNudge)] appearance-none border-0 outline-none rounded-[var(--borderRadiusCircular)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)] flex items-center justify-center active:scale-[0.98]"
+                classList={{
+                  "cursor-pointer": isPredictiveBackSupported(),
+                  "cursor-not-allowed": !isPredictiveBackSupported(),
+                }}
+              >
+                <span
+                  class="relative block w-14 h-7 rounded-[var(--borderRadiusCircular)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                  classList={{
+                    "bg-[var(--colorCompoundBrandBackground)] hover:bg-[var(--colorCompoundBrandBackgroundHover)]":
+                      usePredictiveBack() && isPredictiveBackSupported(),
+                    "bg-[var(--colorNeutralStrokeAccessible)] hover:bg-[var(--colorNeutralStrokeAccessibleHover)]":
+                      !usePredictiveBack() && isPredictiveBackSupported(),
+                    "bg-[var(--colorNeutralStrokeDisabled)]": !isPredictiveBackSupported(),
+                  }}
+                >
+                  <span
+                    class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                    classList={{
+                      "bg-[var(--colorNeutralForegroundOnBrand)]":
+                        usePredictiveBack() && isPredictiveBackSupported(),
+                      "bg-[var(--colorNeutralBackground1)]":
+                        !usePredictiveBack() && isPredictiveBackSupported(),
+                      "bg-[var(--colorNeutralForegroundDisabled)]": !isPredictiveBackSupported(),
+                      "translate-x-[28px]": usePredictiveBack() && isPredictiveBackSupported(),
+                      "translate-x-0.5": !usePredictiveBack() || !isPredictiveBackSupported(),
+                    }}
+                  />
+                </span>
               </button>
             </div>
 

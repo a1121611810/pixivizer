@@ -111,6 +111,7 @@
   --colorNeutralStroke1: #d1d1d1;
   --colorNeutralStroke2: #e0e0e0;
   --colorNeutralStrokeAccessible: #616161;
+  --colorNeutralStrokeAccessibleHover: #575757;
   --colorNeutralStrokeDisabled: #e0e0e0;
 
   --colorBrandBackground: #0078d4;
@@ -195,6 +196,7 @@
   --colorNeutralStroke1: #666666;
   --colorNeutralStroke2: #4d4d4d;
   --colorNeutralStrokeAccessible: #adadad;
+  --colorNeutralStrokeAccessibleHover: #bdbdbd;
   --colorNeutralStrokeDisabled: #333333;
 
   --colorBrandBackground: #106ebe;
