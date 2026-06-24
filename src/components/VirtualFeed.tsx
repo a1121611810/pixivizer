@@ -177,6 +177,7 @@ const VirtualFeed: Component<Props> = (props) => {
                     class="masonry-item"
                     style={{
                       width: "calc(50% - 6px)",
+                      "aspect-ratio": `${illust.width} / ${illust.height}`,
                       ...(props.skipAnimation
                         ? {}
                         : {
