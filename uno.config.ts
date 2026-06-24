@@ -78,7 +78,7 @@ export default defineConfig({
     // ── Bottom Navigation Bar (Fluent 2 floating pill pattern) ──
     "bottom-nav": "fixed bottom-0 left-0 right-0 z-30 flex justify-center px-4 select-none",
     "bottom-nav-container":
-      "flex relative bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadius2XLarge)] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation8)]",
+      "flex relative bg-[var(--colorNeutralBackgroundAlpha)] backdrop-blur-[30px] backdrop-saturate-[125%] rounded-[var(--borderRadius2XLarge)] border-t border-[var(--colorNeutralStroke2)] shadow-[var(--elevation8)]",
     "bottom-nav-pill":
       "absolute top-[var(--spacingVerticalS)] bottom-[var(--spacingVerticalS)] rounded-[var(--borderRadiusLarge)] bg-[var(--colorBrandStroke2)] opacity-0 transition-all duration-[var(--durationFast)] ease-[var(--curveDecelerateMid)]",
     "bottom-nav-item":
