@@ -212,8 +212,8 @@ const VirtualFeed: Component<Props> = (props) => {
             {columns().map((col) => (
               <div class="flex-1 flex flex-col gap-3 min-w-0">
                 <For each={col}>
-                  {(item) => {
-                    const eager = item.rowIndex < 4;
+                  {(illust, index) => {
+                    const eager = index() < 4;
                     return (
                       <div
                         style={
@@ -221,14 +221,14 @@ const VirtualFeed: Component<Props> = (props) => {
                             ? {}
                             : {
                                 animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
-                                "animation-delay": `${item.rowIndex * 60}ms`,
+                                "animation-delay": `${index() * 60}ms`,
                               }
                         }
                       >
                         {eager ? (
-                          <ImageCard illust={item.illust} onClick={props.onIllustClick} />
+                          <ImageCard illust={illust} onClick={props.onIllustClick} />
                         ) : (
-                          <LazyImageCard illust={item.illust} onClick={props.onIllustClick} />
+                          <LazyImageCard illust={illust} onClick={props.onIllustClick} />
                         )}
                       </div>
                     );
