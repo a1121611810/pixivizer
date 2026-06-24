@@ -59,7 +59,11 @@ const Bookmarks: Component = () => {
             class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4"
             onDblClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0">
+            <h1
+              class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0"
+              classList={{ "cursor-pointer": isLoggedIn() }}
+              onClick={() => isLoggedIn() && navigate("/me")}
+            >
               <Show when={isLoggedIn() && user()} fallback={<>Pixivizer</>}>
                 <UserAvatar />
                 <span class="truncate max-w-[120px]">{user()!.name}</span>

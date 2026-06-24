@@ -6,7 +6,7 @@ import { Device } from "@capacitor/device";
 import { setMaxCacheSize } from "../utils/imageLoader";
 import { setPredictiveBackEnabled } from "../services/predictiveBack";
 
-type Tab = "recommended" | "follow" | "bookmarks";
+type Tab = "recommended" | "follow" | "bookmarks" | "me";
 export type { Tab };
 export type Theme = "dark" | "light";
 export type ImageQuality = "medium" | "large" | "original";

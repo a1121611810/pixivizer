@@ -16,6 +16,7 @@ import IllustDetail from "./routes/IllustDetail";
 import DebugImage from "./routes/DebugImage";
 import Bookmarks from "./routes/Bookmarks";
 import TabFeedPage from "./routes/TabFeedPage";
+import PersonalCenter from "./routes/PersonalCenter";
 import PredictiveBackContainer from "./components/PredictiveBackContainer";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
@@ -186,6 +187,7 @@ const App: Component = () => {
       <Route path="/illust/:id" component={IllustDetailRoute} />
       <Route path="/debug" component={DebugImage} />
       <Route path="/bookmarks" component={Bookmarks} />
+      <Route path="/me" component={PersonalCenter} />
       <Route path="*" component={Login} />
     </Router>
   );

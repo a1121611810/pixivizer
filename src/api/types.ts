@@ -81,6 +81,46 @@ export interface PixivUgoiraMetadataResponse {
 export type ContentType = "illust" | "manga";
 export type RestrictType = "public" | "private";
 
+// ─── 用户关注/粉丝 ───
+export interface PixivUserPreview {
+  user: PixivUser;
+  illusts: PixivIllust[];
+  novels: unknown[];
+  is_muted: boolean;
+}
+
+export interface PixivUserFollowingResponse {
+  user_previews: PixivUserPreview[];
+  next_url: string | null;
+}
+
+export interface PixivProfile {
+  webpage?: string;
+  gender: string;
+  birth: string;
+  birth_day: string;
+  birth_year: number;
+  region: string;
+  country_code: string;
+  job: string;
+  total_follow_users: number;
+  total_mypixiv_users: number;
+  total_illusts: number;
+  total_manga: number;
+  total_novels: number;
+  total_illust_bookmarks_public: number;
+  background_image_url?: string;
+  twitter_account?: string;
+  is_premium: boolean;
+}
+
+export interface PixivUserDetailResponse {
+  user: PixivUser;
+  profile: PixivProfile;
+  profile_publicity: Record<string, string>;
+  workspace: Record<string, string>;
+}
+
 // ─── 错误 ───
 export enum ApiErrorType {
   NETWORK = "NETWORK",
