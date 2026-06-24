@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup, createSignal, Show } from "solid-js";
+import { type Component, onMount, onCleanup, createSignal, createEffect, Show } from "solid-js";
 import { useNavigate, useParams } from "@solidjs/router";
 import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
@@ -76,10 +76,6 @@ const PersonalCenter: Component<Props> = (props) => {
 
   onMount(() => {
     setCurrentTab("me");
-    const uid = targetUserId();
-    resetData();
-    loadProfile(uid);
-    loadFollowing(uid);
 
     // ── Scroll-driven header collapse ──
     let scrollTicking = false;
@@ -97,6 +93,15 @@ const PersonalCenter: Component<Props> = (props) => {
     }
     window.addEventListener("scroll", onScrollRaf, { passive: true });
     onCleanup(() => window.removeEventListener("scroll", onScrollRaf));
+  });
+
+  // 用户切换时重新加载（前进/后退/点击列表项）
+  createEffect(() => {
+    const uid = targetUserId();
+    resetData();
+    loadProfile(uid);
+    loadFollowing(uid);
+    window.scrollTo(0, 0);
   });
 
   function fmtNum(n: number | undefined): string {
