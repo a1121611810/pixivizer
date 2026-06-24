@@ -28,6 +28,26 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
   const [error, setError] = createSignal<string | null>(null);
   const [bookmarking, setBookmarking] = createSignal(false);
   const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
+  const [ugoiraCoverHeight, setUgoiraCoverHeight] = createSignal(0);
+
+  function measureCoverContent(e: Event) {
+    const img = e.target as HTMLImageElement;
+    if (img.naturalHeight === 0) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(img, 0, 0);
+    const midX = Math.floor(img.naturalWidth / 2);
+    for (let y = img.naturalHeight - 1; y >= 0; y--) {
+      const p = ctx.getImageData(midX, y, 1, 1).data;
+      if ((p[0] + p[1] + p[2]) / 3 > 15) {
+        setUgoiraCoverHeight(y + 2);
+        return;
+      }
+    }
+  }
 
   let longPressTimer: ReturnType<typeof setTimeout>;
 
@@ -217,6 +237,28 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
                   />
                 ))}
               </div>
+            ) : illust()!.type === "ugoira" ? (
+              <div
+                class="flex justify-center bg-[var(--colorNeutralBackground2)] cursor-pointer border-b border-[var(--colorNeutralStroke2)]"
+                onClick={() => openViewer(0)}
+              >
+                <div
+                  style={{
+                    "aspect-ratio": `${illust()!.width} / ${ugoiraCoverHeight() || Math.round(illust()!.height * 0.75)}`,
+                  }}
+                  class="overflow-hidden w-full"
+                >
+                  <PixivImage
+                    src={coverUrl()}
+                    alt={illust()!.title}
+                    width={illust()!.width}
+                    height={illust()!.height}
+                    loading="eager"
+                    class="w-full h-full object-cover object-top cursor-pointer"
+                    onLoad={measureCoverContent}
+                  />
+                </div>
+              </div>
             ) : (
               <div
                 class="flex justify-center bg-[var(--colorNeutralBackground2)] cursor-pointer border-b border-[var(--colorNeutralStroke2)]"
@@ -228,7 +270,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
                   width={illust()!.width}
                   height={illust()!.height}
                   loading="eager"
-                  class="max-h-[60vh] object-cover cursor-pointer"
+                  class="max-h-[60vh] object-contain cursor-pointer"
                 />
               </div>
             )}
