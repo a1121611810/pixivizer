@@ -214,7 +214,7 @@ const PersonalCenter: Component<Props> = (props) => {
           </Show>
 
           {/* Segmented control — sticky below header */}
-          <div class="sticky top-12 z-10 px-4 py-3 bg-[var(--colorNeutralBackground3)]">
+          <div class="sticky top-12 z-10 px-4 py-3 bg-[var(--colorNeutralBackgroundAlpha)] backdrop-blur-[30px] backdrop-saturate-[125%]">
             <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
               <button
                 classList={{
