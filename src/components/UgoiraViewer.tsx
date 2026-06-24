@@ -90,7 +90,7 @@ const UgoiraViewer: Component<Props> = (props) => {
 
   return (
     <div
-      class="fixed inset-0 z-50 touch-none select-none flex items-center justify-center"
+      class="fixed inset-0 z-50 touch-none select-none flex items-start justify-center"
       style={{ "background-color": "var(--colorOverlayBackground)", ...pbStyle() }}
       onClick={togglePause}
     >
