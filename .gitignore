@@ -1,9 +1,9 @@
 node_modules/*
 .pnpm-store/*
 dist/*
-android/*
 *.local
 .playwright-cli/*
 .reasonix/*
 .codegraph/*
 .worktrees/*
+.DS_Store
