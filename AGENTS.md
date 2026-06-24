@@ -12,7 +12,7 @@
 
 ## 代码智能规范（Code Intelligence）
 
-本项目使用 [CodeGraph](https://github.com/colbymchenry/codegraph) 作为默认代码理解工具。它基于本地预索引的代码知识图谱，提供符号定位、调用链追踪、影响分析、框架路由识别等能力，不只是"代码搜索"。
+本项目使用 [CodeGraph](https://github.com/colbymchenry/codegraph) 作为默认代码理解工具。它基于本地预索引的代码知识图谱，提供符号定位、调用链追踪、影响分析、框架路由识别等能力，不只是「代码搜索」。
 
 ### 默认原则
 
@@ -24,13 +24,12 @@
 
 | 场景 | 首选工具 | 说明/示例 |
 |---|---|---|
-| 接到功能/bug 任务，不确定入口 | `codegraph_context` | “登录态自动恢复逻辑从哪里开始？” |
-| 追踪函数/组件调用关系 | `codegraph_trace` / `codegraph_explore` | `handleLogin` 被谁调用、又调用了谁 |
-| 修改前评估影响范围 | `codegraph_impact` | 修改 `PixivApiClient` 会影响哪些文件 |
-| 路由到 handler 的映射 | `codegraph_explore` | `/illust/:id` 路由对应哪个组件 |
-| 按名称定位符号 | `codegraph_search` | 搜索 `useAuthStore`、`ImageCard` |
-| 读取特定符号的源码 | `codegraph_node` | 获取某个函数/类的完整源码及行号 |
-| 针对任务构建上下文 | `codegraph_context` | 让 CodeGraph 判断与任务相关的代码区域 |
+| 接到功能或 Bug 任务，不确定入口 | `mcp__codegraph__codegraph_context` | “登录态自动恢复逻辑从哪里开始？” |
+| 追踪函数/组件调用关系 | `mcp__codegraph__codegraph_trace` / `mcp__codegraph__codegraph_explore` | `handleLogin` 被谁调用、又调用了谁 |
+| 路由到处理函数的映射 | `mcp__codegraph__codegraph_explore` | `/illust/:id` 路由对应哪个组件 |
+| 按名称定位符号 | `mcp__codegraph__codegraph_search` | 搜索 `useAuthStore`、`ImageCard` |
+| 读取特定符号的源码 | `mcp__codegraph__codegraph_node` | 获取某个函数/类的完整源码及行号 |
+| 针对任务构建上下文 | `mcp__codegraph__codegraph_context` | 让 CodeGraph 判断与任务相关的代码区域 |
 
 ### 禁止的默认行为
 
@@ -38,7 +37,7 @@
 - 用 `Grep` 手动拼凑调用链（应使用 `codegraph_trace`）。
 - 用 `Read` 顺序打开多个文件来“摸索”架构（应先用 `codegraph_context` / `codegraph_explore`）。
 
-### 允许的 Fallback
+### 允许的降级方案
 
 以下情况允许优先使用普通工具：
 
