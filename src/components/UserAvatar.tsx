@@ -5,14 +5,9 @@ import { loadImage, resolveImageUrl } from "../utils/imageLoader";
 
 const isNative = Capacitor.isNativePlatform();
 
-const DEFAULT_AVATAR =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="%23e0e0e0"/><circle cx="12" cy="9" r="4" fill="%23bdbdbd"/><path d="M5 20c0-4 3.1-7 7-7s7 3 7 7" fill="%23bdbdbd"/></svg>`,
-  );
-
 const UserAvatar: Component = () => {
   const [avatarUrl, setAvatarUrl] = createSignal("");
+  const [errored, setErrored] = createSignal(false);
 
   createEffect(() => {
     const u = user();
@@ -25,19 +20,30 @@ const UserAvatar: Component = () => {
     }
   });
 
-  function onError(e: Event) {
-    const img = e.target as HTMLImageElement;
-    if (img.src !== DEFAULT_AVATAR) img.src = DEFAULT_AVATAR;
-  }
-
   return (
-    <Show when={avatarUrl()}>
-      <img
-        src={avatarUrl()}
-        class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
-        onError={onError}
-      />
-    </Show>
+    <>
+      <Show when={!errored() && avatarUrl()}>
+        <img
+          src={avatarUrl()}
+          class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
+          onError={() => setErrored(true)}
+        />
+      </Show>
+      <Show when={errored() || !avatarUrl()}>
+        <div class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0 flex items-center justify-center bg-[var(--colorNeutralBackground2)]">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            class="text-[var(--colorNeutralForegroundDisabled)]"
+          >
+            <circle cx="12" cy="8" r="4" fill="currentColor" />
+            <path d="M5 21c0-4 3.1-7 7-7s7 3 7 7" fill="currentColor" />
+          </svg>
+        </div>
+      </Show>
+    </>
   );
 };
 

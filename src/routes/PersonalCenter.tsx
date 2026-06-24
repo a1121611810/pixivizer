@@ -4,20 +4,28 @@ import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
 import { resolveImageUrl } from "../utils/imageLoader";
 
+function AvatarFallback(props: { class?: string }) {
+  return (
+    <div
+      class={`flex items-center justify-center bg-[var(--colorNeutralBackground2)] ${props.class || ""}`}
+    >
+      <svg
+        width="60%"
+        height="60%"
+        viewBox="0 0 24 24"
+        fill="none"
+        class="text-[var(--colorNeutralForegroundDisabled)]"
+      >
+        <circle cx="12" cy="8" r="4" fill="currentColor" />
+        <path d="M5 21c0-4 3.1-7 7-7s7 3 7 7" fill="currentColor" />
+      </svg>
+    </div>
+  );
+}
+
 function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: string }): string {
   const src = urls.medium || urls.px_170x170 || urls.px_50x50 || "";
   return resolveImageUrl(src);
-}
-
-const DEFAULT_AVATAR =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="%23e0e0e0"/><circle cx="20" cy="15" r="7" fill="%23bdbdbd"/><path d="M8 34c0-7 5.4-12 12-12s12 5 12 12" fill="%23bdbdbd"/></svg>`,
-  );
-
-function onAvatarError(e: Event) {
-  const img = e.target as HTMLImageElement;
-  if (img.src !== DEFAULT_AVATAR) img.src = DEFAULT_AVATAR;
 }
 import {
   profile,
@@ -90,12 +98,15 @@ const PersonalCenter: Component = () => {
           <Show when={user()}>
             {/* User info */}
             <div class="flex flex-col items-center px-4 pt-6 pb-3">
-              <img
-                src={avatarUrl(user()!.profile_image_urls)}
-                alt={user()!.name}
-                class="w-20 h-20 rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
-                onError={onAvatarError}
-              />
+              <div class="relative w-20 h-20">
+                <img
+                  src={avatarUrl(user()!.profile_image_urls)}
+                  alt={user()!.name}
+                  class="relative w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
+                  onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                />
+                <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
+              </div>
               <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
                 {user()!.name}
               </h2>
@@ -169,12 +180,15 @@ const PersonalCenter: Component = () => {
 
             {list().map((preview) => (
               <div class="surface-card rounded-[var(--borderRadiusMedium)] p-3 flex items-center gap-3 transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none">
-                <img
-                  src={avatarUrl(preview.user.profile_image_urls)}
-                  alt={preview.user.name}
-                  class="w-10 h-10 rounded-[var(--borderRadiusCircular)] object-cover flex-shrink-0"
-                  onError={onAvatarError}
-                />
+                <div class="relative w-10 h-10 flex-shrink-0">
+                  <img
+                    src={avatarUrl(preview.user.profile_image_urls)}
+                    alt={preview.user.name}
+                    class="relative w-full h-full rounded-[var(--borderRadiusCircular)] object-cover"
+                    onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                  />
+                  <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
+                </div>
                 <div class="flex-1 min-w-0">
                   <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
                     {preview.user.name}
