@@ -11,7 +11,7 @@ const UserAvatar: Component = () => {
   createEffect(() => {
     const u = user();
     if (!u) return;
-    const src = u.profile_image_urls.px_50x50;
+    const src = u.profile_image_urls.px_50x50 || u.profile_image_urls.medium || "";
     if (isNative) {
       loadImage(src).then((r) => setAvatarUrl(r.url));
     } else {

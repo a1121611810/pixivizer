@@ -3,6 +3,11 @@ import { useNavigate } from "@solidjs/router";
 import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
 import { resolveImageUrl } from "../utils/imageLoader";
+
+function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: string }): string {
+  const src = urls.medium || urls.px_170x170 || urls.px_50x50 || "";
+  return resolveImageUrl(src);
+}
 import {
   profile,
   followingList,
@@ -75,7 +80,7 @@ const PersonalCenter: Component = () => {
             {/* User info */}
             <div class="flex flex-col items-center px-4 pt-6 pb-3">
               <img
-                src={resolveImageUrl(user()!.profile_image_urls.px_170x170)}
+                src={avatarUrl(user()!.profile_image_urls)}
                 alt={user()!.name}
                 class="w-20 h-20 rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
               />
@@ -153,7 +158,7 @@ const PersonalCenter: Component = () => {
             {list().map((preview) => (
               <div class="surface-card rounded-[var(--borderRadiusMedium)] p-3 flex items-center gap-3 transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none">
                 <img
-                  src={resolveImageUrl(preview.user.profile_image_urls.px_170x170)}
+                  src={avatarUrl(preview.user.profile_image_urls)}
                   alt={preview.user.name}
                   class="w-10 h-10 rounded-[var(--borderRadiusCircular)] object-cover flex-shrink-0"
                 />
