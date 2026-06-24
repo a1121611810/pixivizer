@@ -98,7 +98,7 @@ const VirtualFeed: Component<Props> = (props) => {
           props.onLoadMore();
         }
       },
-      { rootMargin: "200px" },
+      { rootMargin: "0px 0px 70% 0px" },
     );
     if (sentinel) observer.observe(sentinel);
     onCleanup(() => observer.disconnect());
@@ -122,12 +122,12 @@ const VirtualFeed: Component<Props> = (props) => {
 
         {props.loading && props.illusts.length === 0 && pullPhase() !== "refreshing" && (
           <div class="flex gap-3">
-            <div class="flex-1 flex flex-col gap-3">
+            <div class="flex-1 flex flex-col gap-3 min-w-0">
               {Array.from({ length: 5 }).map(() => (
                 <SkeletonCard />
               ))}
             </div>
-            <div class="flex-1 flex flex-col gap-3">
+            <div class="flex-1 flex flex-col gap-3 min-w-0">
               {Array.from({ length: 5 }).map(() => (
                 <SkeletonCard />
               ))}
@@ -137,7 +137,7 @@ const VirtualFeed: Component<Props> = (props) => {
 
         {props.illusts.length > 0 && (
           <div class="flex gap-3">
-            <div class="flex-1 flex flex-col gap-3">
+            <div class="flex-1 flex flex-col gap-3 min-w-0">
               <For each={columns()[0]}>
                 {(illust, index) => (
                   <div
@@ -159,7 +159,7 @@ const VirtualFeed: Component<Props> = (props) => {
                 )}
               </For>
             </div>
-            <div class="flex-1 flex flex-col gap-3">
+            <div class="flex-1 flex flex-col gap-3 min-w-0">
               <For each={columns()[1]}>
                 {(illust, index) => (
                   <div
