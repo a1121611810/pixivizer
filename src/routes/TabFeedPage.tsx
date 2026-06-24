@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup, createSignal, Show } from "solid-js";
+import { type Component, onMount, onCleanup, createSignal, createEffect, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
   illusts,
@@ -31,6 +31,14 @@ const TabFeedPage: Component<Props> = (props) => {
   const cached = isFeedCached();
   const [avatarUrl, setAvatarUrl] = createSignal("");
 
+  // 加载用户头像 — createEffect 确保 user() 就绪后自动加载
+  createEffect(() => {
+    const avatarSrc = user()?.profile_image_urls.medium;
+    if (avatarSrc) {
+      loadImage(avatarSrc).then((r) => setAvatarUrl(r.url));
+    }
+  });
+
   // Set current tab on mount so feedStore knows which data to fetch
   onMount(() => {
     setCurrentTab(props.tab);
@@ -41,11 +49,6 @@ const TabFeedPage: Component<Props> = (props) => {
       if (y > 0) {
         requestAnimationFrame(() => window.scrollTo(0, y));
       }
-    }
-    // 加载用户头像
-    const avatarSrc = user()?.profile_image_urls.medium;
-    if (avatarSrc) {
-      loadImage(avatarSrc).then((r) => setAvatarUrl(r.url));
     }
   });
 

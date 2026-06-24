@@ -25,6 +25,14 @@ const Bookmarks: Component = () => {
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = createSignal("");
 
+  // 加载用户头像 — createEffect 确保 user() 就绪后自动加载
+  createEffect(() => {
+    const avatarSrc = user()?.profile_image_urls.medium;
+    if (avatarSrc) {
+      loadImage(avatarSrc).then((r) => setAvatarUrl(r.url));
+    }
+  });
+
   // Restore scroll position when returning to this page
   onMount(() => {
     setCurrentTab("bookmarks");
@@ -35,11 +43,6 @@ const Bookmarks: Component = () => {
     // 返回收藏页时静默刷新（已有数据后台更新，无数据由 effect 处理）
     if (illusts().length > 0 && !loading()) {
       refresh();
-    }
-    // 加载用户头像
-    const avatarSrc = user()?.profile_image_urls.medium;
-    if (avatarSrc) {
-      loadImage(avatarSrc).then((r) => setAvatarUrl(r.url));
     }
   });
 
