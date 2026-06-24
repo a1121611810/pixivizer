@@ -254,10 +254,10 @@ const PersonalCenter: Component<Props> = (props) => {
                   aria-label="查看作品"
                 >
                   <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
-                    {fmtNum(profile()?.total_illusts)}
+                    {fmtNum((profile()?.total_illusts ?? 0) + (profile()?.total_manga ?? 0))}
                   </p>
                   <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-0.5">
-                    插画
+                    作品
                   </p>
                 </div>
                 <div class="flex-1 text-center">
