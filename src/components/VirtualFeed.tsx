@@ -8,6 +8,8 @@ import PullIndicator from "./PullIndicator";
 import type { PullZone } from "./PullIndicator";
 import type { PixivIllust } from "../api/types";
 
+const GAP = 12;
+
 interface Props {
   illusts: PixivIllust[];
   loading: boolean;
@@ -23,6 +25,14 @@ interface Props {
 
 const VirtualFeed: Component<Props> = (props) => {
   let sentinel: HTMLDivElement | undefined;
+  let gridRef: HTMLDivElement | undefined;
+  const [cardWidth, setCardWidth] = createSignal(300);
+
+  function calcSpan(w: number, h: number): number {
+    const cw = cardWidth();
+    if (cw <= 0 || h <= 0) return 200;
+    return Math.round(cw * (h / w));
+  }
 
   const PULL_THRESHOLD = 60;
   const SETTINGS_THRESHOLD = 130;
@@ -89,6 +99,17 @@ const VirtualFeed: Component<Props> = (props) => {
       { rootMargin: "200px" },
     );
     if (sentinel) observer.observe(sentinel);
+
+    // 测量卡片宽度用于计算 span
+    if (gridRef) {
+      const ro = new ResizeObserver((entries) => {
+        const w = entries[0]?.contentRect.width;
+        if (w) setCardWidth((w - GAP) / 2);
+      });
+      ro.observe(gridRef);
+      onCleanup(() => ro.disconnect());
+    }
+
     onCleanup(() => observer.disconnect());
   });
 
@@ -109,7 +130,7 @@ const VirtualFeed: Component<Props> = (props) => {
         )}
 
         {props.loading && props.illusts.length === 0 && pullPhase() !== "refreshing" && (
-          <div class="columns-2 gap-3">
+          <div class="grid grid-cols-2 gap-3">
             {Array.from({ length: 10 }).map(() => (
               <SkeletonCard />
             ))}
@@ -117,21 +138,21 @@ const VirtualFeed: Component<Props> = (props) => {
         )}
 
         {props.illusts.length > 0 && (
-          <div class="columns-2 gap-3">
+          <div ref={gridRef} class="grid grid-cols-2 gap-3" style={{ "grid-auto-rows": "1px" }}>
             <For each={props.illusts}>
               {(illust, index) => {
                 const eager = index() < 4;
                 return (
                   <div
-                    class="break-inside-avoid mb-3"
-                    style={
-                      props.skipAnimation
+                    style={{
+                      "grid-row-end": `span ${calcSpan(illust.width, illust.height)}`,
+                      ...(props.skipAnimation
                         ? {}
                         : {
                             animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
                             "animation-delay": `${index() * 60}ms`,
-                          }
-                    }
+                          }),
+                    }}
                   >
                     {eager ? (
                       <ImageCard illust={illust} onClick={props.onIllustClick} />
