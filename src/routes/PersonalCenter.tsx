@@ -170,7 +170,7 @@ const PersonalCenter: Component<Props> = (props) => {
                 <img
                   src={avatarUrl(displayUser()!.profile_image_urls)}
                   alt={displayUser()!.name}
-                  class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)] z-10"
+                  class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
                   onError={(e) => ((e.target as HTMLElement).style.display = "none")}
                 />
               </div>
