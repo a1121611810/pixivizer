@@ -12,6 +12,7 @@ export function loadRecommended(
 ): Promise<PixivIllustListResponse> {
   return apiClient.get<PixivIllustListResponse>("/v1/illust/recommended", {
     content_type: contentType,
+    filter: "for_ios",
   });
 }
 
