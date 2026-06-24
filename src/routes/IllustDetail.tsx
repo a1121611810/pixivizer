@@ -84,7 +84,10 @@ const IllustDetail: Component = () => {
 
   onMount(() => {
     // Listen for system back when viewer is open
-    const onCloseViewer = () => setViewerOpen(false);
+    const onCloseViewer = () => {
+      (window as any).__viewerOpen = false;
+      setViewerOpen(false);
+    };
     window.addEventListener("closeViewer", onCloseViewer);
     onCleanup(() => window.removeEventListener("closeViewer", onCloseViewer));
   });
