@@ -1,4 +1,4 @@
-import { onMount, onCleanup, createSignal, createEffect, createMemo, For } from "solid-js";
+import { onMount, onCleanup, createSignal, createEffect, For } from "solid-js";
 import type { Component } from "solid-js";
 import ImageCard from "./ImageCard";
 import LazyImageCard from "./LazyImageCard";
@@ -7,43 +7,6 @@ import SkeletonCard from "./SkeletonCard";
 import PullIndicator from "./PullIndicator";
 import type { PullZone } from "./PullIndicator";
 import type { PixivIllust } from "../api/types";
-
-// ─── 列分配工具 ───
-
-const COLUMN_COUNT = 2;
-const GAP_PX = 12; // gap-3 = 12px
-const CARD_PADDING = 60; // 补偿卡片 margin/padding，近似值
-
-/**
- * 贪心最短列分配算法。
- * columnWidth = 单列内容的像素宽度（已扣除 gap）。
- * 返回两列，每列按从上到下顺序排列。
- */
-function distributeToColumns(
-  illusts: PixivIllust[],
-  columnWidth: number,
-): [PixivIllust[], PixivIllust[]] {
-  if (columnWidth <= 0) {
-    const left: PixivIllust[] = [];
-    const right: PixivIllust[] = [];
-    illusts.forEach((illust, i) => {
-      (i % COLUMN_COUNT === 0 ? left : right).push(illust);
-    });
-    return [left, right];
-  }
-
-  const columns: [PixivIllust[], PixivIllust[]] = [[], []];
-  const heights = [0, 0];
-
-  for (const illust of illusts) {
-    const shortestCol = heights[0] <= heights[1] ? 0 : 1;
-    const estHeight = columnWidth / (illust.width / illust.height) + CARD_PADDING;
-    columns[shortestCol].push(illust);
-    heights[shortestCol] += estHeight;
-  }
-
-  return columns;
-}
 
 interface Props {
   illusts: PixivIllust[];
@@ -60,8 +23,6 @@ interface Props {
 
 const VirtualFeed: Component<Props> = (props) => {
   let sentinel: HTMLDivElement | undefined;
-  let containerRef: HTMLDivElement | undefined;
-  const [containerWidth, setContainerWidth] = createSignal(0);
 
   const PULL_THRESHOLD = 60;
   const SETTINGS_THRESHOLD = 130;
@@ -118,13 +79,7 @@ const VirtualFeed: Component<Props> = (props) => {
     }
   }
 
-  // 列宽和列分配
-  const columnWidth = () => (containerWidth() > 0 ? (containerWidth() - GAP_PX) / COLUMN_COUNT : 0);
-
-  const columns = createMemo(() => distributeToColumns(props.illusts, columnWidth()));
-
   onMount(() => {
-    // IntersectionObserver — 加载更多
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && props.hasMore && !props.loading) {
@@ -134,32 +89,11 @@ const VirtualFeed: Component<Props> = (props) => {
       { rootMargin: "200px" },
     );
     if (sentinel) observer.observe(sentinel);
-
-    // ResizeObserver — 容器宽度（列分配用）
-    let resizeObserver: ResizeObserver | undefined;
-    if (containerRef) {
-      resizeObserver = new ResizeObserver((entries) => {
-        const entry = entries[0];
-        if (entry) {
-          const w = entry.contentRect.width;
-          // Only update if width changed by >1px to prevent layout oscillation loops
-          if (Math.abs(w - containerWidth()) > 1) {
-            setContainerWidth(w);
-          }
-        }
-      });
-      resizeObserver.observe(containerRef);
-    }
-
-    onCleanup(() => {
-      observer.disconnect();
-      resizeObserver?.disconnect();
-    });
+    onCleanup(() => observer.disconnect());
   });
 
   return (
     <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      {/* Pull-to-refresh indicator */}
       <PullIndicator
         zone={pullPhase()}
         distance={pullDistance()}
@@ -167,7 +101,6 @@ const VirtualFeed: Component<Props> = (props) => {
         settingsThreshold={SETTINGS_THRESHOLD}
       />
 
-      {/* Content */}
       <div class="px-3 py-4">
         {props.error && (
           <div class="text-center py-4 px-4 mb-3 rounded-[var(--borderRadiusMedium)] mx-3 bg-[var(--colorStatusDangerBackground2)] text-[var(--colorStatusDangerForeground1)]">
@@ -175,7 +108,6 @@ const VirtualFeed: Component<Props> = (props) => {
           </div>
         )}
 
-        {/* Skeleton cards — shown when loading an uncached tab */}
         {props.loading && props.illusts.length === 0 && pullPhase() !== "refreshing" && (
           <div class="columns-2 sm:columns-3 gap-3">
             {Array.from({ length: 10 }).map(() => (
@@ -184,37 +116,31 @@ const VirtualFeed: Component<Props> = (props) => {
           </div>
         )}
 
-        {/* Real cards — JS 最短列分布 + 按排 stagger 动画 */}
         {props.illusts.length > 0 && (
-          <div ref={containerRef} class="flex gap-3">
-            <For each={columns()}>
-              {(col) => (
-                <div class="flex-1 flex flex-col gap-3 min-w-0">
-                  <For each={col}>
-                    {(illust, index) => {
-                      const eager = index() < 4;
-                      return (
-                        <div
-                          style={
-                            props.skipAnimation
-                              ? {}
-                              : {
-                                  animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
-                                  "animation-delay": `${index() * 60}ms`,
-                                }
+          <div class="columns-2 gap-3">
+            <For each={props.illusts}>
+              {(illust, index) => {
+                const eager = index() < 4;
+                return (
+                  <div
+                    class="break-inside-avoid mb-3"
+                    style={
+                      props.skipAnimation
+                        ? {}
+                        : {
+                            animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
+                            "animation-delay": `${index() * 60}ms`,
                           }
-                        >
-                          {eager ? (
-                            <ImageCard illust={illust} onClick={props.onIllustClick} />
-                          ) : (
-                            <LazyImageCard illust={illust} onClick={props.onIllustClick} />
-                          )}
-                        </div>
-                      );
-                    }}
-                  </For>
-                </div>
-              )}
+                    }
+                  >
+                    {eager ? (
+                      <ImageCard illust={illust} onClick={props.onIllustClick} />
+                    ) : (
+                      <LazyImageCard illust={illust} onClick={props.onIllustClick} />
+                    )}
+                  </div>
+                );
+              }}
             </For>
           </div>
         )}
