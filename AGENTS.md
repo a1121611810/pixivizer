@@ -10,6 +10,43 @@
 - **Pixiv API**: 自建 HTTP 客户端 (`src/api/client.ts`)，双模式（Web: fetch + Vite 代理 / Native: CapacitorHttp 直连），iOS OAuth 凭证策略（Android 已弃用）
 - **CSS 架构**: 分层加载 `reset.css` → `tokens.css` → `base.css` → `virtual:uno.css`；PostCSS `postcss-pxtorem` 自动转换字号为 rem
 
+## 代码智能规范（Code Intelligence）
+
+本项目使用 [CodeGraph](https://github.com/colbymchenry/codegraph) 作为默认代码理解工具。它基于本地预索引的代码知识图谱，提供符号定位、调用链追踪、影响分析、框架路由识别等能力，不只是"代码搜索"。
+
+### 默认原则
+
+- **任何涉及“理解代码结构、定位符号、追踪调用链、分析影响范围”的任务，默认优先使用 `mcp__codegraph__*` 系列工具。**
+- CodeGraph 是默认工具，不是搜索失败后的兜底工具。
+- 项目已通过 `reasonix.toml` 配置 `--path`，调用 CodeGraph 工具时**不要**手动传 `projectPath`。
+
+### 典型使用场景
+
+| 场景 | 首选工具 | 说明/示例 |
+|---|---|---|
+| 接到功能/bug 任务，不确定入口 | `codegraph_context` | “登录态自动恢复逻辑从哪里开始？” |
+| 追踪函数/组件调用关系 | `codegraph_trace` / `codegraph_explore` | `handleLogin` 被谁调用、又调用了谁 |
+| 修改前评估影响范围 | `codegraph_impact` | 修改 `PixivApiClient` 会影响哪些文件 |
+| 路由到 handler 的映射 | `codegraph_explore` | `/illust/:id` 路由对应哪个组件 |
+| 按名称定位符号 | `codegraph_search` | 搜索 `useAuthStore`、`ImageCard` |
+| 读取特定符号的源码 | `codegraph_node` | 获取某个函数/类的完整源码及行号 |
+| 针对任务构建上下文 | `codegraph_context` | 让 CodeGraph 判断与任务相关的代码区域 |
+
+### 禁止的默认行为
+
+- 未经 CodeGraph 尝试，直接用 `Grep` / `Glob` / `Bash find` 进行大规模代码探索。
+- 用 `Grep` 手动拼凑调用链（应使用 `codegraph_trace`）。
+- 用 `Read` 顺序打开多个文件来“摸索”架构（应先用 `codegraph_context` / `codegraph_explore`）。
+
+### 允许的 Fallback
+
+以下情况允许优先使用普通工具：
+
+1. **CodeGraph 不可用**：`.codegraph/` 索引未生成、返回空结果、或文件类型未被 CodeGraph 支持。
+2. **已知路径的完整文件读取**：任务已明确需要读取 `src/api/client.ts` 等具体文件，直接用 `Read` 更高效。
+3. **非代码文本搜索**：搜索日志、配置文件、依赖版本、文档等（如查 `package.json` 中的某个字段）。
+4. **简单列举文件**：使用 `Glob` 列出符合明确模式的文件（如 `src/components/**/*.tsx`）。
+
 ## 命令
 
 | 命令                    | 说明                                          |
