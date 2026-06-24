@@ -1,10 +1,11 @@
 import { createSignal } from "solid-js";
 import { getUserDetail, getUserFollowing, getUserFollowers } from "../api/user";
 import { followUser, unfollowUser } from "../api/illust";
-import type { PixivProfile, PixivUserPreview } from "../api/types";
+import type { PixivProfile, PixivUserPreview, PixivUser } from "../api/types";
 import { user } from "./authStore";
 
 const [profile, setProfile] = createSignal<PixivProfile | null>(null);
+const [viewedUser, setViewedUser] = createSignal<PixivUser | null>(null);
 const [followingList, setFollowingList] = createSignal<PixivUserPreview[]>([]);
 const [followersList, setFollowersList] = createSignal<PixivUserPreview[]>([]);
 const [followingNextUrl, setFollowingNextUrl] = createSignal<string | null>(null);
@@ -15,6 +16,7 @@ const [activeTab, setActiveTab] = createSignal<"following" | "followers">("follo
 
 export {
   profile,
+  viewedUser,
   followingList,
   followersList,
   followingNextUrl,
@@ -24,24 +26,25 @@ export {
   activeTab,
 };
 
-export async function loadProfile() {
-  const u = user();
-  if (!u) return;
+export async function loadProfile(userId?: number) {
+  const id = userId ?? user()?.id;
+  if (!id) return;
   try {
-    const data = await getUserDetail(u.id);
+    const data = await getUserDetail(id);
     setProfile(data.profile);
+    setViewedUser(data.user);
   } catch (e) {
     console.warn("[userStore] Failed to load profile", e);
   }
 }
 
-export async function loadFollowing() {
-  const u = user();
-  if (!u) return;
+export async function loadFollowing(userId?: number) {
+  const id = userId ?? user()?.id;
+  if (!id) return;
   setLoading(true);
   setError(null);
   try {
-    const data = await getUserFollowing(u.id);
+    const data = await getUserFollowing(id);
     setFollowingList(data.user_previews);
     setFollowingNextUrl(data.next_url);
   } catch (e) {

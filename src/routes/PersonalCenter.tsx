@@ -1,5 +1,5 @@
 import { type Component, onMount, Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate, useParams } from "@solidjs/router";
 import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
 import { resolveImageUrl } from "../utils/imageLoader";
@@ -29,6 +29,7 @@ function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: stri
 }
 import {
   profile,
+  viewedUser,
   followingList,
   followersList,
   loading,
@@ -47,13 +48,21 @@ import PageTransition from "../components/PageTransition";
 import SettingsSheet from "../components/SettingsSheet";
 import LoadingSpinner from "../components/LoadingSpinner";
 
-const PersonalCenter: Component = () => {
+interface Props {
+  userId?: string;
+}
+
+const PersonalCenter: Component<Props> = (props) => {
   const navigate = useNavigate();
+  const params = useParams<{ id: string }>();
+  const targetUserId = () => Number(props.userId || params.id || user()?.id || 0);
+  const isSelf = () => targetUserId() === (user()?.id ?? 0);
 
   onMount(() => {
     setCurrentTab("me");
-    loadProfile();
-    loadFollowing();
+    const uid = targetUserId();
+    loadProfile(uid);
+    loadFollowing(uid);
   });
 
   // 统计数字格式化
@@ -100,18 +109,20 @@ const PersonalCenter: Component = () => {
             <div class="flex flex-col items-center px-4 pt-6 pb-3">
               <div class="relative w-20 h-20">
                 <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
-                <img
-                  src={avatarUrl(user()!.profile_image_urls)}
-                  alt={user()!.name}
-                  class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)] z-10"
-                  onError={(e) => ((e.target as HTMLElement).style.display = "none")}
-                />
+                <Show when={isSelf() ? user() : viewedUser()}>
+                  <img
+                    src={avatarUrl((isSelf() ? user() : viewedUser())!.profile_image_urls)}
+                    alt={(isSelf() ? user() : viewedUser())!.name}
+                    class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)] z-10"
+                    onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                  />
+                </Show>
               </div>
               <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
-                {user()!.name}
+                {(isSelf() ? user() : viewedUser())?.name}
               </h2>
               <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
-                @{user()!.account}
+                @{(isSelf() ? user() : viewedUser())?.account}
               </p>
             </div>
 
@@ -179,40 +190,59 @@ const PersonalCenter: Component = () => {
             )}
 
             {list().map((preview) => (
-              <div class="surface-card rounded-[var(--borderRadiusMedium)] p-3 flex items-center gap-3 transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none">
-                <div class="relative w-10 h-10 flex-shrink-0">
-                  <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
-                  <img
-                    src={avatarUrl(preview.user.profile_image_urls)}
-                    alt={preview.user.name}
-                    class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover z-10"
-                    onError={(e) => ((e.target as HTMLElement).style.display = "none")}
-                  />
+              <div
+                class="surface-card rounded-[var(--borderRadiusMedium)] p-3 transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none"
+                onClick={() => navigate(`/user/${preview.user.id}`)}
+              >
+                <div class="flex items-center gap-3">
+                  <div class="relative w-10 h-10 flex-shrink-0">
+                    <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
+                    <img
+                      src={avatarUrl(preview.user.profile_image_urls)}
+                      alt={preview.user.name}
+                      class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover z-10"
+                      onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                    />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
+                      {preview.user.name}
+                    </p>
+                    <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] truncate">
+                      @{preview.user.account}
+                    </p>
+                  </div>
+                  {!isSelf() && (
+                    <button
+                      class="inline-flex items-center justify-center min-h-[40px] font-semibold [font-size:var(--fontSizeBase100)] cursor-pointer select-none transition-colors duration-[var(--durationFast)] ease-[var(--curveEasyEase)] active:scale-[0.95] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)] appearance-none border-none bg-transparent p-0 px-[var(--spacingHorizontalS)] flex-shrink-0"
+                      classList={{
+                        "text-[var(--colorBrandForeground1)] hover:text-[var(--colorBrandForeground1Hover)]":
+                          !preview.user.is_followed,
+                        "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerForeground2)]":
+                          preview.user.is_followed,
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleUserFollow(preview, activeTab());
+                      }}
+                      aria-label={preview.user.is_followed ? "取消关注" : "关注"}
+                    >
+                      {preview.user.is_followed ? "已关注" : "关注"}
+                    </button>
+                  )}
                 </div>
-                <div class="flex-1 min-w-0">
-                  <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
-                    {preview.user.name}
-                  </p>
-                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] truncate">
-                    @{preview.user.account}
-                  </p>
-                </div>
-                <button
-                  class="inline-flex items-center justify-center min-h-[40px] font-semibold [font-size:var(--fontSizeBase100)] cursor-pointer select-none transition-colors duration-[var(--durationFast)] ease-[var(--curveEasyEase)] active:scale-[0.95] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)] appearance-none border-none bg-transparent p-0 px-[var(--spacingHorizontalS)] flex-shrink-0"
-                  classList={{
-                    "text-[var(--colorBrandForeground1)] hover:text-[var(--colorBrandForeground1Hover)]":
-                      !preview.user.is_followed,
-                    "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerForeground2)]":
-                      preview.user.is_followed,
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleUserFollow(preview, activeTab());
-                  }}
-                  aria-label={preview.user.is_followed ? "取消关注" : "关注"}
-                >
-                  {preview.user.is_followed ? "已关注" : "关注"}
-                </button>
+                {preview.illusts && preview.illusts.length > 0 && (
+                  <div class="flex gap-1.5 mt-2">
+                    {preview.illusts.slice(0, 3).map((illust) => (
+                      <img
+                        src={resolveImageUrl(illust.image_urls.square_medium)}
+                        alt={illust.title}
+                        class="h-12 aspect-square rounded-[var(--borderRadiusSmall)] object-cover"
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
 

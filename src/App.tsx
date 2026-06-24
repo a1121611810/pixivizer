@@ -188,6 +188,7 @@ const App: Component = () => {
       <Route path="/debug" component={DebugImage} />
       <Route path="/bookmarks" component={Bookmarks} />
       <Route path="/me" component={PersonalCenter} />
+      <Route path="/user/:id" component={PersonalCenter} />
       <Route path="*" component={Login} />
     </Router>
   );
