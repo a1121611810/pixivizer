@@ -14,6 +14,7 @@ export async function load(userId: number, type: ContentType = "illust") {
   setLoading(true);
   setError(null);
   setContentType(type);
+  setIllusts([]);
   try {
     const data = await loadUserIllusts(userId, type);
     setIllusts(data.illusts);
