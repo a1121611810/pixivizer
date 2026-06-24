@@ -1,4 +1,4 @@
-import { type Component, createEffect, onMount, onCleanup, Show } from "solid-js";
+import { type Component, createEffect, onMount, onCleanup, createSignal, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
   illusts,
@@ -14,7 +14,7 @@ import {
   getBookmarkScrollY,
 } from "../stores/bookmarkStore";
 import { user, isLoggedIn } from "../stores/authStore";
-import { resolveImageUrl } from "../utils/imageLoader";
+import { loadImage } from "../utils/imageLoader";
 import { setShowSettingsSheet, setCurrentTab } from "../stores/uiStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
@@ -23,6 +23,7 @@ import SettingsSheet from "../components/SettingsSheet";
 
 const Bookmarks: Component = () => {
   const navigate = useNavigate();
+  const [avatarUrl, setAvatarUrl] = createSignal("");
 
   // Restore scroll position when returning to this page
   onMount(() => {
@@ -34,6 +35,11 @@ const Bookmarks: Component = () => {
     // 返回收藏页时静默刷新（已有数据后台更新，无数据由 effect 处理）
     if (illusts().length > 0 && !loading()) {
       refresh();
+    }
+    // 加载用户头像
+    const avatarSrc = user()?.profile_image_urls.medium;
+    if (avatarSrc) {
+      loadImage(avatarSrc).then((r) => setAvatarUrl(r.url));
     }
   });
 
@@ -61,11 +67,13 @@ const Bookmarks: Component = () => {
           >
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0">
               <Show when={isLoggedIn() && user()} fallback={<>Pixivizer</>}>
-                <img
-                  src={resolveImageUrl(user()!.profile_image_urls.medium)}
-                  alt={user()!.name}
-                  class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
-                />
+                {avatarUrl() && (
+                  <img
+                    src={avatarUrl()}
+                    alt={user()!.name}
+                    class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
+                  />
+                )}
                 <span class="truncate max-w-[120px]">{user()!.name}</span>
               </Show>
             </h1>

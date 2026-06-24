@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup, Show } from "solid-js";
+import { type Component, onMount, onCleanup, createSignal, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
   illusts,
@@ -16,7 +16,7 @@ import {
 import { setCurrentTab, setShowSettingsSheet } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import { user, isLoggedIn } from "../stores/authStore";
-import { resolveImageUrl } from "../utils/imageLoader";
+import { loadImage } from "../utils/imageLoader";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
@@ -29,6 +29,7 @@ interface Props {
 const TabFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
   const cached = isFeedCached();
+  const [avatarUrl, setAvatarUrl] = createSignal("");
 
   // Set current tab on mount so feedStore knows which data to fetch
   onMount(() => {
@@ -40,6 +41,11 @@ const TabFeedPage: Component<Props> = (props) => {
       if (y > 0) {
         requestAnimationFrame(() => window.scrollTo(0, y));
       }
+    }
+    // 加载用户头像
+    const avatarSrc = user()?.profile_image_urls.medium;
+    if (avatarSrc) {
+      loadImage(avatarSrc).then((r) => setAvatarUrl(r.url));
     }
   });
 
@@ -58,11 +64,13 @@ const TabFeedPage: Component<Props> = (props) => {
           >
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0">
               <Show when={isLoggedIn() && user()} fallback={<>Pixivizer</>}>
-                <img
-                  src={resolveImageUrl(user()!.profile_image_urls.medium)}
-                  alt={user()!.name}
-                  class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
-                />
+                {avatarUrl() && (
+                  <img
+                    src={avatarUrl()}
+                    alt={user()!.name}
+                    class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
+                  />
+                )}
                 <span class="truncate max-w-[120px]">{user()!.name}</span>
               </Show>
             </h1>
