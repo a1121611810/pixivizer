@@ -1,4 +1,4 @@
-import { onMount, onCleanup, createSignal, createEffect, createMemo } from "solid-js";
+import { onMount, onCleanup, createSignal, createEffect, createMemo, For } from "solid-js";
 import type { Component } from "solid-js";
 import ImageCard from "./ImageCard";
 import LazyImageCard from "./LazyImageCard";
@@ -211,28 +211,29 @@ const VirtualFeed: Component<Props> = (props) => {
           <div ref={containerRef} class="flex gap-3">
             {columns().map((col) => (
               <div class="flex-1 flex flex-col gap-3 min-w-0">
-                {col.map((item) => {
-                  // 前 4 排（~8张）直接渲染 ImageCard，避免 IntersectionObserver 异步延迟
-                  const eager = item.rowIndex < 4;
-                  return (
-                    <div
-                      style={
-                        props.skipAnimation
-                          ? {}
-                          : {
-                              animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
-                              "animation-delay": `${item.rowIndex * 60}ms`,
-                            }
-                      }
-                    >
-                      {eager ? (
-                        <ImageCard illust={item.illust} onClick={props.onIllustClick} />
-                      ) : (
-                        <LazyImageCard illust={item.illust} onClick={props.onIllustClick} />
-                      )}
-                    </div>
-                  );
-                })}
+                <For each={col}>
+                  {(item) => {
+                    const eager = item.rowIndex < 4;
+                    return (
+                      <div
+                        style={
+                          props.skipAnimation
+                            ? {}
+                            : {
+                                animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
+                                "animation-delay": `${item.rowIndex * 60}ms`,
+                              }
+                        }
+                      >
+                        {eager ? (
+                          <ImageCard illust={item.illust} onClick={props.onIllustClick} />
+                        ) : (
+                          <LazyImageCard illust={item.illust} onClick={props.onIllustClick} />
+                        )}
+                      </div>
+                    );
+                  }}
+                </For>
               </div>
             ))}
           </div>
