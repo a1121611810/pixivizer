@@ -138,16 +138,20 @@ const ImageCard: Component<Props> = (props) => {
           />
         )}
         {isUgoira() && <div class="absolute top-1.5 right-1.5 badge-overlay">▶ 动图</div>}
-        {props.illust.x_restrict === 1 && (
-          <div class="absolute top-1.5 left-1.5 badge-overlay text-[var(--colorStatusDangerForeground1)]">
-            R-18
-          </div>
-        )}
-        {props.illust.x_restrict === 2 && (
-          <div class="absolute top-1.5 left-1.5 badge-overlay text-[var(--colorStatusWarningForeground1)]">
-            R-18G
-          </div>
-        )}
+        {/* Badge group — 左上角，水平排列 */}
+        <div class="absolute top-1.5 left-1.5 flex items-center gap-[var(--spacingHorizontalXXS)] pointer-events-none select-none z-1">
+          {props.illust.x_restrict === 1 && (
+            <span class="badge-overlay text-[var(--colorStatusDangerForeground1)]">R-18</span>
+          )}
+          {props.illust.x_restrict === 2 && (
+            <span class="badge-overlay text-[var(--colorStatusWarningForeground1)]">R-18G</span>
+          )}
+          {props.illust.illust_ai_type != null && props.illust.illust_ai_type > 0 && (
+            <span class="badge-overlay opacity-85">
+              {props.illust.illust_ai_type === 1 ? "AI" : "AI辅助"}
+            </span>
+          )}
+        </div>
         {props.illust.page_count > 1 && (
           <div class="absolute bottom-1.5 left-1.5 badge-overlay">📄 {props.illust.page_count}</div>
         )}
