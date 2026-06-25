@@ -197,6 +197,28 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     onCleanup(() => window.removeEventListener("scroll", handleScroll));
   });
 
+  /** Parse Pixiv internal caption links and navigate in-app */
+  function handleCaptionClick(e: MouseEvent) {
+    const target = e.target as HTMLElement;
+    if (target.tagName !== "A") return;
+    const href = target.getAttribute("href");
+    if (!href) return;
+
+    // pixiv://users/123456 → /user/123456
+    const pixivProtocol = href.match(/^pixiv:\/\/users\/(\d+)/);
+    if (pixivProtocol) { e.preventDefault(); navigate(`/user/${pixivProtocol[1]}`); return; }
+    // pixiv://illusts/12345678 → /illust/12345678
+    const illustProtocol = href.match(/^pixiv:\/\/illusts\/(\d+)/);
+    if (illustProtocol) { e.preventDefault(); navigate(`/illust/${illustProtocol[1]}`); return; }
+    // https://www.pixiv.net/(en/)?users/123456 → /user/123456
+    const webUser = href.match(/pixiv\.net\/(?:en\/)?users\/(\d+)/);
+    if (webUser) { e.preventDefault(); navigate(`/user/${webUser[1]}`); return; }
+    // https://www.pixiv.net/(en/)?artworks/12345678 → /illust/12345678
+    const webArtwork = href.match(/pixiv\.net\/(?:en\/)?artworks\/(\d+)/);
+    if (webArtwork) { e.preventDefault(); navigate(`/illust/${webArtwork[1]}`); return; }
+    // External links (fanbox, twitter, etc.) — let browser handle
+  }
+
   function coverUrl(): string {
     const i = illust();
     if (!i) return "";
@@ -393,9 +415,11 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
 
               {/* Caption */}
               {illust()!.caption && (
-                <p class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground2)] leading-relaxed whitespace-pre-wrap">
-                  {illust()!.caption}
-                </p>
+                <p
+                  class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground2)] leading-relaxed whitespace-pre-wrap"
+                  innerHTML={illust()!.caption}
+                  onClick={handleCaptionClick}
+                />
               )}
             </div>
 

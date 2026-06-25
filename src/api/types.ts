@@ -52,6 +52,7 @@ export interface PixivIllust {
   tags: PixivIllustTag[];
   x_restrict: number;
   create_date: string;
+  caption?: string;
   meta_pages: PixivIllustMetaPage[];
   meta_single_page: { original_image_url?: string };
 }
