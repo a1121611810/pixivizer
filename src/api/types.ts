@@ -49,6 +49,7 @@ export interface PixivIllust {
   total_bookmarks: number;
   total_comments?: number;
   total_view?: number;
+  illust_ai_type?: number;
   tags: PixivIllustTag[];
   x_restrict: number;
   create_date: string;
