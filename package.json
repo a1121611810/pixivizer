@@ -13,11 +13,11 @@
     "lint": "vp lint",
     "fmt": "vp fmt --write",
     "fmt:check": "vp fmt --check",
-    "cap:init": "npx cap init pixivizer com.pixivizer.app",
-    "cap:add:android": "npx cap add android",
-    "cap:copy": "npx cap copy",
-    "cap:sync": "npx cap sync",
-    "cap:open:android": "npx cap open android",
+    "cap:init": "pnpm exec cap init pixivizer com.pixivizer.app",
+    "cap:add:android": "pnpm exec cap add android",
+    "cap:copy": "pnpm exec cap copy",
+    "cap:sync": "pnpm exec cap sync",
+    "cap:open:android": "pnpm exec cap open android",
     "build:android": "pnpm run build && pnpm run cap:sync && cd android && ./gradlew assembleDebug",
     "dev:android": "node scripts/dev-android.mjs"
   },
@@ -49,7 +49,7 @@
     "packageManager": {
       "name": "pnpm",
       "version": "11.9.0",
-      "onFail": "warn"
+      "onFail": "error"
     }
   }
 }
