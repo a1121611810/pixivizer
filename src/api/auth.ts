@@ -10,7 +10,7 @@ const isNative = Capacitor.isNativePlatform();
 const PIXIV_AUTH_URL = "https://oauth.secure.pixiv.net/auth/token";
 
 // ─── Pixiv OAuth 凭证 ───
-// Android 客户端 (KzEZED7...) 已被 Pixiv 停用，仅 iOS 可用
+// 使用 Android client_id + iOS User-Agent 的组合（iOS 凭证 KzEZED7a… 已被封禁）
 const CLIENT_ID = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
 const CLIENT_SECRET = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
 const HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
@@ -44,7 +44,6 @@ async function oauthRequest(body: Record<string, string>): Promise<any> {
   const bodyStr = new URLSearchParams(body).toString();
 
   if (isNative) {
-    // 原生模式：CapacitorHttp 直连 Pixiv（可设自定义 User-Agent）
     const resp = await CapacitorHttp.request({
       method: "POST",
       url: PIXIV_AUTH_URL,
@@ -57,7 +56,6 @@ async function oauthRequest(body: Record<string, string>): Promise<any> {
     }
     return resp.data;
   } else {
-    // Web 模式：fetch 走 Vite 代理（同源无 CORS，代理覆盖 UA）
     const resp = await fetch("/pixiv-oauth/auth/token", {
       method: "POST",
       headers: { ...headers, "Content-Type": "application/x-www-form-urlencoded" },

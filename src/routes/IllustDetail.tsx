@@ -58,7 +58,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     const canvas = document.createElement("canvas");
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
     ctx.drawImage(img, 0, 0);
     const midX = Math.floor(img.naturalWidth / 2);
