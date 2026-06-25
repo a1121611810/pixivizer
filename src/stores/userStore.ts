@@ -14,7 +14,6 @@ const [followersNextUrl, setFollowersNextUrl] = createSignal<string | null>(null
 const [loading, setLoading] = createSignal(false);
 const [error, setError] = createSignal<string | null>(null);
 const [activeTab, setActiveTab] = createSignal<"following" | "followers">("following");
-let currentUserId = 0;
 
 // 缓存已加载的用户数据，避免返回时重复请求
 const profileCache = new Map<number, { profile: PixivProfile; user: PixivUser }>();
@@ -165,7 +164,6 @@ export function switchTab(tab: "following" | "followers") {
 }
 
 export function resetData() {
-  currentUserId = 0;
   setProfile(null);
   setViewedUser(null);
   setFollowingList([]);

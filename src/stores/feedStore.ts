@@ -16,7 +16,6 @@ const tabScrollY: Record<string, number> = {};
 const tabIllusts: Record<string, PixivIllust[]> = {};
 const tabNextUrl: Record<string, string | null> = {};
 const tabLoaded: Record<string, boolean> = {};
-let currentScrollY = 0;
 
 export { illusts, nextUrl, loading, refreshing, error };
 
@@ -61,10 +60,6 @@ export async function refresh() {
   } finally {
     setRefreshing(false);
   }
-}
-
-export function saveFeedScroll() {
-  currentScrollY = window.scrollY;
 }
 
 export function saveTabScroll(tab: string) {

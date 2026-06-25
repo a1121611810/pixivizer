@@ -8,6 +8,11 @@ interface Props {
   onClose?: () => void;
 }
 
+function imgUrl(url: string): string {
+  const parts = url.split("/");
+  return `/pixiv-img/${parts.slice(3).join("/")}`;
+}
+
 const ImageViewer: Component<Props> = (props) => {
   const [scale, setScale] = createSignal(1);
   const [position, setPosition] = createSignal({ x: 0, y: 0 });
@@ -17,11 +22,6 @@ const ImageViewer: Component<Props> = (props) => {
 
   let touchStart = { x: 0, y: 0, dist: 0, time: 0 };
   let lastDist = 0;
-
-  const imgUrl = (url: string) => {
-    const parts = url.split("/");
-    return `/pixiv-img/${parts.slice(3).join("/")}`;
-  };
 
   const handleTouchStart = (e: TouchEvent) => {
     if (animating()) return;

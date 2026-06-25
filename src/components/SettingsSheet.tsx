@@ -93,6 +93,17 @@ const FluentIcon: Component<{ name: IconName; size?: number; active?: boolean }>
   );
 };
 
+function toggleTheme() {
+  setTheme(theme() === "dark" ? "light" : "dark");
+}
+
+// Prevent body scroll when touching the scrim while sheet is open
+function handleScrimTouchMove(e: TouchEvent) {
+  if (e.target === e.currentTarget) {
+    e.preventDefault();
+  }
+}
+
 const SettingsSheet: Component = () => {
   const [closing, setClosing] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
@@ -125,17 +136,6 @@ const SettingsSheet: Component = () => {
     setTimeout(() => {
       setShowSettingsSheet(false);
     }, 250); // match --durationGentle
-  }
-
-  function toggleTheme() {
-    setTheme(theme() === "dark" ? "light" : "dark");
-  }
-
-  // Prevent body scroll when touching the scrim while sheet is open
-  function handleScrimTouchMove(e: TouchEvent) {
-    if (e.target === e.currentTarget) {
-      e.preventDefault();
-    }
   }
 
   return (

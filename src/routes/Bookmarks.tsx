@@ -21,6 +21,8 @@ import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsSheet from "../components/SettingsSheet";
 
+const r18Handler = () => refresh();
+
 const Bookmarks: Component = () => {
   const navigate = useNavigate();
 
@@ -37,7 +39,6 @@ const Bookmarks: Component = () => {
     }
 
     // R18 开关切换时自动刷新
-    const r18Handler = () => refresh();
     window.addEventListener("r18Changed", r18Handler);
     onCleanup(() => window.removeEventListener("r18Changed", r18Handler));
   });

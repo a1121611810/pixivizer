@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-await-in-loop */
 /**
  * 一键启动 Android 开发流程：
  * 1. 启动 Vite dev server（暴露网络访问）
@@ -118,4 +119,4 @@ async function main() {
   }
 }
 
-main();
+void main();

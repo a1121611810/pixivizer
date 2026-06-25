@@ -91,12 +91,12 @@ export async function loginWithPassword(
 }
 
 /** Refresh Token 刷新 */
-export async function refreshToken(refreshToken: string): Promise<PixivAuthResponse> {
+export async function refreshToken(token: string): Promise<PixivAuthResponse> {
   const data = await oauthRequest({
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET,
     grant_type: "refresh_token",
-    refresh_token: refreshToken,
+    refresh_token: token,
     get_secure_url: "1",
   });
   const auth = extractAuth(data);

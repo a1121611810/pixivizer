@@ -99,14 +99,14 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     }
   }
 
-  function onBookmarkPointerDown(e: PointerEvent) {
+  function onBookmarkPointerDown(_e: PointerEvent) {
     longPressTimer = setTimeout(() => {
       toggleBookmark(true); // private
       longPressTimer = 0 as any;
     }, 500);
   }
 
-  function onBookmarkPointerUp(e: PointerEvent) {
+  function onBookmarkPointerUp(_e: PointerEvent) {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
       longPressTimer = 0 as any;

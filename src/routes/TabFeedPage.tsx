@@ -26,6 +26,8 @@ interface Props {
   tab: Tab;
 }
 
+const r18Handler = () => refresh();
+
 const TabFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
   const cached = isFeedCached();
@@ -50,9 +52,8 @@ const TabFeedPage: Component<Props> = (props) => {
 
   // R18 开关切换时自动刷新列表
   onMount(() => {
-    const handler = () => refresh();
-    window.addEventListener("r18Changed", handler);
-    onCleanup(() => window.removeEventListener("r18Changed", handler));
+    window.addEventListener("r18Changed", r18Handler);
+    onCleanup(() => window.removeEventListener("r18Changed", r18Handler));
   });
   return (
     <>

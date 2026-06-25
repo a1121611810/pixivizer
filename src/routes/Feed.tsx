@@ -9,7 +9,6 @@ import {
   ensureLoaded,
   fetchMore,
   refresh,
-  saveFeedScroll,
   saveTabScroll,
   markFeedMounted,
   isFeedCached,
@@ -38,7 +37,6 @@ const Feed: Component = () => {
 
   // Save scroll when leaving the feed page entirely
   onCleanup(() => {
-    saveFeedScroll();
     markFeedMounted();
   });
 

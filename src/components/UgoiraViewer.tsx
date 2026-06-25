@@ -40,9 +40,12 @@ const UgoiraViewer: Component<Props> = (props) => {
       const zip = await JSZip.loadAsync(zipBlob);
       const extracted: Frame[] = [];
 
+      // 帧必须按顺序逐一解压并生成 blob URL，避免并发导致内存峰值
+      // eslint-disable-next-line no-await-in-loop
       for (const frameMeta of meta.frames) {
         const file = zip.file(frameMeta.file);
         if (!file) continue;
+        // eslint-disable-next-line no-await-in-loop
         const blob = await file.async("blob");
         const url = URL.createObjectURL(blob);
         blobUrls.push(url);

@@ -1,7 +1,8 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vite-plus";
 import solid from "vite-plugin-solid";
 import UnoCSS from "unocss/vite";
 import { HttpsProxyAgent } from "https-proxy-agent";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import postcssPxToRem from "postcss-pxtorem";
 
 // 系统代理（中国大陆需要代理访问 Pixiv）
@@ -12,10 +13,15 @@ const proxyUrl =
   process.env.HTTP_PROXY ||
   "http://127.0.0.1:10808";
 console.log(`[vite] 🔧 使用代理: ${proxyUrl}`);
-const proxyAgent = new HttpsProxyAgent(proxyUrl);
+// HttpsProxyAgent 的泛型类型极深，与 Vite+ 扩展后的 UserConfig 比较时会触发 TS 堆栈深度超限，
+// 因此将其断言为 unknown；运行时行为不变。
+const proxyAgent = new HttpsProxyAgent(proxyUrl) as unknown;
 
+// Vite+ 的 UserConfig 拼接了 Vite 全量类型 + Rolldown 类型 + lint/fmt/test 扩展，
+// 类型比对时 TS 递归深度超限。整体断言为 any 规避，运行时仍由 Vite/Vite+ 校验配置。
 export default defineConfig({
   plugins: [solid(), UnoCSS()],
+
   css: {
     postcss: {
       plugins: [
@@ -27,12 +33,13 @@ export default defineConfig({
       ],
     },
   },
+
   server: {
     proxy: {
       "/pixiv-img": {
         target: "https://i.pximg.net",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/pixiv-img/, ""),
+        rewrite: (path: string) => path.replace(/^\/pixiv-img/, ""),
         headers: {
           Referer: "https://app-api.pixiv.net/",
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
@@ -42,14 +49,14 @@ export default defineConfig({
       "/pixiv-api": {
         target: "https://app-api.pixiv.net",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/pixiv-api/, ""),
+        rewrite: (path: string) => path.replace(/^\/pixiv-api/, ""),
         headers: {
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
           Referer: "https://app-api.pixiv.net/",
         },
         agent: proxyAgent,
-        configure: (proxy) => {
-          proxy.on("error", (_err, _req, res) => {
+        configure: (proxy: any) => {
+          proxy.on("error", (_err: Error, _req: IncomingMessage, res: ServerResponse) => {
             if (res && "headersSent" in res && !res.headersSent) {
               res.writeHead(502, { "Content-Type": "application/json" });
               res.end(
@@ -65,7 +72,7 @@ export default defineConfig({
       "/pixiv-oauth": {
         target: "https://oauth.secure.pixiv.net",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/pixiv-oauth/, ""),
+        rewrite: (path: string) => path.replace(/^\/pixiv-oauth/, ""),
         headers: {
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
         },
@@ -73,5 +80,76 @@ export default defineConfig({
       },
     },
   },
+
   build: { target: "esnext" },
-});
+
+  // ── Vite+ lint / fmt 统一配置 ──────────────────────────────
+  lint: {
+    ignorePatterns: [
+      "dist/**",
+      "android/**",
+      "node_modules/**",
+      ".codegraph/**",
+      ".reasonix/**",
+      ".playwright-cli/**",
+      ".worktrees/**",
+      "pnpm-lock.yaml",
+      "*.d.ts",
+    ],
+    options: {
+      typeAware: false,
+      typeCheck: false,
+      maxWarnings: 0,
+    },
+    categories: {
+      correctness: "error",
+      suspicious: "warn",
+      pedantic: "off",
+      perf: "warn",
+      style: "off",
+      restriction: "off",
+      nursery: "off",
+    },
+    plugins: ["typescript", "unicorn", "oxc"],
+    rules: {
+      // SolidJS 的 <div ref={el}> 会在运行时赋值，oxlint 的 no-unassigned-vars 无法理解该模式
+      "no-unassigned-vars": "off",
+      // 允许 _ 前缀的未使用变量，保持解构/回调参数可读性
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      // 允许全局状态标志上的双下划线命名（Capacitor 返回键处理）
+      "no-underscore-dangle": ["error", { allow: ["__viewerOpen", "__settingsOpen"] }],
+    },
+    overrides: [
+      {
+        files: ["**/__tests__/**", "**/*.test.ts", "**/*.test.tsx"],
+        plugins: ["vitest"],
+        env: { node: true },
+        rules: {
+          "no-console": "off",
+          // 测试 mock 的类型参数对可读性增益有限，关闭以专注测试逻辑
+          "require-mock-type-parameters": "off",
+        },
+      },
+      {
+        files: ["scripts/**/*.mjs", "*.config.ts"],
+        env: { node: true },
+        rules: {
+          "no-console": "off",
+        },
+      },
+    ],
+  },
+
+  fmt: {
+    ignorePatterns: [
+      "dist/**",
+      "android/**",
+      "node_modules/**",
+      ".codegraph/**",
+      ".reasonix/**",
+      ".playwright-cli/**",
+      ".worktrees/**",
+      "pnpm-lock.yaml",
+    ],
+  },
+} as any);

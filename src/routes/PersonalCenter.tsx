@@ -49,7 +49,6 @@ import {
   activeTab,
   loadProfile,
   loadFollowing,
-  loadFollowers,
   loadMoreFollowing,
   loadMoreFollowers,
   toggleUserFollow,
@@ -64,6 +63,14 @@ import LoadingSpinner from "../components/LoadingSpinner";
 interface Props {
   userId?: string;
 }
+
+function fmtNum(n: number | undefined): string {
+  if (n == null) return "—";
+  if (n >= 10000) return `${(n / 10000).toFixed(1)}万`;
+  return String(n);
+}
+
+const list = () => (activeTab() === "following" ? followingList() : followersList());
 
 const PersonalCenter: Component<Props> = (props) => {
   const navigate = useNavigate();
@@ -107,12 +114,6 @@ const PersonalCenter: Component<Props> = (props) => {
     window.scrollTo(0, 0);
   });
 
-  function fmtNum(n: number | undefined): string {
-    if (n == null) return "—";
-    if (n >= 10000) return `${(n / 10000).toFixed(1)}万`;
-    return String(n);
-  }
-
   let sentinelRef: HTMLDivElement | undefined;
 
   onMount(() => {
@@ -138,8 +139,6 @@ const PersonalCenter: Component<Props> = (props) => {
     window.addEventListener("r18Changed", handler);
     onCleanup(() => window.removeEventListener("r18Changed", handler));
   });
-
-  const list = () => (activeTab() === "following" ? followingList() : followersList());
 
   return (
     <>

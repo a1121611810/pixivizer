@@ -71,7 +71,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
 
     // Fallback JS back-button handler: registered unconditionally, but only receives
     // events when the native predictive back plugin is disabled (or unavailable).
-    const rootPaths = ["/recommended", "/following", "/bookmarks", "/login"];
+    const rootPaths = new Set(["/recommended", "/following", "/bookmarks", "/login"]);
     let lastBackTime = 0;
     const backButtonListener = await CapApp.addListener("backButton", () => {
       if (window.__viewerOpen) {
@@ -85,7 +85,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
       }
 
       const currentPath = location.pathname;
-      if (!rootPaths.includes(currentPath)) {
+      if (!rootPaths.has(currentPath)) {
         navigate(-1);
         return;
       }

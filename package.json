@@ -8,8 +8,11 @@
     "build": "vp build",
     "check": "vp check",
     "preview": "vp preview",
-    "test": "vitest run",
+    "test": "vp test",
     "test:watch": "vitest",
+    "lint": "vp lint",
+    "fmt": "vp fmt --write",
+    "fmt:check": "vp fmt --check",
     "cap:init": "npx cap init pixivizer com.pixivizer.app",
     "cap:add:android": "npx cap add android",
     "cap:copy": "npx cap copy",
@@ -32,12 +35,21 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.0",
+    "@types/node": "^26.0.0",
     "modern-css-reset": "^1.4.0",
     "postcss-pxtorem": "^6.1.0",
     "typescript": "^6.0.3",
     "unocss": "^66.7.2",
     "vite": "^8.0.16",
     "vite-plugin-solid": "^2.11.12",
+    "vite-plus": "^0.2.1",
     "vitest": "^4.1.9"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.9.0",
+      "onFail": "download"
+    }
   }
 }

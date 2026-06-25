@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import type { CapacitorConfig } from "@capacitor/cli";
 
 // 开发时可通过环境变量启用 Capacitor Live Reload：

@@ -24,7 +24,6 @@ const ImageCard: Component<Props> = (props) => {
   const h = () => props.illust.height;
   const isUgoira = () => props.illust.type === "ugoira";
   const [bookmarked, setBookmarked] = createSignal(props.illust.is_bookmarked);
-  const [totalBookmarks, setTotalBookmarks] = createSignal(props.illust.total_bookmarks);
   const [privateHint, setPrivateHint] = createSignal(false);
   const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
   const [ugoiraHeight, setUgoiraHeight] = createSignal(Math.round(h() * 0.75));
@@ -52,21 +51,21 @@ const ImageCard: Component<Props> = (props) => {
 
   /** 分析 ugoira 静态帧底部黑边，返回内容实际高度 */
   function measureUgoiraContent(e: Event) {
-    const img = e.target as HTMLImageElement;
-    if (img.naturalHeight === 0) return;
+    const target = e.target as HTMLImageElement;
+    if (target.naturalHeight === 0) return;
     const canvas = document.createElement("canvas");
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
+    canvas.width = target.naturalWidth;
+    canvas.height = target.naturalHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.drawImage(img, 0, 0);
+    ctx.drawImage(target, 0, 0);
     // 从底部向上扫描，找第一个亮度 > 15 的像素行
-    const midX = Math.floor(img.naturalWidth / 2);
-    for (let y = img.naturalHeight - 1; y >= 0; y--) {
+    const midX = Math.floor(target.naturalWidth / 2);
+    for (let y = target.naturalHeight - 1; y >= 0; y--) {
       const p = ctx.getImageData(midX, y, 1, 1).data;
       if ((p[0] + p[1] + p[2]) / 3 > 15) {
         // 内容结束行 + 2px 安全余量
-        setUgoiraHeight(Math.min(y + 2, img.naturalHeight));
+        setUgoiraHeight(Math.min(y + 2, target.naturalHeight));
         return;
       }
     }
@@ -87,11 +86,9 @@ const ImageCard: Component<Props> = (props) => {
       if (bookmarked()) {
         await deleteBookmark(props.illust.id);
         setBookmarked(false);
-        setTotalBookmarks((t) => t - 1);
       } else {
         await addBookmark(props.illust.id, privateBookmark ? "private" : "public");
         setBookmarked(true);
-        setTotalBookmarks((t) => t + 1);
         setBookmarkBurstTrigger((n) => n + 1);
         if (privateBookmark) showPrivateToast();
       }

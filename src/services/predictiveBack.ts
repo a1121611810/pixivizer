@@ -47,7 +47,7 @@ export interface BackTarget {
   type: BackTargetType;
 }
 
-const ROOT_PATHS = ["/recommended", "/following", "/bookmarks", "/login"];
+const ROOT_PATHS = new Set(["/recommended", "/following", "/bookmarks", "/login"]);
 
 function determineBackTarget(): BackTarget {
   const path = typeof window !== "undefined" ? window.location.pathname : "";
@@ -70,7 +70,7 @@ export function determineBackTargetForTest(
   if (flags.__settingsOpen) {
     return { type: "closeSettings" };
   }
-  if (ROOT_PATHS.includes(path)) {
+  if (ROOT_PATHS.has(path)) {
     return { type: "finishActivity" };
   }
   return { type: "navigateBack" };
