@@ -11,28 +11,36 @@ const [loading, setLoading] = createSignal(false);
 const [refreshing, setRefreshing] = createSignal(false);
 const [error, setError] = createSignal<string | null>(null);
 
-// 按 Tab 缓存滚动位置和加载状态
+// 关注页隐私过滤状态
+const [followRestrict, setFollowRestrict] = createSignal<RestrictType>("public");
+
+// 按 Tab 缓存：tabIllusts 始终存储原始 API 数据（未经 filterR18）
 const tabScrollY: Record<string, number> = {};
 const tabIllusts: Record<string, PixivIllust[]> = {};
 const tabNextUrl: Record<string, string | null> = {};
 const tabLoaded: Record<string, boolean> = {};
 
-export { illusts, nextUrl, loading, refreshing, error };
+export { illusts, nextUrl, loading, refreshing, error, followRestrict, setFollowRestrict };
+
+/** 获取指定 Tab 的原始作品数据（未经全局 R18/R18G 过滤）。用于子 Tab 独立过滤。 */
+export function getTabRawIllusts(tab: string): PixivIllust[] {
+  return tabIllusts[tab] || [];
+}
 
 export function ensureLoaded() {
   const tab = currentTab();
   if (tabLoaded[tab]) {
-    // Already loaded — restore this tab's cached data
+    // Already loaded — restore this tab's cached data with filtering
     if (tabIllusts[tab]) {
-      setIllusts(tabIllusts[tab]);
+      setIllusts(filterR18(tabIllusts[tab]));
       setNextUrl(tabNextUrl[tab] || null);
     }
     return;
   }
 
-  // Restore cached data if available (return visit)
+  // Restore cached raw data if available (return visit)
   if (tabIllusts[tab]) {
-    setIllusts(tabIllusts[tab]);
+    setIllusts(filterR18(tabIllusts[tab]));
     setNextUrl(tabNextUrl[tab] || null);
     tabLoaded[tab] = true;
     return;
@@ -63,8 +71,7 @@ export async function refresh() {
 }
 
 export function saveTabScroll(tab: string) {
-  // 保存当前数据到该 Tab 缓存
-  tabIllusts[tab] = illusts();
+  // 只保存滚动位置，原始数据由 fetch 函数维护在 tabIllusts 中
   tabNextUrl[tab] = nextUrl();
   tabScrollY[tab] = window.scrollY;
 }
@@ -88,7 +95,7 @@ export async function fetchRecommended(contentType: ContentType = "illust") {
   setError(null);
   try {
     const data = await loadRecommended(contentType);
-    // Always cache, but only update illusts if still on this tab
+    // 缓存原始数据，illusts 使用过滤后的数据
     tabIllusts["recommended"] = data.illusts;
     tabNextUrl["recommended"] = data.next_url;
     if (currentTab() === "recommended") {
@@ -102,12 +109,12 @@ export async function fetchRecommended(contentType: ContentType = "illust") {
   }
 }
 
-export async function fetchFollow(restrict: RestrictType = "public") {
+export async function fetchFollow() {
   setLoading(true);
   setError(null);
   try {
-    const data = await loadFollow(restrict);
-    // Always cache, but only update illusts if still on this tab
+    const data = await loadFollow(followRestrict());
+    // 缓存原始数据，illusts 使用过滤后的数据
     tabIllusts["follow"] = data.illusts;
     tabNextUrl["follow"] = data.next_url;
     if (currentTab() === "follow") {
@@ -123,9 +130,14 @@ export async function fetchFollow(restrict: RestrictType = "public") {
 
 export async function fetchMore() {
   if (!nextUrl() || loading()) return;
+  const tab = currentTab();
   setLoading(true);
   try {
     const data = await loadNext(nextUrl()!);
+    // 追加原始数据到 tabIllusts
+    if (tab === "recommended" || tab === "follow") {
+      tabIllusts[tab] = [...(tabIllusts[tab] || []), ...data.illusts];
+    }
     batch(() => {
       setIllusts([...illusts(), ...filterR18(data.illusts)]);
       setNextUrl(data.next_url);
