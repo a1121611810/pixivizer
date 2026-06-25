@@ -5,8 +5,8 @@ interface Props {
   src: string;
   pageIndex: number;
   totalPages: number;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   onClick: () => void;
 }
 
@@ -61,7 +61,9 @@ const LazyDetailImage: Component<Props> = (props) => {
       ) : (
         <div
           style={{
-            "aspect-ratio": `${props.width} / ${props.height}`,
+            ...(props.width && props.height
+              ? { "aspect-ratio": `${props.width} / ${props.height}` }
+              : { "min-height": "200px" }),
             background: "var(--colorNeutralBackground2)",
             "border-radius": "var(--borderRadiusMedium)",
           }}

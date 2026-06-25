@@ -144,6 +144,10 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
       const data = await loadDetail(Number(illustId()));
       setIllust(data.illust);
       setIsFollowed(data.illust.user.is_followed ?? false);
+      // Multi-page: start observing page visibility for staircase after DOM renders
+      if (data.illust.page_count > 1) {
+        requestAnimationFrame(() => connectPageObserver());
+      }
     } catch (e) {
       setError((e as { message?: string }).message ?? "加载失败");
     } finally {
@@ -151,9 +155,11 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     }
   });
 
-  // IntersectionObserver — track which page is currently visible for staircase
+  // IntersectionObserver — track which page is currently visible for staircase.
+  // Created in onMount for cleanup tracking; observe() is called after data loads.
+  let pageObserver: IntersectionObserver | null = null;
   onMount(() => {
-    const observer = new IntersectionObserver(
+    pageObserver = new IntersectionObserver(
       (entries) => {
         let best: { index: number; ratio: number } | null = null;
         for (const entry of entries) {
@@ -168,15 +174,17 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
       },
       { threshold: [0, 0.25, 0.5, 0.75] },
     );
+    onCleanup(() => pageObserver?.disconnect());
+  });
 
-    // Observe LazyDetailImage containers once they appear in DOM
+  /** Start observing LazyDetailImage containers — call after data renders */
+  function connectPageObserver() {
+    if (!pageObserver) return;
     requestAnimationFrame(() => {
       const containers = document.querySelectorAll("[data-page-index]");
-      containers.forEach((el) => observer.observe(el));
+      containers.forEach((el) => pageObserver!.observe(el));
     });
-
-    onCleanup(() => observer.disconnect());
-  });
+  }
 
   // Scroll listener — show back-to-top FAB after scrolling down
   onMount(() => {
@@ -215,7 +223,9 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
       ignorePageObserver = false;
     }, 600);
     const el = document.querySelector(`[data-page-index="${index}"]`);
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // block: "center" ensures the clicked page is centered in the viewport,
+    // which is more accurate than "start" when pages are shorter than screen height.
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   return (
@@ -254,8 +264,6 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
                     src={url}
                     pageIndex={i}
                     totalPages={imageUrls().length}
-                    width={illust()!.width}
-                    height={illust()!.height}
                     onClick={() => openViewer(i)}
                   />
                 ))}
