@@ -1,4 +1,4 @@
-import { createSignal, createEffect } from "solid-js";
+import { createSignal, createEffect, createRoot } from "solid-js";
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { App } from "@capacitor/app";
@@ -22,12 +22,14 @@ const [cacheSize, setCacheSize] = createSignal<CacheSize>(600);
 const PREF_KEY_USE_PREDICTIVE_BACK = "use_predictive_back";
 const PREF_KEY_AUTO_HIDE_NAV_BAR = "auto_hide_nav_bar";
 const PREF_KEY_SHOW_R18 = "show_r18";
+const PREF_KEY_SHOW_R18G = "show_r18g";
 const ANDROID_16_API_LEVEL = 36;
 
 const [usePredictiveBack, setUsePredictiveBackSig] = createSignal<boolean>(false);
 const [isPredictiveBackSupported, setIsPredictiveBackSupportedSig] = createSignal<boolean>(false);
 const [autoHideNavBar, setAutoHideNavBarSig] = createSignal<boolean>(true);
 const [showR18, setShowR18Sig] = createSignal<boolean>(true);
+const [showR18G, setShowR18GSig] = createSignal<boolean>(true);
 
 async function applyPredictiveBackState(enabled: boolean): Promise<void> {
   try {
@@ -96,18 +98,22 @@ async function setUsePredictiveBack(enabled: boolean): Promise<void> {
 }
 
 // Sync theme class to <html> whenever it changes
-createEffect(() => {
+createRoot(() => {
+  createEffect(() => {
   const root = document.documentElement;
   if (theme() === "dark") {
     root.classList.add("dark");
   } else {
     root.classList.remove("dark");
   }
+  });
 });
 
 // Sync cache size limit to imageLoader whenever it changes
-createEffect(() => {
+createRoot(() => {
+  createEffect(() => {
   setMaxCacheSize(cacheSize());
+  });
 });
 
 async function setAutoHideNavBar(enabled: boolean): Promise<void> {
@@ -151,6 +157,27 @@ async function loadShowR18Preference(): Promise<void> {
   }
 }
 
+async function setShowR18G(enabled: boolean): Promise<void> {
+  setShowR18GSig(enabled);
+  try {
+    await Preferences.set({ key: PREF_KEY_SHOW_R18G, value: String(enabled) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist showR18G", e);
+  }
+  window.dispatchEvent(new CustomEvent("r18gChanged"));
+}
+
+async function loadShowR18GPreference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_SHOW_R18G });
+    if (value !== null) {
+      setShowR18GSig(value === "true");
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load showR18G preference", e);
+  }
+}
+
 export {
   currentTab,
   setCurrentTab,
@@ -174,4 +201,7 @@ export {
   showR18,
   setShowR18,
   loadShowR18Preference,
+  showR18G,
+  setShowR18G,
+  loadShowR18GPreference,
 };

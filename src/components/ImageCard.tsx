@@ -56,7 +56,7 @@ const ImageCard: Component<Props> = (props) => {
     const canvas = document.createElement("canvas");
     canvas.width = target.naturalWidth;
     canvas.height = target.naturalHeight;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
     ctx.drawImage(target, 0, 0);
     // 从底部向上扫描，找第一个亮度 > 15 的像素行
@@ -141,6 +141,11 @@ const ImageCard: Component<Props> = (props) => {
         {props.illust.x_restrict === 1 && (
           <div class="absolute top-1.5 left-1.5 badge-overlay text-[var(--colorStatusDangerForeground1)]">
             R-18
+          </div>
+        )}
+        {props.illust.x_restrict === 2 && (
+          <div class="absolute top-1.5 left-1.5 badge-overlay text-[var(--colorStatusWarningForeground1)]">
+            R-18G
           </div>
         )}
         {props.illust.page_count > 1 && (

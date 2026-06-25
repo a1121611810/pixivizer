@@ -18,6 +18,8 @@ import {
   setAutoHideNavBar,
   showR18,
   setShowR18,
+  showR18G,
+  setShowR18G,
 } from "../stores/uiStore";
 import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 
@@ -342,6 +344,52 @@ const SettingsSheet: Component = () => {
                     classList={{
                       "translate-x-[28px]": showR18(),
                       "translate-x-0.5": !showR18(),
+                    }}
+                  />
+                </span>
+              </button>
+            </div>
+
+            {/* 显示 R-18G 内容开关行 */}
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M10.82 2.001a1.752 1.752 0 0 1 2.36 0c.53.47 6.07 5.42 8.587 11.508.168.405.233.815.233 1.211a4.751 4.751 0 0 1-4.755 4.752 4.4 4.4 0 0 1-1.77-.427L15.5 19c-3.428 0-5.26 0-7-.027a4.753 4.753 0 0 1-4.727-4.725c0-.397.065-.807.233-1.211C6.525 7.422 12.065 2.472 12.595 2l.005.005L10.82 2zm1.18 1.44c-.26.28-5.643 5.058-8.065 10.798a3.28 3.28 0 0 0-.185.796 3.253 3.253 0 0 0 3.24 3.222c1.678.026 3.412.027 6.76.027h.225c.236 0 .473.07.675.2l.022.014a2.9 2.9 0 0 0 1.163.277 3.251 3.251 0 0 0 3.188-2.538c.031-.22.049-.443.052-.667v-.048a3.25 3.25 0 0 0-.157-.813C16.846 8.498 11.463 3.72 11.2 3.44L12 2.64l-.8.8h.001zM12 8.001a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zm0 1.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                    显示 R-18G 内容
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                    关闭后列表中不展示猎奇内容，需刷新列表生效
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowR18G(!showR18G())}
+                role="switch"
+                aria-checked={showR18G()}
+                aria-label="显示 R-18G 内容"
+                class="relative flex-shrink-0 w-14 min-h-10 px-0 py-[var(--spacingVerticalSNudge)] appearance-none border-0 outline-none rounded-[var(--borderRadiusCircular)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)] flex items-center justify-center active:scale-[0.98] cursor-pointer"
+              >
+                <span
+                  class="relative block w-14 h-7 rounded-[var(--borderRadiusCircular)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                  classList={{
+                    "bg-[var(--colorCompoundBrandBackground)]": showR18G(),
+                    "bg-[var(--colorNeutralStrokeAccessible)]": !showR18G(),
+                  }}
+                >
+                  <span
+                    class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                    classList={{
+                      "translate-x-[28px]": showR18G(),
+                      "translate-x-0.5": !showR18G(),
                     }}
                   />
                 </span>

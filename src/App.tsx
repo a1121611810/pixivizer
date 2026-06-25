@@ -7,6 +7,7 @@ import {
   loadPredictiveBackPreference,
   loadAutoHideNavBarPreference,
   loadShowR18Preference,
+  loadShowR18GPreference,
 } from "./stores/uiStore";
 import {
   initPredictiveBack,
@@ -53,15 +54,8 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
   onMount(async () => {
     // Initialize predictive back coordinator before auth
     initPredictiveBack(navigate);
-    await loadPredictiveBackPreference();
-    await loadAutoHideNavBarPreference();
-    await loadShowR18Preference();
-
-    // Initialize route stack tracking
-    clearRouteStack();
-    pushRoute(location.pathname);
-
-    // Show "press again to exit" toast
+    
+    // Show "press again to exit" toast handler
     const onExitHint = () => {
       setShowExitHint(true);
       clearTimeout(exitHintTimer);
@@ -69,11 +63,29 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     };
     window.addEventListener("exitHint", onExitHint);
 
+    // Register cleanup synchronously (before any await) so Solid tracks it properly
+    let backButtonListener: { remove: () => void } | null = null;
+    onCleanup(() => {
+      window.removeEventListener("exitHint", onExitHint);
+      clearTimeout(exitHintTimer);
+      backButtonListener?.remove();
+    });
+
+    // Load persisted preferences (async)
+    await loadPredictiveBackPreference();
+    await loadAutoHideNavBarPreference();
+    await loadShowR18Preference();
+    await loadShowR18GPreference();
+
+    // Initialize route stack tracking
+    clearRouteStack();
+    pushRoute(location.pathname);
+
     // Fallback JS back-button handler: registered unconditionally, but only receives
     // events when the native predictive back plugin is disabled (or unavailable).
     const rootPaths = new Set(["/recommended", "/following", "/bookmarks", "/login"]);
     let lastBackTime = 0;
-    const backButtonListener = await CapApp.addListener("backButton", () => {
+    backButtonListener = await CapApp.addListener("backButton", () => {
       if (window.__viewerOpen) {
         window.dispatchEvent(new CustomEvent("closeViewer"));
         return;
@@ -96,12 +108,6 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
         lastBackTime = Date.now();
         window.dispatchEvent(new CustomEvent("exitHint"));
       }
-    });
-
-    onCleanup(() => {
-      window.removeEventListener("exitHint", onExitHint);
-      clearTimeout(exitHintTimer);
-      backButtonListener.remove();
     });
 
     try {
