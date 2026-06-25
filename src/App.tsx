@@ -54,7 +54,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
   onMount(async () => {
     // Initialize predictive back coordinator before auth
     initPredictiveBack(navigate);
-    
+
     // Show "press again to exit" toast handler
     const onExitHint = () => {
       setShowExitHint(true);

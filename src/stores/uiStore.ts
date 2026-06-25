@@ -100,19 +100,19 @@ async function setUsePredictiveBack(enabled: boolean): Promise<void> {
 // Sync theme class to <html> whenever it changes
 createRoot(() => {
   createEffect(() => {
-  const root = document.documentElement;
-  if (theme() === "dark") {
-    root.classList.add("dark");
-  } else {
-    root.classList.remove("dark");
-  }
+    const root = document.documentElement;
+    if (theme() === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
   });
 });
 
 // Sync cache size limit to imageLoader whenever it changes
 createRoot(() => {
   createEffect(() => {
-  setMaxCacheSize(cacheSize());
+    setMaxCacheSize(cacheSize());
   });
 });
 

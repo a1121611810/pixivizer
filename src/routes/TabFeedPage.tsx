@@ -127,10 +127,12 @@ const TabFeedPage: Component<Props> = (props) => {
                   浏览范围
                 </span>
                 <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-0.5 gap-0.5">
-                  {([
-                    { key: "public", label: "公开" },
-                    { key: "private", label: "非公开" },
-                  ] as { key: RestrictType; label: string }[]).map((r) => (
+                  {(
+                    [
+                      { key: "public", label: "公开" },
+                      { key: "private", label: "非公开" },
+                    ] as { key: RestrictType; label: string }[]
+                  ).map((r) => (
                     <button
                       class="py-[var(--spacingVerticalSNudge)] px-[var(--spacingHorizontalS)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase100)] font-medium transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                       classList={{
@@ -153,10 +155,12 @@ const TabFeedPage: Component<Props> = (props) => {
               </div>
               {/* 第2层：全部 / R-18 — 主要过滤 */}
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
-                {([
-                  { key: "all", label: "全部" },
-                  { key: "r18", label: "R-18" },
-                ] as { key: FollowSubTab; label: string }[]).map((sub) => (
+                {(
+                  [
+                    { key: "all", label: "全部" },
+                    { key: "r18", label: "R-18" },
+                  ] as { key: FollowSubTab; label: string }[]
+                ).map((sub) => (
                   <button
                     class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                     classList={{

@@ -1,4 +1,4 @@
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, CapacitorHttp } from "@capacitor/core";
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -166,8 +166,6 @@ async function fetchWeb(originalUrl: string): Promise<Blob> {
 
 /** Native 模式：通过 CapacitorHttp 获取图片 */
 async function fetchNative(originalUrl: string): Promise<Blob> {
-  const { CapacitorHttp } = await import("@capacitor/core");
-
   const resp = await CapacitorHttp.request({
     method: "GET",
     url: originalUrl,

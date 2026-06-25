@@ -1,4 +1,4 @@
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { ApiErrorType, type ApiError } from "./types";
 
 // ─── 端点 ───
@@ -131,7 +131,6 @@ async function request<T>(
     let response;
     if (isNative) {
       // 原生模式：CapacitorHttp 直连 Pixiv
-      const { CapacitorHttp } = await import("@capacitor/core");
       if (method === "GET") {
         response = await CapacitorHttp.request({
           method: "GET",

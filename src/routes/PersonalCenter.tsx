@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "@solidjs/router";
 import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
 import { resolveImageUrl } from "../utils/imageLoader";
+import { unfollowUser, followUser } from "../api/illust";
 
 function AvatarFallback(props: { class?: string }) {
   return (
@@ -238,10 +239,8 @@ const PersonalCenter: Component<Props> = (props) => {
                     loadProfile(vu.id);
                     try {
                       if (prev) {
-                        const { unfollowUser } = await import("../api/illust");
                         await unfollowUser(vu.id);
                       } else {
-                        const { followUser } = await import("../api/illust");
                         await followUser(vu.id);
                       }
                     } catch {
