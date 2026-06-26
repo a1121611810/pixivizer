@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^26.0.0",
     "modern-css-reset": "^1.4.0",
     "postcss-pxtorem": "^6.1.0",
