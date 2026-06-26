@@ -19,7 +19,8 @@
     "cap:sync": "pnpm exec cap sync",
     "cap:open:android": "pnpm exec cap open android",
     "build:android": "pnpm run build && pnpm run cap:sync && cd android && ./gradlew assembleDebug",
-    "dev:android": "node scripts/dev-android.mjs"
+    "dev:android": "node scripts/dev-android.mjs",
+    "generate:icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
