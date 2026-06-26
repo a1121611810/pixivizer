@@ -10,8 +10,8 @@
                     flood-color="#0078d4" flood-opacity="0.35"/>
     </filter>
   </defs>
-  <path d="M33.75 22.5 h24.75 a19.125 19.125 0 0 1 0 38.25 h-24.75 v27 h-11.25 v-65.25 z"
+  <path d="M37.6875 21.375 h24.75 a19.125 19.125 0 0 1 0 38.25 h-24.75 v27 h-11.25 v-65.25 z"
         fill="url(#pGradFg)" filter="url(#pShadowFg)"/>
-  <path d="M33.75 22.5 h24.75 a19.125 19.125 0 0 1 0 38.25 h-24.75 v27 h-11.25 v-65.25 z"
+  <path d="M37.6875 21.375 h24.75 a19.125 19.125 0 0 1 0 38.25 h-24.75 v27 h-11.25 v-65.25 z"
         fill="white" fill-opacity="0.12"/>
 </svg>

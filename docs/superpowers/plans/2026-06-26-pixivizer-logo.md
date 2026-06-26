@@ -12,28 +12,29 @@
 
 ## File Structure
 
-| 文件 | 职责 |
-|------|------|
-| `assets/logo/pixivizer-logo.svg` | 主 Logo 源文件（含深色背景），用于 favicon、PWA、Android 旧版图标、Splash。 |
-| `assets/logo/ic_launcher_foreground.svg` | Android 自适应图标前景源文件（透明背景，108×108 viewBox）。 |
-| `scripts/generate-icons.mjs` | 批量生成所有 PNG 资产的脚本。 |
-| `public/favicon.svg` | Web favicon SVG。 |
-| `public/favicon-16x16.png` | 小尺寸 favicon。 |
-| `public/favicon-32x32.png` | 标准 favicon。 |
-| `public/logo-192x192.png` | PWA / 大图标。 |
-| `public/logo-512x512.png` | PWA 启动图标。 |
-| `android/app/src/main/res/mipmap-*/ic_launcher.png` | Android 旧版启动器图标。 |
-| `android/app/src/main/res/mipmap-*/ic_launcher_round.png` | Android 圆形启动器图标。 |
-| `android/app/src/main/res/mipmap-*/ic_launcher_foreground.png` | Android 自适应图标前景。 |
-| `android/app/src/main/res/values/ic_launcher_background.xml` | Android 自适应图标背景色。 |
-| `src/App.tsx` | 启动页 Splash 中替换占位图标。 |
-| `index.html` | 添加 favicon 链接。 |
+| 文件                                                           | 职责                                                                        |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `assets/logo/pixivizer-logo.svg`                               | 主 Logo 源文件（含深色背景），用于 favicon、PWA、Android 旧版图标、Splash。 |
+| `assets/logo/ic_launcher_foreground.svg`                       | Android 自适应图标前景源文件（透明背景，108×108 viewBox）。                 |
+| `scripts/generate-icons.mjs`                                   | 批量生成所有 PNG 资产的脚本。                                               |
+| `public/favicon.svg`                                           | Web favicon SVG。                                                           |
+| `public/favicon-16x16.png`                                     | 小尺寸 favicon。                                                            |
+| `public/favicon-32x32.png`                                     | 标准 favicon。                                                              |
+| `public/logo-192x192.png`                                      | PWA / 大图标。                                                              |
+| `public/logo-512x512.png`                                      | PWA 启动图标。                                                              |
+| `android/app/src/main/res/mipmap-*/ic_launcher.png`            | Android 旧版启动器图标。                                                    |
+| `android/app/src/main/res/mipmap-*/ic_launcher_round.png`      | Android 圆形启动器图标。                                                    |
+| `android/app/src/main/res/mipmap-*/ic_launcher_foreground.png` | Android 自适应图标前景。                                                    |
+| `android/app/src/main/res/values/ic_launcher_background.xml`   | Android 自适应图标背景色。                                                  |
+| `src/App.tsx`                                                  | 启动页 Splash 中替换占位图标。                                              |
+| `index.html`                                                   | 添加 favicon 链接。                                                         |
 
 ---
 
 ## Task 1: Install dependency and create SVG sources
 
 **Files:**
+
 - Create: `assets/logo/pixivizer-logo.svg`
 - Create: `assets/logo/ic_launcher_foreground.svg`
 - Modify: `package.json`
@@ -107,6 +108,7 @@ git commit -m "chore(assets): add Pixivizer logo SVG sources and resvg dependenc
 ## Task 2: Create PNG generation script
 
 **Files:**
+
 - Create: `scripts/generate-icons.mjs`
 
 - [ ] **Step 1: Write `scripts/generate-icons.mjs`**
@@ -153,13 +155,21 @@ render(logoSvg, 512, join(root, "public/logo-512x512.png"));
 for (const d of androidDensities) {
   const size = Math.round(48 * d.scale);
   render(logoSvg, size, join(root, `android/app/src/main/res/mipmap-${d.name}/ic_launcher.png`));
-  render(logoSvg, size, join(root, `android/app/src/main/res/mipmap-${d.name}/ic_launcher_round.png`));
+  render(
+    logoSvg,
+    size,
+    join(root, `android/app/src/main/res/mipmap-${d.name}/ic_launcher_round.png`),
+  );
 }
 
 // Android adaptive icon foreground (108dp base)
 for (const d of androidDensities) {
   const size = Math.round(108 * d.scale);
-  render(fgSvg, size, join(root, `android/app/src/main/res/mipmap-${d.name}/ic_launcher_foreground.png`));
+  render(
+    fgSvg,
+    size,
+    join(root, `android/app/src/main/res/mipmap-${d.name}/ic_launcher_foreground.png`),
+  );
 }
 ```
 
@@ -183,6 +193,7 @@ git commit -m "build(scripts): add icon generation script"
 ## Task 3: Generate favicon and PWA assets
 
 **Files:**
+
 - Create: `public/favicon.svg`
 - Create: `public/favicon-16x16.png`
 - Create: `public/favicon-32x32.png`
@@ -223,6 +234,7 @@ git commit -m "feat(assets): generate favicon and PWA logo PNGs"
 ## Task 4: Generate Android icons
 
 **Files:**
+
 - Modify: `android/app/src/main/res/mipmap-*/ic_launcher.png`
 - Modify: `android/app/src/main/res/mipmap-*/ic_launcher_round.png`
 - Modify: `android/app/src/main/res/mipmap-*/ic_launcher_foreground.png`
@@ -246,6 +258,7 @@ done
 ```
 
 Expected sizes:
+
 - `ic_launcher.png` / `ic_launcher_round.png`: 48, 72, 96, 144, 192 px
 - `ic_launcher_foreground.png`: 108, 162, 216, 324, 432 px
 
@@ -261,6 +274,7 @@ git commit -m "feat(android): regenerate launcher icons with new Pixivizer logo"
 ## Task 5: Update Android adaptive icon background color
 
 **Files:**
+
 - Modify: `android/app/src/main/res/values/ic_launcher_background.xml`
 
 - [ ] **Step 1: Replace background color**
@@ -286,6 +300,7 @@ git commit -m "style(android): update launcher background to dark theme"
 ## Task 6: Replace splash icon in `src/App.tsx`
 
 **Files:**
+
 - Modify: `src/App.tsx:148-152`（当前占位 Fluent 图片图标 path）
 
 - [ ] **Step 1: 更新 SVG viewBox**
@@ -308,10 +323,10 @@ git commit -m "style(android): update launcher background to dark theme"
 将：
 
 ```tsx
-              <path
-                d="M17.75 3A3.25 3.25 0 0 1 21 6.25v11.5A3.25 3.25 0 0 1 17.75 21H6.25A3.25 3.25 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3zm-1.72 7.78a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5zM5 15.25V17.5l.005.16A1.75 1.75 0 0 0 6.75 19.25h10.5a1.75 1.75 0 0 0 1.745-1.607L19 17.5v-2.25a.75.75 0 0 0-.648-.743L18.25 14.5H5.75a.75.75 0 0 0-.743.648z"
-                fill="var(--colorBrandForeground1)"
-              />
+<path
+  d="M17.75 3A3.25 3.25 0 0 1 21 6.25v11.5A3.25 3.25 0 0 1 17.75 21H6.25A3.25 3.25 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3zm-1.72 7.78a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5zM5 15.25V17.5l.005.16A1.75 1.75 0 0 0 6.75 19.25h10.5a1.75 1.75 0 0 0 1.745-1.607L19 17.5v-2.25a.75.75 0 0 0-.648-.743L18.25 14.5H5.75a.75.75 0 0 0-.743.648z"
+  fill="var(--colorBrandForeground1)"
+/>
 ```
 
 替换为：
@@ -352,6 +367,7 @@ git commit -m "feat(ui): replace splash placeholder with new Pixivizer logo"
 ## Task 7: Add favicon links to `index.html`
 
 **Files:**
+
 - Modify: `index.html`
 
 - [ ] **Step 1: Insert favicon links**
@@ -359,10 +375,10 @@ git commit -m "feat(ui): replace splash placeholder with new Pixivizer logo"
 在 `<title>Pixivizer</title>` 后添加：
 
 ```html
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/logo-192x192.png" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+<link rel="apple-touch-icon" sizes="192x192" href="/logo-192x192.png" />
 ```
 
 - [ ] **Step 2: Commit**
@@ -403,6 +419,7 @@ Expected: BUILD SUCCESSFUL。
 - [ ] **Step 4: 视觉抽检**
 
 在文件管理器或图片查看器中打开以下文件确认没有拉伸、锯齿或截断：
+
 - `public/favicon-32x32.png`
 - `public/logo-192x192.png`
 - `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png`

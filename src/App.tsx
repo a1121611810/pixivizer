@@ -136,7 +136,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
         when={!isLoading()}
         fallback={
           <div class="flex flex-col items-center justify-center min-h-screen gap-4">
-            {/* Icon: Fluent image (filled), 64px, brand color, scale entrance */}
+            {/* Pixivizer logo, 64px, scale entrance */}
             <svg
               width="64"
               height="64"

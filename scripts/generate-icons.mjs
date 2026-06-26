@@ -3,8 +3,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Resvg } from "@resvg/resvg-js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = join(__dirname, "..");
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const root = join(scriptDir, "..");
 
 function render(svgPath, size, outPath) {
   const svg = readFileSync(svgPath, "utf8");
@@ -39,11 +39,19 @@ render(logoSvg, 512, join(root, "public/logo-512x512.png"));
 for (const d of androidDensities) {
   const size = Math.round(48 * d.scale);
   render(logoSvg, size, join(root, `android/app/src/main/res/mipmap-${d.name}/ic_launcher.png`));
-  render(logoSvg, size, join(root, `android/app/src/main/res/mipmap-${d.name}/ic_launcher_round.png`));
+  render(
+    logoSvg,
+    size,
+    join(root, `android/app/src/main/res/mipmap-${d.name}/ic_launcher_round.png`),
+  );
 }
 
 // Android adaptive icon foreground (108dp base)
 for (const d of androidDensities) {
   const size = Math.round(108 * d.scale);
-  render(fgSvg, size, join(root, `android/app/src/main/res/mipmap-${d.name}/ic_launcher_foreground.png`));
+  render(
+    fgSvg,
+    size,
+    join(root, `android/app/src/main/res/mipmap-${d.name}/ic_launcher_foreground.png`),
+  );
 }
