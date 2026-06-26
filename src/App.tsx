@@ -9,6 +9,7 @@ import {
   loadShowR18Preference,
   loadShowR18GPreference,
   loadLayoutModePreference,
+  loadShowDetailStairsPreference,
 } from "./stores/uiStore";
 import {
   initPredictiveBack,
@@ -79,6 +80,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadShowR18Preference();
     await loadShowR18GPreference();
     await loadLayoutModePreference();
+    await loadShowDetailStairsPreference();
 
     // Initialize route stack tracking
     clearRouteStack();

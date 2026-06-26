@@ -9,7 +9,7 @@ import PixivImage from "../components/PixivImage";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PageTransition from "../components/PageTransition";
 import HeartBurstEffect from "../components/HeartBurstEffect";
-import { detailQuality } from "../stores/uiStore";
+import { detailQuality, showDetailStairs } from "../stores/uiStore";
 
 interface IllustDetailProps {
   illustId?: string;
@@ -477,7 +477,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
             )}
 
             {/* ── Multi-page: staircase (right-side page strip) ── */}
-            {illust()!.page_count > 1 && (
+            {illust()!.page_count > 1 && showDetailStairs() && (
               <nav
                 class="backdrop-blur-[30px] backdrop-saturate-[125%] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] rounded-[var(--borderRadiusXLarge)] flex flex-col items-center z-20"
                 style={{

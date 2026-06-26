@@ -33,6 +33,7 @@ const PREF_KEY_USE_PREDICTIVE_BACK = "use_predictive_back";
 const PREF_KEY_AUTO_HIDE_NAV_BAR = "auto_hide_nav_bar";
 const PREF_KEY_SHOW_R18 = "show_r18";
 const PREF_KEY_SHOW_R18G = "show_r18g";
+const PREF_KEY_SHOW_DETAIL_STAIRS = "show_detail_stairs";
 const ANDROID_16_API_LEVEL = 36;
 
 const [usePredictiveBack, setUsePredictiveBackSig] = createSignal<boolean>(false);
@@ -40,6 +41,7 @@ const [isPredictiveBackSupported, setIsPredictiveBackSupportedSig] = createSigna
 const [autoHideNavBar, setAutoHideNavBarSig] = createSignal<boolean>(true);
 const [showR18, setShowR18Sig] = createSignal<boolean>(true);
 const [showR18G, setShowR18GSig] = createSignal<boolean>(true);
+const [showDetailStairs, setShowDetailStairsSig] = createSignal<boolean>(false);
 
 async function applyPredictiveBackState(enabled: boolean): Promise<void> {
   try {
@@ -209,6 +211,26 @@ async function loadShowR18GPreference(): Promise<void> {
   }
 }
 
+async function setShowDetailStairs(enabled: boolean): Promise<void> {
+  setShowDetailStairsSig(enabled);
+  try {
+    await Preferences.set({ key: PREF_KEY_SHOW_DETAIL_STAIRS, value: String(enabled) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist showDetailStairs", e);
+  }
+}
+
+async function loadShowDetailStairsPreference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_SHOW_DETAIL_STAIRS });
+    if (value !== null) {
+      setShowDetailStairsSig(value === "true");
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load showDetailStairs preference", e);
+  }
+}
+
 export {
   currentTab,
   setCurrentTab,
@@ -238,4 +260,7 @@ export {
   showR18G,
   setShowR18G,
   loadShowR18GPreference,
+  showDetailStairs,
+  setShowDetailStairs,
+  loadShowDetailStairsPreference,
 };

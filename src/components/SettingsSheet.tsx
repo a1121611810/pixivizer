@@ -24,6 +24,8 @@ import {
   layoutMode,
   setLayoutMode,
   type LayoutMode,
+  showDetailStairs,
+  setShowDetailStairs,
 } from "../stores/uiStore";
 import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 
@@ -507,6 +509,66 @@ const SettingsSheet: Component = () => {
                     : "三列网格，信息密度最高"}
               </p>
             </div>
+
+            {/* 详情页楼梯导航开关行 */}
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="relative w-6 h-6 flex-shrink-0">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    class="text-[var(--colorNeutralForeground2)]"
+                  >
+                    <path
+                      d="M3 6.25A3.25 3.25 0 0 1 6.25 3h11.5A3.25 3.25 0 0 1 21 6.25v11.5A3.25 3.25 0 0 1 17.75 21H6.25A3.25 3.25 0 0 1 3 17.75V6.25zM6.25 4.5A1.75 1.75 0 0 0 4.5 6.25V9h2.25V5.25A1.72 1.72 0 0 0 6.25 4.5zM4.5 10.5v3h3v-3h-3zm4.5 0v3h3.75v-3H9zm5.25 0v3h3.75v-3h-3zm3.75-1.5h-3.75V5.25c.455 0 .873.173 1.188.48l.012.012.018.018c.315.315.506.735.532 1.19V9zm-5.25 0H9V5.25h3.75V9zm-8.25 6v2.75c0 .966.784 1.75 1.75 1.75h.5V15H4.5zm3.75 0v4.5H9V15H8.25zm5.25 0v4.5h.75V15h-.75zm5.25 0v4.5h.5a1.75 1.75 0 0 0 1.75-1.75V15h-2.25z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <div class="flex items-center gap-2">
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                    详情页楼梯导航
+                  </p>
+                  <span class="inline-flex items-center px-[var(--spacingHorizontalS)] py-[var(--spacingVerticalXXS)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase100)] font-semibold text-[var(--colorPaletteGreenForeground2)] bg-[var(--colorPaletteGreenBackground2)] leading-snug">
+                    Beta
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowDetailStairs(!showDetailStairs())}
+                role="switch"
+                aria-checked={showDetailStairs()}
+                aria-label="详情页楼梯导航"
+                class="relative flex-shrink-0 w-14 min-h-10 px-0 py-[var(--spacingVerticalSNudge)] appearance-none border-0 outline-none rounded-[var(--borderRadiusCircular)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)] flex items-center justify-center active:scale-[0.98] cursor-pointer"
+              >
+                <span
+                  class="relative block w-14 h-7 rounded-[var(--borderRadiusCircular)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                  classList={{
+                    "bg-[var(--colorCompoundBrandBackground)] hover:bg-[var(--colorCompoundBrandBackgroundHover)]":
+                      showDetailStairs(),
+                    "bg-[var(--colorNeutralStrokeAccessible)] hover:bg-[var(--colorNeutralStrokeAccessibleHover)]":
+                      !showDetailStairs(),
+                  }}
+                >
+                  <span
+                    class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                    classList={{
+                      "bg-[var(--colorNeutralForegroundOnBrand)]": showDetailStairs(),
+                      "bg-[var(--colorNeutralBackground1)]": !showDetailStairs(),
+                      "translate-x-[28px]": showDetailStairs(),
+                      "translate-x-0.5": !showDetailStairs(),
+                    }}
+                  />
+                </span>
+              </button>
+            </div>
+            <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug px-0 pb-1">
+              在多页作品中显示右侧页码导航条，方便快速跳转
+            </p>
 
             {/* Divider before quality settings */}
             <div class="divider my-1" />
