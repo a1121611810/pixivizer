@@ -20,6 +20,9 @@ import {
   setShowR18,
   showR18G,
   setShowR18G,
+  layoutMode,
+  setLayoutMode,
+  type LayoutMode,
 } from "../stores/uiStore";
 import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 
@@ -457,6 +460,50 @@ const SettingsSheet: Component = () => {
                   />
                 </span>
               </button>
+            </div>
+
+            {/* Layout mode selector */}
+            <div class="py-2">
+              <div class="flex items-center gap-2 mb-2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                  class="text-[var(--colorNeutralForeground2)] flex-shrink-0"
+                >
+                  <path
+                    d="M3 6.25A3.25 3.25 0 0 1 6.25 3h11.5A3.25 3.25 0 0 1 21 6.25v11.5A3.25 3.25 0 0 1 17.75 21H6.25A3.25 3.25 0 0 1 3 17.75V6.25zM6.25 4.5A1.75 1.75 0 0 0 4.5 6.25V9h2.25V5.25A1.72 1.72 0 0 0 6.25 4.5zM4.5 10.5v3h3v-3h-3zm4.5 0v3h3.75v-3H9zm5.25 0v3h3.75v-3h-3zm3.75-1.5h-3.75V5.25c.455 0 .873.173 1.188.48l.012.012.018.018c.315.315.506.735.532 1.19V9zm-5.25 0H9V5.25h3.75V9zm-8.25 6v2.75c0 .966.784 1.75 1.75 1.75h.5V15H4.5zm3.75 0v4.5H9V15H8.25zm5.25 0v4.5h.75V15h-.75zm5.25 0v4.5h.5a1.75 1.75 0 0 0 1.75-1.75V15h-2.25z"
+                    fill="currentColor"
+                  />
+                </svg>
+                <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                  布局模式
+                </p>
+              </div>
+              <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
+                {(["waterfall", "single", "grid"] as LayoutMode[]).map((m) => (
+                  <button
+                    class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
+                    classList={{
+                      "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
+                        layoutMode() === m,
+                      "bg-transparent text-[var(--colorNeutralForeground2)]": layoutMode() !== m,
+                    }}
+                    onClick={() => setLayoutMode(m)}
+                  >
+                    {m === "waterfall" ? "瀑布流" : m === "single" ? "单列" : "网格"}
+                  </button>
+                ))}
+              </div>
+              <p class="mt-1.5 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                {layoutMode() === "waterfall"
+                  ? "双列瀑布流，图片错落有致"
+                  : layoutMode() === "single"
+                    ? "单列大图，适合浏览细节"
+                    : "三列网格，信息密度最高"}
+              </p>
             </div>
 
             {/* Divider before quality settings */}

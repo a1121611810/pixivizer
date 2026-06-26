@@ -19,17 +19,15 @@ interface Props {
   onSettingsOpen?: () => void;
   emptyText?: string;
   skipAnimation?: boolean;
+  layoutMode?: "waterfall" | "single" | "grid";
 }
 
-/** 奇偶交替分列：index 0,2,4... → col[0]; index 1,3,5... → col[1]。永不变列。 */
-function splitColumns(illusts: PixivIllust[]): [PixivIllust[], PixivIllust[]] {
-  const left: PixivIllust[] = [];
-  const right: PixivIllust[] = [];
-  for (let i = 0; i < illusts.length; i++) {
-    (i % 2 === 0 ? left : right).push(illusts[i]);
-  }
-  return [left, right];
-}
+/** layoutMode → CSS columns 值 */
+const LAYOUT_COLUMNS: Record<string, string> = {
+  waterfall: "2",
+  single: "1",
+  grid: "3",
+};
 
 const VirtualFeed: Component<Props> = (props) => {
   let sentinel: HTMLDivElement | undefined;
@@ -41,7 +39,13 @@ const VirtualFeed: Component<Props> = (props) => {
   const [pullPhase, setPullPhase] = createSignal<PullZone>("idle");
   let touchStartY = 0;
 
-  const columns = createMemo(() => splitColumns(props.illusts));
+  const columnStyle = createMemo(() => {
+    const cols = LAYOUT_COLUMNS[props.layoutMode ?? "waterfall"];
+    return {
+      columns: cols,
+      "column-gap": "var(--spacingHorizontalM)",
+    };
+  });
 
   createEffect(() => {
     if (pullPhase() === "refreshing" && !props.loading) {
@@ -121,66 +125,37 @@ const VirtualFeed: Component<Props> = (props) => {
         )}
 
         {props.loading && props.illusts.length === 0 && pullPhase() !== "refreshing" && (
-          <div class="flex gap-3">
-            <div class="flex-1 flex flex-col gap-3 min-w-0">
-              {Array.from({ length: 5 }).map(() => (
-                <SkeletonCard />
-              ))}
-            </div>
-            <div class="flex-1 flex flex-col gap-3 min-w-0">
-              {Array.from({ length: 5 }).map(() => (
-                <SkeletonCard />
-              ))}
-            </div>
+          <div style={columnStyle()}>
+            {Array.from({ length: 10 }).map(() => (
+              <SkeletonCard />
+            ))}
           </div>
         )}
 
         {props.illusts.length > 0 && (
-          <div class="flex gap-3">
-            <div class="flex-1 flex flex-col gap-3 min-w-0">
-              <For each={columns()[0]}>
-                {(illust, index) => (
-                  <div
-                    style={
-                      props.skipAnimation
-                        ? {}
-                        : {
-                            animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
-                            "animation-delay": `${index() * 60}ms`,
-                          }
-                    }
-                  >
-                    {index() < 4 ? (
-                      <ImageCard illust={illust} onClick={props.onIllustClick} />
-                    ) : (
-                      <LazyImageCard illust={illust} onClick={props.onIllustClick} />
-                    )}
-                  </div>
-                )}
-              </For>
-            </div>
-            <div class="flex-1 flex flex-col gap-3 min-w-0">
-              <For each={columns()[1]}>
-                {(illust, index) => (
-                  <div
-                    style={
-                      props.skipAnimation
-                        ? {}
-                        : {
-                            animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
-                            "animation-delay": `${index() * 60}ms`,
-                          }
-                    }
-                  >
-                    {index() < 4 ? (
-                      <ImageCard illust={illust} onClick={props.onIllustClick} />
-                    ) : (
-                      <LazyImageCard illust={illust} onClick={props.onIllustClick} />
-                    )}
-                  </div>
-                )}
-              </For>
-            </div>
+          <div style={columnStyle()}>
+            <For each={props.illusts}>
+              {(illust, index) => (
+                <div
+                  style={{
+                    "break-inside": "avoid",
+                    "margin-bottom": "var(--spacingHorizontalM)",
+                    ...(props.skipAnimation
+                      ? {}
+                      : {
+                          animation: `fluent-list-enter var(--durationGentle) var(--curveDecelerateMid) both`,
+                          "animation-delay": `${index() * 60}ms`,
+                        }),
+                  }}
+                >
+                  {index() < 8 ? (
+                    <ImageCard illust={illust} onClick={props.onIllustClick} />
+                  ) : (
+                    <LazyImageCard illust={illust} onClick={props.onIllustClick} />
+                  )}
+                </div>
+              )}
+            </For>
           </div>
         )}
 

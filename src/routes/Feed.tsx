@@ -14,11 +14,13 @@ import {
   isFeedCached,
   getFeedScrollY,
 } from "../stores/feedStore";
-import { currentTab, setShowSettingsSheet } from "../stores/uiStore";
+import { currentTab, setShowSettingsSheet, layoutMode } from "../stores/uiStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsSheet from "../components/SettingsSheet";
+
+const layoutHandler = () => refresh();
 
 const Feed: Component = () => {
   const navigate = useNavigate();
@@ -38,6 +40,12 @@ const Feed: Component = () => {
   // Save scroll when leaving the feed page entirely
   onCleanup(() => {
     markFeedMounted();
+  });
+
+  // 布局模式切换时刷新列表
+  onMount(() => {
+    window.addEventListener("layoutModeChanged", layoutHandler);
+    onCleanup(() => window.removeEventListener("layoutModeChanged", layoutHandler));
   });
 
   // Tab change: save old tab's scroll, restore new tab's scroll, load data
@@ -84,6 +92,7 @@ const Feed: Component = () => {
             onRefresh={refresh}
             onSettingsOpen={() => setShowSettingsSheet(true)}
             skipAnimation={cached}
+            layoutMode={layoutMode()}
           />
         </div>
       </PageTransition>

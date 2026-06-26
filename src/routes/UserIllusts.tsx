@@ -16,6 +16,7 @@ import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsSheet from "../components/SettingsSheet";
+import { layoutMode } from "../stores/uiStore";
 
 const UserIllusts: Component = () => {
   const navigate = useNavigate();
@@ -38,6 +39,16 @@ const UserIllusts: Component = () => {
     };
     window.addEventListener("r18Changed", handler);
     onCleanup(() => window.removeEventListener("r18Changed", handler));
+  });
+
+  // 布局模式切换时刷新
+  onMount(() => {
+    const layoutHandler = () => {
+      const uid = userId();
+      if (uid) load(uid, contentType());
+    };
+    window.addEventListener("layoutModeChanged", layoutHandler);
+    onCleanup(() => window.removeEventListener("layoutModeChanged", layoutHandler));
   });
 
   return (
@@ -94,6 +105,7 @@ const UserIllusts: Component = () => {
               const uid = userId();
               if (uid) await load(uid, contentType());
             }}
+            layoutMode={layoutMode()}
           />
         </div>
       </PageTransition>

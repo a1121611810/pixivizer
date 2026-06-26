@@ -8,6 +8,7 @@ import {
   loadAutoHideNavBarPreference,
   loadShowR18Preference,
   loadShowR18GPreference,
+  loadLayoutModePreference,
 } from "./stores/uiStore";
 import {
   initPredictiveBack,
@@ -76,6 +77,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadAutoHideNavBarPreference();
     await loadShowR18Preference();
     await loadShowR18GPreference();
+    await loadLayoutModePreference();
 
     // Initialize route stack tracking
     clearRouteStack();

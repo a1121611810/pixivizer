@@ -11,6 +11,7 @@ export type { Tab };
 export type Theme = "dark" | "light";
 export type ImageQuality = "medium" | "large" | "original";
 export type CacheSize = number;
+export type LayoutMode = "waterfall" | "single" | "grid";
 
 const [currentTab, setCurrentTab] = createSignal<Tab>("recommended");
 const [theme, setTheme] = createSignal<Theme>("light");
@@ -18,7 +19,16 @@ const [showSettingsSheet, setShowSettingsSheet] = createSignal(false);
 const [listQuality, setListQuality] = createSignal<ImageQuality>("medium");
 const [detailQuality, setDetailQuality] = createSignal<ImageQuality>("medium");
 const [cacheSize, setCacheSize] = createSignal<CacheSize>(600);
+const [layoutMode, setLayoutModeSig] = createSignal<LayoutMode>("waterfall");
 
+/** 布局模式 → 列数映射 */
+export const MODE_COLUMNS: Record<LayoutMode, number> = {
+  waterfall: 2,
+  single: 1,
+  grid: 3,
+};
+
+const PREF_KEY_LAYOUT_MODE = "layout_mode";
 const PREF_KEY_USE_PREDICTIVE_BACK = "use_predictive_back";
 const PREF_KEY_AUTO_HIDE_NAV_BAR = "auto_hide_nav_bar";
 const PREF_KEY_SHOW_R18 = "show_r18";
@@ -167,6 +177,27 @@ async function setShowR18G(enabled: boolean): Promise<void> {
   window.dispatchEvent(new CustomEvent("r18gChanged"));
 }
 
+async function setLayoutMode(mode: LayoutMode): Promise<void> {
+  setLayoutModeSig(mode);
+  try {
+    await Preferences.set({ key: PREF_KEY_LAYOUT_MODE, value: mode });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist layoutMode", e);
+  }
+  window.dispatchEvent(new CustomEvent("layoutModeChanged"));
+}
+
+async function loadLayoutModePreference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_LAYOUT_MODE });
+    if (value !== null && (value === "waterfall" || value === "single" || value === "grid")) {
+      setLayoutModeSig(value as LayoutMode);
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load layoutMode preference", e);
+  }
+}
+
 async function loadShowR18GPreference(): Promise<void> {
   try {
     const { value } = await Preferences.get({ key: PREF_KEY_SHOW_R18G });
@@ -185,6 +216,9 @@ export {
   setTheme,
   showSettingsSheet,
   setShowSettingsSheet,
+  layoutMode,
+  setLayoutMode,
+  loadLayoutModePreference,
   listQuality,
   setListQuality,
   detailQuality,

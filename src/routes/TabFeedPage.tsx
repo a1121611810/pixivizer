@@ -16,7 +16,7 @@ import {
   followRestrict,
   setFollowRestrict,
 } from "../stores/feedStore";
-import { setCurrentTab, setShowSettingsSheet } from "../stores/uiStore";
+import { setCurrentTab, setShowSettingsSheet, layoutMode } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import type { PixivIllust, RestrictType } from "../api/types";
 import { user, isLoggedIn } from "../stores/authStore";
@@ -33,6 +33,7 @@ interface Props {
 type FollowSubTab = "all" | "r18" | "r18g";
 
 const r18Handler = () => refresh();
+const layoutHandler = () => refresh();
 
 function scrollToTop() {
   window.scroll(0, 0);
@@ -80,9 +81,11 @@ const TabFeedPage: Component<Props> = (props) => {
   onMount(() => {
     window.addEventListener("r18Changed", r18Handler);
     window.addEventListener("r18gChanged", r18Handler);
+    window.addEventListener("layoutModeChanged", layoutHandler);
     onCleanup(() => {
       window.removeEventListener("r18Changed", r18Handler);
       window.removeEventListener("r18gChanged", r18Handler);
+      window.removeEventListener("layoutModeChanged", layoutHandler);
     });
   });
   return (
@@ -188,6 +191,7 @@ const TabFeedPage: Component<Props> = (props) => {
             onRefresh={refresh}
             onSettingsOpen={() => setShowSettingsSheet(true)}
             skipAnimation={cached}
+            layoutMode={layoutMode()}
           />
         </div>
       </PageTransition>

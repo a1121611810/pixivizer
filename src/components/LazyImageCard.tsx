@@ -1,5 +1,6 @@
 import { type Component, createSignal, onMount, onCleanup } from "solid-js";
 import ImageCard from "./ImageCard";
+import SkeletonCard from "./SkeletonCard";
 import type { PixivIllust } from "../api/types";
 
 interface Props {
@@ -36,20 +37,12 @@ const LazyImageCard: Component<Props> = (props) => {
     onCleanup(() => observer.disconnect());
   });
 
-  const aspectRatio = `${props.illust.width} / ${props.illust.height}`;
-
   return (
     <div ref={el}>
       {everVisible() ? (
         <ImageCard illust={props.illust} onClick={props.onClick} />
       ) : (
-        <div
-          style={{
-            "aspect-ratio": aspectRatio,
-            background: "var(--colorNeutralBackground2)",
-            "border-radius": "var(--borderRadiusMedium)",
-          }}
-        />
+        <SkeletonCard />
       )}
     </div>
   );
