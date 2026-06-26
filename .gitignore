@@ -6,4 +6,5 @@ dist/*
 .reasonix/*
 .codegraph/*
 .worktrees/
+.superpowers/
 .DS_Store
