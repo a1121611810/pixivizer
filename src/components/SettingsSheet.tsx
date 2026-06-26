@@ -1,4 +1,5 @@
 import { type Component, Show, createSignal, createEffect, onCleanup } from "solid-js";
+import { useNavigate } from "@solidjs/router";
 import {
   showSettingsSheet,
   setShowSettingsSheet,
@@ -110,6 +111,7 @@ function handleScrimTouchMove(e: TouchEvent) {
 }
 
 const SettingsSheet: Component = () => {
+  const navigate = useNavigate();
   const [closing, setClosing] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
   const pbStyle = usePredictiveBackOverlayStyle();
@@ -604,11 +606,82 @@ const SettingsSheet: Component = () => {
           {/* Divider */}
           <div class="divider mx-5" />
 
-          {/* Version footer */}
-          <div class="px-5 py-4">
-            <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] text-center select-none">
-              Pixivizer v0.1.0
-            </p>
+          {/* About entry — clickable row */}
+          <div
+            class="flex items-center justify-between mx-4 mb-4 px-5 py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)]"
+            onClick={() => {
+              close();
+              navigate("/about");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                close();
+                navigate("/about");
+              }
+            }}
+            role="button"
+            tabindex="0"
+            aria-label="关于"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              {/* Pixivizer logo — small 32px */}
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 192 192"
+                fill="none"
+                aria-hidden="true"
+                class="flex-shrink-0"
+              >
+                <defs>
+                  <linearGradient id="settingsPGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#0078d4" />
+                    <stop offset="55%" stop-color="#2899f5" />
+                    <stop offset="100%" stop-color="#60aaff" />
+                  </linearGradient>
+                </defs>
+                <rect
+                  x="12"
+                  y="12"
+                  width="168"
+                  height="168"
+                  rx="44"
+                  fill="var(--colorNeutralBackground2)"
+                />
+                <path
+                  d="M60 40 h44 a34 34 0 0 1 0 68 h-44 v48 h-20 v-116 z"
+                  fill="url(#settingsPGrad)"
+                />
+                <path
+                  d="M60 40 h44 a34 34 0 0 1 0 68 h-44 v48 h-20 v-116 z"
+                  fill="white"
+                  fill-opacity="0.12"
+                />
+              </svg>
+              <div class="min-w-0">
+                <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                  Pixivizer
+                </p>
+                <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                  关于 · v{APP_VERSION}
+                </p>
+              </div>
+            </div>
+            {/* Chevron right */}
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+              class="flex-shrink-0 text-[var(--colorNeutralForeground3)] ml-2"
+            >
+              <path
+                d="M8.22 4.22a.75.75 0 0 1 1.06 0l7.25 7.25a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06-1.06L15.19 12 8.22 5.28a.75.75 0 0 1 0-1.06z"
+                fill="currentColor"
+              />
+            </svg>
           </div>
         </div>
       </div>

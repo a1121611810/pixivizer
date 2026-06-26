@@ -18,7 +18,8 @@
     "cap:copy": "pnpm exec cap copy",
     "cap:sync": "pnpm exec cap sync",
     "cap:open:android": "pnpm exec cap open android",
-    "build:android": "pnpm run build && pnpm run cap:sync && cd android && ./gradlew assembleDebug",
+    "sync:android-version": "node scripts/sync-android-version.mjs",
+    "build:android": "pnpm run sync:android-version && pnpm run build && pnpm run cap:sync && cd android && ./gradlew assembleDebug",
     "dev:android": "node scripts/dev-android.mjs",
     "generate:icons": "node scripts/generate-icons.mjs"
   },

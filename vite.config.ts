@@ -4,6 +4,7 @@ import UnoCSS from "unocss/vite";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import postcssPxToRem from "postcss-pxtorem";
+import pkg from "./package.json";
 
 // 系统代理（中国大陆需要代理访问 Pixiv）
 const proxyUrl =
@@ -21,6 +22,9 @@ const proxyAgent = new HttpsProxyAgent(proxyUrl) as unknown;
 // 类型比对时 TS 递归深度超限。整体断言为 any 规避，运行时仍由 Vite/Vite+ 校验配置。
 export default defineConfig({
   plugins: [solid(), UnoCSS()],
+  define: {
+    APP_VERSION: JSON.stringify(pkg.version),
+  },
 
   css: {
     postcss: {
