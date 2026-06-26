@@ -571,7 +571,7 @@ const SettingsSheet: Component = () => {
                 </p>
               </div>
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
-                {(["medium", "large", "original"] as ImageQuality[]).map((q) => (
+                {(["medium", "large"] as ImageQuality[]).map((q) => (
                   <button
                     class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                     classList={{
@@ -581,7 +581,7 @@ const SettingsSheet: Component = () => {
                     }}
                     onClick={() => setListQuality(q)}
                   >
-                    {q === "medium" ? "默认" : q === "large" ? "高清" : "原图"}
+                    {q === "medium" ? "默认" : "高清"}
                   </button>
                 ))}
               </div>

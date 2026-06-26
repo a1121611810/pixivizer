@@ -39,7 +39,7 @@ export interface PixivIllustTag {
 export interface PixivIllust {
   id: number;
   title: string;
-  type: "illust" | "manga";
+  type: "illust" | "manga" | "ugoira";
   user: PixivUser;
   image_urls: PixivIllustImageUrls;
   width: number;

@@ -4,6 +4,7 @@ import { listQuality } from "../stores/uiStore";
 import { addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import PixivImage from "./PixivImage";
 import HeartBurstEffect from "./HeartBurstEffect";
+import { resolveImageUrl } from "../utils/imageLoader";
 
 function resolveUrl(illust: PixivIllust): string {
   const q = listQuality();
@@ -29,6 +30,7 @@ const ImageCard: Component<Props> = (props) => {
   const [ugoiraHeight, setUgoiraHeight] = createSignal(Math.round(h() * 0.75));
   const [isFollowed, setIsFollowed] = createSignal(props.illust.user.is_followed ?? false);
   const [following, setFollowing] = createSignal(false);
+  const [mainLoaded, setMainLoaded] = createSignal(false);
 
   const toggleFollow = async (e: MouseEvent) => {
     e.stopPropagation();
@@ -114,7 +116,14 @@ const ImageCard: Component<Props> = (props) => {
 
   return (
     <div class="image-card" onClick={() => props.onClick(props.illust.id)}>
-      <div class="relative">
+      <div class="relative overflow-hidden rounded-[var(--borderRadiusMedium)]">
+        {/* Blur-up placeholder: square_medium 瞬间加载，铺底模糊占位；主图加载后淡出 */}
+        <img
+          src={resolveImageUrl(props.illust.image_urls.square_medium)}
+          alt=""
+          class="absolute inset-0 w-full h-full object-cover blur-lg scale-110 pointer-events-none transition-opacity duration-500"
+          classList={{ "opacity-0": mainLoaded() }}
+        />
         {isUgoira() ? (
           <div style={{ "aspect-ratio": `${w()} / ${ugoiraHeight()}` }} class="overflow-hidden">
             <PixivImage
@@ -124,7 +133,10 @@ const ImageCard: Component<Props> = (props) => {
               height={h()}
               loading="lazy"
               class="w-full h-full object-cover object-top"
-              onLoad={measureUgoiraContent}
+              onLoad={(e) => {
+                setMainLoaded(true);
+                measureUgoiraContent(e);
+              }}
             />
           </div>
         ) : (
@@ -135,6 +147,7 @@ const ImageCard: Component<Props> = (props) => {
             height={h()}
             loading="lazy"
             class="w-full h-auto block"
+            onLoad={() => setMainLoaded(true)}
           />
         )}
         {isUgoira() && <div class="absolute top-1.5 right-1.5 badge-overlay">▶ 动图</div>}

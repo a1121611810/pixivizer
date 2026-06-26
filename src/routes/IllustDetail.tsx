@@ -248,10 +248,21 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
   const imageUrls = () => {
     const i = illust();
     if (!i) return [];
+    const q = detailQuality();
     if (i.page_count > 1) {
-      return i.meta_pages.map((p) => p.image_urls.large);
+      // 多图：medium → medium, large/original → large（meta_pages 没有 original）
+      return i.meta_pages.map((p) =>
+        q === "medium" ? p.image_urls.medium : p.image_urls.large,
+      );
     }
-    return [i.meta_single_page.original_image_url ?? i.image_urls.large];
+    // 单图
+    if (q === "original") {
+      return [i.meta_single_page.original_image_url ?? i.image_urls.large];
+    }
+    if (q === "medium") {
+      return [i.image_urls.medium];
+    }
+    return [i.image_urls.large];
   };
 
   function scrollToPage(index: number) {
@@ -349,7 +360,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
               {/* User info */}
               <div class="flex items-center gap-3">
                 <PixivImage
-                  src={illust()!.user.profile_image_urls.medium}
+                  src={illust()!.user.profile_image_urls.medium ?? ""}
                   alt={illust()!.user.name}
                   width={40}
                   height={40}
