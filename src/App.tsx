@@ -140,14 +140,37 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
             <svg
               width="64"
               height="64"
-              viewBox="0 0 24 24"
+              viewBox="0 0 192 192"
               fill="none"
               aria-hidden="true"
               style="animation: fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both"
             >
+              <defs>
+                <linearGradient id="splashPGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#0078d4" />
+                  <stop offset="55%" stop-color="#2899f5" />
+                  <stop offset="100%" stop-color="#60aaff" />
+                </linearGradient>
+                <filter id="splashPShadow" x="-25%" y="-25%" width="150%" height="150%">
+                  <feDropShadow
+                    dx="0"
+                    dy="6"
+                    stdDeviation="8"
+                    flood-color="#0078d4"
+                    flood-opacity="0.35"
+                  />
+                </filter>
+              </defs>
+              <rect x="12" y="12" width="168" height="168" rx="44" fill="#1f1f1f" />
               <path
-                d="M17.75 3A3.25 3.25 0 0 1 21 6.25v11.5A3.25 3.25 0 0 1 17.75 21H6.25A3.25 3.25 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3zm-1.72 7.78a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5zM5 15.25V17.5l.005.16A1.75 1.75 0 0 0 6.75 19.25h10.5a1.75 1.75 0 0 0 1.745-1.607L19 17.5v-2.25a.75.75 0 0 0-.648-.743L18.25 14.5H5.75a.75.75 0 0 0-.743.648z"
-                fill="var(--colorBrandForeground1)"
+                d="M60 40 h44 a34 34 0 0 1 0 68 h-44 v48 h-20 v-116 z"
+                fill="url(#splashPGrad)"
+                filter="url(#splashPShadow)"
+              />
+              <path
+                d="M60 40 h44 a34 34 0 0 1 0 68 h-44 v48 h-20 v-116 z"
+                fill="white"
+                fill-opacity="0.12"
               />
             </svg>
 
