@@ -190,3 +190,7 @@ src/
 
 - **代码理解优先性**：本次任务若涉及代码结构、调用链、影响范围分析，是否优先使用了 `mcp__codegraph__*` 工具？
 - **Fallback 合理性**：若未使用 CodeGraph，是否属于已列出的允许例外（CodeGraph 不可用、已知路径文件读取、非代码文本搜索、简单文件列举）？
+
+## Notes
+
+- 项目必须符合Microsoft Fluent Design 风格
