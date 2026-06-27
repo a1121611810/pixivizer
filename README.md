@@ -4,7 +4,7 @@
   <p align="center">
     <strong>A third-party Pixiv illustration browser built with SolidJS</strong>
     <br>
-    Packaged via Capacitor as a native Android app for a smooth mobile browsing experience
+    Packaged as a native Android app with Capacitor
   </p>
   <p align="center">
     <a href="https://github.com/lilianda/pictelio/blob/main/LICENSE">
@@ -196,10 +196,10 @@
 
 | 🎨 Browsing | 🔧 Utilities | 📱 Native |
 |:---|:---|:---|
-| **Recommended Feed** `/recommended` — Discover curated illustrations | **Bookmarks** `/bookmarks` — Manage your collection | **Predictive Back Gesture** — Native Android transition animation |
-| **Following Feed** `/following` — Follow your favorite artists | **Profile** `/me` — Personal page & settings | **Bottom Navigation Bar** — Intuitive multi-tab switching |
-| **Illust Detail** `/illust/:id` — Full-res, multi-page, Ugoira playback | **User Page** `/user/:id` — Browse artist portfolios | **Pull-to-Refresh** — Swipe down to reload |
-| **Waterfall / Single / Grid** — 3 layout modes | **Follow/Unfollow** — Directly from cards | **Auto-hide Nav** — Immersive browsing experience |
+| **Recommended Feed** `/recommended` — Curated illustrations from Pixiv | **Bookmarks** `/bookmarks` — Your saved illusts | **Predictive Back Gesture** — Android native transition animation |
+| **Following Feed** `/following` — Illusts from artists you follow | **Profile** `/me` — Personal page and settings | **Bottom Navigation Bar** — Multi-tab navigation |
+| **Illust Detail** `/illust/:id` — Full resolution, multi-page, Ugoira playback | **User Page** `/user/:id` — Browse an artist's portfolio | **Pull to Refresh** — Swipe down to reload |
+| **Waterfall / Single Column / Grid** — Three layout modes | **Follow / Unfollow** — Directly from image cards | **Auto-hide Navigation** — Scroll-based nav bar hiding |
 
 </div>
 
@@ -260,7 +260,7 @@ pnpm install
 pnpm dev
 ```
 
-> **Proxy Configuration**: During web development, Vite proxies requests to Pixiv. The project auto-reads `https_proxy`, `HTTPS_PROXY`, `http_proxy`, `HTTP_PROXY` environment variables, falling back to `http://127.0.0.1:10808` by default.
+> **Proxy Configuration**: During web development, Vite proxies requests to Pixiv. The project reads `https_proxy`, `HTTPS_PROXY`, `http_proxy`, and `HTTP_PROXY` environment variables. Falls back to `http://127.0.0.1:10808` if none are set.
 >
 > Example:
 > ```bash
@@ -271,7 +271,7 @@ pnpm dev
 
 ## 📱 Android Build & Development
 
-### Build Debug APK
+### Build a Debug APK
 
 ```bash
 pnpm build:android
@@ -279,13 +279,13 @@ pnpm build:android
 
 This runs: TypeScript type check → Vite production build → Capacitor sync → `./gradlew assembleDebug`
 
-### One-command hot-reload
+### Hot-reload development
 
 ```bash
 pnpm dev:android
 ```
 
-Automatically: starts Vite dev server → gets local Wi-Fi IP → syncs Capacitor config → builds APK → installs via adb.
+Starts the Vite dev server, detects the local Wi-Fi IP, syncs Capacitor configuration, builds the APK, and installs it via adb automatically.
 
 **Prerequisites**: Phone and computer on same Wi-Fi, adb device connected, dependencies installed.
 
@@ -335,7 +335,7 @@ This project enforces **Microsoft Fluent Design System 2**:
 | `pnpm test` | Run Vitest tests |
 | `pnpm test:watch` | Run tests in watch mode |
 | `pnpm build:android` | Web build + Capacitor sync + Gradle APK |
-| `pnpm dev:android` | One-command Android hot-reload workflow |
+| `pnpm dev:android` | Hot-reload Android development workflow |
 | `pnpm cap:sync` | Sync web assets & Capacitor config to Android |
 | `pnpm cap:open:android` | Open Android project in Android Studio |
 
@@ -349,7 +349,7 @@ This project is provided **for educational and research purposes only**.
 - All illustrations displayed in the app are sourced from the [Pixiv](https://www.pixiv.net) public API and are the intellectual property of their respective creators.
 - This project does **not** store, host, distribute, or modify any copyrighted content. It acts solely as a third-party client that retrieves data already accessible through Pixiv's public API.
 - Users are responsible for complying with Pixiv's [Terms of Service](https://www.pixiv.net/terms/) and applicable laws.
-- **Please delete the app and all associated data within 24 hours** if you do not have explicit permission from the copyright holders to view their content through this client.
+- **Delete the app and all associated data within 24 hours** if you do not have explicit permission from the copyright holders to view their content through this client.
 
 By using this software, you acknowledge that you have read and understood this disclaimer. If you do not agree, do not use or distribute this project.
 
