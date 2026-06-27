@@ -146,6 +146,18 @@
   | `pnpm cap:sync` | 同步 Web 产物和 Capacitor 配置到 Android 项目 |
   | `pnpm cap:open:android` | 在 Android Studio 中打开 `android/` 项目 |
 
+  ### ⚠️ 免责声明
+
+  本应用**仅供学习与研究目的**使用。
+
+  - Pictelio **与 Pixiv Inc. 没有任何关联**，未经 Pixiv 官方认可或授权。
+  - 应用中展示的所有插画均来自 [Pixiv](https://www.pixiv.net) 公开 API，版权归原作者所有。
+  - 本项目**不存储、托管、分发或修改**任何受版权保护的内容。它仅作为第三方客户端，检索 Pixiv 公开 API 中已有的数据。
+  - 用户有责任遵守 Pixiv 的[服务条款](https://www.pixiv.net/terms/)及适用法律。
+  - **请在 24 小时内删除本应用及相关数据**，除非你获得版权所有者的明确许可。
+
+  使用本软件即表示你已阅读并理解此免责声明。如不同意，请勿使用或分发本项目。
+
   ### 📄 许可证
 
   [MIT](LICENSE) © 2025 Lilianda
@@ -326,6 +338,20 @@ This project enforces **Microsoft Fluent Design System 2**:
 | `pnpm dev:android` | One-command Android hot-reload workflow |
 | `pnpm cap:sync` | Sync web assets & Capacitor config to Android |
 | `pnpm cap:open:android` | Open Android project in Android Studio |
+
+---
+
+## ⚠️ Disclaimer
+
+This project is provided **for educational and research purposes only**.
+
+- Pictelio is **not affiliated with**, endorsed by, or connected to Pixiv Inc. in any way.
+- All illustrations displayed in the app are sourced from the [Pixiv](https://www.pixiv.net) public API and are the intellectual property of their respective creators.
+- This project does **not** store, host, distribute, or modify any copyrighted content. It acts solely as a third-party client that retrieves data already accessible through Pixiv's public API.
+- Users are responsible for complying with Pixiv's [Terms of Service](https://www.pixiv.net/terms/) and applicable laws.
+- **Please delete the app and all associated data within 24 hours** if you do not have explicit permission from the copyright holders to view their content through this client.
+
+By using this software, you acknowledge that you have read and understood this disclaimer. If you do not agree, do not use or distribute this project.
 
 ---
 
