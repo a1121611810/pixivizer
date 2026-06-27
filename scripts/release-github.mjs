@@ -103,6 +103,15 @@ function printGhInstructions() {
   console.error("完成后重新执行本脚本。");
 }
 
+function shellQuote(arg) {
+  // 将参数安全地转义为可粘贴到 shell 的格式。
+  // 包含空格、引号或特殊 shell 字符的参数用单引号包裹。
+  if (/^[a-zA-Z0-9_./:@-]+$/.test(arg)) {
+    return arg;
+  }
+  return `'${arg.replace(/'/g, `'\\''`)}'`;
+}
+
 function execBuild(dry) {
   if (dry) {
     console.log("[dry-run] 将执行：pnpm run build:android:release");
@@ -136,7 +145,7 @@ async function createGitHubRelease(repo, tag, title, notes, apk, dry) {
     apk,
   ];
   if (dry) {
-    console.log(`[dry-run] 将执行：${cmdParts.join(" ")}`);
+    console.log(`[dry-run] 将执行：${cmdParts.map(shellQuote).join(" ")}`);
     if (notes) {
       console.log("[dry-run] release notes 内容：");
       console.log(notes);
@@ -145,13 +154,9 @@ async function createGitHubRelease(repo, tag, title, notes, apk, dry) {
   }
 
   return new Promise((resolve, reject) => {
-    const child = execFile(
-      "gh",
-      ["release", "create", tag, "--repo", repo, "--title", title, notesArg, apk],
-      {
-        stdio: ["pipe", "inherit", "inherit"],
-      },
-    );
+    const child = execFile("gh", cmdParts.slice(1), {
+      stdio: ["pipe", "inherit", "inherit"],
+    });
     if (notes) {
       child.stdin.write(notes);
     }
