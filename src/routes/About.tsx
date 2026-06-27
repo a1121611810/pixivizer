@@ -51,6 +51,15 @@ interface AboutSection {
 
 const sections: AboutSection[] = [
   {
+    title: "免责声明",
+    rows: [
+      { label: "第三方客户端", value: "与 Pixiv 官方无关", icon: "info" },
+      { label: "内容来源", value: "Pixiv 公开 API", icon: "info" },
+      { label: "版权", value: "归原作者所有", icon: "info" },
+      { label: "年龄限制", value: "未成年请在监护人指导下使用", icon: "info" },
+    ],
+  },
+  {
     title: "应用信息",
     rows: [{ label: "应用版本", value: APP_VERSION, icon: "info" }],
   },
@@ -128,37 +137,19 @@ const About: Component = () => {
 
         {/* ── Brand area ── */}
         <div class="flex flex-col items-center pt-10 pb-6 gap-3">
-          {/* Pixivizer logo — same SVG as splash screen (64px version) */}
-          <svg width="64" height="64" viewBox="0 0 192 192" fill="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="aboutPGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#0078d4" />
-                <stop offset="55%" stop-color="#2899f5" />
-                <stop offset="100%" stop-color="#60aaff" />
-              </linearGradient>
-            </defs>
-            <rect
-              x="12"
-              y="12"
-              width="168"
-              height="168"
-              rx="44"
-              fill="var(--colorNeutralBackground2)"
-            />
-            <path d="M60 40 h44 a34 34 0 0 1 0 68 h-44 v48 h-20 v-116 z" fill="url(#aboutPGrad)" />
-            <path
-              d="M60 40 h44 a34 34 0 0 1 0 68 h-44 v48 h-20 v-116 z"
-              fill="white"
-              fill-opacity="0.12"
-            />
-          </svg>
+          {/* Pictelio logo */}
+          <img
+            src="/logo-192x192.png"
+            alt="Pictelio"
+            class="w-16 h-16 rounded-[var(--borderRadiusXLarge)]"
+          />
 
           <div class="text-center">
             <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-              Pixivizer
+              Pictelio
             </p>
             <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug mt-0.5">
-              Pixiv 第三方客户端
+              第三方插画浏览器
             </p>
           </div>
         </div>
