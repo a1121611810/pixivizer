@@ -1,4 +1,4 @@
-import { type Component, createSignal, onMount, onCleanup } from "solid-js";
+import { type Component, createSignal, onMount, onCleanup, createEffect } from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
 import { loadDetail, addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import type { PixivIllust } from "../api/types";
@@ -10,6 +10,8 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import PageTransition from "../components/PageTransition";
 import HeartBurstEffect from "../components/HeartBurstEffect";
 import { detailQuality, showDetailStairs } from "../stores/uiStore";
+import { blockUser, isBlocked } from "../stores/blockStore";
+import ReportSheet from "../components/ReportSheet";
 
 interface IllustDetailProps {
   illustId?: string;
@@ -31,6 +33,9 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
   const [ugoiraCoverHeight, setUgoiraCoverHeight] = createSignal(0);
   const [isFollowed, setIsFollowed] = createSignal(false);
   const [following, setFollowing] = createSignal(false);
+  const [showReportSheet, setShowReportSheet] = createSignal(false);
+  const [showActionMenu, setShowActionMenu] = createSignal(false);
+  const [toastMessage, setToastMessage] = createSignal<string | null>(null);
 
   async function toggleFollow() {
     const i = illust();
@@ -51,6 +56,34 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
       setFollowing(false);
     }
   }
+
+  async function handleBlockAuthor() {
+    const i = illust();
+    if (!i) return;
+    setShowActionMenu(false);
+    if (isBlocked(i.user.id)) {
+      setToastMessage("该作者已被屏蔽");
+      return;
+    }
+    if (!window.confirm("确定要屏蔽该作者吗？屏蔽后其作品将不再显示在推荐和关注列表中。")) {
+      return;
+    }
+    await blockUser(i.user.id);
+    setToastMessage("已屏蔽该作者");
+  }
+
+  function openReport() {
+    setShowActionMenu(false);
+    setShowReportSheet(true);
+  }
+
+  // Auto-hide toast message
+  createEffect(() => {
+    if (toastMessage()) {
+      const timer = setTimeout(() => setToastMessage(null), 2500);
+      onCleanup(() => clearTimeout(timer));
+    }
+  });
 
   function measureCoverContent(e: Event) {
     const img = e.target as HTMLImageElement;
@@ -294,14 +327,68 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
         {illust() && !viewerOpen() && (
           <>
             {/* App bar header */}
-            <header class="flex items-center gap-3 px-4 py-3 surface-appbar sticky top-0 z-10">
+            <header class="relative flex items-center gap-3 px-4 py-3 surface-appbar sticky top-0 z-10">
               <button onClick={() => navigate(-1)} class="btn-icon text-lg" aria-label="返回">
                 ←
               </button>
               <h2 class="text-[var(--colorNeutralForeground1)] font-semibold truncate flex-1 [font-size:var(--fontSizeBase300)]">
                 {illust()!.title}
               </h2>
+              <button
+                class="btn-icon text-lg"
+                onClick={() => setShowActionMenu((v) => !v)}
+                aria-label="更多"
+                aria-expanded={showActionMenu()}
+              >
+                ⋮
+              </button>
+
+              {/* Action menu */}
+              {showActionMenu() && (
+                <div
+                  class="absolute right-3 top-12 z-20 min-w-[140px] py-1 surface-flyout flex flex-col"
+                  style={{ "box-shadow": "var(--elevation8)" }}
+                >
+                  <button
+                    class="flex items-center gap-3 px-4 py-2.5 text-left [font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground1Hover)] active:bg-[var(--colorNeutralBackground1Pressed)] transition-colors appearance-none border-none outline-none cursor-pointer focus-visible:bg-[var(--colorNeutralBackground1Selected)]"
+                    onClick={openReport}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zM12 6a.75.75 0 0 1 .75.75v6.5a.75.75 0 0 1-1.5 0v-6.5A.75.75 0 0 1 12 6zm0 10a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    举报
+                  </button>
+                  <button
+                    class="flex items-center gap-3 px-4 py-2.5 text-left [font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground1Hover)] active:bg-[var(--colorNeutralBackground1Pressed)] transition-colors appearance-none border-none outline-none cursor-pointer focus-visible:bg-[var(--colorNeutralBackground1Selected)]"
+                    onClick={handleBlockAuthor}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm4.25 6.25a.75.75 0 0 1 0 1.06l-8.5 8.5a.75.75 0 1 1-1.06-1.06l8.5-8.5a.75.75 0 0 1 1.06 0z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    屏蔽作者
+                  </button>
+                </div>
+              )}
             </header>
+
+            {/* Toast confirmation */}
+            {toastMessage() && (
+              <div
+                class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-[var(--colorStatusSuccessBackground2)] text-[var(--colorStatusSuccessForeground1)] border border-[var(--colorStatusSuccessForeground1)] rounded-[var(--borderRadius2XLarge)] shadow-[var(--elevation8)] px-5 py-2.5 [font-size:var(--fontSizeBase200)] font-medium whitespace-nowrap pointer-events-none transition-all duration-[var(--durationGentle)]"
+                style={{
+                  animation:
+                    "fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both",
+                }}
+              >
+                {toastMessage()}
+              </div>
+            )}
 
             {/* Images — multi-page: vertical stack; single: cover + tap */}
             {illust()!.page_count > 1 ? (
@@ -539,6 +626,12 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
             onClose={closeViewer}
           />
         )}
+
+        <ReportSheet
+          illustId={illust()?.id ?? 0}
+          isOpen={showReportSheet()}
+          onClose={() => setShowReportSheet(false)}
+        />
       </div>
     </PageTransition>
   );

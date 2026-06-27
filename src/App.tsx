@@ -20,6 +20,8 @@ import {
   popRoute,
   clearRouteStack,
 } from "./services/predictiveBack";
+import { loadReportedIds } from "./stores/reportStore";
+import { loadBlockedIds } from "./stores/blockStore";
 import Login from "./routes/Login";
 import IllustDetail from "./routes/IllustDetail";
 import DebugImage from "./routes/DebugImage";
@@ -85,6 +87,10 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadLayoutModePreference();
     await loadShowDetailStairsPreference();
     await loadAgePreference();
+
+    // Load user content moderation state
+    await loadReportedIds();
+    await loadBlockedIds();
 
     // Initialize route stack tracking
     clearRouteStack();
