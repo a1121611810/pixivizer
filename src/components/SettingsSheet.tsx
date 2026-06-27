@@ -157,8 +157,10 @@ interface ConfirmDialogProps {
 
 function openDeleteAccountPage() {
   // TODO: Install @capacitor/browser and use Browser.open({ url }) for a native in-app/system browser experience.
-  window.open("https://www.pixiv.net/leave.php", "_blank");
+  window.open("https://www.pixiv.net/leave.php", "_blank", "noopener,noreferrer");
 }
+
+const DIALOG_CLOSE_DURATION_MS = 200; // matches --durationNormal
 
 const ConfirmDialog: Component<ConfirmDialogProps> = (props) => {
   const [mounted, setMounted] = createSignal(false);
@@ -180,7 +182,7 @@ const ConfirmDialog: Component<ConfirmDialogProps> = (props) => {
       props.onCancel();
       setClosing(false);
       setMounted(false);
-    }, 200);
+    }, DIALOG_CLOSE_DURATION_MS);
   }
 
   function confirm() {
@@ -189,7 +191,7 @@ const ConfirmDialog: Component<ConfirmDialogProps> = (props) => {
       props.onConfirm();
       setClosing(false);
       setMounted(false);
-    }, 200);
+    }, DIALOG_CLOSE_DURATION_MS);
   }
 
   return (
@@ -206,7 +208,8 @@ const ConfirmDialog: Component<ConfirmDialogProps> = (props) => {
         />
         <div class="absolute inset-0 flex items-center justify-center p-5 pointer-events-none">
           <div
-            class="w-full max-w-[22rem] surface-dialog p-6 pointer-events-auto"
+            class="w-full surface-dialog p-6 pointer-events-auto"
+            style={{ "max-width": "22rem" }} // one-off dialog width; no matching Fluent spacing token
             style={{
               transform: mounted() && !closing() ? "scale(1)" : "scale(0.96)",
               opacity: mounted() && !closing() ? 1 : 0,
@@ -287,19 +290,28 @@ const SettingsSheet: Component = () => {
   });
 
   async function handleLogout() {
-    await logout();
-    setActionToast("已退出登录");
+    try {
+      await logout();
+      setActionToast("已退出登录");
+    } catch {
+      setActionToast("退出登录失败");
+    }
   }
 
   async function handleClearLocalData() {
-    await logout();
-    clearImageCache();
-    resetBlockedIds();
-    resetReportedIds();
-    await Preferences.clear();
-    await resetUiStore();
-    setActionToast("本地数据已清除");
-    close();
+    try {
+      await logout();
+      clearImageCache();
+      resetBlockedIds();
+      resetReportedIds();
+      await Preferences.clear();
+      await resetUiStore();
+      setActionToast("本地数据已清除");
+    } catch {
+      setActionToast("清除失败，请重试");
+    } finally {
+      close();
+    }
   }
 
   function requireAdult(action: () => void) {
@@ -1102,9 +1114,9 @@ const SettingsSheet: Component = () => {
               >
                 <defs>
                   <linearGradient id="settingsPGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#0078d4" />
-                    <stop offset="55%" stop-color="#2899f5" />
-                    <stop offset="100%" stop-color="#60aaff" />
+                    <stop offset="0%" stop-color="var(--colorBrandBackground)" />
+                    <stop offset="55%" stop-color="var(--colorBrandBackgroundHover)" />
+                    <stop offset="100%" stop-color="var(--colorBrandBackgroundPressed)" />
                   </linearGradient>
                 </defs>
                 <rect
@@ -1121,7 +1133,7 @@ const SettingsSheet: Component = () => {
                 />
                 <path
                   d="M60 40 h44 a34 34 0 0 1 0 68 h-44 v48 h-20 v-116 z"
-                  fill="white"
+                  fill="var(--colorNeutralBackground1)"
                   fill-opacity="0.12"
                 />
               </svg>
