@@ -26,7 +26,7 @@ const androidDensities = [
   { name: "xxxhdpi", scale: 4 },
 ];
 
-const logoSvg = join(root, "assets/logo/pixivizer-logo.svg");
+const logoSvg = join(root, "assets/logo/pictelio-logo.svg");
 const fgSvg = join(root, "assets/logo/ic_launcher_foreground.svg");
 
 // Favicon + PWA
