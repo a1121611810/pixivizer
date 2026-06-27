@@ -18,6 +18,7 @@ import PageTransition from "../components/PageTransition";
 import HeartBurstEffect from "../components/HeartBurstEffect";
 import { detailQuality, showDetailStairs } from "../stores/uiStore";
 import { blockUser, isBlocked } from "../stores/blockStore";
+import { sanitizeHtml } from "../utils/html";
 import ReportSheet from "../components/ReportSheet";
 
 interface IllustDetailProps {
@@ -551,7 +552,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
               {illust()!.caption && (
                 <p
                   class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground2)] leading-relaxed whitespace-pre-wrap"
-                  innerHTML={illust()!.caption}
+                  innerHTML={sanitizeHtml(illust()!.caption)}
                   onClick={handleCaptionClick}
                 />
               )}
