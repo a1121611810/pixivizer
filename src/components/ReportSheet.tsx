@@ -14,7 +14,7 @@ interface ReportSheetProps {
 
 const REASONS: ReportReason[] = ["pornography", "violence", "infringement", "spam", "other"];
 
-const REPORT_EMAIL = "YOUR_REPORT_EMAIL@example.com";
+const REPORT_EMAIL = "a1121611810@outlook.com";
 
 function openReportEmail(illustId: number, reason: ReportReason) {
   const subject = encodeURIComponent(`[Pictelio 举报] 作品 ID: ${illustId}`);

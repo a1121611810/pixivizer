@@ -31,7 +31,7 @@
 - ✅ `YOUR_USERNAME/pictelio` → `a1121611810/pixivizer`（已替换于 `website/index.html`）
 - ✅ `YOUR_NAME` → `a1121611810`（已替换于 `website/index.html` 版权信息）
 - ✅ `YOUR_PRIVACY_EMAIL@example.com` → `a1121611810@outlook.com`（已替换于隐私政策文件）
-- ⏸ `YOUR_REPORT_EMAIL@example.com`（保留，正式发布前替换）
+- ✅ `YOUR_REPORT_EMAIL@example.com` → `a1121611810@outlook.com`（已替换于 `ReportSheet.tsx` 与隐私政策文件）
 - ✅ `public/privacy-policy.html` 已与 `website/privacy-policy.html` 保持同步
 
 ---
@@ -39,7 +39,7 @@
 ## 三、预发布检查清单
 
 - [x] 替换 `YOUR_PRIVACY_EMAIL@example.com` 为真实隐私联系邮箱
-- [ ] 替换 `YOUR_REPORT_EMAIL@example.com` 为真实举报联系邮箱
+- [x] 替换 `YOUR_REPORT_EMAIL@example.com` 为真实举报联系邮箱
 - [ ] 创建真实 release keystore 于 `android/app/pictelio-release.keystore`
 - [ ] 设置环境变量 `PICTELIO_KEYSTORE_PASSWORD` 与 `PICTELIO_KEY_PASSWORD`
 - [ ] 验证 `pnpm release:github --repo=a1121611810/pixivizer` 可正常工作
