@@ -43,8 +43,8 @@
 - [x] 创建真实 release keystore 于 `android/app/pictelio-release.keystore`
 - [x] 设置环境变量 `PICTELIO_KEYSTORE_PASSWORD` 与 `PICTELIO_KEY_PASSWORD`（已验证 release 构建成功）
 - [ ] 验证 `pnpm release:github --repo=a1121611810/pixivizer` 可正常工作
-- [ ] 向 `fastlane/metadata/android/en-US/images/phoneScreenshots/` 添加真实截图
-- [ ] 向 `fastlane/metadata/android/en-US/images/featureGraphic.png` 添加真实功能图
+- [x] 向 `fastlane/metadata/android/en-US/images/phoneScreenshots/` 添加真实截图
+- [x] 向 `fastlane/metadata/android/en-US/images/featureGraphic.png` 添加真实功能图
 - [ ] 提交 F-Droid 收录申请（参考 `docs/superpowers/plans/2026-06-27-pictelio-public-release.md` 中的 metadata 模板）
 
 ---
