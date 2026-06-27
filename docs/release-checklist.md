@@ -40,8 +40,8 @@
 
 - [x] 替换 `YOUR_PRIVACY_EMAIL@example.com` 为真实隐私联系邮箱
 - [x] 替换 `YOUR_REPORT_EMAIL@example.com` 为真实举报联系邮箱
-- [ ] 创建真实 release keystore 于 `android/app/pictelio-release.keystore`
-- [ ] 设置环境变量 `PICTELIO_KEYSTORE_PASSWORD` 与 `PICTELIO_KEY_PASSWORD`
+- [x] 创建真实 release keystore 于 `android/app/pictelio-release.keystore`
+- [x] 设置环境变量 `PICTELIO_KEYSTORE_PASSWORD` 与 `PICTELIO_KEY_PASSWORD`（已验证 release 构建成功）
 - [ ] 验证 `pnpm release:github --repo=a1121611810/pixivizer` 可正常工作
 - [ ] 向 `fastlane/metadata/android/en-US/images/phoneScreenshots/` 添加真实截图
 - [ ] 向 `fastlane/metadata/android/en-US/images/featureGraphic.png` 添加真实功能图
