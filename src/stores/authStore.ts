@@ -1,8 +1,13 @@
 import { createSignal } from "solid-js";
-import { Preferences } from "@capacitor/preferences";
 import { setAccessToken, setOnUnauthorized } from "../api/client";
-import { loginWithPassword, refreshToken } from "../api/auth";
+import { refreshToken } from "../api/auth";
 import type { PixivUser } from "../api/types";
+import {
+  getRefreshToken,
+  setRefreshToken,
+  removeRefreshToken,
+  migrateRefreshTokenFromPreferences,
+} from "../utils/secureStorage";
 
 const [accessTokenSig, setAccessTokenSig] = createSignal<string | null>(null);
 const [refreshTokenSig, setRefreshTokenSig] = createSignal<string | null>(null);
@@ -31,11 +36,14 @@ function setupUnauthorizedHandler() {
 
 export async function initializeAuth() {
   setIsLoading(true);
-  const { value } = await Preferences.get({ key: "refresh_token" });
-  if (value) {
-    setRefreshTokenSig(value);
+  let token = await getRefreshToken();
+  if (!token) {
+    token = await migrateRefreshTokenFromPreferences();
+  }
+  if (token) {
+    setRefreshTokenSig(token);
     setupUnauthorizedHandler();
-    await performRefresh(value);
+    await performRefresh(token);
   }
   setIsLoading(false);
 }
@@ -47,20 +55,10 @@ async function performRefresh(token: string) {
     setRefreshTokenSig(resp.refresh_token);
     setUser(resp.user);
     setIsLoggedIn(true);
-    await Preferences.set({ key: "refresh_token", value: resp.refresh_token });
+    await setRefreshToken(resp.refresh_token);
   } catch {
     await logout();
   }
-}
-
-export async function login(username: string, password: string) {
-  const resp = await loginWithPassword(username, password);
-  syncToken(resp.access_token);
-  setRefreshTokenSig(resp.refresh_token);
-  setUser(resp.user);
-  setIsLoggedIn(true);
-  setupUnauthorizedHandler();
-  await Preferences.set({ key: "refresh_token", value: resp.refresh_token });
 }
 
 export async function loginWithToken(token: string) {
@@ -70,7 +68,7 @@ export async function loginWithToken(token: string) {
   setUser(resp.user);
   setIsLoggedIn(true);
   setupUnauthorizedHandler();
-  await Preferences.set({ key: "refresh_token", value: resp.refresh_token });
+  await setRefreshToken(resp.refresh_token);
 }
 
 export async function logout() {
@@ -78,5 +76,5 @@ export async function logout() {
   setRefreshTokenSig(null);
   setUser(null);
   setIsLoggedIn(false);
-  await Preferences.remove({ key: "refresh_token" });
+  await removeRefreshToken();
 }

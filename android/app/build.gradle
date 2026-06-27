@@ -16,11 +16,42 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            storeFile file("pictelio-release.keystore")
+            storePassword System.getenv("PICTELIO_KEYSTORE_PASSWORD")
+            keyAlias "pictelio"
+            keyPassword System.getenv("PICTELIO_KEY_PASSWORD")
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
+    }
+}
+
+// 仅在执行 Release 构建时校验签名凭据，避免 Debug 构建需要环境变量
+def validateReleaseSigning() {
+    def keystorePassword = System.getenv("PICTELIO_KEYSTORE_PASSWORD")
+    def keyPassword = System.getenv("PICTELIO_KEY_PASSWORD")
+    if (keystorePassword == null || keystorePassword.isEmpty()) {
+        throw new GradleException("Missing environment variable PICTELIO_KEYSTORE_PASSWORD. See docs/release-signing.md")
+    }
+    if (keyPassword == null || keyPassword.isEmpty()) {
+        throw new GradleException("Missing environment variable PICTELIO_KEY_PASSWORD. See docs/release-signing.md")
+    }
+    if (!file("pictelio-release.keystore").exists()) {
+        throw new GradleException("Release keystore not found at android/app/pictelio-release.keystore. See docs/release-signing.md")
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def releaseTasks = [':app:assembleRelease', ':app:packageRelease', ':app:bundleRelease', ':app:signReleaseApk', ':app:signReleaseBundle']
+    if (graph.allTasks.any { it.path in releaseTasks }) {
+        validateReleaseSigning()
     }
 }
 

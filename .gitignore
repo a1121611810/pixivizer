@@ -8,3 +8,8 @@ dist/*
 .worktrees/
 .superpowers/
 .DS_Store
+
+# Android signing secrets
+android/app/*.keystore
+android/app/*.jks
+android/app/release/
