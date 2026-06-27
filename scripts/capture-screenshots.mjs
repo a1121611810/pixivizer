@@ -329,6 +329,14 @@ async function main() {
   await page.reload({ waitUntil: "networkidle", timeout: 10000 });
   log(`App loaded at: ${page.url()}`);
 
+  // If auth redirect didn't fire (Login.tsx onMount ran before auth completed),
+  // navigate to /recommended manually.
+  if (page.url().includes('/login')) {
+    log('Auth redirect did not fire automatically; navigating to /recommended');
+    await page.goto(`${BASE_URL}/recommended`, { waitUntil: 'networkidle', timeout: 10000 });
+    log(`After manual navigation: ${page.url()}`);
+  }
+
   // 01 — Feed
   await captureCurrent(page, "01_feed.png", "/recommended", async (p) => {
     // Wait for either skeleton placeholders or actual feed cards to appear.
@@ -350,8 +358,11 @@ async function main() {
     await p.waitForTimeout(2500);
   });
 
-  // 03 — Settings sheet (scroll down to show 账号与数据 section)
-  await clientNavigate(page, "/recommended");
+  // 03 — Settings sheet
+  // Ensure we're on a page with the settings button
+  if (!page.url().includes('/recommended') && !page.url().includes('/following')) {
+    await page.goto(`${BASE_URL}/recommended`, { waitUntil: 'networkidle', timeout: 10000 });
+  }
   await captureCurrent(page, "03_settings.png", "/recommended", async (p) => {
     await dismissAgeGate(p);
     const settingsButton = p.locator('header button[aria-label="设置"]').first();
@@ -377,8 +388,14 @@ async function main() {
   });
   await fullNavigate(page, `${BASE_URL}/login`);
   await captureCurrent(page, "04_login.png", "/login", async (p) => {
-    await p.locator("text=Pictelio").first().waitFor({ state: "visible", timeout: 5000 });
-    await p.waitForTimeout(500);
+    // Wait for the login form to render — look for the "Pictelio" heading text
+    try {
+      await p.locator('h1:has-text("Pictelio")').first().waitFor({ state: "visible", timeout: 7000 });
+    } catch {
+      // Fallback: wait for any form element
+      await p.locator('form').first().waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+    }
+    await p.waitForTimeout(1000);
   });
 
   await context.close();
