@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 import { Preferences } from "@capacitor/preferences";
 import { setAccessToken, setOnUnauthorized } from "../api/client";
-import { loginWithPassword, refreshToken } from "../api/auth";
+import { refreshToken } from "../api/auth";
 import type { PixivUser } from "../api/types";
 
 const [accessTokenSig, setAccessTokenSig] = createSignal<string | null>(null);
@@ -51,16 +51,6 @@ async function performRefresh(token: string) {
   } catch {
     await logout();
   }
-}
-
-export async function login(username: string, password: string) {
-  const resp = await loginWithPassword(username, password);
-  syncToken(resp.access_token);
-  setRefreshTokenSig(resp.refresh_token);
-  setUser(resp.user);
-  setIsLoggedIn(true);
-  setupUnauthorizedHandler();
-  await Preferences.set({ key: "refresh_token", value: resp.refresh_token });
 }
 
 export async function loginWithToken(token: string) {

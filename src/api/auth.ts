@@ -70,24 +70,6 @@ async function oauthRequest(body: Record<string, string>): Promise<any> {
   }
 }
 
-/** 用户名+密码登录 */
-export async function loginWithPassword(
-  username: string,
-  password: string,
-): Promise<PixivAuthResponse> {
-  const data = await oauthRequest({
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-    grant_type: "password",
-    username,
-    password,
-    get_secure_url: "1",
-  });
-  const auth = extractAuth(data);
-  setAccessToken(auth.accessToken);
-  return data;
-}
-
 /** Refresh Token 刷新 */
 export async function refreshToken(token: string): Promise<PixivAuthResponse> {
   const data = await oauthRequest({
