@@ -160,7 +160,7 @@
 
   ### 📄 许可证
 
-  [MIT](LICENSE) © 2026 Lilianda
+  [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) © 2026 Lilianda
 
   ---
 
@@ -355,4 +355,4 @@ By using this software, you acknowledge that you have read and understood this d
 
 ## 📄 License
 
-[MIT](LICENSE) © 2026 Lilianda
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) © 2026 Lilianda
