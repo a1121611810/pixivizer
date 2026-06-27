@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Pixivizer</string>
-    <string name="title_activity_main">Pixivizer</string>
-    <string name="package_name">com.pixivizer.app</string>
-    <string name="custom_url_scheme">com.pixivizer.app</string>
+    <string name="app_name">Pictelio</string>
+    <string name="title_activity_main">Pictelio</string>
+    <string name="package_name">io.pictelio.app</string>
+    <string name="custom_url_scheme">io.pictelio.app</string>
 </resources>

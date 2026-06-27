@@ -95,8 +95,8 @@ const Login: Component = () => {
       <form onSubmit={handleSubmit} style={S.form}>
         <div style={S.title}>
           <div style={S.emoji}>🎨</div>
-          <h1 style={S.h1}>Pixivizer</h1>
-          <p style={S.sub}>登录你的 Pixiv 账号</p>
+          <h1 style={S.h1}>Pictelio</h1>
+          <p style={S.sub}>第三方插画浏览器</p>
         </div>
 
         {/* 模式切换 — 水平 tabs */}

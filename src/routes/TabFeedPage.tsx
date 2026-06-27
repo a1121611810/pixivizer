@@ -101,7 +101,7 @@ const TabFeedPage: Component<Props> = (props) => {
               classList={{ "cursor-pointer": isLoggedIn() }}
               onClick={() => isLoggedIn() && navigate("/me")}
             >
-              <Show when={isLoggedIn() && user()} fallback={<>Pixivizer</>}>
+              <Show when={isLoggedIn() && user()} fallback={<>Pictelio</>}>
                 <UserAvatar />
                 <span class="truncate max-w-[120px]">{user()!.name}</span>
               </Show>

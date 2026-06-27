@@ -676,7 +676,7 @@ const SettingsSheet: Component = () => {
             aria-label="关于"
           >
             <div class="flex items-center gap-3 min-w-0">
-              {/* Pixivizer logo — small 32px */}
+              {/* Pictelio logo — small 32px */}
               <svg
                 width="32"
                 height="32"
@@ -712,7 +712,7 @@ const SettingsSheet: Component = () => {
               </svg>
               <div class="min-w-0">
                 <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                  Pixivizer
+                  Pictelio
                 </p>
                 <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
                   关于 · v{APP_VERSION}
