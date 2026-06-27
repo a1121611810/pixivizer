@@ -34,14 +34,18 @@ const PREF_KEY_AUTO_HIDE_NAV_BAR = "auto_hide_nav_bar";
 const PREF_KEY_SHOW_R18 = "show_r18";
 const PREF_KEY_SHOW_R18G = "show_r18g";
 const PREF_KEY_SHOW_DETAIL_STAIRS = "show_detail_stairs";
+const PREF_KEY_AGE_CONFIRMED = "age_confirmed";
+const PREF_KEY_IS_ADULT = "is_adult";
 const ANDROID_16_API_LEVEL = 36;
 
 const [usePredictiveBack, setUsePredictiveBackSig] = createSignal<boolean>(false);
 const [isPredictiveBackSupported, setIsPredictiveBackSupportedSig] = createSignal<boolean>(false);
 const [autoHideNavBar, setAutoHideNavBarSig] = createSignal<boolean>(true);
-const [showR18, setShowR18Sig] = createSignal<boolean>(true);
-const [showR18G, setShowR18GSig] = createSignal<boolean>(true);
+const [showR18, setShowR18Sig] = createSignal<boolean>(false);
+const [showR18G, setShowR18GSig] = createSignal<boolean>(false);
 const [showDetailStairs, setShowDetailStairsSig] = createSignal<boolean>(false);
+const [ageConfirmed, setAgeConfirmedSig] = createSignal<boolean>(false);
+const [isAdult, setIsAdultSig] = createSignal<boolean>(false);
 
 async function applyPredictiveBackState(enabled: boolean): Promise<void> {
   try {
@@ -211,6 +215,39 @@ async function loadShowR18GPreference(): Promise<void> {
   }
 }
 
+async function loadAgePreference(): Promise<void> {
+  try {
+    const [{ value: confirmed }, { value: adult }] = await Promise.all([
+      Preferences.get({ key: PREF_KEY_AGE_CONFIRMED }),
+      Preferences.get({ key: PREF_KEY_IS_ADULT }),
+    ]);
+    if (confirmed !== null) {
+      setAgeConfirmedSig(confirmed === "true");
+    }
+    if (adult !== null) {
+      setIsAdultSig(adult === "true");
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load age preference", e);
+  }
+}
+
+async function setAgeConfirmation(confirmed: boolean, adult: boolean): Promise<void> {
+  setAgeConfirmedSig(confirmed);
+  setIsAdultSig(adult);
+  try {
+    await Preferences.set({ key: PREF_KEY_AGE_CONFIRMED, value: String(confirmed) });
+    await Preferences.set({ key: PREF_KEY_IS_ADULT, value: String(adult) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist age confirmation", e);
+  }
+  if (!adult) {
+    // 未成年人自动关闭敏感内容开关
+    await setShowR18(false);
+    await setShowR18G(false);
+  }
+}
+
 async function setShowDetailStairs(enabled: boolean): Promise<void> {
   setShowDetailStairsSig(enabled);
   try {
@@ -263,4 +300,8 @@ export {
   showDetailStairs,
   setShowDetailStairs,
   loadShowDetailStairsPreference,
+  ageConfirmed,
+  isAdult,
+  loadAgePreference,
+  setAgeConfirmation,
 };

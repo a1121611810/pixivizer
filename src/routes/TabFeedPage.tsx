@@ -1,4 +1,12 @@
-import { type Component, onMount, onCleanup, Show, createSignal, createMemo } from "solid-js";
+import {
+  type Component,
+  onMount,
+  onCleanup,
+  Show,
+  createSignal,
+  createMemo,
+  createEffect,
+} from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
   illusts,
@@ -16,7 +24,7 @@ import {
   followRestrict,
   setFollowRestrict,
 } from "../stores/feedStore";
-import { setCurrentTab, setShowSettingsSheet, layoutMode } from "../stores/uiStore";
+import { setCurrentTab, setShowSettingsSheet, layoutMode, isAdult } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import type { PixivIllust, RestrictType } from "../api/types";
 import { user, isLoggedIn } from "../stores/authStore";
@@ -45,6 +53,13 @@ const TabFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
   const cached = isFeedCached();
   const [followSubTab, setFollowSubTab] = createSignal<FollowSubTab>("all");
+
+  // 如果年龄确认不是成年人，则回到“全部”子标签并隐藏 R-18 子标签
+  createEffect(() => {
+    if (!isAdult() && followSubTab() !== "all") {
+      setFollowSubTab("all");
+    }
+  });
 
   // Filter illusts based on follow sub-tab selection.
   // "全部" uses the globally-filtered illusts() (respects R18/R18G toggles).
@@ -156,12 +171,12 @@ const TabFeedPage: Component<Props> = (props) => {
                   ))}
                 </div>
               </div>
-              {/* 第2层：全部 / R-18 — 主要过滤 */}
+              {/* 第2层：全部 / R-18 — 主要过滤（R-18 仅在成年人确认后显示） */}
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
                 {(
                   [
                     { key: "all", label: "全部" },
-                    { key: "r18", label: "R-18" },
+                    ...(isAdult() ? [{ key: "r18" as const, label: "R-18" }] : []),
                   ] as { key: FollowSubTab; label: string }[]
                 ).map((sub) => (
                   <button

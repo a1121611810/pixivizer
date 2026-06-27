@@ -10,6 +10,8 @@ import {
   loadShowR18GPreference,
   loadLayoutModePreference,
   loadShowDetailStairsPreference,
+  loadAgePreference,
+  ageConfirmed,
 } from "./stores/uiStore";
 import {
   initPredictiveBack,
@@ -27,6 +29,7 @@ import PersonalCenter from "./routes/PersonalCenter";
 import UserIllusts from "./routes/UserIllusts";
 import About from "./routes/About";
 import PredictiveBackContainer from "./components/PredictiveBackContainer";
+import AgeGate from "./components/AgeGate";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
   const navigate = useNavigate();
@@ -81,6 +84,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadShowR18GPreference();
     await loadLayoutModePreference();
     await loadShowDetailStairsPreference();
+    await loadAgePreference();
 
     // Initialize route stack tracking
     clearRouteStack();
@@ -209,6 +213,11 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
         <div class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-[var(--colorNeutralBackground1)] border border-[var(--colorNeutralStroke2)] rounded-[var(--borderRadius2XLarge)] shadow-[var(--elevation8)] px-5 py-2.5 text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium whitespace-nowrap pointer-events-none transition-all duration-[var(--durationGentle)]">
           再按一次退出应用
         </div>
+      </Show>
+
+      {/* Age gate overlay */}
+      <Show when={!ageConfirmed()}>
+        <AgeGate />
       </Show>
     </div>
   );

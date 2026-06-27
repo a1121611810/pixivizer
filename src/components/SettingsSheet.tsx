@@ -26,8 +26,15 @@ import {
   type LayoutMode,
   showDetailStairs,
   setShowDetailStairs,
+  ageConfirmed,
+  isAdult,
+  setAgeConfirmation,
 } from "../stores/uiStore";
 import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
+
+function reconfirmAge() {
+  setAgeConfirmation(false, false);
+}
 
 // ── Fluent UI System Icons (24px) — SVG path data ──
 // Sourced from microsoft/fluentui-system-icons
@@ -116,7 +123,24 @@ const SettingsSheet: Component = () => {
   const navigate = useNavigate();
   const [closing, setClosing] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
+  const [ageGateMessage, setAgeGateMessage] = createSignal<string | null>(null);
   const pbStyle = usePredictiveBackOverlayStyle();
+
+  // Auto-hide the age gate hint toast
+  createEffect(() => {
+    if (ageGateMessage()) {
+      const timer = setTimeout(() => setAgeGateMessage(null), 2500);
+      onCleanup(() => clearTimeout(timer));
+    }
+  });
+
+  function requireAdult(action: () => void) {
+    if (!isAdult()) {
+      setAgeGateMessage("请先确认已满 18 岁");
+      return;
+    }
+    action();
+  }
 
   // Reset animation state and register back-button listener each time opened
   createEffect(() => {
@@ -149,6 +173,18 @@ const SettingsSheet: Component = () => {
 
   return (
     <Show when={showSettingsSheet()}>
+      {/* Age gate hint toast */}
+      <Show when={ageGateMessage()}>
+        <div
+          class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-[var(--colorStatusWarningBackground2)] text-[var(--colorStatusWarningForeground1)] border border-[var(--colorStatusWarningForeground1)] rounded-[var(--borderRadius2XLarge)] shadow-[var(--elevation8)] px-5 py-2.5 [font-size:var(--fontSizeBase200)] font-medium whitespace-nowrap pointer-events-none transition-all duration-[var(--durationGentle)]"
+          style={{
+            animation: "fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both",
+          }}
+        >
+          {ageGateMessage()}
+        </div>
+      </Show>
+
       <div class="fixed inset-0 z-50" style={pbStyle()}>
         {/* Scrim — click to close */}
         <div
@@ -333,7 +369,7 @@ const SettingsSheet: Component = () => {
               </div>
 
               <button
-                onClick={() => setShowR18(!showR18())}
+                onClick={() => requireAdult(() => setShowR18(!showR18()))}
                 role="switch"
                 aria-checked={showR18()}
                 aria-label="显示 R18 内容"
@@ -379,7 +415,7 @@ const SettingsSheet: Component = () => {
               </div>
 
               <button
-                onClick={() => setShowR18G(!showR18G())}
+                onClick={() => requireAdult(() => setShowR18G(!showR18G()))}
                 role="switch"
                 aria-checked={showR18G()}
                 aria-label="显示 R-18G 内容"
@@ -402,6 +438,38 @@ const SettingsSheet: Component = () => {
                 </span>
               </button>
             </div>
+
+            {/* 重新确认年龄 */}
+            <Show when={ageConfirmed()}>
+              <div class="flex items-center justify-between py-2">
+                <div class="flex items-center gap-3">
+                  <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm0 4.5a.75.75 0 0 1 .75.75v4.19l2.47 2.47a.75.75 0 0 1-1.06 1.06l-2.72-2.72a.75.75 0 0 1-.22-.53V8.75a.75.75 0 0 1 .75-.75z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                      重新确认年龄
+                    </p>
+                    <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                      点击后再次弹出年龄确认对话框
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  class="btn-secondary py-2 px-4"
+                  onClick={reconfirmAge}
+                  aria-label="重新确认年龄"
+                >
+                  重新确认
+                </button>
+              </div>
+            </Show>
 
             {/* 预测性返回手势开关行 */}
             <div class="flex items-center justify-between py-3">
