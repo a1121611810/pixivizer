@@ -11,7 +11,7 @@
 
 import { chromium } from "playwright";
 import { join } from "node:path";
-import { existsSync, mkdirSync, copyFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, copyFileSync, writeFileSync, readFileSync } from "node:fs";
 
 const BASE_URL = process.env.BASE_URL || "http://localhost:5173";
 const OUT_EN = join(
@@ -71,12 +71,58 @@ function saveScreenshot(buffer, filename) {
   log(`Saved ${filename} (${buffer.length} bytes)`);
 }
 
+/** @returns {import("../src/api/types").PixivUser} */
+function makeMockUser(id) {
+  return {
+    id,
+    name: "Pictelio 画师",
+    account: "pictelio_user",
+    profile_image_urls: {
+      medium: "/pixiv-img/profile.png",
+      px_16x16: "/pixiv-img/profile.png",
+      px_50x50: "/pixiv-img/profile.png",
+      px_170x170: "/pixiv-img/profile.png",
+    },
+    is_followed: false,
+  };
+}
+
+/** @returns {import("../src/api/types").PixivIllust} */
+function makeMockIllust(id, title, width, height) {
+  return {
+    id,
+    title,
+    type: "illust",
+    user: makeMockUser(100000 + id),
+    image_urls: {
+      square_medium: "/pixiv-img/sample.png",
+      medium: "/pixiv-img/sample.png",
+      large: "/pixiv-img/sample.png",
+    },
+    width,
+    height,
+    page_count: 1,
+    is_bookmarked: false,
+    total_bookmarks: 128,
+    total_comments: 12,
+    total_view: 2048,
+    illust_ai_type: 0,
+    tags: [{ name: "sample" }, { name: "pictelio" }],
+    x_restrict: 0,
+    create_date: "2026-06-27T00:00:00+09:00",
+    caption: "Pictelio 截图示例作品",
+    meta_pages: [],
+    meta_single_page: { original_image_url: "/pixiv-img/sample.png" },
+  };
+}
+
 /**
- * Intercept the Pixiv OAuth endpoint so the app thinks it is logged in
- * without needing a real refresh_token.
+ * Intercept Pixiv API requests and return mock data so the app renders real
+ * screens without needing a valid Pixiv token.
  * @param {import("playwright").Page} page
  */
-async function interceptFakeAuth(page) {
+async function interceptApi(page) {
+  // OAuth token refresh
   await page.route("**/pixiv-oauth/auth/token", async (route) => {
     log("Intercepted OAuth request; returning mock auth response");
     await route.fulfill({
@@ -86,17 +132,58 @@ async function interceptFakeAuth(page) {
         response: {
           access_token: "fake-access-token",
           refresh_token: REFRESH_TOKEN,
-          user: {
-            id: 123456,
-            name: "Pictelio User",
-            account: "pictelio_user",
-            profile_image_urls: {},
-          },
+          user: makeMockUser(123456),
           expires_in: 3600,
           token_type: "Bearer",
         },
       }),
     });
+  });
+
+  // Recommended feed
+  await page.route("**/pixiv-api/v1/illust/recommended**", async (route) => {
+    log("Intercepted recommended feed; returning mock illusts");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        illusts: [
+          makeMockIllust(1001, "晨光中的少女", 800, 1200),
+          makeMockIllust(1002, "夏日海边", 1200, 800),
+          makeMockIllust(1003, "星空下的城市", 900, 900),
+          makeMockIllust(1004, "雨中漫步", 800, 1100),
+          makeMockIllust(1005, "午后红茶", 1000, 1000),
+          makeMockIllust(1006, "樱花盛开", 800, 1300),
+        ],
+        next_url: null,
+      }),
+    });
+  });
+
+  // Illustration detail
+  await page.route("**/pixiv-api/v1/illust/detail**", async (route) => {
+    log("Intercepted illust detail; returning mock detail");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        illust: makeMockIllust(1001, "晨光中的少女", 800, 1200),
+      }),
+    });
+  });
+
+  // Image proxy — return a small colored placeholder PNG so cards render
+  await page.route("**/pixiv-img/**", async (route) => {
+    const logoPath = join(process.cwd(), "public", "logo-192x192.png");
+    if (existsSync(logoPath)) {
+      await route.fulfill({
+        status: 200,
+        contentType: "image/png",
+        body: readFileSync(logoPath),
+      });
+    } else {
+      await route.abort("failed");
+    }
   });
 }
 
@@ -232,7 +319,7 @@ async function main() {
 
   log(`Using base URL: ${BASE_URL}`);
 
-  await interceptFakeAuth(page);
+  await interceptApi(page);
 
   // Seed token and load the app once so RootLayout can complete auth init
   // before we capture authenticated routes.
@@ -257,13 +344,13 @@ async function main() {
   });
 
   // 02 — Detail
-  await clientNavigate(page, "/illust/12345678");
-  await captureCurrent(page, "02_detail.png", "/illust/12345678", async (p) => {
+  await clientNavigate(page, "/illust/1001");
+  await captureCurrent(page, "02_detail.png", "/illust/1001", async (p) => {
     // Detail page is mostly static once its own data resolves.
     await p.waitForTimeout(2500);
   });
 
-  // 03 — Settings sheet
+  // 03 — Settings sheet (scroll down to show 账号与数据 section)
   await clientNavigate(page, "/recommended");
   await captureCurrent(page, "03_settings.png", "/recommended", async (p) => {
     await dismissAgeGate(p);
@@ -273,6 +360,14 @@ async function main() {
     // Wait for the settings sheet header to render.
     await p.locator("text=设置").first().waitFor({ state: "visible", timeout: 5000 });
     await p.waitForTimeout(500);
+    // Scroll to the 账号与数据 section if it exists.
+    const accountSection = p.locator("text=账号与数据").first();
+    try {
+      await accountSection.scrollIntoViewIfNeeded({ timeout: 3000 });
+      await p.waitForTimeout(500);
+    } catch {
+      // Ignore if section not found; capture current view.
+    }
   });
 
   // 04 — Login (capture from a clean, logged-out state)
