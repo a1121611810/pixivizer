@@ -49,7 +49,7 @@ def validateReleaseSigning() {
 }
 
 gradle.taskGraph.whenReady { graph ->
-    def releaseTasks = [':app:assembleRelease', ':app:packageRelease', ':app:bundleRelease']
+    def releaseTasks = [':app:assembleRelease', ':app:packageRelease', ':app:bundleRelease', ':app:signReleaseApk', ':app:signReleaseBundle']
     if (graph.allTasks.any { it.path in releaseTasks }) {
         validateReleaseSigning()
     }
