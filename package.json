@@ -44,6 +44,7 @@
     "@types/node": "^26.0.0",
     "happy-dom": "^20.10.6",
     "modern-css-reset": "^1.4.0",
+    "playwright": "^1.61.1",
     "postcss-pxtorem": "^6.1.0",
     "typescript": "^6.0.3",
     "unocss": "^66.7.2",
