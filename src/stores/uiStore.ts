@@ -230,6 +230,12 @@ async function loadAgePreference(): Promise<void> {
   } catch (e) {
     console.warn("[uiStore] Failed to load age preference", e);
   }
+
+  // 如果用户不是成年人，强制关闭 R-18/R-18G 并持久化，防止持久化数据不一致时启动即展示成人内容
+  if (!isAdult()) {
+    await setShowR18(false);
+    await setShowR18G(false);
+  }
 }
 
 async function setAgeConfirmation(confirmed: boolean, adult: boolean): Promise<void> {

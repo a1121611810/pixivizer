@@ -148,3 +148,108 @@ describe("usePredictiveBack", () => {
     expect(setPredictiveBackEnabled).not.toHaveBeenCalled();
   });
 });
+
+describe("age preference", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (globalThis as any).window = { dispatchEvent: vi.fn() };
+    (globalThis as any).CustomEvent = class CustomEvent {
+      constructor(public type: string) {}
+    };
+    vi.mocked(Preferences.set).mockResolvedValue(undefined);
+  });
+
+  it("defaults ageConfirmed and isAdult to false", async () => {
+    const { ageConfirmed, isAdult } = await loadStore();
+
+    expect(ageConfirmed()).toBe(false);
+    expect(isAdult()).toBe(false);
+  });
+
+  it("loading persisted minor state forces showR18 and showR18G to false", async () => {
+    vi.mocked(Preferences.get).mockImplementation(async ({ key }) => {
+      if (key === "age_confirmed") return { value: "true" };
+      if (key === "is_adult") return { value: "false" };
+      return { value: null };
+    });
+
+    const { loadAgePreference, setShowR18, setShowR18G, showR18, showR18G } = await loadStore();
+    await setShowR18(true);
+    await setShowR18G(true);
+    await loadAgePreference();
+
+    expect(showR18()).toBe(false);
+    expect(showR18G()).toBe(false);
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "show_r18",
+      value: "false",
+    });
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "show_r18g",
+      value: "false",
+    });
+  });
+
+  it("loading persisted adult state leaves showR18 and showR18G as persisted", async () => {
+    vi.mocked(Preferences.get).mockImplementation(async ({ key }) => {
+      if (key === "age_confirmed") return { value: "true" };
+      if (key === "is_adult") return { value: "true" };
+      if (key === "show_r18") return { value: "true" };
+      if (key === "show_r18g") return { value: "true" };
+      return { value: null };
+    });
+
+    const { loadAgePreference, loadShowR18Preference, loadShowR18GPreference, showR18, showR18G } =
+      await loadStore();
+    await loadShowR18Preference();
+    await loadShowR18GPreference();
+    await loadAgePreference();
+
+    expect(showR18()).toBe(true);
+    expect(showR18G()).toBe(true);
+  });
+
+  it("setAgeConfirmation(true, false) sets minor and disables adult content", async () => {
+    const { setAgeConfirmation, ageConfirmed, isAdult, showR18, showR18G } = await loadStore();
+
+    await setAgeConfirmation(true, false);
+
+    expect(ageConfirmed()).toBe(true);
+    expect(isAdult()).toBe(false);
+    expect(showR18()).toBe(false);
+    expect(showR18G()).toBe(false);
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "age_confirmed",
+      value: "true",
+    });
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "is_adult",
+      value: "false",
+    });
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "show_r18",
+      value: "false",
+    });
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "show_r18g",
+      value: "false",
+    });
+  });
+
+  it("setAgeConfirmation(true, true) sets adult", async () => {
+    const { setAgeConfirmation, ageConfirmed, isAdult } = await loadStore();
+
+    await setAgeConfirmation(true, true);
+
+    expect(ageConfirmed()).toBe(true);
+    expect(isAdult()).toBe(true);
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "age_confirmed",
+      value: "true",
+    });
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "is_adult",
+      value: "true",
+    });
+  });
+});
