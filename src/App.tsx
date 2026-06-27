@@ -159,32 +159,40 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
               style="animation: fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both"
             >
               <defs>
-                <linearGradient id="splashPGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#0078d4" />
-                  <stop offset="55%" stop-color="#2899f5" />
-                  <stop offset="100%" stop-color="#60aaff" />
-                </linearGradient>
-                <filter id="splashPShadow" x="-25%" y="-25%" width="150%" height="150%">
+                <filter id="splashShadow" x="-20%" y="-20%" width="140%" height="140%">
                   <feDropShadow
                     dx="0"
                     dy="6"
-                    stdDeviation="8"
-                    flood-color="#0078d4"
-                    flood-opacity="0.35"
+                    stdDeviation="10"
+                    flood-color="#000000"
+                    flood-opacity="0.10"
                   />
                 </filter>
               </defs>
-              <rect x="12" y="12" width="168" height="168" rx="44" fill="#1f1f1f" />
-              <path
-                d="M60 40 h44 a34 34 0 0 1 0 68 h-44 v48 h-20 v-116 z"
-                fill="url(#splashPGrad)"
-                filter="url(#splashPShadow)"
+              <rect
+                x="12"
+                y="12"
+                width="168"
+                height="168"
+                rx="44"
+                fill="#ffffff"
+                filter="url(#splashShadow)"
               />
-              <path
-                d="M60 40 h44 a34 34 0 0 1 0 68 h-44 v48 h-20 v-116 z"
-                fill="white"
-                fill-opacity="0.12"
-              />
+              <svg x="36" y="36" width="120" height="120" viewBox="0 0 64 64">
+                <path
+                  d="M18 12 C18 12 16 28 19 52 C19 52 22 54 24 50 C26 47 24 39 26 33 C26 33 37 35 45 27 C51 21 47 13 38 11 C31 9 24 12 18 12 Z"
+                  fill="#2b579a"
+                />
+                <path
+                  d="M22 16 C22 16 21 28 23 46"
+                  fill="none"
+                  stroke="#5a9fd4"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+                <circle cx="42" cy="19" r="2" fill="#7ab8e8" />
+                <circle cx="46" cy="25" r="1.5" fill="#7ab8e8" />
+              </svg>
             </svg>
 
             {/* Brand text: staggered fade-slide-up */}

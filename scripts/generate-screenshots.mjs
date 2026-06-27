@@ -18,11 +18,12 @@ const BOTTOM_NAV_H = 112;
 const BOTTOM_NAV_Y = PHONE_H - BOTTOM_NAV_H;
 
 const BRAND = {
-  teal1: "#0d7377",
-  teal2: "#14a085",
-  blue: "#0078d4",
+  blue: "#2b579a",
+  blueLight: "#5a9fd4",
+  blueLighter: "#7ab8e8",
   white: "#ffffff",
   black: "#1a1a1a",
+  lightBg: "#f5f5f5",
   gray100: "#f3f2f1",
   gray200: "#e1dfdd",
   gray300: "#c8c6c4",
@@ -62,9 +63,9 @@ function svgWrapper(width, height, content) {
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <defs>
     <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="${BRAND.teal1}"/>
-      <stop offset="55%" stop-color="${BRAND.teal2}"/>
-      <stop offset="100%" stop-color="${BRAND.blue}"/>
+      <stop offset="0%" stop-color="#e8f4fd"/>
+      <stop offset="55%" stop-color="#f0f0f0"/>
+      <stop offset="100%" stop-color="#e8f4fd"/>
     </linearGradient>
     <linearGradient id="cardGrad1" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#b3e5fc"/>
@@ -101,14 +102,14 @@ function featureGraphic() {
   const logoSize = 160;
   const content = `
     <rect width="${w}" height="${h}" fill="url(#bgGrad)"/>
-    <circle cx="820" cy="80" r="220" fill="${BRAND.white}" opacity="0.06"/>
-    <circle cx="120" cy="420" r="160" fill="${BRAND.white}" opacity="0.05"/>
+    <circle cx="820" cy="80" r="220" fill="${BRAND.blue}" opacity="0.04"/>
+    <circle cx="120" cy="420" r="160" fill="${BRAND.blue}" opacity="0.03"/>
     <g transform="translate(80, 170)">
       ${LOGO_SVG.replace("<svg", `<svg width="${logoSize}" height="${logoSize}"`).replace(/viewBox="[^"]*"/, 'viewBox="0 0 192 192"')}
     </g>
-    <text x="272" y="250" font-family="${FONT_STACK}" font-size="92" font-weight="700" fill="${BRAND.white}">Pictelio</text>
-    <text x="278" y="310" font-family="${FONT_STACK}" font-size="34" fill="${BRAND.white}" opacity="0.95">第三方 Pixiv 客户端 · 为 Android 打造</text>
-    <rect x="80" y="348" width="96" height="6" rx="3" fill="${BRAND.white}" opacity="0.8"/>
+    <text x="272" y="250" font-family="${FONT_STACK}" font-size="92" font-weight="700" fill="${BRAND.gray900}">Pictelio</text>
+    <text x="278" y="310" font-family="${FONT_STACK}" font-size="34" fill="${BRAND.gray700}">第三方 Pixiv 客户端 · 为 Android 打造</text>
+    <rect x="80" y="348" width="96" height="6" rx="3" fill="${BRAND.blue}" opacity="0.6"/>
   `;
   return svgWrapper(w, h, content);
 }
@@ -155,7 +156,7 @@ function bottomNav(activeIndex = 0, labels = ["推荐", "关注", "收藏", "设
   let items = "";
   for (let i = 0; i < labels.length; i++) {
     const x = i * itemW + itemW / 2;
-    const color = i === activeIndex ? BRAND.teal1 : BRAND.gray500;
+    const color = i === activeIndex ? BRAND.blue : BRAND.gray500;
     const s = icons[i].size;
     const scale = 1;
     items += `
@@ -216,7 +217,7 @@ function screenshotFeed() {
   const tabBarH = 72;
   const startY = TOP_NAV_H + 20;
   let tabsSvg = `<rect x="0" y="${TOP_NAV_H}" width="${w}" height="${tabBarH}" fill="${BRAND.white}"/>`;
-  tabsSvg += `<rect x="36" y="${TOP_NAV_H + tabBarH - 4}" width="56" height="4" rx="2" fill="${BRAND.teal1}"/>`;
+  tabsSvg += `<rect x="36" y="${TOP_NAV_H + tabBarH - 4}" width="56" height="4" rx="2" fill="${BRAND.blue}"/>`;
   tabsSvg += `<text x="36" y="${TOP_NAV_H + 46}" font-family="${FONT_STACK}" font-size="28" font-weight="700" fill="${BRAND.gray900}">${tabs[0]}</text>`;
   tabsSvg += `<text x="142" y="${TOP_NAV_H + 46}" font-family="${FONT_STACK}" font-size="28" fill="${BRAND.gray500}">${tabs[1]}</text>`;
 
@@ -307,7 +308,7 @@ function screenshotDetail() {
     <text x="48" y="${imageY + imageH + 204}" font-family="${FONT_STACK}" font-size="26" fill="${BRAND.gray700}">静谧森林中的光之精灵，柔和笔触呈现午后氛围。</text>
 
     <g transform="translate(48, ${imageY + imageH + 260})">
-      <rect width="180" height="64" rx="32" fill="${BRAND.teal1}"/>
+      <rect width="180" height="64" rx="32" fill="${BRAND.blue}"/>
       <text x="90" y="42" text-anchor="middle" font-family="${FONT_STACK}" font-size="24" font-weight="600" fill="${BRAND.white}">收藏</text>
     </g>
     <g transform="translate(252, ${imageY + imageH + 260})">
@@ -359,7 +360,7 @@ function screenshotSettings() {
 }
 
 function switchControl(x, y, on) {
-  const color = on ? BRAND.teal1 : BRAND.gray300;
+  const color = on ? BRAND.blue : BRAND.gray300;
   const cx = on ? x + 56 : x + 16;
   return `
     <rect x="${x}" y="${y}" width="72" height="40" rx="20" fill="${color}"/>
@@ -407,7 +408,7 @@ function screenshotLogin() {
     <text x="96" y="${centerY + 356}" font-family="${FONT_STACK}" font-size="26" fill="${BRAND.gray500}">refresh_token</text>
 
     <rect x="72" y="${centerY + 430}" width="${w - 144}" height="96" rx="48" fill="url(#bgGrad)" filter="url(#softShadow)"/>
-    <text x="${w / 2}" y="${centerY + 488}" text-anchor="middle" font-family="${FONT_STACK}" font-size="30" font-weight="700" fill="${BRAND.white}">登录</text>
+    <text x="${w / 2}" y="${centerY + 488}" text-anchor="middle" font-family="${FONT_STACK}" font-size="30" font-weight="700" fill="${BRAND.gray900}">登录</text>
 
     <rect x="96" y="${centerY + 580}" width="${w - 192}" height="2" fill="${BRAND.gray200}"/>
     <text x="${w / 2}" y="${centerY + 640}" text-anchor="middle" font-family="${FONT_STACK}" font-size="24" fill="${BRAND.gray500}">本应用与 Pixiv Inc. 无任何关联</text>

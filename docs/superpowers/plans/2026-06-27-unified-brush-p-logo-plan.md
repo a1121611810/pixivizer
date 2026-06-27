@@ -12,25 +12,26 @@
 
 ## 文件结构
 
-| 文件 | 操作 | 说明 |
-|------|------|------|
-| `assets/logo/pictelio-logo.svg` | 替换 | 主 Logo：白色徽章 + 画笔 P |
-| `assets/logo/ic_launcher_foreground.svg` | 替换 | Android 自适应前景：白色徽章 + 画笔 P，透明底 |
-| `android/app/src/main/res/values/ic_launcher_background.xml` | 修改 | 背景色 `#1f1f2e` → `#f5f5f5` |
-| `public/*.png` | 重新生成 | favicon-16/32、logo-192/512 |
-| `android/app/src/main/res/mipmap-*/*.png` | 重新生成 | 全部 Android 图标 |
-| `src/App.tsx` | 修改 | Splash 内联 SVG 替换 |
-| `src/components/SettingsSheet.tsx` | 修改 | 关于条目内联 SVG 替换 |
-| `website/index.html` | 修改 | Header + Hero 内联 SVG 替换 |
-| `website/privacy-policy.html` | 修改 | Header 内联 SVG 替换 |
-| `public/privacy-policy.html` | 修改 | 同步副本 |
-| `scripts/generate-screenshots.mjs` | 修改 | 品牌背景色更新 |
+| 文件                                                         | 操作     | 说明                                          |
+| ------------------------------------------------------------ | -------- | --------------------------------------------- |
+| `assets/logo/pictelio-logo.svg`                              | 替换     | 主 Logo：白色徽章 + 画笔 P                    |
+| `assets/logo/ic_launcher_foreground.svg`                     | 替换     | Android 自适应前景：白色徽章 + 画笔 P，透明底 |
+| `android/app/src/main/res/values/ic_launcher_background.xml` | 修改     | 背景色 `#1f1f2e` → `#f5f5f5`                  |
+| `public/*.png`                                               | 重新生成 | favicon-16/32、logo-192/512                   |
+| `android/app/src/main/res/mipmap-*/*.png`                    | 重新生成 | 全部 Android 图标                             |
+| `src/App.tsx`                                                | 修改     | Splash 内联 SVG 替换                          |
+| `src/components/SettingsSheet.tsx`                           | 修改     | 关于条目内联 SVG 替换                         |
+| `website/index.html`                                         | 修改     | Header + Hero 内联 SVG 替换                   |
+| `website/privacy-policy.html`                                | 修改     | Header 内联 SVG 替换                          |
+| `public/privacy-policy.html`                                 | 修改     | 同步副本                                      |
+| `scripts/generate-screenshots.mjs`                           | 修改     | 品牌背景色更新                                |
 
 ---
 
 ### Task 1: 替换主 Logo SVG 源文件
 
 **Files:**
+
 - Modify: `assets/logo/pictelio-logo.svg`（完全替换）
 
 - [ ] **Step 1: 写入新的 pictelio-logo.svg**
@@ -73,6 +74,7 @@ git commit -m "feat: replace main logo with unified white badge + brush P"
 ### Task 2: 替换 Android 自适应图标前景 SVG
 
 **Files:**
+
 - Modify: `assets/logo/ic_launcher_foreground.svg`（完全替换）
 
 - [ ] **Step 1: 写入新的 ic_launcher_foreground.svg**
@@ -110,6 +112,7 @@ git commit -m "feat: replace Android adaptive foreground with unified brush P"
 ### Task 3: 更新 Android 自适应图标背景色
 
 **Files:**
+
 - Modify: `android/app/src/main/res/values/ic_launcher_background.xml`
 
 - [ ] **Step 1: 修改背景色**
@@ -128,6 +131,7 @@ git commit -m "feat: change Android adaptive icon background to light gray #f5f5
 ### Task 4: 重新生成全部图标 PNG
 
 **Files:**
+
 - 重新生成: `public/favicon-16x16.png`、`public/favicon-32x32.png`、`public/logo-192x192.png`、`public/logo-512x512.png`
 - 重新生成: `android/app/src/main/res/mipmap-*/ic_launcher*.png`
 
@@ -152,6 +156,7 @@ git commit -m "chore: regenerate all icon PNGs from unified brush P SVGs"
 ### Task 5: 替换 App.tsx Splash 启动屏内联 SVG
 
 **Files:**
+
 - Modify: `src/App.tsx` — Splash fallback 中的 dark-neon 内联 SVG（第 151–205 行）
 
 - [ ] **Step 1: 替换整个 Splash 图标 SVG 块**
@@ -169,24 +174,10 @@ git commit -m "chore: regenerate all icon PNGs from unified brush P SVGs"
 >
   <defs>
     <filter id="splashShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow
-        dx="0"
-        dy="6"
-        stdDeviation="10"
-        flood-color="#000000"
-        flood-opacity="0.10"
-      />
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.10" />
     </filter>
   </defs>
-  <rect
-    x="12"
-    y="12"
-    width="168"
-    height="168"
-    rx="44"
-    fill="#ffffff"
-    filter="url(#splashShadow)"
-  />
+  <rect x="12" y="12" width="168" height="168" rx="44" fill="#ffffff" filter="url(#splashShadow)" />
   <svg x="36" y="36" width="120" height="120" viewBox="0 0 64 64">
     <path
       d="M18 12 C18 12 16 28 19 52 C19 52 22 54 24 50 C26 47 24 39 26 33 C26 33 37 35 45 27 C51 21 47 13 38 11 C31 9 24 12 18 12 Z"
@@ -217,6 +208,7 @@ git commit -m "feat: replace Splash logo with unified white badge + brush P"
 ### Task 6: 替换 SettingsSheet.tsx 关于条目内联 SVG
 
 **Files:**
+
 - Modify: `src/components/SettingsSheet.tsx` — 第 1107–1158 行的 dark-neon 内联 SVG
 
 - [ ] **Step 1: 替换内联 SVG 块**
@@ -234,13 +226,7 @@ git commit -m "feat: replace Splash logo with unified white badge + brush P"
 >
   <defs>
     <filter id="settingsShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow
-        dx="0"
-        dy="4"
-        stdDeviation="6"
-        flood-color="#000000"
-        flood-opacity="0.08"
-      />
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.08" />
     </filter>
   </defs>
   <rect
@@ -282,6 +268,7 @@ git commit -m "feat: replace About icon in settings with unified brush P logo"
 ### Task 7: 替换 website/index.html 中的两处内联 SVG
 
 **Files:**
+
 - Modify: `website/index.html` — Header brand logo（第 745–787 行）和 Hero logo（第 805–847 行）
 
 - [ ] **Step 1: 替换 Header brand logo SVG**
@@ -338,6 +325,7 @@ git commit -m "feat: replace website header and hero logos with unified brush P"
 ### Task 8: 替换 website/privacy-policy.html 内联 SVG
 
 **Files:**
+
 - Modify: `website/privacy-policy.html` — Header brand logo（第 311–353 行）
 
 - [ ] **Step 1: 替换 Header brand logo SVG**
@@ -379,6 +367,7 @@ git commit -m "feat: replace privacy policy header logo with unified brush P"
 ### Task 9: 更新截图生成脚本的品牌配色
 
 **Files:**
+
 - Modify: `scripts/generate-screenshots.mjs` — BRAND 对象与 background gradient
 
 - [ ] **Step 1: 替换 BRAND 对象**
@@ -418,9 +407,10 @@ const BRAND = {
 - [ ] **Step 3: 更新 feature graphic 中 titles/CTA 文字色**
 
 由于 bgGrad 从暗色改为浅色，需要将 feature graphic 中的白色文字（`fill="${BRAND.white}"`）改为深色文字。将 `featureGraphic()` 函数中的三处 `fill="${BRAND.white}"` 分别改为：
-  - Logo 下方 title "Pictelio": `fill="${BRAND.gray900}"`
-  - 副标题: `fill="${BRAND.gray700}"`
-  - 装饰横条: `fill="${BRAND.blue}" opacity="0.6"`
+
+- Logo 下方 title "Pictelio": `fill="${BRAND.gray900}"`
+- 副标题: `fill="${BRAND.gray700}"`
+- 装饰横条: `fill="${BRAND.blue}" opacity="0.6"`
 
 - [ ] **Step 4: 提交**
 

@@ -11,12 +11,12 @@
     <style>
       :root {
         /* ── Pictelio brand ── */
-        --colorPictelioTeal: #0d7377;
-        --colorPictelioTealDark: #095c5f;
-        --colorPictelioTealDarker: #074446;
-        --colorPictelioTealLight: #14919a;
-        --colorPictelioTealLighter: #1cafb8;
-        --colorPictelioTealBgSubtle: #e6f5f5;
+        --colorPictelioTeal: #0078d4;
+        --colorPictelioTealDark: #106ebe;
+        --colorPictelioTealDarker: #005a9e;
+        --colorPictelioTealLight: #2899f5;
+        --colorPictelioTealLighter: #60aaff;
+        --colorPictelioTealBgSubtle: #e6f5ff;
 
         --brandPrimary: var(--colorBrandBackground);
         --brandOnPrimary: var(--colorNeutralForegroundOnBrand);
@@ -157,7 +157,7 @@
           --shadowAmbient: rgba(0, 0, 0, 0.24);
           --shadowKey: rgba(0, 0, 0, 0.28);
 
-          --colorPictelioTealBgSubtle: #0f2e2f;
+          --colorPictelioTealBgSubtle: #0f2e4f;
         }
       }
 
@@ -744,15 +744,45 @@
         <a class="brand" href="index.html" aria-label="Pictelio 首页">
           <svg
             class="brand-logo"
-            viewBox="0 0 512 512"
+            viewBox="0 0 192 192"
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
           >
-            <rect width="512" height="512" rx="120" fill="var(--brandPrimary)" />
-            <path
-              d="M160 130h132c60 0 100 38 100 96 0 58-40 96-100 96H238v60H160V130zm78 60v72h54c24 0 40-16 40-36s-16-36-40-36H238z"
-              fill="var(--brandOnPrimary)"
+            <defs>
+              <filter id="brandLogoShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow
+                  dx="0"
+                  dy="4"
+                  stdDeviation="6"
+                  flood-color="#000000"
+                  flood-opacity="0.08"
+                />
+              </filter>
+            </defs>
+            <rect
+              x="12"
+              y="12"
+              width="168"
+              height="168"
+              rx="44"
+              fill="#ffffff"
+              filter="url(#brandLogoShadow)"
             />
+            <svg x="36" y="36" width="120" height="120" viewBox="0 0 64 64">
+              <path
+                d="M18 12 C18 12 16 28 19 52 C19 52 22 54 24 50 C26 47 24 39 26 33 C26 33 37 35 45 27 C51 21 47 13 38 11 C31 9 24 12 18 12 Z"
+                fill="#2b579a"
+              />
+              <path
+                d="M22 16 C22 16 21 28 23 46"
+                fill="none"
+                stroke="#5a9fd4"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+              <circle cx="42" cy="19" r="2" fill="#7ab8e8" />
+              <circle cx="46" cy="25" r="1.5" fill="#7ab8e8" />
+            </svg>
           </svg>
           Pictelio
         </a>
@@ -773,15 +803,45 @@
           <div class="hero-content">
             <svg
               class="hero-logo"
-              viewBox="0 0 512 512"
+              viewBox="0 0 192 192"
               xmlns="http://www.w3.org/2000/svg"
               aria-hidden="true"
             >
-              <rect width="512" height="512" rx="120" fill="var(--brandPrimary)" />
-              <path
-                d="M160 130h132c60 0 100 38 100 96 0 58-40 96-100 96H238v60H160V130zm78 60v72h54c24 0 40-16 40-36s-16-36-40-36H238z"
-                fill="var(--brandOnPrimary)"
+              <defs>
+                <filter id="heroLogoShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow
+                    dx="0"
+                    dy="6"
+                    stdDeviation="10"
+                    flood-color="#000000"
+                    flood-opacity="0.10"
+                  />
+                </filter>
+              </defs>
+              <rect
+                x="12"
+                y="12"
+                width="168"
+                height="168"
+                rx="44"
+                fill="#ffffff"
+                filter="url(#heroLogoShadow)"
               />
+              <svg x="36" y="36" width="120" height="120" viewBox="0 0 64 64">
+                <path
+                  d="M18 12 C18 12 16 28 19 52 C19 52 22 54 24 50 C26 47 24 39 26 33 C26 33 37 35 45 27 C51 21 47 13 38 11 C31 9 24 12 18 12 Z"
+                  fill="#2b579a"
+                />
+                <path
+                  d="M22 16 C22 16 21 28 23 46"
+                  fill="none"
+                  stroke="#5a9fd4"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+                <circle cx="42" cy="19" r="2" fill="#7ab8e8" />
+                <circle cx="46" cy="25" r="1.5" fill="#7ab8e8" />
+              </svg>
             </svg>
             <h1 id="hero-title" class="hero-title">
               <span>Pictelio</span><br />

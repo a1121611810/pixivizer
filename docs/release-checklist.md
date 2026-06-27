@@ -42,7 +42,7 @@
 - [x] 替换 `YOUR_REPORT_EMAIL@example.com` 为真实举报联系邮箱
 - [x] 创建真实 release keystore 于 `android/app/pictelio-release.keystore`
 - [x] 设置环境变量 `PICTELIO_KEYSTORE_PASSWORD` 与 `PICTELIO_KEY_PASSWORD`（已验证 release 构建成功）
-- [ ] 验证 `pnpm release:github --repo=a1121611810/pixivizer` 可正常工作
+- [x] 验证 `pnpm release:github --repo=a1121611810/pixivizer` 可正常工作（已发布 https://github.com/a1121611810/pixivizer/releases/tag/v1.0.0）
 - [x] 向 `fastlane/metadata/android/en-US/images/phoneScreenshots/` 添加真实截图
 - [x] 向 `fastlane/metadata/android/en-US/images/featureGraphic.png` 添加真实功能图
 - [ ] 提交 F-Droid 收录申请（参考 `docs/superpowers/plans/2026-06-27-pictelio-public-release.md` 中的 metadata 模板）
@@ -65,27 +65,24 @@
 
 ## 五、Git 信息
 
-- **分支**：`feature/pictelio-public-release`
-- **当前 commit**：`186541fba707e79c89d1d2027b1e8428dfabe1a3`
-- **commit message**：`fix(website): align landing page with tokens and a11y`
-- **本次修改文件**：
-  - `website/index.html`
-  - `public/privacy-policy.html`
+- **分支**：`main`
+- **当前 commit**：`cc54e24`
+- **commit message**：`assets(fastlane): improve Playwright screenshots with API mocking and settings scroll`
+- **GitHub Release**：https://github.com/a1121611810/pixivizer/releases/tag/v1.0.0
+- **已上传 APK**：`app-release.apk`（版本 1.0.0，versionCode 10000）
 
 ---
 
 ## 六、后续行动
 
-完成「预发布检查清单」中的所有项目后，即可执行：
+GitHub Release 已发布完成。
 
-```bash
-# 1. 创建并推送 tag
-git tag -a v1.0.0 -m "Pictelio 1.0.0"
-git push origin v1.0.0
+## 官网部署
 
-# 2. 发布 GitHub Release
-pnpm release:github --repo=a1121611810/pixivizer
-
-# 3. 部署官网（GitHub Pages）
-git subtree push --prefix website origin gh-pages
-```
+- ✅ `website/` 已推送到 `origin/gh-pages` 分支
+- ⏳ 需要你在 GitHub 仓库设置中启用 GitHub Pages：
+  1. 打开 https://github.com/a1121611810/pixivizer/settings/pages
+  2. Source 选择 **Deploy from a branch**
+  3. Branch 选择 `gh-pages`，文件夹选 `/ (root)`
+  4. 点击 Save
+- 启用后官网地址：https://a1121611810.github.io/pixivizer

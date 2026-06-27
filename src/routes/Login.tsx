@@ -8,7 +8,9 @@ const S = {
   title: "text-align:center;margin-bottom:16px",
   h1: "font-size:var(--fontSizeHero800);font-weight:700;color:var(--colorNeutralForeground1)",
   sub: "color:var(--colorNeutralForeground2);font-size:var(--fontSizeBase300);margin-top:4px",
-  emoji: "font-size:var(--fontSizeHero900);margin-bottom:var(--spacingVerticalS)",
+  iconBadge:
+    "width:80px;height:80px;border-radius:24px;background-color:#ffffff;display:flex;align-items:center;justify-content:center;margin:0 auto var(--spacingVerticalM);box-shadow:var(--elevation4)",
+  iconSvg: "width:52px;height:52px;display:block",
   label: "font-size:var(--fontSizeBase200);color:var(--colorNeutralForeground2);font-weight:400",
   textarea:
     "width:100%;padding:6px 10px;border-radius:var(--borderRadiusMedium);background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);font-size:var(--fontSizeBase300);border:1px solid var(--colorNeutralStroke1);outline:none;resize:vertical;box-sizing:border-box;min-height:96px",
@@ -48,7 +50,23 @@ const Login: Component = () => {
     <div style={S.page}>
       <form onSubmit={handleSubmit} style={S.form}>
         <div style={S.title}>
-          <div style={S.emoji}>🎨</div>
+          <div style={S.iconBadge}>
+            <svg style={S.iconSvg} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M18 12 C18 12 16 28 19 52 C19 52 22 54 24 50 C26 47 24 39 26 33 C26 33 37 35 45 27 C51 21 47 13 38 11 C31 9 24 12 18 12 Z"
+                fill="#2b579a"
+              />
+              <path
+                d="M22 16 C22 16 21 28 23 46"
+                fill="none"
+                stroke="#5a9fd4"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+              <circle cx="42" cy="19" r="2" fill="#7ab8e8" />
+              <circle cx="46" cy="25" r="1.5" fill="#7ab8e8" />
+            </svg>
+          </div>
           <h1 style={S.h1}>Pictelio</h1>
           <p style={S.sub}>第三方插画浏览器</p>
         </div>
