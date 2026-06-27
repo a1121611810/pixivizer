@@ -1,6 +1,6 @@
 {
-  "name": "pixivizer",
-  "version": "0.1.0",
+  "name": "pictelio",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,7 @@
     "lint": "vp lint",
     "fmt": "vp fmt --write",
     "fmt:check": "vp fmt --check",
-    "cap:init": "pnpm exec cap init pixivizer com.pixivizer.app",
+    "cap:init": "pnpm exec cap init pictelio io.pictelio.app",
     "cap:add:android": "pnpm exec cap add android",
     "cap:copy": "pnpm exec cap copy",
     "cap:sync": "pnpm exec cap sync",

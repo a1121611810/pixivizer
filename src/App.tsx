@@ -139,7 +139,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
         when={!isLoading()}
         fallback={
           <div class="flex flex-col items-center justify-center min-h-screen gap-4">
-            {/* Pixivizer logo, 64px, scale entrance */}
+            {/* Pictelio logo, 64px, scale entrance */}
             <svg
               width="64"
               height="64"
@@ -183,13 +183,13 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
                 class="text-[var(--fontSizeBase600)] font-semibold text-[var(--colorNeutralForeground1)] leading-none"
                 style="animation: splash-fade-slide-up var(--durationNormal) var(--curveDecelerateMid) 100ms both"
               >
-                Pixivizer
+                Pictelio
               </h1>
               <p
                 class="text-[var(--fontSizeBase200)] text-[var(--colorNeutralForegroundDisabled)] font-400"
                 style="animation: splash-fade-slide-up var(--durationNormal) var(--curveDecelerateMid) 200ms both"
               >
-                Pixiv 第三方客户端
+                第三方插画浏览器
               </p>
             </div>
 

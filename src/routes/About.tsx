@@ -128,7 +128,7 @@ const About: Component = () => {
 
         {/* ── Brand area ── */}
         <div class="flex flex-col items-center pt-10 pb-6 gap-3">
-          {/* Pixivizer logo — same SVG as splash screen (64px version) */}
+          {/* Pictelio logo — same SVG as splash screen (64px version) */}
           <svg width="64" height="64" viewBox="0 0 192 192" fill="none" aria-hidden="true">
             <defs>
               <linearGradient id="aboutPGrad" x1="0" y1="0" x2="1" y2="1">
@@ -155,10 +155,10 @@ const About: Component = () => {
 
           <div class="text-center">
             <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-              Pixivizer
+              Pictelio
             </p>
             <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug mt-0.5">
-              Pixiv 第三方客户端
+              第三方插画浏览器
             </p>
           </div>
         </div>

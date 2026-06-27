@@ -1,4 +1,4 @@
-package com.pixivizer.app;
+package io.pictelio.app;
 
 import android.app.Activity;
 import android.os.Build;

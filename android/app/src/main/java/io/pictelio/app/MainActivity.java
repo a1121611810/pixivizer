@@ -1,4 +1,4 @@
-package com.pixivizer.app;
+package io.pictelio.app;
 
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
@@ -8,7 +8,7 @@ import android.webkit.WebViewClient;
 
 import com.getcapacitor.BridgeActivity;
 
-import com.pixivizer.app.PredictiveBackPlugin;
+import io.pictelio.app.PredictiveBackPlugin;
 
 import java.io.ByteArrayOutputStream;
 
@@ -17,7 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * Pixiv Android 客户端 — 拦截 /pixiv-img/ 请求并代理到 i.pximg.net，
+ * Pictelio Android 客户端 — 拦截 /pixiv-img/ 请求并代理到 i.pximg.net，
  * 注入 Referer 头绕过 Pixiv 防盗链。
  */
 public class MainActivity extends BridgeActivity {

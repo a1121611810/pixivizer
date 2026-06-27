@@ -6,8 +6,8 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const devServerUrl = process.env.CAPACITOR_DEV_SERVER_URL;
 
 const config: CapacitorConfig = {
-  appId: "com.pixivizer.app",
-  appName: "Pixivizer",
+  appId: "io.pictelio.app",
+  appName: "Pictelio",
   webDir: "dist",
   server: {
     androidScheme: "https",

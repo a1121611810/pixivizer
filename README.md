@@ -1,6 +1,6 @@
-# Pixivizer
+# Pictelio
 
-基于 SolidJS 的 Pixiv 第三方客户端，通过 Capacitor 打包为 Android 原生应用。
+基于 SolidJS 的第三方插画浏览器，通过 Capacitor 打包为 Android 原生应用。
 
 ## 功能特性
 

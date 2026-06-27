@@ -251,9 +251,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     const q = detailQuality();
     if (i.page_count > 1) {
       // 多图：medium → medium, large/original → large（meta_pages 没有 original）
-      return i.meta_pages.map((p) =>
-        q === "medium" ? p.image_urls.medium : p.image_urls.large,
-      );
+      return i.meta_pages.map((p) => (q === "medium" ? p.image_urls.medium : p.image_urls.large));
     }
     // 单图
     if (q === "original") {

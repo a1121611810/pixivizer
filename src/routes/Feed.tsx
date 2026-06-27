@@ -70,7 +70,7 @@ const Feed: Component = () => {
         <div class="pb-16">
           <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center justify-between px-4">
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
-              Pixivizer
+              Pictelio
             </h1>
             <button class="btn-icon" onClick={() => setShowSettingsSheet(true)} aria-label="设置">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
