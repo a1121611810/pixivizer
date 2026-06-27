@@ -9,6 +9,9 @@ dist/*
 .superpowers/
 .DS_Store
 
+# Temporary task reports
+task-*-report.md
+
 # Android signing secrets
 android/app/*.keystore
 android/app/*.jks
