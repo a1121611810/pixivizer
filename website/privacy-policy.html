@@ -8,12 +8,35 @@
       body {
         font-family: system-ui, sans-serif;
         max-width: 720px;
-        margin: 40px auto;
-        padding: 0 20px;
+        margin: 0 auto;
+        padding: 0 20px 40px;
         line-height: 1.6;
+        color: #242424;
+      }
+      .site-header {
+        margin: 0 -20px 24px;
+        padding: 16px 20px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: #242424;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+      }
+      .brand:hover {
+        text-decoration: none;
+      }
+      .brand-logo {
+        width: 32px;
+        height: 32px;
       }
       h1 {
         font-size: 1.8rem;
+        margin-top: 0;
       }
       h2 {
         font-size: 1.3rem;
@@ -26,6 +49,23 @@
     </style>
   </head>
   <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="返回 Pictelio 首页">
+        <svg
+          class="brand-logo"
+          viewBox="0 0 512 512"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <rect width="512" height="512" rx="120" fill="#0d7377" />
+          <path
+            d="M160 130h132c60 0 100 38 100 96 0 58-40 96-100 96H238v60H160V130zm78 60v72h54c24 0 40-16 40-36s-16-36-40-36H238z"
+            fill="#ffffff"
+          />
+        </svg>
+        Pictelio
+      </a>
+    </header>
     <h1>Pictelio 隐私政策</h1>
     <p><strong>生效日期</strong>: 2026-06-27</p>
     <p class="placeholder-notice">

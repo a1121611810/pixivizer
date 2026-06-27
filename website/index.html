@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Pictelio - 第三方 Pixiv 客户端，为 Android 打造。浏览推荐与关注 feed、查看作品详情、管理内容过滤，尽在简洁优雅的本地应用。"
+    />
+    <title>Pictelio - 第三方 Pixiv 客户端</title>
+    <style>
+      :root {
+        /* ── Pictelio brand ── */
+        --colorPictelioTeal: #0d7377;
+        --colorPictelioTealDark: #095c5f;
+        --colorPictelioTealDarker: #074446;
+        --colorPictelioTealLight: #14919a;
+        --colorPictelioTealLighter: #1cafb8;
+        --colorPictelioTealBgSubtle: #e6f5f5;
+
+        /* ── Typography ── */
+        --fontFamilyBase:
+          "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto,
+          "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+
+        /* ── Font sizes (Fluent type ramp) ── */
+        --fontSizeBase200: 12px;
+        --fontSizeBase300: 14px;
+        --fontSizeBase400: 16px;
+        --fontSizeBase500: 20px;
+        --fontSizeBase600: 24px;
+        --fontSizeHero700: clamp(24px, 1.2vw + 20px, 28px);
+        --fontSizeHero800: clamp(28px, 1.5vw + 22px, 32px);
+        --fontSizeHero900: clamp(32px, 2vw + 24px, 40px);
+        --fontSizeHero1000: clamp(40px, 3vw + 28px, 56px);
+
+        /* ── Line heights ── */
+        --lineHeightBase100: 1.4;
+        --lineHeightBase200: 1.333;
+        --lineHeightBase300: 1.4286;
+        --lineHeightBase400: 1.375;
+        --lineHeightBase500: 1.4;
+
+        /* ── Font weights ── */
+        --fontWeightRegular: 400;
+        --fontWeightMedium: 500;
+        --fontWeightSemibold: 600;
+        --fontWeightBold: 700;
+
+        /* ── Border radius ── */
+        --borderRadiusSmall: 2px;
+        --borderRadiusMedium: 4px;
+        --borderRadiusLarge: 6px;
+        --borderRadiusXLarge: 8px;
+        --borderRadius2XLarge: 12px;
+        --borderRadius3XLarge: 16px;
+        --borderRadius4XLarge: 24px;
+        --borderRadiusCircular: 10000px;
+
+        /* ── Spacing (4px grid) ── */
+        --spacingHorizontalS: 8px;
+        --spacingHorizontalM: 12px;
+        --spacingHorizontalL: 16px;
+        --spacingHorizontalXL: 20px;
+        --spacingHorizontalXXL: 24px;
+        --spacingHorizontalXXXL: 32px;
+
+        --spacingVerticalXS: 4px;
+        --spacingVerticalS: 8px;
+        --spacingVerticalM: 12px;
+        --spacingVerticalL: 16px;
+        --spacingVerticalXL: 20px;
+        --spacingVerticalXXL: 24px;
+        --spacingVerticalXXXL: 32px;
+        --spacingVerticalXXXXL: 48px;
+
+        /* ── Motion durations ── */
+        --durationFast: 150ms;
+        --durationNormal: 200ms;
+        --durationGentle: 250ms;
+        --durationSlow: 300ms;
+
+        /* ── Motion easing curves (Fluent) ── */
+        --curveDecelerateMid: cubic-bezier(0, 0, 0, 1);
+        --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
+        --curveAccelerateMid: cubic-bezier(0.33, 0, 0, 1);
+        --curveLinear: cubic-bezier(0, 0, 1, 1);
+
+        /* ── Colors: Light theme ── */
+        --colorNeutralBackground1: #ffffff;
+        --colorNeutralBackground2: #fafafa;
+        --colorNeutralBackground3: #f5f5f5;
+        --colorNeutralBackground1Hover: #f5f5f5;
+        --colorNeutralBackground1Pressed: #ebebeb;
+
+        --colorNeutralForeground1: #242424;
+        --colorNeutralForeground2: #424242;
+        --colorNeutralForeground3: #616161;
+        --colorNeutralForegroundDisabled: #bdbdbd;
+
+        --colorNeutralStroke1: #d1d1d1;
+        --colorNeutralStroke2: #e0e0e0;
+
+        --colorBrandBackground: var(--colorPictelioTeal);
+        --colorBrandBackgroundHover: var(--colorPictelioTealDark);
+        --colorBrandBackgroundPressed: var(--colorPictelioTealDarker);
+        --colorBrandForeground1: var(--colorPictelioTeal);
+        --colorBrandForegroundLink: var(--colorPictelioTealDark);
+        --colorBrandForegroundLinkHover: var(--colorPictelioTealDarker);
+        --colorNeutralForegroundOnBrand: #ffffff;
+
+        --shadowAmbient: rgba(0, 0, 0, 0.12);
+        --shadowKey: rgba(0, 0, 0, 0.14);
+
+        --elevation2: 0 0 2px var(--shadowAmbient), 0 1px 2px var(--shadowKey);
+        --elevation4: 0 0 2px var(--shadowAmbient), 0 2px 4px var(--shadowKey);
+        --elevation8: 0 0 2px var(--shadowAmbient), 0 4px 8px var(--shadowKey);
+        --elevation16: 0 0 2px var(--shadowAmbient), 0 8px 16px var(--shadowKey);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --colorNeutralBackground1: #292929;
+          --colorNeutralBackground2: #1f1f1f;
+          --colorNeutralBackground3: #141414;
+          --colorNeutralBackground1Hover: #333333;
+          --colorNeutralBackground1Pressed: #3d3d3d;
+
+          --colorNeutralForeground1: #ffffff;
+          --colorNeutralForeground2: #d6d6d6;
+          --colorNeutralForeground3: #adadad;
+          --colorNeutralForegroundDisabled: #5c5c5c;
+
+          --colorNeutralStroke1: #666666;
+          --colorNeutralStroke2: #4d4d4d;
+
+          --colorBrandBackground: var(--colorPictelioTealLight);
+          --colorBrandBackgroundHover: var(--colorPictelioTeal);
+          --colorBrandBackgroundPressed: var(--colorPictelioTealDark);
+          --colorBrandForeground1: var(--colorPictelioTealLighter);
+          --colorBrandForegroundLink: var(--colorPictelioTealLighter);
+          --colorBrandForegroundLinkHover: var(--colorPictelioTealLight);
+
+          --shadowAmbient: rgba(0, 0, 0, 0.24);
+          --shadowKey: rgba(0, 0, 0, 0.28);
+
+          --colorPictelioTealBgSubtle: #0f2e2f;
+        }
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--fontFamilyBase);
+        font-size: var(--fontSizeBase400);
+        line-height: var(--lineHeightBase400);
+        color: var(--colorNeutralForeground1);
+        background-color: var(--colorNeutralBackground1);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      a {
+        color: var(--colorBrandForegroundLink);
+        text-decoration: none;
+        transition: color var(--durationFast) var(--curveEasyEase);
+      }
+
+      a:hover {
+        color: var(--colorBrandForegroundLinkHover);
+        text-decoration: underline;
+      }
+
+      a:focus-visible {
+        outline: var(--strokeWidthThick, 2px) solid var(--colorBrandForeground1);
+        outline-offset: 2px;
+        border-radius: var(--borderRadiusSmall);
+      }
+
+      /* ── Header ── */
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: var(--colorNeutralBackgroundAlpha, rgba(255, 255, 255, 0.8));
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--colorNeutralStroke2);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .site-header {
+          background-color: rgba(41, 41, 41, 0.8);
+        }
+      }
+
+      .header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: var(--spacingVerticalM) var(--spacingHorizontalXL);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacingHorizontalM);
+        color: var(--colorNeutralForeground1);
+        font-weight: var(--fontWeightSemibold);
+        font-size: var(--fontSizeBase500);
+        text-decoration: none;
+      }
+
+      .brand:hover {
+        color: var(--colorNeutralForeground1);
+        text-decoration: none;
+      }
+
+      .brand-logo {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+      }
+
+      .header-nav {
+        display: flex;
+        align-items: center;
+        gap: var(--spacingHorizontalXL);
+      }
+
+      .header-nav a {
+        font-size: var(--fontSizeBase300);
+        font-weight: var(--fontWeightMedium);
+        color: var(--colorNeutralForeground2);
+      }
+
+      .header-nav a:hover {
+        color: var(--colorNeutralForeground1);
+      }
+
+      /* ── Hero ── */
+      .hero {
+        padding: var(--spacingVerticalXXXXL) var(--spacingHorizontalXL);
+        background:
+          radial-gradient(ellipse at 120% 0%, var(--colorPictelioTealBgSubtle) 0%, transparent 55%),
+          var(--colorNeutralBackground1);
+      }
+
+      .hero-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--spacingVerticalXXXL);
+        align-items: center;
+      }
+
+      @media (min-width: 768px) {
+        .hero-inner {
+          grid-template-columns: 1.2fr 0.8fr;
+        }
+      }
+
+      .hero-logo {
+        width: 96px;
+        height: 96px;
+        margin-bottom: var(--spacingVerticalL);
+        filter: drop-shadow(var(--elevation8));
+      }
+
+      .hero-title {
+        margin: 0;
+        font-size: var(--fontSizeHero1000);
+        font-weight: var(--fontWeightBold);
+        line-height: 1.1;
+        color: var(--colorNeutralForeground1);
+      }
+
+      .hero-title span {
+        color: var(--colorBrandForeground1);
+      }
+
+      .hero-tagline {
+        margin: var(--spacingVerticalL) 0 0;
+        font-size: var(--fontSizeHero700);
+        color: var(--colorNeutralForeground2);
+        max-width: 560px;
+        line-height: var(--lineHeightBase500);
+      }
+
+      .hero-ctas {
+        margin-top: var(--spacingVerticalXXL);
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacingHorizontalL);
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacingHorizontalS);
+        min-height: 40px;
+        padding: var(--spacingVerticalM) var(--spacingHorizontalXXL);
+        border-radius: var(--borderRadiusCircular);
+        font-family: inherit;
+        font-size: var(--fontSizeBase400);
+        font-weight: var(--fontWeightSemibold);
+        line-height: 1;
+        text-decoration: none;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition:
+          background-color var(--durationFast) var(--curveEasyEase),
+          color var(--durationFast) var(--curveEasyEase),
+          transform var(--durationFast) var(--curveEasyEase),
+          box-shadow var(--durationFast) var(--curveEasyEase);
+        touch-action: manipulation;
+      }
+
+      .button:hover {
+        text-decoration: none;
+      }
+
+      .button:active {
+        transform: scale(0.98);
+      }
+
+      .button:focus-visible {
+        outline: var(--strokeWidthThick, 2px) solid var(--colorBrandForeground1);
+        outline-offset: 2px;
+      }
+
+      .button-primary {
+        color: var(--colorNeutralForegroundOnBrand);
+        background-color: var(--colorBrandBackground);
+        box-shadow: var(--elevation4);
+      }
+
+      .button-primary:hover {
+        color: var(--colorNeutralForegroundOnBrand);
+        background-color: var(--colorBrandBackgroundHover);
+        box-shadow: var(--elevation8);
+      }
+
+      .button-primary:active {
+        background-color: var(--colorBrandBackgroundPressed);
+      }
+
+      .button-secondary {
+        color: var(--colorNeutralForeground1);
+        background-color: var(--colorNeutralBackground1);
+        border-color: var(--colorNeutralStroke1);
+        box-shadow: var(--elevation2);
+      }
+
+      .button-secondary:hover {
+        background-color: var(--colorNeutralBackground1Hover);
+        border-color: var(--colorNeutralStroke1);
+      }
+
+      .button-secondary:active {
+        background-color: var(--colorNeutralBackground1Pressed);
+      }
+
+      .button-note {
+        font-size: var(--fontSizeBase200);
+        font-weight: var(--fontWeightRegular);
+        opacity: 0.8;
+        margin-left: var(--spacingHorizontalXS);
+      }
+
+      .hero-visual {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .hero-card {
+        width: 100%;
+        max-width: 320px;
+        aspect-ratio: 9 / 16;
+        background: var(--colorNeutralBackground2);
+        border: 1px solid var(--colorNeutralStroke2);
+        border-radius: var(--borderRadius4XLarge);
+        box-shadow: var(--elevation16);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .hero-card-screen {
+        position: absolute;
+        inset: 12px;
+        border-radius: var(--borderRadius3XLarge);
+        background:
+          linear-gradient(180deg, var(--colorPictelioTealBgSubtle) 0%, transparent 60%),
+          var(--colorNeutralBackground1);
+        border: 1px solid var(--colorNeutralStroke2);
+        padding: var(--spacingHorizontalL);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacingVerticalM);
+      }
+
+      .hero-card-bar {
+        height: 12px;
+        width: 40%;
+        border-radius: var(--borderRadiusCircular);
+        background-color: var(--colorNeutralStroke2);
+      }
+
+      .hero-card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacingHorizontalM);
+        margin-top: auto;
+      }
+
+      .hero-card-thumb {
+        aspect-ratio: 1;
+        border-radius: var(--borderRadiusLarge);
+        background-color: var(--colorNeutralStroke2);
+      }
+
+      .hero-card-thumb:nth-child(2n) {
+        background-color: var(--colorPictelioTealBgSubtle);
+      }
+
+      /* ── Sections ── */
+      .section {
+        padding: var(--spacingVerticalXXXXL) var(--spacingHorizontalXL);
+      }
+
+      .section-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .section-title {
+        margin: 0 0 var(--spacingVerticalXL);
+        font-size: var(--fontSizeHero800);
+        font-weight: var(--fontWeightBold);
+        color: var(--colorNeutralForeground1);
+        text-align: center;
+      }
+
+      .section-lead {
+        margin: 0 auto var(--spacingVerticalXXXL);
+        font-size: var(--fontSizeBase500);
+        color: var(--colorNeutralForeground2);
+        text-align: center;
+        max-width: 640px;
+        line-height: var(--lineHeightBase500);
+      }
+
+      /* ── Feature cards ── */
+      .features-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--spacingHorizontalXL);
+      }
+
+      @media (min-width: 640px) {
+        .features-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .features-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+
+      .feature-card {
+        padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
+        background-color: var(--colorNeutralBackground2);
+        border: 1px solid var(--colorNeutralStroke2);
+        border-radius: var(--borderRadius3XLarge);
+        transition:
+          background-color var(--durationFast) var(--curveEasyEase),
+          transform var(--durationFast) var(--curveEasyEase),
+          box-shadow var(--durationFast) var(--curveEasyEase);
+      }
+
+      .feature-card:hover {
+        background-color: var(--colorNeutralBackground1);
+        box-shadow: var(--elevation8);
+        transform: translateY(-2px);
+      }
+
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--borderRadiusXLarge);
+        background-color: var(--colorPictelioTealBgSubtle);
+        color: var(--colorBrandForeground1);
+        margin-bottom: var(--spacingVerticalL);
+      }
+
+      .feature-icon svg {
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+      }
+
+      .feature-title {
+        margin: 0 0 var(--spacingVerticalS);
+        font-size: var(--fontSizeBase500);
+        font-weight: var(--fontWeightSemibold);
+        color: var(--colorNeutralForeground1);
+      }
+
+      .feature-desc {
+        margin: 0;
+        color: var(--colorNeutralForeground2);
+        font-size: var(--fontSizeBase300);
+        line-height: var(--lineHeightBase300);
+      }
+
+      /* ── Disclaimer ── */
+      .disclaimer {
+        background-color: var(--colorNeutralBackground2);
+        border-top: 1px solid var(--colorNeutralStroke2);
+        border-bottom: 1px solid var(--colorNeutralStroke2);
+      }
+
+      .disclaimer-box {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
+        background-color: var(--colorPictelioTealBgSubtle);
+        border: 1px solid var(--colorNeutralStroke2);
+        border-radius: var(--borderRadius3XLarge);
+      }
+
+      .disclaimer-title {
+        display: flex;
+        align-items: center;
+        gap: var(--spacingHorizontalS);
+        margin: 0 0 var(--spacingVerticalM);
+        font-size: var(--fontSizeBase500);
+        font-weight: var(--fontWeightSemibold);
+        color: var(--colorNeutralForeground1);
+      }
+
+      .disclaimer-box p {
+        margin: 0;
+        color: var(--colorNeutralForeground2);
+        font-size: var(--fontSizeBase300);
+        line-height: var(--lineHeightBase300);
+      }
+
+      .disclaimer-box p + p {
+        margin-top: var(--spacingVerticalM);
+      }
+
+      /* ── Download section ── */
+      .download-options {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--spacingHorizontalXL);
+        max-width: 720px;
+        margin: 0 auto;
+      }
+
+      @media (min-width: 640px) {
+        .download-options {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      .download-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
+        background-color: var(--colorNeutralBackground2);
+        border: 1px solid var(--colorNeutralStroke2);
+        border-radius: var(--borderRadius3XLarge);
+        transition:
+          background-color var(--durationFast) var(--curveEasyEase),
+          box-shadow var(--durationFast) var(--curveEasyEase);
+      }
+
+      .download-card:hover {
+        background-color: var(--colorNeutralBackground1);
+        box-shadow: var(--elevation8);
+      }
+
+      .download-card .button {
+        margin-top: auto;
+      }
+
+      .download-card h3 {
+        margin: 0 0 var(--spacingVerticalS);
+        font-size: var(--fontSizeBase500);
+        font-weight: var(--fontWeightSemibold);
+      }
+
+      .download-card p {
+        margin: 0 0 var(--spacingVerticalXL);
+        color: var(--colorNeutralForeground2);
+        font-size: var(--fontSizeBase300);
+        line-height: var(--lineHeightBase300);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: var(--spacingVerticalXS) var(--spacingHorizontalM);
+        border-radius: var(--borderRadiusCircular);
+        font-size: var(--fontSizeBase200);
+        font-weight: var(--fontWeightSemibold);
+        background-color: var(--colorPictelioTealBgSubtle);
+        color: var(--colorBrandForeground1);
+        margin-bottom: var(--spacingVerticalM);
+      }
+
+      /* ── Footer ── */
+      .site-footer {
+        padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
+        background-color: var(--colorNeutralBackground2);
+        border-top: 1px solid var(--colorNeutralStroke2);
+      }
+
+      .footer-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacingVerticalL);
+        align-items: center;
+        text-align: center;
+      }
+
+      @media (min-width: 640px) {
+        .footer-inner {
+          flex-direction: row;
+          justify-content: space-between;
+          text-align: left;
+        }
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacingHorizontalXL);
+        justify-content: center;
+      }
+
+      .footer-links a {
+        font-size: var(--fontSizeBase300);
+        color: var(--colorNeutralForeground2);
+      }
+
+      .footer-links a:hover {
+        color: var(--colorNeutralForeground1);
+      }
+
+      .footer-copy {
+        margin: 0;
+        font-size: var(--fontSizeBase300);
+        color: var(--colorNeutralForeground3);
+      }
+
+      /* ── Utility ── */
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="Pictelio 首页">
+          <svg
+            class="brand-logo"
+            viewBox="0 0 512 512"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <rect width="512" height="512" rx="120" fill="#0d7377" />
+            <path
+              d="M160 130h132c60 0 100 38 100 96 0 58-40 96-100 96H238v60H160V130zm78 60v72h54c24 0 40-16 40-36s-16-36-40-36H238z"
+              fill="#ffffff"
+            />
+          </svg>
+          Pictelio
+        </a>
+        <nav class="header-nav" aria-label="主导航">
+          <a href="#features">功能</a>
+          <a href="#download">下载</a>
+          <a href="privacy-policy.html">隐私政策</a>
+          <a href="https://github.com/YOUR_USERNAME/pictelio" target="_blank" rel="noopener"
+            >GitHub</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-inner">
+          <div class="hero-content">
+            <svg
+              class="hero-logo"
+              viewBox="0 0 512 512"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <rect width="512" height="512" rx="120" fill="#0d7377" />
+              <path
+                d="M160 130h132c60 0 100 38 100 96 0 58-40 96-100 96H238v60H160V130zm78 60v72h54c24 0 40-16 40-36s-16-36-40-36H238z"
+                fill="#ffffff"
+              />
+            </svg>
+            <h1 id="hero-title" class="hero-title">
+              <span>Pictelio</span><br />
+              第三方 Pixiv 客户端
+            </h1>
+            <p class="hero-tagline">
+              为 Android
+              打造的简洁浏览体验。发现推荐与关注作品，沉浸式查看大图，安全可控的内容过滤，一切尽在本地。
+            </p>
+            <div class="hero-ctas">
+              <a
+                class="button button-primary"
+                href="https://github.com/YOUR_USERNAME/pictelio/releases"
+                target="_blank"
+                rel="noopener"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                  />
+                </svg>
+                GitHub Releases 下载
+              </a>
+              <a class="button button-secondary" href="#" aria-describedby="fdroid-note">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 3h18v18H3V3zm2 2v14h14V5H5zm3 3h2v2H8V8zm4 0h2v2h-2V8zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2z"
+                  />
+                </svg>
+                F-Droid
+                <span class="button-note">即将上架</span>
+              </a>
+              <span id="fdroid-note" class="visually-hidden"
+                >F-Droid 版本尚未上架，当前为占位链接</span
+              >
+            </div>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <div class="hero-card">
+              <div class="hero-card-screen">
+                <div class="hero-card-bar"></div>
+                <div class="hero-card-grid">
+                  <div class="hero-card-thumb"></div>
+                  <div class="hero-card-thumb"></div>
+                  <div class="hero-card-thumb"></div>
+                  <div class="hero-card-thumb"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section" aria-labelledby="features-title">
+        <div class="section-inner">
+          <h2 id="features-title" class="section-title">核心功能</h2>
+          <p class="section-lead">
+            Pictelio 提供流畅的插画浏览体验，所有数据均通过 Pixiv 官方 API 获取并在本地处理。
+          </p>
+          <div class="features-grid">
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                </svg>
+              </div>
+              <h3 class="feature-title">推荐与关注 feed</h3>
+              <p class="feature-desc">
+                快速切换「推荐」与「关注」标签，沉浸式浏览 Pixiv 每日精选与你关注的创作者动态。
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <circle cx="8.5" cy="9.5" r="1.5" fill="currentColor" />
+                  <path d="M21 15l-5-5L5 16" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h3 class="feature-title">作品详情与大图浏览</h3>
+              <p class="feature-desc">
+                查看单页或多页作品，支持缩放、滑动翻页与 Ugoira 动图播放，还原插画细节。
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+              </div>
+              <h3 class="feature-title">年龄门与 R-18/R-18G 过滤</h3>
+              <p class="feature-desc">
+                内置年龄确认与分级内容过滤，帮助你在应用设置中管理敏感内容的显示权限。
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                  />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+              <h3 class="feature-title">举报与屏蔽</h3>
+              <p class="feature-desc">
+                遇到不适内容？一键举报或屏蔽用户/标签，打造更符合个人偏好的浏览环境。
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="download" class="section" aria-labelledby="download-title">
+        <div class="section-inner">
+          <h2 id="download-title" class="section-title">获取 Pictelio</h2>
+          <p class="section-lead">
+            当前公共版本通过 GitHub Releases 分发，F-Droid 上架流程正在进行中。
+          </p>
+          <div class="download-options">
+            <div class="download-card">
+              <span class="badge">推荐</span>
+              <h3>GitHub Releases</h3>
+              <p>下载最新 APK，适用于 Android 8.0 及以上版本。源码公开可审计。</p>
+              <a
+                class="button button-primary"
+                href="https://github.com/YOUR_USERNAME/pictelio/releases"
+                target="_blank"
+                rel="noopener"
+              >
+                前往下载
+              </a>
+            </div>
+            <div class="download-card">
+              <span class="badge">即将上架</span>
+              <h3>F-Droid</h3>
+              <p>我们已提交 F-Droid 收录申请，审核通过后将在此提供直达链接。</p>
+              <a class="button button-secondary" href="#" aria-describedby="fdroid-note-2"
+                >敬请期待</a
+              >
+              <span id="fdroid-note-2" class="visually-hidden">F-Droid 版本尚未上架</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section disclaimer" aria-labelledby="disclaimer-title">
+        <div class="section-inner">
+          <div class="disclaimer-box">
+            <h2 id="disclaimer-title" class="disclaimer-title">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              免责声明
+            </h2>
+            <p>
+              Pictelio 是一款由社区开发的<strong>第三方 Pixiv 客户端</strong>，与 Pixiv
+              株式会社及其关联公司不存在任何关联、赞助或认可关系。Pixiv 及其 logo 为 Pixiv
+              株式会社的商标或注册商标。
+            </p>
+            <p>
+              使用 Pictelio 访问 Pixiv 服务时，请遵守
+              <a href="https://www.pixiv.net/terms/?page=term" target="_blank" rel="noopener"
+                >Pixiv 服务条款</a
+              >
+              与相关法律法规。开发者不对用户生成或传播的内容负责。
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <nav class="footer-links" aria-label="页脚导航">
+          <a href="index.html">首页</a>
+          <a href="privacy-policy.html">隐私政策</a>
+          <a href="https://github.com/YOUR_USERNAME/pictelio" target="_blank" rel="noopener"
+            >GitHub</a
+          >
+        </nav>
+        <p class="footer-copy">© 2026 YOUR_NAME. Pictelio 为第三方开源项目，与 Pixiv 无关。</p>
+      </div>
+    </footer>
+  </body>
+</html>
