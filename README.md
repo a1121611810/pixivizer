@@ -353,8 +353,6 @@ This project is provided **for educational and research purposes only**.
 
 By using this software, you acknowledge that you have read and understood this disclaimer. If you do not agree, do not use or distribute this project.
 
----
-
 ## 📄 License
 
 [MIT](LICENSE) © 2026 Lilianda
