@@ -30,6 +30,7 @@
     "@capacitor/device": "^8.0.2",
     "@capacitor/preferences": "^8.0.1",
     "@solidjs/router": "^0.16.1",
+    "capacitor-secure-storage-plugin": "^0.13.0",
     "https-proxy-agent": "^9.1.0",
     "jszip": "^3.10.1",
     "solid-js": "^1.9.13",
