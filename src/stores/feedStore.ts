@@ -2,7 +2,7 @@ import { createSignal } from "solid-js";
 import { loadRecommended, loadFollow, loadNext } from "../api/illust";
 import type { PixivIllust, ContentType, RestrictType } from "../api/types";
 import { currentTab } from "./uiStore";
-import { filterR18 } from "../utils/r18Filter";
+import { filterFeedIllusts } from "../utils/r18Filter";
 import { batch } from "solid-js";
 
 const [illusts, setIllusts] = createSignal<PixivIllust[]>([]);
@@ -14,7 +14,7 @@ const [error, setError] = createSignal<string | null>(null);
 // 关注页隐私过滤状态
 const [followRestrict, setFollowRestrict] = createSignal<RestrictType>("public");
 
-// 按 Tab 缓存：tabIllusts 始终存储原始 API 数据（未经 filterR18）
+// 按 Tab 缓存：tabIllusts 始终存储原始 API 数据（未经 filterFeedIllusts）
 const tabScrollY: Record<string, number> = {};
 const tabIllusts: Record<string, PixivIllust[]> = {};
 const tabNextUrl: Record<string, string | null> = {};
@@ -32,7 +32,7 @@ export function ensureLoaded() {
   if (tabLoaded[tab]) {
     // Already loaded — restore this tab's cached data with filtering
     if (tabIllusts[tab]) {
-      setIllusts(filterR18(tabIllusts[tab]));
+      setIllusts(filterFeedIllusts(tabIllusts[tab]));
       setNextUrl(tabNextUrl[tab] || null);
     }
     return;
@@ -40,7 +40,7 @@ export function ensureLoaded() {
 
   // Restore cached raw data if available (return visit)
   if (tabIllusts[tab]) {
-    setIllusts(filterR18(tabIllusts[tab]));
+    setIllusts(filterFeedIllusts(tabIllusts[tab]));
     setNextUrl(tabNextUrl[tab] || null);
     tabLoaded[tab] = true;
     return;
@@ -99,7 +99,7 @@ export async function fetchRecommended(contentType: ContentType = "illust") {
     tabIllusts["recommended"] = data.illusts;
     tabNextUrl["recommended"] = data.next_url;
     if (currentTab() === "recommended") {
-      setIllusts(filterR18(data.illusts));
+      setIllusts(filterFeedIllusts(data.illusts));
       setNextUrl(data.next_url);
     }
   } catch (e) {
@@ -118,7 +118,7 @@ export async function fetchFollow() {
     tabIllusts["follow"] = data.illusts;
     tabNextUrl["follow"] = data.next_url;
     if (currentTab() === "follow") {
-      setIllusts(filterR18(data.illusts));
+      setIllusts(filterFeedIllusts(data.illusts));
       setNextUrl(data.next_url);
     }
   } catch (e) {
@@ -139,7 +139,7 @@ export async function fetchMore() {
       tabIllusts[tab] = [...(tabIllusts[tab] || []), ...data.illusts];
     }
     batch(() => {
-      setIllusts([...illusts(), ...filterR18(data.illusts)]);
+      setIllusts([...illusts(), ...filterFeedIllusts(data.illusts)]);
       setNextUrl(data.next_url);
     });
   } catch (e) {

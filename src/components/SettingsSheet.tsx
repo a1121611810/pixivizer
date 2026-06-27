@@ -31,6 +31,7 @@ import {
   setAgeConfirmation,
 } from "../stores/uiStore";
 import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
+import BlocklistSheet from "./BlocklistSheet";
 
 function reconfirmAge() {
   setAgeConfirmation(false, false);
@@ -124,6 +125,7 @@ const SettingsSheet: Component = () => {
   const [closing, setClosing] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
   const [ageGateMessage, setAgeGateMessage] = createSignal<string | null>(null);
+  const [showBlocklist, setShowBlocklist] = createSignal(false);
   const pbStyle = usePredictiveBackOverlayStyle();
 
   // Auto-hide the age gate hint toast
@@ -471,6 +473,54 @@ const SettingsSheet: Component = () => {
               </div>
             </Show>
 
+            {/* 管理屏蔽列表 */}
+            <div
+              class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
+              onClick={() => setShowBlocklist(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setShowBlocklist(true);
+                }
+              }}
+              role="button"
+              tabindex="0"
+              aria-label="管理屏蔽列表"
+            >
+              <div class="flex items-center gap-3">
+                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm4.25 6.25a.75.75 0 0 1 0 1.06l-8.5 8.5a.75.75 0 1 1-1.06-1.06l8.5-8.5a.75.75 0 0 1 1.06 0z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                    管理屏蔽列表
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                    查看或解除已屏蔽的作者
+                  </p>
+                </div>
+              </div>
+              {/* Chevron right */}
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                class="flex-shrink-0 text-[var(--colorNeutralForeground3)] ml-2"
+              >
+                <path
+                  d="M8.22 4.22a.75.75 0 0 1 1.06 0l7.25 7.25a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06-1.06L15.19 12 8.22 5.28a.75.75 0 0 1 0-1.06z"
+                  fill="currentColor"
+                />
+              </svg>
+            </div>
+
             {/* 预测性返回手势开关行 */}
             <div class="flex items-center justify-between py-3">
               <div class="flex items-center gap-3">
@@ -804,6 +854,8 @@ const SettingsSheet: Component = () => {
           </div>
         </div>
       </div>
+
+      <BlocklistSheet isOpen={showBlocklist()} onClose={() => setShowBlocklist(false)} />
     </Show>
   );
 };

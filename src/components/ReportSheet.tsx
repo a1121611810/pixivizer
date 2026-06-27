@@ -1,5 +1,10 @@
 import { type Component, Show, createSignal, createEffect } from "solid-js";
-import { reportIllust, type ReportReason, REPORT_REASON_LABELS } from "../stores/reportStore";
+import {
+  reportIllust,
+  hasReported,
+  type ReportReason,
+  REPORT_REASON_LABELS,
+} from "../stores/reportStore";
 
 interface ReportSheetProps {
   illustId: number;
@@ -31,6 +36,7 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
   const [mounted, setMounted] = createSignal(false);
   const [selectedReason, setSelectedReason] = createSignal<ReportReason | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
+  const alreadyReported = () => hasReported(props.illustId);
 
   // Reset animation state each time opened
   createEffect(() => {
@@ -53,7 +59,7 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
 
   async function handleSubmit() {
     const reason = selectedReason();
-    if (!reason) return;
+    if (!reason || alreadyReported()) return;
     setSubmitting(true);
     await reportIllust(props.illustId, reason);
     openReportEmail(props.illustId, reason);
@@ -119,13 +125,14 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
               <button
                 class="flex items-center gap-3 px-3 py-3 rounded-[var(--borderRadiusMedium)] transition-all active:scale-[0.98] appearance-none border-none outline-none cursor-pointer text-left focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[var(--colorStrokeFocus2)]"
                 classList={{
-                  "bg-[var(--colorBrandStroke2)] text-[var(--colorNeutralForeground1)]":
+                  "bg-[var(--colorBrandBackgroundSelected)] text-[var(--colorNeutralForeground1)]":
                     selectedReason() === reason,
                   "bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground1Hover)] hover:text-[var(--colorNeutralForeground1)]":
                     selectedReason() !== reason,
                 }}
                 onClick={() => setSelectedReason(reason)}
                 aria-pressed={selectedReason() === reason}
+                disabled={alreadyReported()}
               >
                 <span
                   class="w-5 h-5 rounded-[var(--borderRadiusCircular)] border flex items-center justify-center flex-shrink-0 transition-colors"
@@ -137,10 +144,17 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
                   }}
                 >
                   <Show when={selectedReason() === reason}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                      class="text-[var(--colorNeutralForegroundOnBrand)]"
+                    >
                       <path
                         d="M8.22 16.72a.75.75 0 0 1-1.06 0l-3.25-3.25a.75.75 0 1 1 1.06-1.06l2.72 2.72 7.72-7.72a.75.75 0 1 1 1.06 1.06l-8.25 8.25z"
-                        fill="white"
+                        fill="currentColor"
                       />
                     </svg>
                   </Show>
@@ -156,10 +170,10 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
           <div class="px-5 pb-6 pt-2">
             <button
               class="btn-primary w-full justify-center py-3"
-              disabled={!selectedReason() || submitting()}
+              disabled={!selectedReason() || submitting() || alreadyReported()}
               onClick={handleSubmit}
             >
-              {submitting() ? "提交中…" : "提交举报"}
+              {alreadyReported() ? "已举报" : submitting() ? "提交中…" : "提交举报"}
             </button>
             <p class="mt-3 text-center [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
               提交后将打开邮件客户端发送举报详情

@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 import { loadUserIllusts, loadNext } from "../api/illust";
 import type { PixivIllust, ContentType } from "../api/types";
-import { filterR18 } from "../utils/r18Filter";
+import { filterFeedIllusts } from "../utils/r18Filter";
 
 const [illusts, setIllusts] = createSignal<PixivIllust[]>([]);
 const [nextUrl, setNextUrl] = createSignal<string | null>(null);
@@ -18,7 +18,7 @@ export async function load(userId: number, type: ContentType = "illust") {
   setIllusts([]);
   try {
     const data = await loadUserIllusts(userId, type);
-    setIllusts(filterR18(data.illusts));
+    setIllusts(filterFeedIllusts(data.illusts));
     setNextUrl(data.next_url);
   } catch (e) {
     setError((e as { message?: string }).message ?? "加载失败");
@@ -32,7 +32,7 @@ export async function loadMore() {
   setLoading(true);
   try {
     const data = await loadNext(nextUrl()!);
-    setIllusts((prev) => [...prev, ...filterR18(data.illusts)]);
+    setIllusts((prev) => [...prev, ...filterFeedIllusts(data.illusts)]);
     setNextUrl(data.next_url);
   } catch (e) {
     setError((e as { message?: string }).message ?? "加载失败");

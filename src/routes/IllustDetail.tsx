@@ -1,4 +1,11 @@
-import { type Component, createSignal, onMount, onCleanup, createEffect } from "solid-js";
+import {
+  type Component,
+  createSignal,
+  onMount,
+  onCleanup,
+  createEffect,
+  createMemo,
+} from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
 import { loadDetail, addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import type { PixivIllust } from "../api/types";
@@ -36,6 +43,10 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
   const [showReportSheet, setShowReportSheet] = createSignal(false);
   const [showActionMenu, setShowActionMenu] = createSignal(false);
   const [toastMessage, setToastMessage] = createSignal<string | null>(null);
+  const isBlockedAuthor = createMemo(() => {
+    const i = illust();
+    return i ? isBlocked(i.user.id) : false;
+  });
 
   async function toggleFollow() {
     const i = illust();
@@ -324,7 +335,18 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
           </div>
         )}
 
-        {illust() && !viewerOpen() && (
+        {illust() && !viewerOpen() && isBlockedAuthor() && (
+          <div class="flex flex-col items-center justify-center h-screen gap-4 px-6">
+            <p class="text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase300)]">
+              该作者已被屏蔽
+            </p>
+            <button class="btn-secondary" onClick={() => navigate(-1)}>
+              返回
+            </button>
+          </div>
+        )}
+
+        {illust() && !viewerOpen() && !isBlockedAuthor() && (
           <>
             {/* App bar header */}
             <header class="relative flex items-center gap-3 px-4 py-3 surface-appbar sticky top-0 z-10">

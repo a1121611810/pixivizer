@@ -21,7 +21,7 @@ function isBlockedUser(i: PixivIllust): boolean {
  * 过滤作品列表：同时应用 R18 / R-18G 开关与屏蔽用户。
  * 被屏蔽用户的所有作品都会被隐藏。
  */
-export function filterR18(illusts: PixivIllust[]): PixivIllust[] {
+export function filterFeedIllusts(illusts: PixivIllust[]): PixivIllust[] {
   return illusts.filter((i) => !isRestricted(i) && !isBlockedUser(i));
 }
 
