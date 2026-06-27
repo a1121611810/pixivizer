@@ -18,6 +18,9 @@
         --colorPictelioTealLighter: #1cafb8;
         --colorPictelioTealBgSubtle: #e6f5f5;
 
+        --brandPrimary: var(--colorBrandBackground);
+        --brandOnPrimary: var(--colorNeutralForegroundOnBrand);
+
         /* ── Typography ── */
         --fontFamilyBase:
           "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto,
@@ -57,6 +60,10 @@
         --borderRadius4XLarge: 24px;
         --borderRadiusCircular: 10000px;
 
+        /* ── Stroke widths ── */
+        --strokeWidthThin: 1px;
+        --strokeWidthThick: 2px;
+
         /* ── Spacing (4px grid) ── */
         --spacingHorizontalS: 8px;
         --spacingHorizontalM: 12px;
@@ -92,6 +99,12 @@
         --colorNeutralBackground3: #f5f5f5;
         --colorNeutralBackground1Hover: #f5f5f5;
         --colorNeutralBackground1Pressed: #ebebeb;
+
+        --colorNeutralBackgroundAlpha: color-mix(
+          in srgb,
+          var(--colorNeutralBackground1) 80%,
+          transparent
+        );
 
         --colorNeutralForeground1: #242424;
         --colorNeutralForeground2: #424242;
@@ -181,7 +194,7 @@
       }
 
       a:focus-visible {
-        outline: var(--strokeWidthThick, 2px) solid var(--colorBrandForeground1);
+        outline: var(--strokeWidthThick) solid var(--colorBrandForeground1);
         outline-offset: 2px;
         border-radius: var(--borderRadiusSmall);
       }
@@ -191,16 +204,10 @@
         position: sticky;
         top: 0;
         z-index: 10;
-        background-color: var(--colorNeutralBackgroundAlpha, rgba(255, 255, 255, 0.8));
+        background-color: var(--colorNeutralBackgroundAlpha);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border-bottom: 1px solid var(--colorNeutralStroke2);
-      }
-
-      @media (prefers-color-scheme: dark) {
-        .site-header {
-          background-color: rgba(41, 41, 41, 0.8);
-        }
       }
 
       .header-inner {
@@ -321,11 +328,14 @@
         text-decoration: none;
         cursor: pointer;
         border: 1px solid transparent;
+        background-color: transparent;
+        color: inherit;
         transition:
           background-color var(--durationFast) var(--curveEasyEase),
           color var(--durationFast) var(--curveEasyEase),
           transform var(--durationFast) var(--curveEasyEase),
-          box-shadow var(--durationFast) var(--curveEasyEase);
+          box-shadow var(--durationFast) var(--curveEasyEase),
+          opacity var(--durationFast) var(--curveEasyEase);
         touch-action: manipulation;
       }
 
@@ -338,8 +348,21 @@
       }
 
       .button:focus-visible {
-        outline: var(--strokeWidthThick, 2px) solid var(--colorBrandForeground1);
+        outline: var(--strokeWidthThick) solid var(--colorBrandForeground1);
         outline-offset: 2px;
+      }
+
+      .button:disabled,
+      .button[aria-disabled="true"] {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .button:disabled:hover,
+      .button[aria-disabled="true"]:hover {
+        text-decoration: none;
       }
 
       .button-primary {
@@ -365,13 +388,20 @@
         box-shadow: var(--elevation2);
       }
 
-      .button-secondary:hover {
+      .button-secondary:hover:not(:disabled):not([aria-disabled="true"]) {
         background-color: var(--colorNeutralBackground1Hover);
         border-color: var(--colorNeutralStroke1);
       }
 
-      .button-secondary:active {
+      .button-secondary:active:not(:disabled):not([aria-disabled="true"]) {
         background-color: var(--colorNeutralBackground1Pressed);
+      }
+
+      .button-secondary:disabled,
+      .button-secondary[aria-disabled="true"] {
+        background-color: var(--colorNeutralBackground2);
+        border-color: var(--colorNeutralStroke2);
+        color: var(--colorNeutralForegroundDisabled);
       }
 
       .button-note {
@@ -678,6 +708,22 @@
         color: var(--colorNeutralForeground3);
       }
 
+      .placeholder {
+        display: inline;
+        padding: 0 var(--spacingHorizontalS);
+        border-radius: var(--borderRadiusSmall);
+        background-color: var(--colorPictelioTealBgSubtle);
+        color: var(--colorBrandForeground1);
+        font-weight: var(--fontWeightSemibold);
+      }
+
+      .placeholder-notice {
+        margin: 0;
+        font-size: var(--fontSizeBase300);
+        font-weight: var(--fontWeightSemibold);
+        color: var(--colorBrandForeground1);
+      }
+
       /* ── Utility ── */
       .visually-hidden {
         position: absolute;
@@ -702,10 +748,10 @@
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
           >
-            <rect width="512" height="512" rx="120" fill="#0d7377" />
+            <rect width="512" height="512" rx="120" fill="var(--brandPrimary)" />
             <path
               d="M160 130h132c60 0 100 38 100 96 0 58-40 96-100 96H238v60H160V130zm78 60v72h54c24 0 40-16 40-36s-16-36-40-36H238z"
-              fill="#ffffff"
+              fill="var(--brandOnPrimary)"
             />
           </svg>
           Pictelio
@@ -731,10 +777,10 @@
               xmlns="http://www.w3.org/2000/svg"
               aria-hidden="true"
             >
-              <rect width="512" height="512" rx="120" fill="#0d7377" />
+              <rect width="512" height="512" rx="120" fill="var(--brandPrimary)" />
               <path
                 d="M160 130h132c60 0 100 38 100 96 0 58-40 96-100 96H238v60H160V130zm78 60v72h54c24 0 40-16 40-36s-16-36-40-36H238z"
-                fill="#ffffff"
+                fill="var(--brandOnPrimary)"
               />
             </svg>
             <h1 id="hero-title" class="hero-title">
@@ -765,7 +811,12 @@
                 </svg>
                 GitHub Releases 下载
               </a>
-              <a class="button button-secondary" href="#" aria-describedby="fdroid-note">
+              <button
+                type="button"
+                class="button button-secondary"
+                disabled
+                aria-describedby="fdroid-note"
+              >
                 <svg
                   width="20"
                   height="20"
@@ -779,9 +830,9 @@
                 </svg>
                 F-Droid
                 <span class="button-note">即将上架</span>
-              </a>
+              </button>
               <span id="fdroid-note" class="visually-hidden"
-                >F-Droid 版本尚未上架，当前为占位链接</span
+                >F-Droid 版本尚未上架，当前为占位按钮</span
               >
             </div>
           </div>
@@ -917,9 +968,14 @@
               <span class="badge">即将上架</span>
               <h3>F-Droid</h3>
               <p>我们已提交 F-Droid 收录申请，审核通过后将在此提供直达链接。</p>
-              <a class="button button-secondary" href="#" aria-describedby="fdroid-note-2"
-                >敬请期待</a
+              <button
+                type="button"
+                class="button button-secondary"
+                disabled
+                aria-describedby="fdroid-note-2"
               >
+                敬请期待
+              </button>
               <span id="fdroid-note-2" class="visually-hidden">F-Droid 版本尚未上架</span>
             </div>
           </div>
@@ -971,7 +1027,15 @@
             >GitHub</a
           >
         </nav>
-        <p class="footer-copy">© 2026 YOUR_NAME. Pictelio 为第三方开源项目，与 Pixiv 无关。</p>
+        <div>
+          <p class="footer-copy">
+            © 2026 <span class="placeholder">YOUR_NAME</span>. Pictelio 为第三方开源项目，与 Pixiv
+            无关。
+          </p>
+          <p class="placeholder-notice">
+            占位符提示：YOUR_USERNAME 与 YOUR_NAME 将在正式发布前替换为实际信息。
+          </p>
+        </div>
       </div>
     </footer>
   </body>
