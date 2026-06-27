@@ -48,15 +48,17 @@
 
 ## 命令
 
-| 命令                    | 说明                                          |
-| ----------------------- | --------------------------------------------- |
-| `pnpm dev`              | 启动 Vite 开发服务器                          |
-| `pnpm build`            | TypeScript 检查 + Vite 构建到 `dist/`         |
-| `pnpm check`            | 仅 TypeScript 类型检查                        |
-| `pnpm preview`          | 预览生产构建                                  |
-| `pnpm build:android`    | 构建 Web + Capacitor 同步 + Gradle 编译 APK   |
-| `pnpm cap:sync`         | 同步 Web 产物和 Capacitor 配置到 Android 项目 |
-| `pnpm cap:open:android` | 在 Android Studio 中打开 `android/` 项目      |
+| 命令                         | 说明                                                                       |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| `pnpm dev`                   | 启动 Vite 开发服务器                                                       |
+| `pnpm build`                 | TypeScript 检查 + Vite 构建到 `dist/`                                      |
+| `pnpm check`                 | 仅 TypeScript 类型检查                                                     |
+| `pnpm preview`               | 预览生产构建                                                               |
+| `pnpm build:android`         | 构建 Web + Capacitor 同步 + Gradle 编译 APK                                |
+| `pnpm build:android:release` | 构建签名 Release APK（需签名环境变量与 keystore）                          |
+| `pnpm release:github`        | 构建 Release APK 并发布到 GitHub Releases（详见 `docs/github-release.md`） |
+| `pnpm cap:sync`              | 同步 Web 产物和 Capacitor 配置到 Android 项目                              |
+| `pnpm cap:open:android`      | 在 Android Studio 中打开 `android/` 项目                                   |
 
 ## 架构
 
