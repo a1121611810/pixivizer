@@ -74,4 +74,21 @@ describe("reportStore", () => {
     expect(reportedIds().size).toBe(1);
     expect(Preferences.set).toHaveBeenCalledTimes(1);
   });
+
+  it("resets reported ids and records", async () => {
+    vi.mocked(Preferences.get).mockResolvedValue({
+      value: JSON.stringify([
+        { id: 123, reason: "pornography" as const, reportedAt: 1 },
+        { id: 456, reason: "spam" as const, reportedAt: 2 },
+      ]),
+    });
+
+    const { loadReportedIds, resetReportedIds, reportedIds, hasReported } = await loadStore();
+    await loadReportedIds();
+    resetReportedIds();
+
+    expect(reportedIds().size).toBe(0);
+    expect(hasReported(123)).toBe(false);
+    expect(hasReported(456)).toBe(false);
+  });
 });

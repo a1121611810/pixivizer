@@ -96,4 +96,18 @@ describe("blockStore", () => {
     expect(blockedIds().size).toBe(0);
     expect(Preferences.set).not.toHaveBeenCalled();
   });
+
+  it("resets blocked ids to empty", async () => {
+    vi.mocked(Preferences.get).mockResolvedValue({
+      value: JSON.stringify([111, 222]),
+    });
+
+    const { loadBlockedIds, resetBlockedIds, blockedIds, isBlocked } = await loadStore();
+    await loadBlockedIds();
+    resetBlockedIds();
+
+    expect(blockedIds().size).toBe(0);
+    expect(isBlocked(111)).toBe(false);
+    expect(isBlocked(222)).toBe(false);
+  });
 });

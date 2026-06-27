@@ -274,6 +274,25 @@ async function loadShowDetailStairsPreference(): Promise<void> {
   }
 }
 
+/** 重置所有 UI 设置为默认值，并尽可能持久化。 */
+export async function resetUiStore(): Promise<void> {
+  setTheme("light");
+  setListQuality("medium");
+  setDetailQuality("medium");
+  setCacheSize(600);
+  await setAutoHideNavBar(true);
+  await setShowR18(false);
+  await setShowR18G(false);
+  await setLayoutMode("waterfall");
+  await setShowDetailStairs(false);
+  await setAgeConfirmation(false, false);
+  if (Capacitor.getPlatform() === "android") {
+    await setUsePredictiveBack(isPredictiveBackSupported());
+  } else {
+    setUsePredictiveBackSig(false);
+  }
+}
+
 export {
   currentTab,
   setCurrentTab,

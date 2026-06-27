@@ -61,3 +61,9 @@ export async function reportIllust(id: number, reason: ReportReason): Promise<vo
 export function hasReported(id: number): boolean {
   return reportedIds().has(id);
 }
+
+/** 清空本地举报记录（不操作 Preferences，调用方负责清除）。 */
+export function resetReportedIds(): void {
+  setReportedIds(new Set());
+  setReportRecords([]);
+}

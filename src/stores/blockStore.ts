@@ -50,3 +50,8 @@ export async function unblockUser(userId: number): Promise<void> {
 export function isBlocked(userId: number): boolean {
   return blockedIds().has(userId);
 }
+
+/** 清空本地屏蔽列表（不操作 Preferences，调用方负责清除）。 */
+export function resetBlockedIds(): void {
+  setBlockedIds(new Set());
+}

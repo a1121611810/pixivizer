@@ -1,5 +1,6 @@
 import { type Component, Show, createSignal, createEffect, onCleanup } from "solid-js";
 import { useNavigate } from "@solidjs/router";
+import { Preferences } from "@capacitor/preferences";
 import {
   showSettingsSheet,
   setShowSettingsSheet,
@@ -29,7 +30,12 @@ import {
   ageConfirmed,
   isAdult,
   setAgeConfirmation,
+  resetUiStore,
 } from "../stores/uiStore";
+import { isLoggedIn, logout } from "../stores/authStore";
+import { clearImageCache } from "../utils/imageLoader";
+import { resetBlockedIds } from "../stores/blockStore";
+import { resetReportedIds } from "../stores/reportStore";
 import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 import BlocklistSheet from "./BlocklistSheet";
 
@@ -78,6 +84,24 @@ const iconPaths = {
     filled:
       "M12.003.75a.75.75 0 0 1 .75.75v1.087a6.7 6.7 0 0 1 1.97.812l.765-.765a.75.75 0 0 1 1.06 1.06l-.742.743c.488.541.894 1.15 1.194 1.81l1.032-.32a.75.75 0 1 1 .462 1.427l-1.054.342c.05.402.06.813.028 1.22l1.06.382a.75.75 0 0 1-.497 1.416l-1.077-.378a6.693 6.693 0 0 1-1.268 1.849l.753.754a.75.75 0 0 1-1.06 1.06l-.78-.78a6.716 6.716 0 0 1-1.823.789v1.112a.75.75 0 0 1-1.5 0v-1.102a6.658 6.658 0 0 1-1.853-.794l-.777.777a.75.75 0 0 1-1.06-1.06l.75-.75a6.695 6.695 0 0 1-1.27-1.835l-1.08.376a.75.75 0 1 1-.496-1.415l1.06-.384a6.745 6.745 0 0 1 .032-1.245l-1.05-.342a.75.75 0 1 1 .465-1.427l1.032.32c.303-.658.713-1.267 1.204-1.806l-.743-.743a.75.75 0 1 1 1.06-1.06l.766.766a6.687 6.687 0 0 1 1.962-.811V1.5a.75.75 0 0 1 .75-.75zm-.005 6a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z",
   },
+  signOut: {
+    regular:
+      "M12 4.5a1 1 0 0 0-1 1v2a.75.75 0 0 1-1.5 0v-2A2.5 2.5 0 0 1 12 3h3.5A2.5 2.5 0 0 1 18 5.5v13A2.5 2.5 0 0 1 15.5 21H12a2.5 2.5 0 0 1-2.5-2.5v-2a.75.75 0 0 1 1.5 0v2a1 1 0 0 0 1 1h3.5a1 1 0 0 0 1-1v-13a1 1 0 0 0-1-1H12zm-4.22 4.72a.75.75 0 0 1 0 1.06l-1.47 1.47H14a.75.75 0 0 1 0 1.5H6.31l1.47 1.47a.75.75 0 1 1-1.06 1.06l-2.75-2.75a.75.75 0 0 1 0-1.06l2.75-2.75a.75.75 0 0 1 1.06 0z",
+    filled:
+      "M12 4.5a1 1 0 0 0-1 1v1.75a.75.75 0 0 1-1.5 0V5.5A2.5 2.5 0 0 1 12 3h3.5A2.5 2.5 0 0 1 18 5.5v13A2.5 2.5 0 0 1 15.5 21H12a2.5 2.5 0 0 1-2.5-2.5v-1.75a.75.75 0 0 1 1.5 0v1.75a1 1 0 0 0 1 1h3.5a1 1 0 0 0 1-1v-13a1 1 0 0 0-1-1H12zM6.22 9.22a.75.75 0 0 1 1.06 0l2.75 2.75a.75.75 0 0 1 0 1.06l-2.75 2.75a.75.75 0 0 1-1.06-1.06l1.47-1.47H2.75a.75.75 0 0 1 0-1.5h4.94l-1.47-1.47a.75.75 0 0 1 0-1.06z",
+  },
+  delete: {
+    regular:
+      "M10 3.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 .75.75v1.25h-4V3.25zM6.5 5v13.75a2.25 2.25 0 0 0 2.25 2.25h6.5a2.25 2.25 0 0 0 2.25-2.25V5h-11zm4.25 3.25a.75.75 0 0 1 1.5 0v7.5a.75.75 0 0 1-1.5 0v-7.5zm-3 0a.75.75 0 0 1 1.5 0v7.5a.75.75 0 0 1-1.5 0v-7.5z",
+    filled:
+      "M10 3.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 .75.75v1.25h-4V3.25zM5.75 5h12.5a.75.75 0 0 1 0 1.5h-.75v12.25a2.25 2.25 0 0 1-2.25 2.25H8.75a2.25 2.25 0 0 1-2.25-2.25V6.5H5.75a.75.75 0 0 1 0-1.5zm3.5 3.75a.75.75 0 0 0-1.5 0v7.5a.75.75 0 0 0 1.5 0v-7.5zm4 0a.75.75 0 0 0-1.5 0v7.5a.75.75 0 0 0 1.5 0v-7.5z",
+  },
+  open: {
+    regular:
+      "M6.25 4.5A1.75 1.75 0 0 0 4.5 6.25v11.5c0 .966.784 1.75 1.75 1.75h11.5a1.75 1.75 0 0 0 1.75-1.75v-5a.75.75 0 0 1 1.5 0v5A3.25 3.25 0 0 1 17.75 21H6.25A3.25 3.25 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3h5a.75.75 0 0 1 0 1.5h-5zm6.5 0a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 .75.75v5a.75.75 0 0 1-1.5 0V6.31l-6.97 6.97a.75.75 0 1 1-1.06-1.06l6.97-6.97h-3.94a.75.75 0 0 1-.75-.75z",
+    filled:
+      "M6.25 4.5A1.75 1.75 0 0 0 4.5 6.25v11.5c0 .966.784 1.75 1.75 1.75h11.5a1.75 1.75 0 0 0 1.75-1.75v-5a.75.75 0 0 1 1.5 0v5A3.25 3.25 0 0 1 17.75 21H6.25A3.25 3.25 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3h5a.75.75 0 0 1 0 1.5h-5zm6.5 0a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 .75.75v5a.75.75 0 0 1-1.5 0V6.31l-6.97 6.97a.75.75 0 1 1-1.06-1.06l6.97-6.97h-3.94a.75.75 0 0 1-.75-.75z",
+  },
 } as const;
 
 type IconName = keyof typeof iconPaths;
@@ -120,12 +144,130 @@ function handleScrimTouchMove(e: TouchEvent) {
   }
 }
 
+interface ConfirmDialogProps {
+  isOpen: boolean;
+  title: string;
+  body: string;
+  cancelText: string;
+  confirmText: string;
+  confirmVariant?: "danger" | "primary";
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function openDeleteAccountPage() {
+  // TODO: Install @capacitor/browser and use Browser.open({ url }) for a native in-app/system browser experience.
+  window.open("https://www.pixiv.net/leave.php", "_blank");
+}
+
+const ConfirmDialog: Component<ConfirmDialogProps> = (props) => {
+  const [mounted, setMounted] = createSignal(false);
+  const [closing, setClosing] = createSignal(false);
+
+  createEffect(() => {
+    if (props.isOpen) {
+      setMounted(false);
+      setClosing(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setMounted(true));
+      });
+    }
+  });
+
+  function close() {
+    setClosing(true);
+    setTimeout(() => {
+      props.onCancel();
+      setClosing(false);
+      setMounted(false);
+    }, 200);
+  }
+
+  function confirm() {
+    setClosing(true);
+    setTimeout(() => {
+      props.onConfirm();
+      setClosing(false);
+      setMounted(false);
+    }, 200);
+  }
+
+  return (
+    <Show when={props.isOpen}>
+      <div class="fixed inset-0 z-[70]">
+        <div
+          class="absolute inset-0 transition-opacity"
+          style={{
+            "background-color": "var(--colorScrim)",
+            opacity: mounted() && !closing() ? 1 : 0,
+            transition: `opacity var(--durationNormal) var(--curveEasyEase)`,
+          }}
+          onClick={close}
+        />
+        <div class="absolute inset-0 flex items-center justify-center p-5 pointer-events-none">
+          <div
+            class="w-full max-w-[22rem] surface-dialog p-6 pointer-events-auto"
+            style={{
+              transform: mounted() && !closing() ? "scale(1)" : "scale(0.96)",
+              opacity: mounted() && !closing() ? 1 : 0,
+              transition: `transform var(--durationNormal) var(--curveEasyEase), opacity var(--durationNormal) var(--curveEasyEase)`,
+            }}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="confirm-dialog-title"
+            aria-describedby="confirm-dialog-body"
+          >
+            <h3
+              id="confirm-dialog-title"
+              class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)] mb-2"
+            >
+              {props.title}
+            </h3>
+            <p
+              id="confirm-dialog-body"
+              class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground2)] leading-[var(--lineHeightBase300)] mb-6"
+            >
+              {props.body}
+            </p>
+            <div class="flex gap-3 justify-end">
+              <button
+                class="btn-secondary min-h-10 px-4"
+                onClick={close}
+                aria-label={props.cancelText}
+              >
+                {props.cancelText}
+              </button>
+              <button
+                class="min-h-10 px-4 rounded-[var(--borderRadiusMedium)] font-semibold [font-size:var(--fontSizeBase300)] transition-all active:scale-[0.97] appearance-none border outline-none cursor-pointer focus-visible:outline-none focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]"
+                classList={{
+                  "bg-[var(--colorStatusDangerBackground1)] text-white border-[var(--colorStatusDangerBackground1)] hover:opacity-90 active:opacity-80":
+                    props.confirmVariant === "danger",
+                  "bg-[var(--colorBrandBackground)] text-white border-[var(--colorBrandBackground)] hover:bg-[var(--colorBrandBackgroundHover)] active:bg-[var(--colorBrandBackgroundPressed)]":
+                    props.confirmVariant !== "danger",
+                }}
+                onClick={confirm}
+                aria-label={props.confirmText}
+              >
+                {props.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Show>
+  );
+};
+
 const SettingsSheet: Component = () => {
   const navigate = useNavigate();
   const [closing, setClosing] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
   const [ageGateMessage, setAgeGateMessage] = createSignal<string | null>(null);
   const [showBlocklist, setShowBlocklist] = createSignal(false);
+  const [actionToast, setActionToast] = createSignal<string | null>(null);
+  const [dialogState, setDialogState] = createSignal<
+    { type: "clear" } | { type: "deleteAccount" } | null
+  >(null);
   const pbStyle = usePredictiveBackOverlayStyle();
 
   // Auto-hide the age gate hint toast
@@ -135,6 +277,30 @@ const SettingsSheet: Component = () => {
       onCleanup(() => clearTimeout(timer));
     }
   });
+
+  // Auto-hide action toast
+  createEffect(() => {
+    if (actionToast()) {
+      const timer = setTimeout(() => setActionToast(null), 2500);
+      onCleanup(() => clearTimeout(timer));
+    }
+  });
+
+  async function handleLogout() {
+    await logout();
+    setActionToast("已退出登录");
+  }
+
+  async function handleClearLocalData() {
+    await logout();
+    clearImageCache();
+    resetBlockedIds();
+    resetReportedIds();
+    await Preferences.clear();
+    await resetUiStore();
+    setActionToast("本地数据已清除");
+    close();
+  }
 
   function requireAdult(action: () => void) {
     if (!isAdult()) {
@@ -184,6 +350,18 @@ const SettingsSheet: Component = () => {
           }}
         >
           {ageGateMessage()}
+        </div>
+      </Show>
+
+      {/* Action success toast */}
+      <Show when={actionToast()}>
+        <div
+          class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-[var(--colorStatusSuccessBackground2)] text-[var(--colorStatusSuccessForeground1)] border border-[var(--colorStatusSuccessForeground1)] rounded-[var(--borderRadius2XLarge)] shadow-[var(--elevation8)] px-5 py-2.5 [font-size:var(--fontSizeBase200)] font-medium whitespace-nowrap pointer-events-none transition-all duration-[var(--durationGentle)]"
+          style={{
+            animation: "fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both",
+          }}
+        >
+          {actionToast()}
         </div>
       </Show>
 
@@ -775,6 +953,125 @@ const SettingsSheet: Component = () => {
           {/* Divider */}
           <div class="divider mx-5" />
 
+          {/* ── Account & data section ── */}
+          <div class="px-5 py-3 flex flex-col">
+            <p class="[font-size:var(--fontSizeBase200)] font-semibold text-[var(--colorNeutralForeground3)] uppercase tracking-wide mb-1">
+              账号与数据
+            </p>
+
+            {/* 退出登录 */}
+            <Show when={isLoggedIn()}>
+              <div
+                class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
+                onClick={handleLogout}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleLogout();
+                  }
+                }}
+                role="button"
+                tabindex="0"
+                aria-label="退出登录"
+              >
+                <div class="flex items-center gap-3">
+                  <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d={iconPaths.signOut.regular} fill="currentColor" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                      退出登录
+                    </p>
+                    <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                      清除当前登录凭证，不会删除本地其他数据
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Show>
+
+            {/* 清除所有本地数据 */}
+            <div
+              class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
+              onClick={() => setDialogState({ type: "clear" })}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setDialogState({ type: "clear" });
+                }
+              }}
+              role="button"
+              tabindex="0"
+              aria-label="清除所有本地数据"
+            >
+              <div class="flex items-center gap-3">
+                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorStatusDangerForeground1)]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d={iconPaths.delete.regular} fill="currentColor" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorStatusDangerForeground1)] leading-snug">
+                    清除所有本地数据
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                    删除登录凭证、图片缓存、设置、屏蔽与举报记录
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 删除 Pixiv 账号 */}
+            <div
+              class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
+              onClick={() => setDialogState({ type: "deleteAccount" })}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setDialogState({ type: "deleteAccount" });
+                }
+              }}
+              role="button"
+              tabindex="0"
+              aria-label="删除 Pixiv 账号"
+            >
+              <div class="flex items-center gap-3">
+                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d={iconPaths.open.regular} fill="currentColor" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                    删除 Pixiv 账号
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                    打开 Pixiv 官方账号删除页面，按官方流程操作
+                  </p>
+                </div>
+              </div>
+              {/* Chevron right */}
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                class="flex-shrink-0 text-[var(--colorNeutralForeground3)] ml-2"
+              >
+                <path
+                  d="M8.22 4.22a.75.75 0 0 1 1.06 0l7.25 7.25a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06-1.06L15.19 12 8.22 5.28a.75.75 0 0 1 0-1.06z"
+                  fill="currentColor"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div class="divider mx-5" />
+
           {/* About entry — clickable row */}
           <div
             class="flex items-center justify-between mx-4 mb-4 px-5 py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)]"
@@ -856,6 +1153,31 @@ const SettingsSheet: Component = () => {
       </div>
 
       <BlocklistSheet isOpen={showBlocklist()} onClose={() => setShowBlocklist(false)} />
+
+      <ConfirmDialog
+        isOpen={dialogState()?.type === "clear"}
+        title="清除所有本地数据？"
+        body="这将删除本应用在本机保存的全部数据，包括：登录凭证、图片缓存、浏览设置、屏蔽列表、举报记录。此操作不可恢复，但不会删除你的 Pixiv 账号及其在 Pixiv 服务器上的数据。"
+        cancelText="取消"
+        confirmText="确认清除"
+        confirmVariant="danger"
+        onCancel={() => setDialogState(null)}
+        onConfirm={handleClearLocalData}
+      />
+
+      <ConfirmDialog
+        isOpen={dialogState()?.type === "deleteAccount"}
+        title="删除 Pixiv 账号？"
+        body="Pictelio 是第三方客户端，无法直接删除你的 Pixiv 账号。点击确认将打开 Pixiv 官方账号删除页面，请按官方流程操作。"
+        cancelText="取消"
+        confirmText="前往 Pixiv"
+        confirmVariant="danger"
+        onCancel={() => setDialogState(null)}
+        onConfirm={() => {
+          setDialogState(null);
+          openDeleteAccountPage();
+        }}
+      />
     </Show>
   );
 };
