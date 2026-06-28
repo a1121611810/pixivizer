@@ -331,9 +331,9 @@ async function main() {
 
   // If auth redirect didn't fire (Login.tsx onMount ran before auth completed),
   // navigate to /recommended manually.
-  if (page.url().includes('/login')) {
-    log('Auth redirect did not fire automatically; navigating to /recommended');
-    await page.goto(`${BASE_URL}/recommended`, { waitUntil: 'networkidle', timeout: 10000 });
+  if (page.url().includes("/login")) {
+    log("Auth redirect did not fire automatically; navigating to /recommended");
+    await page.goto(`${BASE_URL}/recommended`, { waitUntil: "networkidle", timeout: 10000 });
     log(`After manual navigation: ${page.url()}`);
   }
 
@@ -360,8 +360,8 @@ async function main() {
 
   // 03 — Settings sheet
   // Ensure we're on a page with the settings button
-  if (!page.url().includes('/recommended') && !page.url().includes('/following')) {
-    await page.goto(`${BASE_URL}/recommended`, { waitUntil: 'networkidle', timeout: 10000 });
+  if (!page.url().includes("/recommended") && !page.url().includes("/following")) {
+    await page.goto(`${BASE_URL}/recommended`, { waitUntil: "networkidle", timeout: 10000 });
   }
   await captureCurrent(page, "03_settings.png", "/recommended", async (p) => {
     await dismissAgeGate(p);
@@ -390,10 +390,17 @@ async function main() {
   await captureCurrent(page, "04_login.png", "/login", async (p) => {
     // Wait for the login form to render — look for the "Pictelio" heading text
     try {
-      await p.locator('h1:has-text("Pictelio")').first().waitFor({ state: "visible", timeout: 7000 });
+      await p
+        .locator('h1:has-text("Pictelio")')
+        .first()
+        .waitFor({ state: "visible", timeout: 7000 });
     } catch {
       // Fallback: wait for any form element
-      await p.locator('form').first().waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
+      await p
+        .locator("form")
+        .first()
+        .waitFor({ state: "visible", timeout: 5000 })
+        .catch(() => {});
     }
     await p.waitForTimeout(1000);
   });

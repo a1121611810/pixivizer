@@ -141,9 +141,13 @@
         --acrylicCardBackground: rgba(255, 255, 255, 0.4);
         --acrylicCardBlur: 20px;
         --acrylicCardBorder: rgba(0, 0, 0, 0.06);
-        --revealHighlight: radial-gradient(circle at var(--mouseX, 50%) var(--mouseY, 50%), rgba(43, 87, 154, 0.08) 0%, transparent 60%);
-        --elevationWin11: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.04);
-        --elevationWin11Hover: 0 4px 16px rgba(0,0,0,0.12), 0 16px 48px rgba(0,0,0,0.06);
+        --revealHighlight: radial-gradient(
+          circle at var(--mouseX, 50%) var(--mouseY, 50%),
+          rgba(43, 87, 154, 0.08) 0%,
+          transparent 60%
+        );
+        --elevationWin11: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.04);
+        --elevationWin11Hover: 0 4px 16px rgba(0, 0, 0, 0.12), 0 16px 48px rgba(0, 0, 0, 0.06);
       }
 
       @media (prefers-color-scheme: dark) {
@@ -179,9 +183,13 @@
           --acrylicBorder: rgba(255, 255, 255, 0.08);
           --acrylicCardBackground: rgba(32, 32, 32, 0.6);
           --acrylicCardBorder: rgba(255, 255, 255, 0.08);
-          --revealHighlight: radial-gradient(circle at var(--mouseX, 50%) var(--mouseY, 50%), rgba(90, 159, 212, 0.12) 0%, transparent 60%);
-          --elevationWin11: 0 2px 8px rgba(0,0,0,0.24), 0 8px 32px rgba(0,0,0,0.16);
-          --elevationWin11Hover: 0 4px 16px rgba(0,0,0,0.32), 0 16px 48px rgba(0,0,0,0.24);
+          --revealHighlight: radial-gradient(
+            circle at var(--mouseX, 50%) var(--mouseY, 50%),
+            rgba(90, 159, 212, 0.12) 0%,
+            transparent 60%
+          );
+          --elevationWin11: 0 2px 8px rgba(0, 0, 0, 0.24), 0 8px 32px rgba(0, 0, 0, 0.16);
+          --elevationWin11Hover: 0 4px 16px rgba(0, 0, 0, 0.32), 0 16px 48px rgba(0, 0, 0, 0.24);
         }
       }
 
@@ -204,7 +212,7 @@
         background-color: var(--colorNeutralBackground1);
         background-image:
           radial-gradient(ellipse at 80% 0%, var(--colorPictelioBgSubtle) 0%, transparent 60%),
-          radial-gradient(ellipse at 20% 100%, rgba(43,87,154,0.03) 0%, transparent 40%);
+          radial-gradient(ellipse at 20% 100%, rgba(43, 87, 154, 0.03) 0%, transparent 40%);
         background-attachment: fixed;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -293,7 +301,7 @@
       }
 
       .hero::before {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         background: var(--acrylicBackground);
@@ -485,7 +493,7 @@
         align-items: center;
         gap: var(--spacingHorizontalS);
         padding: 10px var(--spacingHorizontalM);
-        background: rgba(255,255,255,0.08);
+        background: rgba(255, 255, 255, 0.08);
         border-bottom: 1px solid var(--acrylicBorder);
         user-select: none;
       }
@@ -502,9 +510,15 @@
         transition: filter var(--durationFast) var(--curveEasyEase);
       }
 
-      .win-dot-close { background: #e81123; }
-      .win-dot-min   { background: #f7b731; }
-      .win-dot-max   { background: #28a745; }
+      .win-dot-close {
+        background: #e81123;
+      }
+      .win-dot-min {
+        background: #f7b731;
+      }
+      .win-dot-max {
+        background: #28a745;
+      }
 
       .win-dot:hover {
         filter: brightness(1.4);
@@ -611,13 +625,14 @@
         -webkit-backdrop-filter: blur(var(--acrylicCardBlur));
         border: 1px solid var(--acrylicCardBorder);
         box-shadow: var(--elevationWin11);
-        transition: transform var(--durationGentle) var(--curveEasyEase),
-                    box-shadow var(--durationGentle) var(--curveEasyEase);
+        transition:
+          transform var(--durationGentle) var(--curveEasyEase),
+          box-shadow var(--durationGentle) var(--curveEasyEase);
         cursor: default;
       }
 
       .feature-card::before {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
         border-radius: inherit;
@@ -729,8 +744,9 @@
         border: 1px solid var(--acrylicCardBorder);
         box-shadow: var(--elevationWin11);
         position: relative;
-        transition: transform var(--durationGentle) var(--curveEasyEase),
-                    box-shadow var(--durationGentle) var(--curveEasyEase);
+        transition:
+          transform var(--durationGentle) var(--curveEasyEase),
+          box-shadow var(--durationGentle) var(--curveEasyEase);
       }
 
       .download-card:hover {
@@ -830,7 +846,6 @@
         color: var(--colorBrandForeground1);
       }
 
-
       /* ── Utility ── */
       .visually-hidden {
         position: absolute;
@@ -877,8 +892,9 @@
         background: transparent;
         color: var(--colorNeutralForeground3);
         cursor: pointer;
-        transition: background var(--durationFast) var(--curveEasyEase),
-                    color var(--durationFast) var(--curveEasyEase);
+        transition:
+          background var(--durationFast) var(--curveEasyEase),
+          color var(--durationFast) var(--curveEasyEase);
         margin-left: auto;
       }
 
@@ -905,8 +921,9 @@
       .reveal {
         opacity: 0;
         transform: translateY(24px);
-        transition: opacity 0.6s cubic-bezier(0.33, 0, 0.67, 1),
-                    transform 0.6s cubic-bezier(0.33, 0, 0.67, 1);
+        transition:
+          opacity 0.6s cubic-bezier(0.33, 0, 0.67, 1),
+          transform 0.6s cubic-bezier(0.33, 0, 0.67, 1);
       }
 
       .reveal.visible {
@@ -921,7 +938,7 @@
       }
 
       .header-nav a::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: -2px;
         left: 50%;
@@ -929,8 +946,9 @@
         height: 2px;
         border-radius: 1px;
         background: currentColor;
-        transition: width var(--durationGentle) var(--curveEasyEase),
-                    left var(--durationGentle) var(--curveEasyEase);
+        transition:
+          width var(--durationGentle) var(--curveEasyEase),
+          left var(--durationGentle) var(--curveEasyEase);
       }
 
       .header-nav a:hover::after {
@@ -945,10 +963,14 @@
       }
 
       .button::after {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at var(--rippleX, 50%) var(--rippleY, 50%), rgba(255,255,255,0.3) 0%, transparent 60%);
+        background: radial-gradient(
+          circle at var(--rippleX, 50%) var(--rippleY, 50%),
+          rgba(255, 255, 255, 0.3) 0%,
+          transparent 60%
+        );
         opacity: 0;
         transition: opacity 0.4s ease-out;
         pointer-events: none;
@@ -961,8 +983,13 @@
 
       /* ── Hero Logo Gentle Float ── */
       @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-6px); }
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
       }
 
       .hero-logo {
@@ -971,8 +998,13 @@
 
       /* ── Win11 Window Subtle Glow ── */
       @keyframes glowPulse {
-        0%, 100% { box-shadow: var(--elevationWin11); }
-        50% { box-shadow: var(--elevationWin11Hover); }
+        0%,
+        100% {
+          box-shadow: var(--elevationWin11);
+        }
+        50% {
+          box-shadow: var(--elevationWin11Hover);
+        }
       }
 
       .win-window {
@@ -981,8 +1013,15 @@
 
       /* ── Download CTA Gentle Pulse ── */
       @keyframes ctaPulse {
-        0%, 100% { box-shadow: var(--elevation4); }
-        50% { box-shadow: 0 0 0 4px rgba(0,120,212,0.15), var(--elevation8); }
+        0%,
+        100% {
+          box-shadow: var(--elevation4);
+        }
+        50% {
+          box-shadow:
+            0 0 0 4px rgba(0, 120, 212, 0.15),
+            var(--elevation8);
+        }
       }
 
       .download-card:first-child .button-primary {
@@ -990,18 +1029,36 @@
       }
 
       /* ── Staggered Entrance Delays ── */
-      .features-grid .feature-card:nth-child(1) { transition-delay: 0s; }
-      .features-grid .feature-card:nth-child(2) { transition-delay: 0.1s; }
-      .features-grid .feature-card:nth-child(3) { transition-delay: 0.2s; }
-      .features-grid .feature-card:nth-child(4) { transition-delay: 0.3s; }
+      .features-grid .feature-card:nth-child(1) {
+        transition-delay: 0s;
+      }
+      .features-grid .feature-card:nth-child(2) {
+        transition-delay: 0.1s;
+      }
+      .features-grid .feature-card:nth-child(3) {
+        transition-delay: 0.2s;
+      }
+      .features-grid .feature-card:nth-child(4) {
+        transition-delay: 0.3s;
+      }
 
-      .download-options .download-card:nth-child(1) { transition-delay: 0s; }
-      .download-options .download-card:nth-child(2) { transition-delay: 0.15s; }
+      .download-options .download-card:nth-child(1) {
+        transition-delay: 0s;
+      }
+      .download-options .download-card:nth-child(2) {
+        transition-delay: 0.15s;
+      }
 
       /* ── Win11 Dot Hover Glow ── */
-      .win-dot-close:hover { box-shadow: 0 0 8px #e81123; }
-      .win-dot-min:hover   { box-shadow: 0 0 8px #f7b731; }
-      .win-dot-max:hover   { box-shadow: 0 0 8px #28a745; }
+      .win-dot-close:hover {
+        box-shadow: 0 0 8px #e81123;
+      }
+      .win-dot-min:hover {
+        box-shadow: 0 0 8px #f7b731;
+      }
+      .win-dot-max:hover {
+        box-shadow: 0 0 8px #28a745;
+      }
     </style>
   </head>
   <body>
@@ -1178,14 +1235,14 @@
                   <div class="win-phone-screen">
                     <div class="win-phone-placeholder">
                       <svg viewBox="0 0 240 480" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="240" height="480" fill="#1a1a2e"/>
-                        <rect x="16" y="48" width="208" height="32" rx="8" fill="#2a2a4e"/>
-                        <rect x="16" y="96" width="120" height="16" rx="4" fill="#3a3a5e"/>
-                        <rect x="16" y="128" width="208" height="200" rx="12" fill="#2a2a4e"/>
-                        <circle cx="120" cy="280" r="40" fill="#3a3a5e"/>
-                        <rect x="16" y="350" width="60" height="80" rx="8" fill="#2a2a4e"/>
-                        <rect x="88" y="350" width="60" height="80" rx="8" fill="#2a2a4e"/>
-                        <rect x="160" y="350" width="60" height="80" rx="8" fill="#2a2a4e"/>
+                        <rect width="240" height="480" fill="#1a1a2e" />
+                        <rect x="16" y="48" width="208" height="32" rx="8" fill="#2a2a4e" />
+                        <rect x="16" y="96" width="120" height="16" rx="4" fill="#3a3a5e" />
+                        <rect x="16" y="128" width="208" height="200" rx="12" fill="#2a2a4e" />
+                        <circle cx="120" cy="280" r="40" fill="#3a3a5e" />
+                        <rect x="16" y="350" width="60" height="80" rx="8" fill="#2a2a4e" />
+                        <rect x="88" y="350" width="60" height="80" rx="8" fill="#2a2a4e" />
+                        <rect x="160" y="350" width="60" height="80" rx="8" fill="#2a2a4e" />
                       </svg>
                     </div>
                   </div>
@@ -1291,9 +1348,7 @@
       <section id="download" class="section" aria-labelledby="download-title">
         <div class="section-inner">
           <h2 id="download-title" class="section-title reveal">获取 Pictelio</h2>
-          <p class="section-lead">
-            当前公共版本通过 GitHub Releases 分发，F-Droid 上架准备中。
-          </p>
+          <p class="section-lead">当前公共版本通过 GitHub Releases 分发，F-Droid 上架准备中。</p>
           <div class="download-options">
             <div class="download-card reveal">
               <span class="badge">推荐</span>
@@ -1310,10 +1365,23 @@
               <div class="fingerprint-row">
                 <span class="fingerprint-label">SHA-256:</span>
                 <code class="fingerprint-value">AB3F...E7D2</code>
-                <button type="button" class="fingerprint-copy" aria-label="复制指纹" data-fingerprint="AB3F...E7D2">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                <button
+                  type="button"
+                  class="fingerprint-copy"
+                  aria-label="复制指纹"
+                  data-fingerprint="AB3F...E7D2"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                   </svg>
                 </button>
               </div>
@@ -1361,8 +1429,10 @@
               株式会社的商标或注册商标。本应用<strong>仅供学习与研究目的</strong>使用。
             </p>
             <p>
-              应用中展示的所有插画均来自 <a href="https://www.pixiv.net" target="_blank" rel="noopener">Pixiv</a>
-              公开 API，版权归原作者所有。本项目<strong>不存储、托管、分发或修改</strong>任何受版权保护的内容，
+              应用中展示的所有插画均来自
+              <a href="https://www.pixiv.net" target="_blank" rel="noopener">Pixiv</a>
+              公开
+              API，版权归原作者所有。本项目<strong>不存储、托管、分发或修改</strong>任何受版权保护的内容，
               它仅作为第三方客户端，检索 Pixiv 公开 API 中已有的数据。
             </p>
             <p>
@@ -1373,9 +1443,7 @@
               与相关法律法规。<strong>请在 24 小时内删除本应用及相关数据</strong>，
               除非你获得版权所有者的明确许可。开发者不对用户生成或传播的内容负责。
             </p>
-            <p>
-              使用本软件即表示你已阅读并理解此免责声明。如不同意，请勿使用或分发本项目。
-            </p>
+            <p>使用本软件即表示你已阅读并理解此免责声明。如不同意，请勿使用或分发本项目。</p>
           </div>
         </div>
       </section>
@@ -1401,54 +1469,58 @@
         </div>
       </div>
     </footer>
-  <script>
-    // Reveal highlight effect - mouse-position-aware gradient on cards
-    document.querySelectorAll('.feature-card').forEach(card => {
-      card.addEventListener('mousemove', e => {
-        const rect = card.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-        const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-        card.style.setProperty('--mouseX', x + '%');
-        card.style.setProperty('--mouseY', y + '%');
+    <script>
+      // Reveal highlight effect - mouse-position-aware gradient on cards
+      document.querySelectorAll(".feature-card").forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = (((e.clientX - rect.left) / rect.width) * 100).toFixed(1);
+          const y = (((e.clientY - rect.top) / rect.height) * 100).toFixed(1);
+          card.style.setProperty("--mouseX", x + "%");
+          card.style.setProperty("--mouseY", y + "%");
+        });
       });
-    });
 
-    // Button ripple effect (Fluent style)
-    document.querySelectorAll('.button').forEach(btn => {
-      btn.addEventListener('mousedown', e => {
-        const rect = btn.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-        const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-        btn.style.setProperty('--rippleX', x + '%');
-        btn.style.setProperty('--rippleY', y + '%');
+      // Button ripple effect (Fluent style)
+      document.querySelectorAll(".button").forEach((btn) => {
+        btn.addEventListener("mousedown", (e) => {
+          const rect = btn.getBoundingClientRect();
+          const x = (((e.clientX - rect.left) / rect.width) * 100).toFixed(1);
+          const y = (((e.clientY - rect.top) / rect.height) * 100).toFixed(1);
+          btn.style.setProperty("--rippleX", x + "%");
+          btn.style.setProperty("--rippleY", y + "%");
+        });
       });
-    });
 
-    // Fingerprint copy to clipboard
-    document.querySelectorAll('.fingerprint-copy').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const text = btn.dataset.fingerprint;
-        try {
-          await navigator.clipboard.writeText(text);
-          const original = btn.innerHTML;
-          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
-          setTimeout(() => btn.innerHTML = original, 2000);
-        } catch (e) {
-          // fallback - do nothing
-        }
+      // Fingerprint copy to clipboard
+      document.querySelectorAll(".fingerprint-copy").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const text = btn.dataset.fingerprint;
+          try {
+            await navigator.clipboard.writeText(text);
+            const original = btn.innerHTML;
+            btn.innerHTML =
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
+            setTimeout(() => (btn.innerHTML = original), 2000);
+          } catch (e) {
+            // fallback - do nothing
+          }
+        });
       });
-    });
-    // Scroll reveal animation
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        revealObserver.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+      // Scroll reveal animation
+      const revealObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              revealObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
+      );
 
-  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
-</script>
-</body>
+      document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+    </script>
+  </body>
 </html>

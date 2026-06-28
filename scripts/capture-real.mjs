@@ -10,8 +10,24 @@ import { join } from "node:path";
 import { existsSync, mkdirSync, copyFileSync, writeFileSync } from "node:fs";
 
 const BASE_URL = "http://localhost:5173";
-const OUT_EN = join(process.cwd(), "fastlane", "metadata", "android", "en-US", "images", "phoneScreenshots");
-const OUT_ZH = join(process.cwd(), "fastlane", "metadata", "android", "zh-CN", "images", "phoneScreenshots");
+const OUT_EN = join(
+  process.cwd(),
+  "fastlane",
+  "metadata",
+  "android",
+  "en-US",
+  "images",
+  "phoneScreenshots",
+);
+const OUT_ZH = join(
+  process.cwd(),
+  "fastlane",
+  "metadata",
+  "android",
+  "zh-CN",
+  "images",
+  "phoneScreenshots",
+);
 
 const REFRESH_TOKEN = process.env.PIXIV_REFRESH_TOKEN || "YOUR_REFRESH_TOKEN_HERE";
 if (!REFRESH_TOKEN || REFRESH_TOKEN === "YOUR_REFRESH_TOKEN_HERE") {
@@ -23,7 +39,9 @@ const VIEWPORT = { width: 540, height: 960 };
 const DEVICE_SCALE_FACTOR = 2;
 
 /** @param {string} message */
-function log(message) { console.log(`[capture] ${message}`); }
+function log(message) {
+  console.log(`[capture] ${message}`);
+}
 
 function ensureDirs() {
   for (const dir of [OUT_EN, OUT_ZH]) {
@@ -46,7 +64,9 @@ async function dismissAgeGate(page) {
     await btn.click();
     log("Age gate dismissed");
     await page.waitForTimeout(500);
-  } catch { /* not shown */ }
+  } catch {
+    /* not shown */
+  }
 }
 
 async function main() {
@@ -58,7 +78,8 @@ async function main() {
     deviceScaleFactor: DEVICE_SCALE_FACTOR,
     isMobile: true,
     hasTouch: true,
-    userAgent: "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    userAgent:
+      "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
   });
   const page = await context.newPage();
 
@@ -109,13 +130,17 @@ async function main() {
     try {
       const hrefs = await page.evaluate(() => {
         const links = document.querySelectorAll('a[href*="/illust/"]');
-        return Array.from(links).map(a => a.getAttribute('href')).slice(0, 3);
+        return Array.from(links)
+          .map((a) => a.getAttribute("href"))
+          .slice(0, 3);
       });
       log(`Found illust links: ${JSON.stringify(hrefs)}`);
       if (hrefs.length > 0) {
         await page.goto(`${BASE_URL}${hrefs[0]}`, { waitUntil: "networkidle", timeout: 15000 });
       }
-    } catch { /* give up */ }
+    } catch {
+      /* give up */
+    }
   }
   await page.waitForTimeout(2000);
   log("Capturing 02_detail...");
@@ -141,7 +166,9 @@ async function main() {
     try {
       await accountSection.scrollIntoViewIfNeeded({ timeout: 3000 });
       await page.waitForTimeout(500);
-    } catch { /* fine */ }
+    } catch {
+      /* fine */
+    }
   } catch (err) {
     log(`Settings button issue: ${err.message}`);
   }

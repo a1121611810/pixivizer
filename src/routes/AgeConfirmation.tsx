@@ -83,23 +83,14 @@ const AgeConfirmation: Component = () => {
         <div
           class="w-full max-w-sm surface-dialog p-8 flex flex-col items-center gap-6"
           style={{
-            animation:
-              "fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both",
+            animation: "fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both",
           }}
         >
           {/* 图标 */}
           <div class="w-12 h-12 text-[var(--colorBrandForeground1)] flex-shrink-0">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d={shieldIcon.regular}
-                fill="currentColor"
-                opacity="0.12"
-              />
-              <path
-                d={shieldIcon.filled}
-                fill="currentColor"
-                opacity="1"
-              />
+              <path d={shieldIcon.regular} fill="currentColor" opacity="0.12" />
+              <path d={shieldIcon.filled} fill="currentColor" opacity="1" />
             </svg>
           </div>
 
