@@ -30,6 +30,16 @@ import {
   ageConfirmed,
   isAdult,
   setAgeConfirmation,
+  autoCheckUpdate,
+  hasUpdate,
+  isCheckingUpdate,
+  latestVersion,
+  setAutoCheckUpdate,
+  setHasUpdate,
+  setIsCheckingUpdate,
+  setLatestChangelog,
+  setLatestReleaseUrl,
+  setLatestVersion,
   resetUiStore,
 } from "../stores/uiStore";
 import { isLoggedIn, logout } from "../stores/authStore";
@@ -38,6 +48,7 @@ import { resetBlockedIds } from "../stores/blockStore";
 import { resetReportedIds } from "../stores/reportStore";
 import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 import BlocklistSheet from "./BlocklistSheet";
+import { checkForUpdate } from "../services/updateService";
 
 // ── Fluent UI System Icons (24px) — SVG path data ──
 // Sourced from microsoft/fluentui-system-icons
@@ -1079,6 +1090,139 @@ const SettingsSheet: Component = () => {
                   fill="currentColor"
                 />
               </svg>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div class="divider mx-5" />
+
+          {/* ── 检测更新 ── */}
+          <div class="px-5 py-3 flex flex-col">
+            <p class="[font-size:var(--fontSizeBase200)] font-semibold text-[var(--colorNeutralForeground3)] uppercase tracking-wide mb-1">
+              检测更新
+            </p>
+
+            {/* 启动时检查更新 — toggle row */}
+            <div
+              class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
+              onClick={() => setAutoCheckUpdate(!autoCheckUpdate())}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setAutoCheckUpdate(!autoCheckUpdate());
+                }
+              }}
+              role="switch"
+              aria-checked={autoCheckUpdate()}
+              tabindex="0"
+              aria-label="启动时检查更新"
+            >
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)] flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M12 4.5a7.5 7.5 0 0 0-5.303 12.803.75.75 0 0 0 1.06-1.06A6 6 0 1 1 18 12h-3.75a.75.75 0 0 0-.53 1.28l3.25 3.247a.75.75 0 0 0 1.06 0l3.25-3.247A.75.75 0 0 0 20.28 12H16.5A7.5 7.5 0 0 0 12 4.5z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                    启动时检查更新
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                    每次打开 App 时后台检测新版本
+                  </p>
+                </div>
+              </div>
+              <div
+                class="flex-shrink-0 w-11 h-5 rounded-full relative transition-colors duration-[var(--durationFast)]"
+                style={{
+                  "background-color": autoCheckUpdate()
+                    ? "var(--colorCompoundBrandBackground)"
+                    : "var(--colorNeutralStroke2)",
+                }}
+              >
+                <div
+                  class="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-[var(--elevation2)] transition-transform duration-[var(--durationFast)]"
+                  style={{
+                    transform: autoCheckUpdate() ? "translateX(1.375rem)" : "translateX(0.125rem)",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* 检查更新 — button row */}
+            <div
+              class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
+              onClick={async () => {
+                setIsCheckingUpdate(true);
+                const result = await checkForUpdate();
+                setHasUpdate(result.hasUpdate);
+                setLatestVersion(result.latestVersion);
+                setLatestReleaseUrl(result.latestReleaseUrl);
+                setLatestChangelog(result.latestChangelog);
+                setIsCheckingUpdate(false);
+                // If update available, open the release page
+                if (result.hasUpdate && result.latestReleaseUrl) {
+                  window.open(result.latestReleaseUrl, "_blank", "noopener,noreferrer");
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  // Trigger same logic as onClick
+                  setIsCheckingUpdate(true);
+                  checkForUpdate().then((result) => {
+                    setHasUpdate(result.hasUpdate);
+                    setLatestVersion(result.latestVersion);
+                    setLatestReleaseUrl(result.latestReleaseUrl);
+                    setLatestChangelog(result.latestChangelog);
+                    setIsCheckingUpdate(false);
+                    if (result.hasUpdate && result.latestReleaseUrl) {
+                      window.open(result.latestReleaseUrl, "_blank", "noopener,noreferrer");
+                    }
+                  });
+                }
+              }}
+              role="button"
+              tabindex="0"
+              aria-label="检查更新"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)] flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.25 14.66l-4-4a.75.75 0 0 1 1.06-1.06l2.97 2.97 5.22-5.97a.75.75 0 1 1 1.14 1l-5.75 6.5a.75.75 0 0 1-.56.25.75.75 0 0 1-.55-.23l-.53-.52V16.66z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                  检查更新
+                </p>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0 ml-3">
+                {/* Loading spinner */}
+                <Show when={isCheckingUpdate()}>
+                  <div
+                    class="w-4 h-4 [border-width:var(--strokeWidthThick)] border-solid [border-color:var(--colorNeutralStroke2)] [border-top-color:var(--colorBrandStroke1)] rounded-[var(--borderRadiusCircular)]"
+                    style="animation: spin 1s linear infinite"
+                  />
+                </Show>
+                {/* Latest version tag — only visible after check */}
+                <Show when={!isCheckingUpdate() && latestVersion() !== ""}>
+                  <span
+                    class="[font-size:var(--fontSizeBase200)] font-semibold leading-snug"
+                    classList={{
+                      "text-[var(--colorStatusSuccessForeground1)]": !hasUpdate(),
+                      "text-[var(--colorBrandForeground1)]": hasUpdate(),
+                    }}
+                  >
+                    {hasUpdate() ? `v${latestVersion()} ✨` : `v${APP_VERSION} ✅`}
+                  </span>
+                </Show>
+              </div>
             </div>
           </div>
 
