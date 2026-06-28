@@ -129,6 +129,19 @@
         --elevation4: 0 0 2px var(--shadowAmbient), 0 2px 4px var(--shadowKey);
         --elevation8: 0 0 2px var(--shadowAmbient), 0 4px 8px var(--shadowKey);
         --elevation16: 0 0 2px var(--shadowAmbient), 0 8px 16px var(--shadowKey);
+
+        /* ── Mica & Acrylic ── */
+        --micaBase: #f3f3f3;
+        --micaBaseDark: #1a1a1a;
+        --acrylicBackground: rgba(255, 255, 255, 0.5);
+        --acrylicBorder: rgba(0, 0, 0, 0.06);
+        --acrylicBlur: 40px;
+        --acrylicCardBackground: rgba(255, 255, 255, 0.4);
+        --acrylicCardBlur: 20px;
+        --acrylicCardBorder: rgba(0, 0, 0, 0.06);
+        --revealHighlight: radial-gradient(circle at var(--mouseX, 50%) var(--mouseY, 50%), rgba(0, 120, 212, 0.08) 0%, transparent 60%);
+        --elevationWin11: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.04);
+        --elevationWin11Hover: 0 4px 16px rgba(0,0,0,0.12), 0 16px 48px rgba(0,0,0,0.06);
       }
 
       @media (prefers-color-scheme: dark) {
@@ -158,6 +171,15 @@
           --shadowKey: rgba(0, 0, 0, 0.28);
 
           --colorPictelioTealBgSubtle: #0f2e4f;
+
+          --micaBase: var(--micaBaseDark);
+          --acrylicBackground: rgba(32, 32, 32, 0.7);
+          --acrylicBorder: rgba(255, 255, 255, 0.08);
+          --acrylicCardBackground: rgba(32, 32, 32, 0.6);
+          --acrylicCardBorder: rgba(255, 255, 255, 0.08);
+          --revealHighlight: radial-gradient(circle at var(--mouseX, 50%) var(--mouseY, 50%), rgba(96, 170, 255, 0.12) 0%, transparent 60%);
+          --elevationWin11: 0 2px 8px rgba(0,0,0,0.24), 0 8px 32px rgba(0,0,0,0.16);
+          --elevationWin11Hover: 0 4px 16px rgba(0,0,0,0.32), 0 16px 48px rgba(0,0,0,0.24);
         }
       }
 
