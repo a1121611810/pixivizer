@@ -1,0 +1,6 @@
+1→🎨 品牌颜色全线迁移：从 Fluent Blue 迁移至 Logo #2b579a 深蓝色板
+2→🌐 官网 Fluent Design 重构：Mica 背景、Acrylic 毛玻璃、Win11 窗口 Mockup
+3→🧭 年龄确认：从内嵌弹窗改为独立路由页面
+4→🐛 ImageCard 修复：修正 AI 标签显示条件及文字对应关系
+5→📝 README 与文档完全重构：双语布局、新截图、MIT 许可
+6→🧹 杂项清理与脚本改进
