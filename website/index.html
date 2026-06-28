@@ -14,12 +14,10 @@
     <style>
       :root {
         /* ── Pictelio brand ── */
-        --colorPictelioTeal: #0078d4;
-        --colorPictelioTealDark: #106ebe;
-        --colorPictelioTealDarker: #005a9e;
-        --colorPictelioTealLight: #2899f5;
-        --colorPictelioTealLighter: #60aaff;
-        --colorPictelioTealBgSubtle: #e6f5ff;
+        --colorPictelioDeep: #2b579a;
+        --colorPictelioMid: #5a9fd4;
+        --colorPictelioLight: #7ab8e8;
+        --colorPictelioBgSubtle: #ede6d8;
 
         --brandPrimary: var(--colorBrandBackground);
         --brandOnPrimary: var(--colorNeutralForegroundOnBrand);
@@ -117,12 +115,13 @@
         --colorNeutralStroke1: #d1d1d1;
         --colorNeutralStroke2: #e0e0e0;
 
-        --colorBrandBackground: var(--colorPictelioTeal);
-        --colorBrandBackgroundHover: var(--colorPictelioTealDark);
-        --colorBrandBackgroundPressed: var(--colorPictelioTealDarker);
-        --colorBrandForeground1: var(--colorPictelioTeal);
-        --colorBrandForegroundLink: var(--colorPictelioTealDark);
-        --colorBrandForegroundLinkHover: var(--colorPictelioTealDarker);
+        --colorBrandBackground: var(--colorPictelioDeep);
+        --colorBrandBackgroundHover: #3a6fb5;
+        --colorBrandBackgroundPressed: #1e3d6e;
+        --colorBrandForeground1: var(--colorPictelioDeep);
+        --colorBrandForegroundLink: var(--colorPictelioDeep);
+        --colorBrandForegroundLinkHover: var(--colorPictelioMid);
+        --colorBrandForegroundLinkPressed: #1e3d6e;
         --colorNeutralForegroundOnBrand: #ffffff;
 
         --shadowAmbient: rgba(0, 0, 0, 0.12);
@@ -142,7 +141,7 @@
         --acrylicCardBackground: rgba(255, 255, 255, 0.4);
         --acrylicCardBlur: 20px;
         --acrylicCardBorder: rgba(0, 0, 0, 0.06);
-        --revealHighlight: radial-gradient(circle at var(--mouseX, 50%) var(--mouseY, 50%), rgba(0, 120, 212, 0.08) 0%, transparent 60%);
+        --revealHighlight: radial-gradient(circle at var(--mouseX, 50%) var(--mouseY, 50%), rgba(43, 87, 154, 0.08) 0%, transparent 60%);
         --elevationWin11: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.04);
         --elevationWin11Hover: 0 4px 16px rgba(0,0,0,0.12), 0 16px 48px rgba(0,0,0,0.06);
       }
@@ -163,24 +162,24 @@
           --colorNeutralStroke1: #666666;
           --colorNeutralStroke2: #4d4d4d;
 
-          --colorBrandBackground: var(--colorPictelioTealLight);
-          --colorBrandBackgroundHover: var(--colorPictelioTeal);
-          --colorBrandBackgroundPressed: var(--colorPictelioTealDark);
-          --colorBrandForeground1: var(--colorPictelioTealLighter);
-          --colorBrandForegroundLink: var(--colorPictelioTealLighter);
-          --colorBrandForegroundLinkHover: var(--colorPictelioTealLight);
+          --colorBrandBackground: var(--colorPictelioMid);
+          --colorBrandBackgroundHover: var(--colorPictelioLight);
+          --colorBrandBackgroundPressed: #4285b4;
+          --colorBrandForeground1: var(--colorPictelioLight);
+          --colorBrandForegroundLink: var(--colorPictelioLight);
+          --colorBrandForegroundLinkHover: #8fc9f0;
 
           --shadowAmbient: rgba(0, 0, 0, 0.24);
           --shadowKey: rgba(0, 0, 0, 0.28);
 
-          --colorPictelioTealBgSubtle: #0f2e4f;
+          --colorPictelioBgSubtle: #1a2438;
 
           --micaBase: var(--micaBaseDark);
           --acrylicBackground: rgba(32, 32, 32, 0.7);
           --acrylicBorder: rgba(255, 255, 255, 0.08);
           --acrylicCardBackground: rgba(32, 32, 32, 0.6);
           --acrylicCardBorder: rgba(255, 255, 255, 0.08);
-          --revealHighlight: radial-gradient(circle at var(--mouseX, 50%) var(--mouseY, 50%), rgba(96, 170, 255, 0.12) 0%, transparent 60%);
+          --revealHighlight: radial-gradient(circle at var(--mouseX, 50%) var(--mouseY, 50%), rgba(90, 159, 212, 0.12) 0%, transparent 60%);
           --elevationWin11: 0 2px 8px rgba(0,0,0,0.24), 0 8px 32px rgba(0,0,0,0.16);
           --elevationWin11Hover: 0 4px 16px rgba(0,0,0,0.32), 0 16px 48px rgba(0,0,0,0.24);
         }
@@ -204,8 +203,8 @@
         color: var(--colorNeutralForeground1);
         background-color: var(--colorNeutralBackground1);
         background-image:
-          radial-gradient(ellipse at 80% 0%, var(--colorPictelioTealBgSubtle) 0%, transparent 60%),
-          radial-gradient(ellipse at 20% 100%, rgba(0,120,212,0.03) 0%, transparent 40%);
+          radial-gradient(ellipse at 80% 0%, var(--colorPictelioBgSubtle) 0%, transparent 60%),
+          radial-gradient(ellipse at 20% 100%, rgba(43,87,154,0.03) 0%, transparent 40%);
         background-attachment: fixed;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -644,7 +643,7 @@
         align-items: center;
         justify-content: center;
         border-radius: var(--borderRadiusXLarge);
-        background-color: var(--colorPictelioTealBgSubtle);
+        background-color: var(--colorPictelioBgSubtle);
         color: var(--colorBrandForeground1);
         margin-bottom: var(--spacingVerticalL);
       }
@@ -680,7 +679,7 @@
         max-width: 800px;
         margin: 0 auto;
         padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
-        background-color: var(--colorPictelioTealBgSubtle);
+        background-color: var(--colorPictelioBgSubtle);
         border: 1px solid var(--colorNeutralStroke2);
         border-radius: var(--borderRadius3XLarge);
       }
@@ -763,7 +762,7 @@
         border-radius: var(--borderRadiusCircular);
         font-size: var(--fontSizeBase200);
         font-weight: var(--fontWeightSemibold);
-        background-color: var(--colorPictelioTealBgSubtle);
+        background-color: var(--colorPictelioBgSubtle);
         color: var(--colorBrandForeground1);
         margin-bottom: var(--spacingVerticalM);
       }
@@ -819,7 +818,7 @@
         display: inline;
         padding: 0 var(--spacingHorizontalS);
         border-radius: var(--borderRadiusSmall);
-        background-color: var(--colorPictelioTealBgSubtle);
+        background-color: var(--colorPictelioBgSubtle);
         color: var(--colorBrandForeground1);
         font-weight: var(--fontWeightSemibold);
       }
