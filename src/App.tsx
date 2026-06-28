@@ -12,7 +12,10 @@ import {
   loadShowDetailStairsPreference,
   loadAgePreference,
   ageConfirmed,
+  autoCheckUpdate,
+  loadAutoCheckUpdatePreference,
 } from "./stores/uiStore";
+import { checkForUpdate } from "./services/updateService";
 import {
   initPredictiveBack,
   setPredictiveBackEnabled,
@@ -87,10 +90,16 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadLayoutModePreference();
     await loadShowDetailStairsPreference();
     await loadAgePreference();
+    await loadAutoCheckUpdatePreference();
 
     // Load user content moderation state
     await loadReportedIds();
     await loadBlockedIds();
+
+    // Silently check for updates on startup if toggle is enabled
+    if (autoCheckUpdate()) {
+      checkForUpdate(); // fire-and-forget, non-blocking
+    }
 
     // Initialize route stack tracking
     clearRouteStack();
