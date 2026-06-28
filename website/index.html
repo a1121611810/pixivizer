@@ -719,21 +719,21 @@
       }
 
       .download-card {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
-        background-color: var(--colorNeutralBackground2);
-        border: 1px solid var(--colorNeutralStroke2);
-        border-radius: var(--borderRadius3XLarge);
-        transition:
-          background-color var(--durationFast) var(--curveEasyEase),
-          box-shadow var(--durationFast) var(--curveEasyEase);
+        padding: var(--spacingVerticalXXXXL) var(--spacingHorizontalXXL);
+        border-radius: var(--borderRadius2XLarge);
+        background: var(--acrylicCardBackground);
+        backdrop-filter: blur(var(--acrylicCardBlur));
+        -webkit-backdrop-filter: blur(var(--acrylicCardBlur));
+        border: 1px solid var(--acrylicCardBorder);
+        box-shadow: var(--elevationWin11);
+        position: relative;
+        transition: transform var(--durationGentle) var(--curveEasyEase),
+                    box-shadow var(--durationGentle) var(--curveEasyEase);
       }
 
       .download-card:hover {
-        background-color: var(--colorNeutralBackground1);
-        box-shadow: var(--elevation8);
+        transform: translateY(-2px);
+        box-shadow: var(--elevationWin11Hover);
       }
 
       .download-card .button {
@@ -910,6 +910,53 @@
         clip: rect(0, 0, 0, 0);
         white-space: nowrap;
         border: 0;
+      }
+      /* ── Trust Signals ── */
+      .fingerprint-row {
+        display: flex;
+        align-items: center;
+        gap: var(--spacingHorizontalS);
+        margin-top: var(--spacingVerticalL);
+        padding: var(--spacingVerticalS) var(--spacingHorizontalM);
+        background: var(--acrylicCardBackground);
+        border-radius: var(--borderRadiusMedium);
+        font-size: var(--fontSizeBase200);
+      }
+
+      .fingerprint-label {
+        color: var(--colorNeutralForeground3);
+        font-weight: var(--fontWeightMedium);
+      }
+
+      .fingerprint-value {
+        font-family: "Cascadia Code", "SF Mono", "Fira Code", "Consolas", monospace;
+        color: var(--colorNeutralForeground2);
+        letter-spacing: 0.05em;
+      }
+
+      .fingerprint-copy {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: var(--borderRadiusSmall);
+        background: transparent;
+        color: var(--colorNeutralForeground3);
+        cursor: pointer;
+        transition: background var(--durationFast) var(--curveEasyEase),
+                    color var(--durationFast) var(--curveEasyEase);
+        margin-left: auto;
+      }
+
+      .fingerprint-copy:hover {
+        background: var(--colorNeutralBackground1Hover);
+        color: var(--colorNeutralForeground1);
+      }
+
+      .fingerprint-copy:active {
+        background: var(--colorNeutralBackground1Pressed);
       }
     </style>
   </head>
@@ -1248,6 +1295,16 @@
               >
                 前往下载
               </a>
+              <div class="fingerprint-row">
+                <span class="fingerprint-label">SHA-256:</span>
+                <code class="fingerprint-value">AB3F...E7D2</code>
+                <button type="button" class="fingerprint-copy" aria-label="复制指纹" data-fingerprint="AB3F...E7D2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             <div class="download-card">
               <span class="badge">即将上架</span>
@@ -1378,6 +1435,20 @@
           const nextIndex = (activeIndex + 1) % slides.length;
           slides[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }, 4000);
+      });
+      // Fingerprint copy to clipboard
+      document.querySelectorAll('.fingerprint-copy').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const text = btn.dataset.fingerprint;
+          try {
+            await navigator.clipboard.writeText(text);
+            const original = btn.innerHTML;
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
+            setTimeout(() => btn.innerHTML = original, 2000);
+          } catch (e) {
+            // fallback - do nothing
+          }
+        });
       });
     }
   </script>
