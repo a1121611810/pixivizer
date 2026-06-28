@@ -588,37 +588,50 @@
       /* ── Feature cards ── */
       .features-grid {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
         gap: var(--spacingHorizontalXL);
+        margin-top: var(--spacingVerticalXXXXL);
       }
 
-      @media (min-width: 640px) {
+      @media (max-width: 480px) {
         .features-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-
-      @media (min-width: 1024px) {
-        .features-grid {
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: 1fr;
         }
       }
 
       .feature-card {
-        padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
-        background-color: var(--colorNeutralBackground2);
-        border: 1px solid var(--colorNeutralStroke2);
-        border-radius: var(--borderRadius3XLarge);
-        transition:
-          background-color var(--durationFast) var(--curveEasyEase),
-          transform var(--durationFast) var(--curveEasyEase),
-          box-shadow var(--durationFast) var(--curveEasyEase);
+        position: relative;
+        overflow: hidden;
+        padding: var(--spacingVerticalXXXL) var(--spacingHorizontalXXL);
+        border-radius: var(--borderRadius2XLarge);
+        background: var(--acrylicCardBackground);
+        backdrop-filter: blur(var(--acrylicCardBlur));
+        -webkit-backdrop-filter: blur(var(--acrylicCardBlur));
+        border: 1px solid var(--acrylicCardBorder);
+        box-shadow: var(--elevationWin11);
+        transition: transform var(--durationGentle) var(--curveEasyEase),
+                    box-shadow var(--durationGentle) var(--curveEasyEase);
+        cursor: default;
+      }
+
+      .feature-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: var(--revealHighlight);
+        opacity: 0;
+        transition: opacity var(--durationFast) var(--curveEasyEase);
+        pointer-events: none;
       }
 
       .feature-card:hover {
-        background-color: var(--colorNeutralBackground1);
-        box-shadow: var(--elevation8);
         transform: translateY(-2px);
+        box-shadow: var(--elevationWin11Hover);
+      }
+
+      .feature-card:hover::before {
+        opacity: 1;
       }
 
       .feature-icon {
@@ -1207,5 +1220,17 @@
         </div>
       </div>
     </footer>
-  </body>
+  <script>
+    // Reveal highlight effect - mouse-position-aware gradient on cards
+    document.querySelectorAll('.feature-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+        const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+        card.style.setProperty('--mouseX', x + '%');
+        card.style.setProperty('--mouseY', y + '%');
+      });
+    });
+  </script>
+</body>
 </html>
