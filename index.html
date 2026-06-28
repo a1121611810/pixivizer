@@ -914,6 +914,95 @@
         opacity: 1;
         transform: translateY(0);
       }
+
+      /* ── Nav Underline Animation (Fluent) ── */
+      .header-nav a {
+        position: relative;
+        text-decoration: none;
+      }
+
+      .header-nav a::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        border-radius: 1px;
+        background: currentColor;
+        transition: width var(--durationGentle) var(--curveEasyEase),
+                    left var(--durationGentle) var(--curveEasyEase);
+      }
+
+      .header-nav a:hover::after {
+        width: 100%;
+        left: 0;
+      }
+
+      /* ── Button Ripple (Fluent) ── */
+      .button {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .button::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at var(--rippleX, 50%) var(--rippleY, 50%), rgba(255,255,255,0.3) 0%, transparent 60%);
+        opacity: 0;
+        transition: opacity 0.4s ease-out;
+        pointer-events: none;
+      }
+
+      .button:active::after {
+        opacity: 1;
+        transition: opacity 0s;
+      }
+
+      /* ── Hero Logo Gentle Float ── */
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+      }
+
+      .hero-logo {
+        animation: float 4s var(--curveEasyEase) infinite;
+      }
+
+      /* ── Win11 Window Subtle Glow ── */
+      @keyframes glowPulse {
+        0%, 100% { box-shadow: var(--elevationWin11); }
+        50% { box-shadow: var(--elevationWin11Hover); }
+      }
+
+      .win-window {
+        animation: glowPulse 4s var(--curveEasyEase) infinite;
+      }
+
+      /* ── Download CTA Gentle Pulse ── */
+      @keyframes ctaPulse {
+        0%, 100% { box-shadow: var(--elevation4); }
+        50% { box-shadow: 0 0 0 4px rgba(0,120,212,0.15), var(--elevation8); }
+      }
+
+      .download-card:first-child .button-primary {
+        animation: ctaPulse 3s var(--curveEasyEase) infinite;
+      }
+
+      /* ── Staggered Entrance Delays ── */
+      .features-grid .feature-card:nth-child(1) { transition-delay: 0s; }
+      .features-grid .feature-card:nth-child(2) { transition-delay: 0.1s; }
+      .features-grid .feature-card:nth-child(3) { transition-delay: 0.2s; }
+      .features-grid .feature-card:nth-child(4) { transition-delay: 0.3s; }
+
+      .download-options .download-card:nth-child(1) { transition-delay: 0s; }
+      .download-options .download-card:nth-child(2) { transition-delay: 0.15s; }
+
+      /* ── Win11 Dot Hover Glow ── */
+      .win-dot-close:hover { box-shadow: 0 0 8px #e81123; }
+      .win-dot-min:hover   { box-shadow: 0 0 8px #f7b731; }
+      .win-dot-max:hover   { box-shadow: 0 0 8px #28a745; }
     </style>
   </head>
   <body>
@@ -1322,6 +1411,17 @@
         const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
         card.style.setProperty('--mouseX', x + '%');
         card.style.setProperty('--mouseY', y + '%');
+      });
+    });
+
+    // Button ripple effect (Fluent style)
+    document.querySelectorAll('.button').forEach(btn => {
+      btn.addEventListener('mousedown', e => {
+        const rect = btn.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+        const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+        btn.style.setProperty('--rippleX', x + '%');
+        btn.style.setProperty('--rippleY', y + '%');
       });
     });
 
