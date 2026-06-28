@@ -96,44 +96,44 @@
   --curveLinear: cubic-bezier(0, 0, 1, 1);
 
   /* ── Colors: Light theme ── */
-  --colorNeutralBackground1: #ffffff;
-  --colorNeutralBackground2: #fafafa;
-  --colorNeutralBackground3: #f5f5f5;
-  --colorNeutralBackground1Hover: #f5f5f5;
-  --colorNeutralBackground1Pressed: #ebebeb;
-  --colorNeutralBackground1Selected: #ebebeb;
+  --colorNeutralBackground1: #fefcf8;
+  --colorNeutralBackground2: #f7f4ee;
+  --colorNeutralBackground3: #f0ece4;
+  --colorNeutralBackground1Hover: #f0ece4;
+  --colorNeutralBackground1Pressed: #e6e2d8;
+  --colorNeutralBackground1Selected: #e6e2d8;
 
-  --colorNeutralForeground1: #242424;
-  --colorNeutralForeground2: #424242;
-  --colorNeutralForeground3: #616161;
-  --colorNeutralForegroundDisabled: #bdbdbd;
+  --colorNeutralForeground1: #2c2822;
+  --colorNeutralForeground2: #4a453e;
+  --colorNeutralForeground3: #696358;
+  --colorNeutralForegroundDisabled: #bbb5aa;
 
-  --colorNeutralStroke1: #d1d1d1;
-  --colorNeutralStroke2: #e0e0e0;
-  --colorNeutralStrokeAccessible: #616161;
-  --colorNeutralStrokeAccessibleHover: #575757;
-  --colorNeutralStrokeDisabled: #e0e0e0;
+  --colorNeutralStroke1: #cdc8be;
+  --colorNeutralStroke2: #dcd7ce;
+  --colorNeutralStrokeAccessible: #696358;
+  --colorNeutralStrokeAccessibleHover: #5f5950;
+  --colorNeutralStrokeDisabled: #dcd7ce;
 
-  --colorBrandBackground: #0078d4;
-  --colorBrandBackgroundHover: #106ebe;
-  --colorBrandBackgroundPressed: #005a9e;
-  --colorBrandBackgroundSelected: #005a9e;
-  --colorBrandForeground1: #0078d4;
-  --colorBrandForegroundLink: #106ebe;
-  --colorBrandForegroundLinkHover: #005a9e;
-  --colorBrandForegroundLinkPressed: #004578;
-  --colorBrandStroke1: #0078d4;
-  --colorBrandStroke2: #c2e0f4;
-  --colorNeutralForegroundOnBrand: #ffffff; /* text on brand bg */
+  --colorBrandBackground: #2b579a;
+  --colorBrandBackgroundHover: #3a6fb5;
+  --colorBrandBackgroundPressed: #1e3d6e;
+  --colorBrandBackgroundSelected: #1e3d6e;
+  --colorBrandForeground1: #2b579a;
+  --colorBrandForegroundLink: #2b579a;
+  --colorBrandForegroundLinkHover: #5a9fd4;
+  --colorBrandForegroundLinkPressed: #1e3d6e;
+  --colorBrandStroke1: #2b579a;
+  --colorBrandStroke2: #d2e3f5;
+  --colorNeutralForegroundOnBrand: #ffffff;
 
-  --colorCompoundBrandBackground: #0078d4;
-  --colorCompoundBrandBackgroundHover: #106ebe;
-  --colorCompoundBrandBackgroundPressed: #005a9e;
-  --colorCompoundBrandForeground1: #0078d4;
-  --colorCompoundBrandStroke1: #0078d4;
+  --colorCompoundBrandBackground: #2b579a;
+  --colorCompoundBrandBackgroundHover: #3a6fb5;
+  --colorCompoundBrandBackgroundPressed: #1e3d6e;
+  --colorCompoundBrandForeground1: #2b579a;
+  --colorCompoundBrandStroke1: #2b579a;
 
-  --colorNeutralBackgroundAlpha: rgba(255, 255, 255, 0.8);
-  --colorNeutralBackgroundAlpha2: rgba(255, 255, 255, 0.6);
+  --colorNeutralBackgroundAlpha: rgba(254, 252, 248, 0.8);
+  --colorNeutralBackgroundAlpha2: rgba(254, 252, 248, 0.6);
 
   /* ── Overlay scrim ── */
   --colorScrim: rgba(0, 0, 0, 0.4);
@@ -181,44 +181,44 @@
 
 /* ── Dark theme ── */
 :root.dark {
-  --colorNeutralBackground1: #292929;
-  --colorNeutralBackground2: #1f1f1f;
-  --colorNeutralBackground3: #141414;
-  --colorNeutralBackground1Hover: #333333;
-  --colorNeutralBackground1Pressed: #3d3d3d;
-  --colorNeutralBackground1Selected: #3d3d3d;
+  --colorNeutralBackground1: #2a2622;
+  --colorNeutralBackground2: #211d19;
+  --colorNeutralBackground3: #181410;
+  --colorNeutralBackground1Hover: #34302a;
+  --colorNeutralBackground1Pressed: #3e3832;
+  --colorNeutralBackground1Selected: #3e3832;
 
   --colorNeutralForeground1: #ffffff;
-  --colorNeutralForeground2: #d6d6d6;
-  --colorNeutralForeground3: #adadad;
-  --colorNeutralForegroundDisabled: #5c5c5c;
+  --colorNeutralForeground2: #d4cfc8;
+  --colorNeutralForeground3: #aba59c;
+  --colorNeutralForegroundDisabled: #5e5852;
 
-  --colorNeutralStroke1: #666666;
-  --colorNeutralStroke2: #4d4d4d;
-  --colorNeutralStrokeAccessible: #adadad;
-  --colorNeutralStrokeAccessibleHover: #bdbdbd;
-  --colorNeutralStrokeDisabled: #333333;
+  --colorNeutralStroke1: #656058;
+  --colorNeutralStroke2: #4c473f;
+  --colorNeutralStrokeAccessible: #aba59c;
+  --colorNeutralStrokeAccessibleHover: #bbb5aa;
+  --colorNeutralStrokeDisabled: #34302a;
 
-  --colorBrandBackground: #106ebe;
-  --colorBrandBackgroundHover: #0078d4;
-  --colorBrandBackgroundPressed: #005a9e;
-  --colorBrandBackgroundSelected: #005a9e;
-  --colorBrandForeground1: #479ef5;
-  --colorBrandForegroundLink: #2899f5;
-  --colorBrandForegroundLinkHover: #479ef5;
-  --colorBrandForegroundLinkPressed: #60aaff;
-  --colorBrandStroke1: #2899f5;
-  --colorBrandStroke2: #1a3a5c;
+  --colorBrandBackground: #5a9fd4;
+  --colorBrandBackgroundHover: #7ab8e8;
+  --colorBrandBackgroundPressed: #4285b4;
+  --colorBrandBackgroundSelected: #4285b4;
+  --colorBrandForeground1: #7ab8e8;
+  --colorBrandForegroundLink: #7ab8e8;
+  --colorBrandForegroundLinkHover: #8fc9f0;
+  --colorBrandForegroundLinkPressed: #5a9fd4;
+  --colorBrandStroke1: #5a9fd4;
+  --colorBrandStroke2: #1a3052;
   --colorNeutralForegroundOnBrand: #ffffff; /* text on brand bg — white in both themes */
 
-  --colorCompoundBrandBackground: #0078d4;
-  --colorCompoundBrandBackgroundHover: #106ebe;
-  --colorCompoundBrandBackgroundPressed: #005a9e;
-  --colorCompoundBrandForeground1: #479ef5;
-  --colorCompoundBrandStroke1: #2899f5;
+  --colorCompoundBrandBackground: #5a9fd4;
+  --colorCompoundBrandBackgroundHover: #7ab8e8;
+  --colorCompoundBrandBackgroundPressed: #4285b4;
+  --colorCompoundBrandForeground1: #7ab8e8;
+  --colorCompoundBrandStroke1: #5a9fd4;
 
-  --colorNeutralBackgroundAlpha: rgba(41, 41, 41, 0.8);
-  --colorNeutralBackgroundAlpha2: rgba(41, 41, 41, 0.6);
+  --colorNeutralBackgroundAlpha: rgba(42, 38, 34, 0.8);
+  --colorNeutralBackgroundAlpha2: rgba(42, 38, 34, 0.6);
 
   --colorScrim: rgba(0, 0, 0, 0.6);
 
