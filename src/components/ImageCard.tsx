@@ -159,9 +159,9 @@ const ImageCard: Component<Props> = (props) => {
           {props.illust.x_restrict === 2 && (
             <span class="badge-overlay text-[var(--colorStatusWarningForeground1)]">R-18G</span>
           )}
-          {props.illust.illust_ai_type != null && props.illust.illust_ai_type > 0 && (
+          {props.illust.illust_ai_type != null && props.illust.illust_ai_type > 1 && (
             <span class="badge-overlay opacity-85">
-              {props.illust.illust_ai_type === 1 ? "AI" : "AI辅助"}
+              {props.illust.illust_ai_type === 2 ? "AI" : "AI辅助"}
             </span>
           )}
         </div>
