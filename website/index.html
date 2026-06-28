@@ -200,6 +200,10 @@
         line-height: var(--lineHeightBase400);
         color: var(--colorNeutralForeground1);
         background-color: var(--colorNeutralBackground1);
+        background-image:
+          radial-gradient(ellipse at 80% 0%, var(--colorPictelioTealBgSubtle) 0%, transparent 60%),
+          radial-gradient(ellipse at 20% 100%, rgba(0,120,212,0.03) 0%, transparent 40%);
+        background-attachment: fixed;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
@@ -280,10 +284,21 @@
 
       /* ── Hero ── */
       .hero {
+        position: relative;
         padding: var(--spacingVerticalXXXXL) var(--spacingHorizontalXL);
-        background:
-          radial-gradient(ellipse at 120% 0%, var(--colorPictelioTealBgSubtle) 0%, transparent 55%),
-          var(--colorNeutralBackground1);
+        background: none;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: var(--acrylicBackground);
+        backdrop-filter: blur(var(--acrylicBlur));
+        -webkit-backdrop-filter: blur(var(--acrylicBlur));
+        border-bottom: 1px solid var(--acrylicBorder);
+        pointer-events: none;
       }
 
       .hero-inner {
