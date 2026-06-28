@@ -314,6 +314,12 @@
         .hero-inner {
           grid-template-columns: 1.2fr 0.8fr;
         }
+
+        .hero-visual {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
       }
 
       .hero-logo {
@@ -454,54 +460,102 @@
         align-items: center;
       }
 
-      .hero-card {
+      /* ── Win11 Window Mockup ── */
+      .win-window {
         width: 100%;
-        max-width: 320px;
-        aspect-ratio: 9 / 16;
-        background: var(--colorNeutralBackground2);
-        border: 1px solid var(--colorNeutralStroke2);
-        border-radius: var(--borderRadius4XLarge);
-        box-shadow: var(--elevation16);
+        max-width: 360px;
+        border-radius: var(--borderRadius2XLarge);
         overflow: hidden;
-        position: relative;
+        background: var(--acrylicBackground);
+        backdrop-filter: blur(var(--acrylicBlur));
+        -webkit-backdrop-filter: blur(var(--acrylicBlur));
+        border: 1px solid var(--acrylicBorder);
+        box-shadow: var(--elevationWin11);
+        transition: box-shadow var(--durationGentle) var(--curveEasyEase);
       }
 
-      .hero-card-screen {
-        position: absolute;
-        inset: 12px;
-        border-radius: var(--borderRadius3XLarge);
-        background:
-          linear-gradient(180deg, var(--colorPictelioTealBgSubtle) 0%, transparent 60%),
-          var(--colorNeutralBackground1);
-        border: 1px solid var(--colorNeutralStroke2);
-        padding: var(--spacingHorizontalL);
+      .win-window:hover {
+        box-shadow: var(--elevationWin11Hover);
+      }
+
+      .win-titlebar {
         display: flex;
-        flex-direction: column;
-        gap: var(--spacingVerticalM);
+        align-items: center;
+        gap: var(--spacingHorizontalS);
+        padding: 10px var(--spacingHorizontalM);
+        background: rgba(255,255,255,0.08);
+        border-bottom: 1px solid var(--acrylicBorder);
+        user-select: none;
       }
 
-      .hero-card-bar {
+      .win-titlebar-dots {
+        display: flex;
+        gap: 7px;
+      }
+
+      .win-dot {
+        width: 12px;
         height: 12px;
-        width: 40%;
         border-radius: var(--borderRadiusCircular);
-        background-color: var(--colorNeutralStroke2);
+        transition: filter var(--durationFast) var(--curveEasyEase);
       }
 
-      .hero-card-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--spacingHorizontalM);
-        margin-top: auto;
+      .win-dot-close { background: #e81123; }
+      .win-dot-min   { background: #f7b731; }
+      .win-dot-max   { background: #28a745; }
+
+      .win-dot:hover {
+        filter: brightness(1.4);
       }
 
-      .hero-card-thumb {
-        aspect-ratio: 1;
-        border-radius: var(--borderRadiusLarge);
-        background-color: var(--colorNeutralStroke2);
+      .win-titlebar-text {
+        font-size: var(--fontSizeBase200);
+        color: var(--colorNeutralForeground3);
+        margin-left: var(--spacingHorizontalS);
       }
 
-      .hero-card-thumb:nth-child(2n) {
-        background-color: var(--colorPictelioTealBgSubtle);
+      .win-content {
+        padding: var(--spacingVerticalL);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 400px;
+      }
+
+      /* ── Phone Frame inside Window ── */
+      .win-phone-frame {
+        width: 200px;
+        height: 400px;
+        border-radius: var(--borderRadius3XLarge);
+        background: #1a1a2e;
+        border: 2px solid var(--colorNeutralStroke2);
+        box-shadow: var(--elevation8);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .win-phone-notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 24px;
+        background: #1a1a2e;
+        border-radius: 0 0 16px 16px;
+        z-index: 2;
+      }
+
+      .win-phone-screen {
+        width: 100%;
+        height: 100%;
+        padding: 24px 0 0;
+      }
+
+      .win-phone-placeholder svg {
+        width: 100%;
+        height: 100%;
+        display: block;
       }
 
       /* ── Sections ── */
@@ -934,14 +988,32 @@
             </div>
           </div>
           <div class="hero-visual" aria-hidden="true">
-            <div class="hero-card">
-              <div class="hero-card-screen">
-                <div class="hero-card-bar"></div>
-                <div class="hero-card-grid">
-                  <div class="hero-card-thumb"></div>
-                  <div class="hero-card-thumb"></div>
-                  <div class="hero-card-thumb"></div>
-                  <div class="hero-card-thumb"></div>
+            <div class="win-window">
+              <div class="win-titlebar">
+                <div class="win-titlebar-dots">
+                  <span class="win-dot win-dot-close"></span>
+                  <span class="win-dot win-dot-min"></span>
+                  <span class="win-dot win-dot-max"></span>
+                </div>
+                <span class="win-titlebar-text">Pictelio</span>
+              </div>
+              <div class="win-content">
+                <div class="win-phone-frame">
+                  <div class="win-phone-notch"></div>
+                  <div class="win-phone-screen">
+                    <div class="win-phone-placeholder">
+                      <svg viewBox="0 0 240 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="240" height="480" fill="#1a1a2e"/>
+                        <rect x="16" y="48" width="208" height="32" rx="8" fill="#2a2a4e"/>
+                        <rect x="16" y="96" width="120" height="16" rx="4" fill="#3a3a5e"/>
+                        <rect x="16" y="128" width="208" height="200" rx="12" fill="#2a2a4e"/>
+                        <circle cx="120" cy="280" r="40" fill="#3a3a5e"/>
+                        <rect x="16" y="350" width="60" height="80" rx="8" fill="#2a2a4e"/>
+                        <rect x="88" y="350" width="60" height="80" rx="8" fill="#2a2a4e"/>
+                        <rect x="160" y="350" width="60" height="80" rx="8" fill="#2a2a4e"/>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
