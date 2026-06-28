@@ -68,9 +68,8 @@ function run(cmd, argsArr, opts = {}) {
     const child = execFile(cmd, argsArr, { cwd: rootDir, stdio: "inherit", ...opts });
     child.on("error", reject);
     child.on("close", (code) => {
-      code === 0
-        ? resolve()
-        : reject(new Error(`"${cmd} ${argsArr.join(" ")}" exited with code ${code}`));
+      if (code === 0) resolve();
+      else reject(new Error(`"${cmd} ${argsArr.join(" ")}" exited with code ${code}`));
     });
   });
 }
@@ -100,14 +99,14 @@ async function getGitLogSince(tag) {
 }
 
 function classifyCommit(msg) {
-  if (msg.startsWith("feat(")) return "✨ 新功能";
-  if (msg.startsWith("fix(")) return "🐛 修复";
-  if (msg.startsWith("perf(")) return "⚡ 性能";
-  if (/^docs?\(/.test(msg) || /^📝/.test(msg)) return "📝 文档";
-  if (msg.startsWith("chore(") || /^🔧/.test(msg) || msg.startsWith("chore:")) return "🧹 杂项";
-  if (msg.startsWith("refactor(")) return "♻️ 重构";
-  if (msg.startsWith("style(")) return "💄 样式";
-  if (msg.startsWith("test(")) return "🧪 测试";
+  if (msg.startsWith("feat(") || msg.startsWith("feat:")) return "✨ 新功能";
+  if (msg.startsWith("fix(") || msg.startsWith("fix:")) return "🐛 修复";
+  if (msg.startsWith("perf(") || msg.startsWith("perf:")) return "⚡ 性能";
+  if (msg.startsWith("docs(") || msg.startsWith("docs:") || msg.startsWith("📝")) return "📝 文档";
+  if (msg.startsWith("chore(") || msg.startsWith("chore:") || msg.startsWith("🔧")) return "🧹 杂项";
+  if (msg.startsWith("refactor(") || msg.startsWith("refactor:")) return "♻️ 重构";
+  if (msg.startsWith("style(") || msg.startsWith("style:")) return "💄 样式";
+  if (msg.startsWith("test(") || msg.startsWith("test:")) return "🧪 测试";
   return "🔧 其他";
 }
 
@@ -158,17 +157,17 @@ async function patchJavaCompat() {
     "android/app/capacitor.build.gradle",
     "android/capacitor-cordova-android-plugins/build.gradle",
   ];
-  let patched = 0;
-  for (const f of gradleFiles) {
-    if (!(await exists(f))) continue;
-    let content = await readText(f);
-    if (content.includes("VERSION_21")) {
+  const results = await Promise.all(
+    gradleFiles.map(async (f) => {
+      if (!(await exists(f))) return 0;
+      let content = await readText(f);
+      if (!content.includes("VERSION_21")) return 0;
       content = content.replace(/VERSION_21/g, "VERSION_17");
       await writeText(f, content);
-      patched++;
-    }
-  }
-  return patched;
+      return 1;
+    }),
+  );
+  return results.reduce((a, b) => a + b, 0);
 }
 
 async function main() {
