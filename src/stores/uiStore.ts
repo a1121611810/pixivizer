@@ -36,6 +36,7 @@ const PREF_KEY_SHOW_R18G = "show_r18g";
 const PREF_KEY_SHOW_DETAIL_STAIRS = "show_detail_stairs";
 const PREF_KEY_AGE_CONFIRMED = "age_confirmed";
 const PREF_KEY_IS_ADULT = "is_adult";
+const PREF_KEY_AUTO_CHECK_UPDATE = "auto_check_update";
 const ANDROID_16_API_LEVEL = 36;
 
 const [usePredictiveBack, setUsePredictiveBackSig] = createSignal<boolean>(false);
@@ -46,6 +47,14 @@ const [showR18G, setShowR18GSig] = createSignal<boolean>(false);
 const [showDetailStairs, setShowDetailStairsSig] = createSignal<boolean>(false);
 const [ageConfirmed, setAgeConfirmedSig] = createSignal<boolean>(false);
 const [isAdult, setIsAdultSig] = createSignal<boolean>(false);
+
+const [autoCheckUpdateSig, setAutoCheckUpdateSig] = createSignal<boolean>(false);
+const [hasUpdateSig, setHasUpdateSig] = createSignal<boolean>(false);
+const [latestVersionSig, setLatestVersionSig] = createSignal<string>("");
+const [latestReleaseUrlSig, setLatestReleaseUrlSig] = createSignal<string>("");
+const [latestChangelogSig, setLatestChangelogSig] = createSignal<string>("");
+const [isCheckingUpdateSig, setIsCheckingUpdateSig] = createSignal<boolean>(false);
+const [lastCheckTimeSig, setLastCheckTimeSig] = createSignal<number>(0);
 
 async function applyPredictiveBackState(enabled: boolean): Promise<void> {
   try {
@@ -274,6 +283,26 @@ async function loadShowDetailStairsPreference(): Promise<void> {
   }
 }
 
+async function setAutoCheckUpdate(enabled: boolean): Promise<void> {
+  setAutoCheckUpdateSig(enabled);
+  try {
+    await Preferences.set({ key: PREF_KEY_AUTO_CHECK_UPDATE, value: String(enabled) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist autoCheckUpdate", e);
+  }
+}
+
+async function loadAutoCheckUpdatePreference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_AUTO_CHECK_UPDATE });
+    if (value !== null) {
+      setAutoCheckUpdateSig(value === "true");
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load autoCheckUpdate preference", e);
+  }
+}
+
 /** 重置所有 UI 设置为默认值，并尽可能持久化。 */
 export async function resetUiStore(): Promise<void> {
   setTheme("light");
@@ -286,6 +315,7 @@ export async function resetUiStore(): Promise<void> {
   await setLayoutMode("waterfall");
   await setShowDetailStairs(false);
   await setAgeConfirmation(false, false);
+  await setAutoCheckUpdate(false);
   if (Capacitor.getPlatform() === "android") {
     await setUsePredictiveBack(isPredictiveBackSupported());
   } else {
@@ -329,4 +359,19 @@ export {
   isAdult,
   loadAgePreference,
   setAgeConfirmation,
+  autoCheckUpdateSig as autoCheckUpdate,
+  setAutoCheckUpdate,
+  loadAutoCheckUpdatePreference,
+  hasUpdateSig as hasUpdate,
+  setHasUpdateSig as setHasUpdate,
+  latestVersionSig as latestVersion,
+  setLatestVersionSig as setLatestVersion,
+  latestReleaseUrlSig as latestReleaseUrl,
+  setLatestReleaseUrlSig as setLatestReleaseUrl,
+  latestChangelogSig as latestChangelog,
+  setLatestChangelogSig as setLatestChangelog,
+  isCheckingUpdateSig as isCheckingUpdate,
+  setIsCheckingUpdateSig as setIsCheckingUpdate,
+  lastCheckTimeSig as lastCheckTime,
+  setLastCheckTimeSig as setLastCheckTime,
 };
