@@ -229,11 +229,11 @@
       .site-header {
         position: sticky;
         top: 0;
-        z-index: 10;
-        background-color: var(--colorNeutralBackgroundAlpha);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid var(--colorNeutralStroke2);
+        z-index: 100;
+        background: var(--acrylicBackground);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid var(--acrylicBorder);
       }
 
       .header-inner {
@@ -958,6 +958,29 @@
       .fingerprint-copy:active {
         background: var(--colorNeutralBackground1Pressed);
       }
+      /* ── Scroll Reveal ── */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(24px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.6s cubic-bezier(0.33, 0, 0.67, 1),
+                    transform 0.6s cubic-bezier(0.33, 0, 0.67, 1);
+      }
+
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
     </style>
   </head>
   <body>
@@ -1022,7 +1045,7 @@
     <main>
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-inner">
-          <div class="hero-content">
+          <div class="hero-content reveal">
             <svg
               class="hero-logo"
               viewBox="0 0 192 192"
@@ -1118,7 +1141,7 @@
               >
             </div>
           </div>
-          <div class="hero-visual" aria-hidden="true">
+          <div class="hero-visual reveal" aria-hidden="true">
             <div class="win-window">
               <div class="win-titlebar">
                 <div class="win-titlebar-dots">
@@ -1154,12 +1177,12 @@
 
       <section id="features" class="section" aria-labelledby="features-title">
         <div class="section-inner">
-          <h2 id="features-title" class="section-title">核心功能</h2>
+          <h2 id="features-title" class="section-title reveal">核心功能</h2>
           <p class="section-lead">
             Pictelio 提供流畅的插画浏览体验，所有数据均通过 Pixiv 官方 API 获取并在本地处理。
           </p>
           <div class="features-grid">
-            <article class="feature-card">
+            <article class="feature-card reveal">
               <div class="feature-icon">
                 <svg
                   viewBox="0 0 24 24"
@@ -1180,7 +1203,7 @@
               </p>
             </article>
 
-            <article class="feature-card">
+            <article class="feature-card reveal">
               <div class="feature-icon">
                 <svg
                   viewBox="0 0 24 24"
@@ -1200,7 +1223,7 @@
               </p>
             </article>
 
-            <article class="feature-card">
+            <article class="feature-card reveal">
               <div class="feature-icon">
                 <svg
                   viewBox="0 0 24 24"
@@ -1219,7 +1242,7 @@
               </p>
             </article>
 
-            <article class="feature-card">
+            <article class="feature-card reveal">
               <div class="feature-icon">
                 <svg
                   viewBox="0 0 24 24"
@@ -1247,7 +1270,7 @@
       <!-- ── Screenshot Carousel ── -->
       <section class="section" aria-labelledby="screenshots-title">
         <div class="section-inner">
-          <h2 id="screenshots-title" class="section-title">应用预览</h2>
+          <h2 id="screenshots-title" class="section-title reveal">应用预览</h2>
           <div class="carousel-container" role="region" aria-label="应用截图展示">
             <div class="carousel-track">
               <div class="carousel-slide">
@@ -1278,12 +1301,12 @@
 
       <section id="download" class="section" aria-labelledby="download-title">
         <div class="section-inner">
-          <h2 id="download-title" class="section-title">获取 Pictelio</h2>
+          <h2 id="download-title" class="section-title reveal">获取 Pictelio</h2>
           <p class="section-lead">
             当前公共版本通过 GitHub Releases 分发，F-Droid 上架准备中。
           </p>
           <div class="download-options">
-            <div class="download-card">
+            <div class="download-card reveal">
               <span class="badge">推荐</span>
               <h3>GitHub Releases</h3>
               <p>下载最新 APK，适用于 Android 8.0 及以上版本。源码公开可审计。</p>
@@ -1306,7 +1329,7 @@
                 </button>
               </div>
             </div>
-            <div class="download-card">
+            <div class="download-card reveal">
               <span class="badge">即将上架</span>
               <h3>F-Droid</h3>
               <p>F-Droid 上架准备中，通过后将在此提供直达链接。</p>
@@ -1451,6 +1474,17 @@
         });
       });
     }
-  </script>
+    // Scroll reveal animation
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
 </body>
 </html>
