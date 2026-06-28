@@ -2,6 +2,8 @@
   "name": "pictelio",
   "version": "1.1.0",
   "private": true,
+  "description": "A third-party Pixiv illustration browser built with SolidJS, packaged as a native Android app with Capacitor",
+  "homepage": "https://a1121611810.github.io/pixivizer",
   "type": "module",
   "scripts": {
     "dev": "vp dev",
