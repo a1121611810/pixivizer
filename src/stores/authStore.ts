@@ -15,7 +15,7 @@ const [user, setUser] = createSignal<PixivUser | null>(null);
 const [isLoggedIn, setIsLoggedIn] = createSignal(false);
 const [isLoading, setIsLoading] = createSignal(true);
 
-export { isLoggedIn, user, isLoading, accessTokenSig, refreshTokenSig };
+export { isLoggedIn, user, isLoading, setIsLoading, accessTokenSig, refreshTokenSig };
 
 function syncToken(token: string) {
   setAccessTokenSig(token);

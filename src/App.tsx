@@ -2,7 +2,7 @@ import { type Component, onMount, Show, createSignal, onCleanup } from "solid-js
 import { Route, Router, useNavigate, useLocation, useBeforeLeave } from "@solidjs/router";
 import type { RouteSectionProps } from "@solidjs/router";
 import { App as CapApp } from "@capacitor/app";
-import { isLoggedIn, isLoading, initializeAuth } from "./stores/authStore";
+import { isLoggedIn, isLoading, setIsLoading, initializeAuth } from "./stores/authStore";
 import {
   loadPredictiveBackPreference,
   loadAutoHideNavBarPreference,
@@ -23,6 +23,7 @@ import {
 import { loadReportedIds } from "./stores/reportStore";
 import { loadBlockedIds } from "./stores/blockStore";
 import Login from "./routes/Login";
+import AgeConfirmation from "./routes/AgeConfirmation";
 import IllustDetail from "./routes/IllustDetail";
 import DebugImage from "./routes/DebugImage";
 import Bookmarks from "./routes/Bookmarks";
@@ -31,7 +32,6 @@ import PersonalCenter from "./routes/PersonalCenter";
 import UserIllusts from "./routes/UserIllusts";
 import About from "./routes/About";
 import PredictiveBackContainer from "./components/PredictiveBackContainer";
-import AgeGate from "./components/AgeGate";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
   const navigate = useNavigate();
@@ -126,6 +126,13 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     });
 
     try {
+      // 如果尚未确认年龄，先导航到年龄确认页面，不进行登录判断
+      if (!ageConfirmed()) {
+        setIsLoading(false);
+        navigate("/age-confirmation", { replace: true });
+        return;
+      }
+
       await initializeAuth();
       if (isLoggedIn()) {
         navigate("/recommended", { replace: true });
@@ -228,11 +235,6 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
           再按一次退出应用
         </div>
       </Show>
-
-      {/* Age gate overlay */}
-      <Show when={!ageConfirmed()}>
-        <AgeGate />
-      </Show>
     </div>
   );
 };
@@ -254,6 +256,7 @@ const App: Component = () => {
       <Route path="/user/:id/illusts" component={UserIllusts} />
       <Route path="/user/:id" component={PersonalCenter} />
       <Route path="/about" component={About} />
+      <Route path="/age-confirmation" component={AgeConfirmation} />
       <Route path="*" component={Login} />
     </Router>
   );

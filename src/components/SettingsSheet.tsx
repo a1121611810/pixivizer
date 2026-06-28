@@ -39,10 +39,6 @@ import { resetReportedIds } from "../stores/reportStore";
 import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 import BlocklistSheet from "./BlocklistSheet";
 
-function reconfirmAge() {
-  setAgeConfirmation(false, false);
-}
-
 // ── Fluent UI System Icons (24px) — SVG path data ──
 // Sourced from microsoft/fluentui-system-icons
 // Each icon has regular (outline) and filled (solid) variant for crossfade
@@ -271,6 +267,11 @@ const SettingsSheet: Component = () => {
   const [dialogState, setDialogState] = createSignal<
     { type: "clear" } | { type: "deleteAccount" } | null
   >(null);
+
+  function reconfirmAge() {
+    setAgeConfirmation(false, false);
+    navigate("/age-confirmation?reconfirm=true");
+  }
   const pbStyle = usePredictiveBackOverlayStyle();
 
   // Auto-hide the age gate hint toast
@@ -648,7 +649,7 @@ const SettingsSheet: Component = () => {
                       重新确认年龄
                     </p>
                     <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                      点击后再次弹出年龄确认对话框
+                      点击后重新进入年龄确认页面
                     </p>
                   </div>
                 </div>
