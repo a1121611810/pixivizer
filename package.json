@@ -24,6 +24,8 @@
     "build:android": "pnpm run sync:android-version && pnpm run build && pnpm run cap:sync && cd android && ./gradlew assembleDebug",
     "build:android:release": "pnpm run sync:android-version && pnpm run build && pnpm run cap:sync && cd android && ./gradlew assembleRelease",
     "release:github": "node scripts/release-github.mjs",
+    "release": "node scripts/release.mjs",
+    "release:dry": "node scripts/release.mjs --dry-run",
     "dev:android": "node scripts/dev-android.mjs",
     "generate:icons": "node scripts/generate-icons.mjs"
   },
