@@ -34,16 +34,17 @@ interface GitHubRelease {
 }
 
 // Core function
-async function checkForUpdate(): Promise<CheckResult>
+async function checkForUpdate(): Promise<CheckResult>;
 
 // Version comparison (no external dependency)
-function isNewer(local: string, remote: string): boolean
+function isNewer(local: string, remote: string): boolean;
 
 // Get cached result (avoid refetch if already checked recently)
-function getCachedResult(): CheckResult | null
+function getCachedResult(): CheckResult | null;
 ```
 
 **API call:**
+
 - `GET https://api.github.com/repos/a1121611810/pixivizer/releases/latest`
 - Headers: `Accept: application/vnd.github.v3+json`, `User-Agent: Pictelio/${APP_VERSION}`
 - Filter: reject if `prerelease === true`
@@ -53,20 +54,20 @@ function getCachedResult(): CheckResult | null
 
 ### 2. uiStore additions
 
-| Signal | Type | Default | Description |
-|--------|------|---------|-------------|
-| `autoCheckUpdate` | `boolean` | `false` | Toggle: check on startup |
-| `hasUpdate` | `boolean` | `false` | Whether a new version exists |
-| `latestVersion` | `string` | `""` | Latest GitHub version string |
-| `latestReleaseUrl` | `string` | `""` | URL to the release page |
-| `latestChangelog` | `string` | `""` | Release body (changelog) |
+| Signal             | Type      | Default | Description                    |
+| ------------------ | --------- | ------- | ------------------------------ |
+| `autoCheckUpdate`  | `boolean` | `false` | Toggle: check on startup       |
+| `hasUpdate`        | `boolean` | `false` | Whether a new version exists   |
+| `latestVersion`    | `string`  | `""`    | Latest GitHub version string   |
+| `latestReleaseUrl` | `string`  | `""`    | URL to the release page        |
+| `latestChangelog`  | `string`  | `""`    | Release body (changelog)       |
 | `isCheckingUpdate` | `boolean` | `false` | Loading state for manual check |
-| `lastCheckTime` | `number` | `0` | Timestamp of last check |
+| `lastCheckTime`    | `number`  | `0`     | Timestamp of last check        |
 
 ### 3. Preferences
 
-| Key | Type | Purpose |
-|-----|------|---------|
+| Key                 | Type                      | Purpose              |
+| ------------------- | ------------------------- | -------------------- |
 | `auto_check_update` | `string` ("true"/"false") | Persist toggle state |
 
 ### 4. SettingsSheet.tsx additions
@@ -104,12 +105,12 @@ if (autoCheckUpdate()) {
 
 ## Files Changed
 
-| File | Change |
-|------|--------|
-| `src/services/updateService.ts` | **NEW** — core check logic |
-| `src/stores/uiStore.ts` | Add 7 new signals + 1 Preference key |
+| File                               | Change                                       |
+| ---------------------------------- | -------------------------------------------- |
+| `src/services/updateService.ts`    | **NEW** — core check logic                   |
+| `src/stores/uiStore.ts`            | Add 7 new signals + 1 Preference key         |
 | `src/components/SettingsSheet.tsx` | Add toggle row + button row + status display |
-| `src/App.tsx` | Add auto-check trigger on startup |
+| `src/App.tsx`                      | Add auto-check trigger on startup            |
 
 ## Testing
 

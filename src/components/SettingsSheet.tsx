@@ -37,7 +37,6 @@ import {
   setAutoCheckUpdate,
   setHasUpdate,
   setIsCheckingUpdate,
-  setLatestChangelog,
   setLatestReleaseUrl,
   setLatestVersion,
   resetUiStore,
@@ -160,6 +159,20 @@ interface ConfirmDialogProps {
   confirmVariant?: "danger" | "primary";
   onCancel: () => void;
   onConfirm: () => void;
+}
+
+async function handleCheckUpdate() {
+  if (isCheckingUpdate()) return;
+  setIsCheckingUpdate(true);
+  const result = await checkForUpdate();
+  setHasUpdate(result.hasUpdate);
+  setLatestVersion(result.latestVersion);
+  setLatestReleaseUrl(result.latestReleaseUrl);
+  setIsCheckingUpdate(false);
+  // If update available, open the release page
+  if (result.hasUpdate && result.latestReleaseUrl) {
+    window.open(result.latestReleaseUrl, "_blank", "noopener,noreferrer");
+  }
 }
 
 function openDeleteAccountPage() {
@@ -1155,34 +1168,11 @@ const SettingsSheet: Component = () => {
             {/* 检查更新 — button row */}
             <div
               class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
-              onClick={async () => {
-                setIsCheckingUpdate(true);
-                const result = await checkForUpdate();
-                setHasUpdate(result.hasUpdate);
-                setLatestVersion(result.latestVersion);
-                setLatestReleaseUrl(result.latestReleaseUrl);
-                setLatestChangelog(result.latestChangelog);
-                setIsCheckingUpdate(false);
-                // If update available, open the release page
-                if (result.hasUpdate && result.latestReleaseUrl) {
-                  window.open(result.latestReleaseUrl, "_blank", "noopener,noreferrer");
-                }
-              }}
+              onClick={handleCheckUpdate}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  // Trigger same logic as onClick
-                  setIsCheckingUpdate(true);
-                  checkForUpdate().then((result) => {
-                    setHasUpdate(result.hasUpdate);
-                    setLatestVersion(result.latestVersion);
-                    setLatestReleaseUrl(result.latestReleaseUrl);
-                    setLatestChangelog(result.latestChangelog);
-                    setIsCheckingUpdate(false);
-                    if (result.hasUpdate && result.latestReleaseUrl) {
-                      window.open(result.latestReleaseUrl, "_blank", "noopener,noreferrer");
-                    }
-                  });
+                  handleCheckUpdate();
                 }
               }}
               role="button"

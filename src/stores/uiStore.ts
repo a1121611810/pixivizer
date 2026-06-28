@@ -54,7 +54,6 @@ const [latestVersionSig, setLatestVersionSig] = createSignal<string>("");
 const [latestReleaseUrlSig, setLatestReleaseUrlSig] = createSignal<string>("");
 const [latestChangelogSig, setLatestChangelogSig] = createSignal<string>("");
 const [isCheckingUpdateSig, setIsCheckingUpdateSig] = createSignal<boolean>(false);
-const [lastCheckTimeSig, setLastCheckTimeSig] = createSignal<number>(0);
 
 async function applyPredictiveBackState(enabled: boolean): Promise<void> {
   try {
@@ -372,6 +371,4 @@ export {
   setLatestChangelogSig as setLatestChangelog,
   isCheckingUpdateSig as isCheckingUpdate,
   setIsCheckingUpdateSig as setIsCheckingUpdate,
-  lastCheckTimeSig as lastCheckTime,
-  setLastCheckTimeSig as setLastCheckTime,
 };

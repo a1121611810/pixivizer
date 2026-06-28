@@ -40,6 +40,7 @@ function isNewer(local: string, remote: string): boolean {
   const lParts = local.split(".").map(Number);
   const rParts = remote.replace(/^v/, "").split(".").map(Number);
 
+  // Compare up to major.minor.patch (standard semver, 3 parts max)
   for (let i = 0; i < 3; i++) {
     const l = lParts[i] ?? 0;
     const r = rParts[i] ?? 0;
@@ -51,8 +52,7 @@ function isNewer(local: string, remote: string): boolean {
 
 // ── Core fetch ──
 
-const GITHUB_API_URL =
-  "https://api.github.com/repos/a1121611810/pixivizer/releases/latest";
+const GITHUB_API_URL = "https://api.github.com/repos/a1121611810/pixivizer/releases/latest";
 
 /**
  * Fetch the latest stable release from GitHub and compare
@@ -71,9 +71,7 @@ export async function checkForUpdate(): Promise<CheckResult> {
     });
 
     if (!res.ok) {
-      console.warn(
-        `[updateService] GitHub API responded with ${res.status}`,
-      );
+      console.warn(`[updateService] GitHub API responded with ${res.status}`);
       return cachedResult ?? noUpdateResult();
     }
 
@@ -81,9 +79,7 @@ export async function checkForUpdate(): Promise<CheckResult> {
 
     // Skip pre-releases
     if (release.prerelease) {
-      console.warn(
-        `[updateService] Latest release is a pre-release, skipping`,
-      );
+      console.warn(`[updateService] Latest release is a pre-release, skipping`);
       return cachedResult ?? noUpdateResult();
     }
 

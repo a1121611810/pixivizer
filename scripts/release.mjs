@@ -36,9 +36,15 @@ const versionArg = args.find((a) => a.startsWith("--version="))?.split("=")[1];
 
 // ── 工具函数 ──
 
-function log(...m) { console.log(`[release]`, ...m); }
-function warn(...m) { console.warn(`[release] ⚠`, ...m); }
-function ok(...m)  { console.log(`[release] ✅`, ...m); }
+function log(...m) {
+  console.log(`[release]`, ...m);
+}
+function warn(...m) {
+  console.warn(`[release] ⚠`, ...m);
+}
+function ok(...m) {
+  console.log(`[release] ✅`, ...m);
+}
 
 async function readText(path) {
   return readFile(resolvePath(rootDir, path), "utf-8");
@@ -49,8 +55,12 @@ async function writeText(path, content) {
 }
 
 async function exists(path) {
-  try { await stat(resolvePath(rootDir, path)); return true; }
-  catch { return false; }
+  try {
+    await stat(resolvePath(rootDir, path));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function run(cmd, argsArr, opts = {}) {
@@ -58,13 +68,19 @@ function run(cmd, argsArr, opts = {}) {
     const child = execFile(cmd, argsArr, { cwd: rootDir, stdio: "inherit", ...opts });
     child.on("error", reject);
     child.on("close", (code) => {
-      code === 0 ? resolve() : reject(new Error(`"${cmd} ${argsArr.join(" ")}" exited with code ${code}`));
+      code === 0
+        ? resolve()
+        : reject(new Error(`"${cmd} ${argsArr.join(" ")}" exited with code ${code}`));
     });
   });
 }
 
 function runOutput(cmd, argsArr) {
-  return execFileSync(cmd, argsArr, { cwd: rootDir, encoding: "utf-8", stdio: ["pipe", "pipe", "ignore"] }).trim();
+  return execFileSync(cmd, argsArr, {
+    cwd: rootDir,
+    encoding: "utf-8",
+    stdio: ["pipe", "pipe", "ignore"],
+  }).trim();
 }
 
 // ── 核心流程 ──
@@ -84,14 +100,14 @@ async function getGitLogSince(tag) {
 }
 
 function classifyCommit(msg) {
-  if (/^feat\(/.test(msg)) return "✨ 新功能";
-  if (/^fix\(/.test(msg)) return "🐛 修复";
-  if (/^perf\(/.test(msg)) return "⚡ 性能";
+  if (msg.startsWith("feat(")) return "✨ 新功能";
+  if (msg.startsWith("fix(")) return "🐛 修复";
+  if (msg.startsWith("perf(")) return "⚡ 性能";
   if (/^docs?\(/.test(msg) || /^📝/.test(msg)) return "📝 文档";
-  if (/^chore\(/.test(msg) || /^🔧/.test(msg) || /^chore:/.test(msg)) return "🧹 杂项";
-  if (/^refactor\(/.test(msg)) return "♻️ 重构";
-  if (/^style\(/.test(msg)) return "💄 样式";
-  if (/^test\(/.test(msg)) return "🧪 测试";
+  if (msg.startsWith("chore(") || /^🔧/.test(msg) || msg.startsWith("chore:")) return "🧹 杂项";
+  if (msg.startsWith("refactor(")) return "♻️ 重构";
+  if (msg.startsWith("style(")) return "💄 样式";
+  if (msg.startsWith("test(")) return "🧪 测试";
   return "🔧 其他";
 }
 
@@ -122,9 +138,12 @@ function parseVersion(v) {
 function bump(v, part) {
   const p = parseVersion(v);
   switch (part) {
-    case "major": return `${p.major + 1}.0.0`;
-    case "minor": return `${p.major}.${p.minor + 1}.0`;
-    default:      return `${p.major}.${p.minor}.${p.patch + 1}`;
+    case "major":
+      return `${p.major + 1}.0.0`;
+    case "minor":
+      return `${p.major}.${p.minor + 1}.0`;
+    default:
+      return `${p.major}.${p.minor}.${p.patch + 1}`;
   }
 }
 
@@ -175,7 +194,9 @@ async function main() {
   const title = `Pictelio v${newVersion}`;
 
   log(`当前版本: ${currentVersion}`);
-  log(`目标版本: ${newVersion} (versionCode: ${versionCode}) [${versionArg ? "指定版本" : bumpType + "递增"}]`);
+  log(
+    `目标版本: ${newVersion} (versionCode: ${versionCode}) [${versionArg ? "指定版本" : bumpType + "递增"}]`,
+  );
   log(`标签: ${tag}`);
   console.log("");
 
@@ -297,18 +318,32 @@ async function main() {
   if (!dryRun) {
     log("创建 GitHub Release...");
     const apkAbs = resolvePath(rootDir, apkPath);
-    const child = execFile("gh", [
-      "release", "create", tag,
-      "--repo", runOutput("git", ["remote", "get-url", "origin"]).replace(/\.git$/, "").replace(/.*github\.com[/:]/, "").replace(/\.git$/, ""),
-      "--title", title,
-      "--notes-file", "-",
-      apkAbs,
-    ], { cwd: rootDir, stdio: ["pipe", "inherit", "inherit"] });
+    const child = execFile(
+      "gh",
+      [
+        "release",
+        "create",
+        tag,
+        "--repo",
+        runOutput("git", ["remote", "get-url", "origin"])
+          .replace(/\.git$/, "")
+          .replace(/.*github\.com[/:]/, "")
+          .replace(/\.git$/, ""),
+        "--title",
+        title,
+        "--notes-file",
+        "-",
+        apkAbs,
+      ],
+      { cwd: rootDir, stdio: ["pipe", "inherit", "inherit"] },
+    );
     child.stdin.write(changelog);
     child.stdin.end();
     await new Promise((resolve, reject) => {
       child.on("error", reject);
-      child.on("close", (code) => code === 0 ? resolve() : reject(new Error(`gh release create exited with code ${code}`)));
+      child.on("close", (code) =>
+        code === 0 ? resolve() : reject(new Error(`gh release create exited with code ${code}`)),
+      );
     });
     ok(`GitHub Release ${tag} 发布成功！`);
   } else {
@@ -321,7 +356,11 @@ async function main() {
   console.log(`   版本: ${newVersion}`);
   console.log(`   标签: ${tag}`);
   console.log(`   APK: ${resolvePath(rootDir, apkPath)}`);
-  console.log(`   地址: https://github.com/${runOutput("git", ["remote", "get-url", "origin"]).replace(/.*github\.com[/:]/, "").replace(/\.git$/, "")}/releases/tag/${tag}`);
+  console.log(
+    `   地址: https://github.com/${runOutput("git", ["remote", "get-url", "origin"])
+      .replace(/.*github\.com[/:]/, "")
+      .replace(/\.git$/, "")}/releases/tag/${tag}`,
+  );
   console.log("=".repeat(50));
 }
 

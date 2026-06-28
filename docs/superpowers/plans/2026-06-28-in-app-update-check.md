@@ -21,9 +21,11 @@
 ### Task 1: Create `src/services/updateService.ts`
 
 **Files:**
+
 - Create: `src/services/updateService.ts`
 
 **Interfaces:**
+
 - Produces: `checkForUpdate(): Promise<CheckResult>`, `isNewer(local: string, remote: string): boolean`, types `CheckResult` and `GitHubRelease`
 
 - [ ] **Step 1: Create the update service module**
@@ -83,8 +85,7 @@ function isNewer(local: string, remote: string): boolean {
 
 // ── Core fetch ──
 
-const GITHUB_API_URL =
-  "https://api.github.com/repos/a1121611810/pixivizer/releases/latest";
+const GITHUB_API_URL = "https://api.github.com/repos/a1121611810/pixivizer/releases/latest";
 
 /**
  * Fetch the latest stable release from GitHub and compare
@@ -103,9 +104,7 @@ export async function checkForUpdate(): Promise<CheckResult> {
     });
 
     if (!res.ok) {
-      console.warn(
-        `[updateService] GitHub API responded with ${res.status}`,
-      );
+      console.warn(`[updateService] GitHub API responded with ${res.status}`);
       return cachedResult ?? noUpdateResult();
     }
 
@@ -113,9 +112,7 @@ export async function checkForUpdate(): Promise<CheckResult> {
 
     // Skip pre-releases
     if (release.prerelease) {
-      console.warn(
-        `[updateService] Latest release is a pre-release, skipping`,
-      );
+      console.warn(`[updateService] Latest release is a pre-release, skipping`);
       return cachedResult ?? noUpdateResult();
     }
 
@@ -179,9 +176,11 @@ git commit -m "feat: add update check service with GitHub API integration"
 ### Task 2: Extend `src/stores/uiStore.ts` with update signals
 
 **Files:**
+
 - Modify: `src/stores/uiStore.ts`
 
 **Interfaces:**
+
 - Consumes: none (pure store extension)
 - Produces: `autoCheckUpdate`, `setAutoCheckUpdate`, `loadAutoCheckUpdatePreference`, `hasUpdate`, `setHasUpdate`, `latestVersion`, `setLatestVersion`, `latestReleaseUrl`, `setLatestReleaseUrl`, `latestChangelog`, `setLatestChangelog`, `isCheckingUpdate`, `setIsCheckingUpdate`, `lastCheckTime`, `setLastCheckTime`
 
@@ -276,9 +275,11 @@ git commit -m "feat: add update-check signals and preference to uiStore"
 ### Task 3: Wire startup auto-check into `src/App.tsx`
 
 **Files:**
+
 - Modify: `src/App.tsx`
 
 **Interfaces:**
+
 - Consumes: `autoCheckUpdate` (from uiStore), `checkForUpdate` (from updateService)
 
 - [ ] **Step 1: Add imports**
@@ -292,6 +293,7 @@ import { checkForUpdate } from "./services/updateService";
 Add `autoCheckUpdate` and `loadAutoCheckUpdatePreference` to the existing uiStore import:
 
 Find the line:
+
 ```typescript
 import {
   loadPredictiveBackPreference,
@@ -334,9 +336,11 @@ git commit -m "feat: wire startup auto-update check in App.tsx"
 ### Task 4: Add update check UI to `src/components/SettingsSheet.tsx`
 
 **Files:**
+
 - Modify: `src/components/SettingsSheet.tsx`
 
 **Interfaces:**
+
 - Consumes: `autoCheckUpdate`, `setAutoCheckUpdate`, `hasUpdate`, `setHasUpdate`, `latestVersion`, `setLatestVersion`, `latestReleaseUrl`, `setLatestReleaseUrl`, `latestChangelog`, `setLatestChangelog`, `isCheckingUpdate`, `setIsCheckingUpdate`, `lastCheckTime`, `setLastCheckTime` (from uiStore)
 - Consumes: `checkForUpdate` (from updateService)
 
@@ -345,6 +349,7 @@ git commit -m "feat: wire startup auto-update check in App.tsx"
 Add to the existing uiStore imports in SettingsSheet.tsx:
 
 Find the import block from `../stores/uiStore` (lines 4-34) and add these to the destructured list:
+
 ```
 autoCheckUpdate,
 setAutoCheckUpdate,
@@ -361,6 +366,7 @@ setIsCheckingUpdate,
 ```
 
 Add the updateService import:
+
 ```typescript
 import { checkForUpdate } from "../services/updateService";
 ```
@@ -520,20 +526,22 @@ git commit -m "feat: add update check UI section to SettingsSheet"
 
 ### 1. Spec Coverage
 
-| Spec Requirement | Task(s) | Status |
-|---|---|---|
-| Toggle "启动时检查更新" (default OFF) | Task 2 (signal + preference), Task 4 (UI toggle) | ✅ |
-| "检查更新" button | Task 4 (UI button row) | ✅ |
-| Startup silent check | Task 3 (App.tsx trigger) | ✅ |
-| Visual indicator on new version | Task 4 (version tag + accent color) | ✅ |
-| Source: GitHub Releases (stable only) | Task 1 (updateService.ts — filters prerelease) | ✅ |
-| Manual check shows inline status | Task 4 (loading spinner + version tag) | ✅ |
-| Link to GitHub Release page | Task 4 (window.open on click when hasUpdate) | ✅ |
-| No semver dependency | Task 1 (isNewer uses numeric comparison) | ✅ |
-| Silent error handling | Task 1 (all errors caught, console.warn only) | ✅ |
+| Spec Requirement                      | Task(s)                                          | Status |
+| ------------------------------------- | ------------------------------------------------ | ------ |
+| Toggle "启动时检查更新" (default OFF) | Task 2 (signal + preference), Task 4 (UI toggle) | ✅     |
+| "检查更新" button                     | Task 4 (UI button row)                           | ✅     |
+| Startup silent check                  | Task 3 (App.tsx trigger)                         | ✅     |
+| Visual indicator on new version       | Task 4 (version tag + accent color)              | ✅     |
+| Source: GitHub Releases (stable only) | Task 1 (updateService.ts — filters prerelease)   | ✅     |
+| Manual check shows inline status      | Task 4 (loading spinner + version tag)           | ✅     |
+| Link to GitHub Release page           | Task 4 (window.open on click when hasUpdate)     | ✅     |
+| No semver dependency                  | Task 1 (isNewer uses numeric comparison)         | ✅     |
+| Silent error handling                 | Task 1 (all errors caught, console.warn only)    | ✅     |
 
 ### 2. Placeholder Scan
+
 No "TBD", "TODO", or incomplete step content found.
 
 ### 3. Type Consistency
+
 All signal names, function signatures, and import paths are consistent across tasks.
