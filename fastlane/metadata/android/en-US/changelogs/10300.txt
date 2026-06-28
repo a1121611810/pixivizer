@@ -1,0 +1,11 @@
+🔧 其他
+  fix: proxy GitHub API through Vite dev server to avoid 403 from proxy agent
+  fix: address final review findings — double-click guard, deduplicate handler, remove dead code
+  feat: add update check UI section to SettingsSheet
+  feat: wire startup auto-update check in App.tsx
+  feat: add update-check signals and preference to uiStore
+  feat: add update check service with GitHub API integration
+  docs: add implementation plan for in-app update check
+  docs: add in-app update check design spec
+✨ 新功能
+  feat(scripts): 新增一键发布与试运行命令
