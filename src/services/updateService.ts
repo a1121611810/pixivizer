@@ -52,7 +52,9 @@ function isNewer(local: string, remote: string): boolean {
 
 // ── Core fetch ──
 
-const GITHUB_API_URL = "https://api.github.com/repos/a1121611810/pixivizer/releases/latest";
+// dev 模式走 Vite proxy（避免代理拦截 GitHub），production 直连
+const GITHUB_API_BASE = import.meta.env.DEV ? "/github-api" : "https://api.github.com";
+const GITHUB_API_URL = `${GITHUB_API_BASE}/repos/a1121611810/pixivizer/releases/latest`;
 
 /**
  * Fetch the latest stable release from GitHub and compare

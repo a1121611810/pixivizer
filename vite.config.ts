@@ -82,6 +82,12 @@ export default defineConfig({
         },
         agent: proxyAgent,
       },
+      // GitHub API — 不经过代理，直连（代理会拦截 GitHub 返回 403）
+      "/github-api": {
+        target: "https://api.github.com",
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/github-api/, ""),
+      },
     },
   },
 
