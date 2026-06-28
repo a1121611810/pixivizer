@@ -828,76 +828,6 @@
         color: var(--colorBrandForeground1);
       }
 
-      /* ── Screenshot Carousel ── */
-      .carousel-container {
-        position: relative;
-        margin-top: var(--spacingVerticalXXXXL);
-      }
-
-      .carousel-track {
-        display: flex;
-        gap: var(--spacingHorizontalXL);
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        padding: var(--spacingVerticalL) 0;
-      }
-
-      .carousel-track::-webkit-scrollbar {
-        display: none;
-      }
-
-      .carousel-slide {
-        flex: 0 0 auto;
-        scroll-snap-align: center;
-      }
-
-      .phone-frame {
-        width: 200px;
-        height: 400px;
-        border-radius: var(--borderRadius3XLarge);
-        overflow: hidden;
-        border: 2px solid var(--colorNeutralStroke2);
-        box-shadow: var(--elevationWin11);
-        background: var(--colorNeutralBackground2);
-        transition: transform var(--durationGentle) var(--curveEasyEase),
-                    box-shadow var(--durationGentle) var(--curveEasyEase);
-      }
-
-      .phone-frame:hover {
-        transform: translateY(-4px) scale(1.02);
-        box-shadow: var(--elevationWin11Hover);
-      }
-
-      .phone-frame img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
-      .carousel-dots {
-        display: flex;
-        justify-content: center;
-        gap: var(--spacingHorizontalS);
-        margin-top: var(--spacingVerticalL);
-      }
-
-      .carousel-dots span {
-        width: 8px;
-        height: 8px;
-        border-radius: var(--borderRadiusCircular);
-        background: var(--colorNeutralStroke1);
-        transition: background var(--durationFast) var(--curveEasyEase),
-                    transform var(--durationFast) var(--curveEasyEase);
-        cursor: pointer;
-      }
-
-      .carousel-dots span.active {
-        background: var(--colorBrandForeground1);
-        transform: scale(1.4);
-      }
 
       /* ── Utility ── */
       .visually-hidden {
@@ -1267,38 +1197,6 @@
         </div>
       </section>
 
-      <!-- ── Screenshot Carousel ── -->
-      <section class="section" aria-labelledby="screenshots-title">
-        <div class="section-inner">
-          <h2 id="screenshots-title" class="section-title reveal">应用预览</h2>
-          <div class="carousel-container" role="region" aria-label="应用截图展示">
-            <div class="carousel-track">
-              <div class="carousel-slide">
-                <div class="phone-frame">
-                  <img src="screenshots/01_feed.png" alt="推荐流截图" loading="lazy" width="200" height="400" />
-                </div>
-              </div>
-              <div class="carousel-slide">
-                <div class="phone-frame">
-                  <img src="screenshots/02_detail.png" alt="作品详情截图" loading="lazy" width="200" height="400" />
-                </div>
-              </div>
-              <div class="carousel-slide">
-                <div class="phone-frame">
-                  <img src="screenshots/03_settings.png" alt="设置面板截图" loading="lazy" width="200" height="400" />
-                </div>
-              </div>
-              <div class="carousel-slide">
-                <div class="phone-frame">
-                  <img src="screenshots/04_login.png" alt="登录页截图" loading="lazy" width="200" height="400" />
-                </div>
-              </div>
-            </div>
-            <div class="carousel-dots" aria-hidden="true"></div>
-          </div>
-        </div>
-      </section>
-
       <section id="download" class="section" aria-labelledby="download-title">
         <div class="section-inner">
           <h2 id="download-title" class="section-title reveal">获取 Pictelio</h2>
@@ -1415,65 +1313,20 @@
       });
     });
 
-    // Screenshot carousel - dot indicators + auto-play
-    const carousel = document.querySelector('.carousel-track');
-    const dotsContainer = document.querySelector('.carousel-dots');
-    if (carousel && dotsContainer) {
-      const slides = carousel.querySelectorAll('.carousel-slide');
-      slides.forEach((_, i) => {
-        const dot = document.createElement('span');
-        if (i === 0) dot.classList.add('active');
-        dot.addEventListener('click', () => {
-          slides[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        });
-        dotsContainer.appendChild(dot);
-      });
-
-      const dots = dotsContainer.querySelectorAll('span');
-      let activeIndex = 0;
-
-      const updateDots = () => {
-        const scrollLeft = carousel.scrollLeft;
-        const slideWidth = carousel.querySelector('.carousel-slide')?.offsetWidth || 1;
-        const gap = 24;
-        const index = Math.round(scrollLeft / (slideWidth + gap));
-        if (index !== activeIndex) {
-          dots[activeIndex]?.classList.remove('active');
-          activeIndex = Math.min(index, dots.length - 1);
-          dots[activeIndex]?.classList.add('active');
+    // Fingerprint copy to clipboard
+    document.querySelectorAll('.fingerprint-copy').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const text = btn.dataset.fingerprint;
+        try {
+          await navigator.clipboard.writeText(text);
+          const original = btn.innerHTML;
+          btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
+          setTimeout(() => btn.innerHTML = original, 2000);
+        } catch (e) {
+          // fallback - do nothing
         }
-      };
-
-      carousel.addEventListener('scroll', updateDots);
-
-      let autoPlay = setInterval(() => {
-        const nextIndex = (activeIndex + 1) % slides.length;
-        slides[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }, 4000);
-
-      carousel.addEventListener('mouseenter', () => clearInterval(autoPlay));
-      carousel.addEventListener('mouseleave', () => {
-        clearInterval(autoPlay);
-        autoPlay = setInterval(() => {
-          const nextIndex = (activeIndex + 1) % slides.length;
-          slides[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        }, 4000);
       });
-      // Fingerprint copy to clipboard
-      document.querySelectorAll('.fingerprint-copy').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const text = btn.dataset.fingerprint;
-          try {
-            await navigator.clipboard.writeText(text);
-            const original = btn.innerHTML;
-            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
-            setTimeout(() => btn.innerHTML = original, 2000);
-          } catch (e) {
-            // fallback - do nothing
-          }
-        });
-      });
-    }
+    });
     // Scroll reveal animation
   const revealObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
