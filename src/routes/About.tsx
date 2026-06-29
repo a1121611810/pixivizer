@@ -1,12 +1,6 @@
 import { type Component } from "solid-js";
 import { useNavigate } from "@solidjs/router";
-import { onMount } from "solid-js";
 import PageTransition from "../components/PageTransition";
-import { webDebugEnabled, setWebDebugEnabled } from "../stores/uiStore";
-import {
-  getWebDebugEnabled,
-  setWebDebugEnabled as setNativeDebug,
-} from "../services/webDebugService";
 
 // ── Fluent UI System Icons (24px) — SVG path data ──
 const iconPaths = {
@@ -123,12 +117,6 @@ const sections: AboutSection[] = [
 const About: Component = () => {
   const navigate = useNavigate();
 
-  // 启动时从原生插件同步 WebView 调试状态
-  onMount(async () => {
-    const enabled = await getWebDebugEnabled();
-    setWebDebugEnabled(enabled);
-  });
-
   return (
     <PageTransition>
       <div class="min-h-screen pb-16">
@@ -235,55 +223,6 @@ const About: Component = () => {
           </section>
         ))}
 
-        {/* ── 开发者选项 ── */}
-        <section class="mb-1">
-          <p class="px-5 py-2 [font-size:var(--fontSizeBase200)] font-semibold text-[var(--colorNeutralForeground2)] uppercase tracking-wide">
-            开发者选项
-          </p>
-          <div class="mx-4 rounded-[var(--borderRadiusLarge)] bg-[var(--colorNeutralBackground1)] overflow-hidden">
-            <div class="flex items-center justify-between px-4 min-h-11 py-3">
-              <div class="flex items-center gap-3 min-w-0 flex-1">
-                <div class="w-5 h-5 flex-shrink-0 text-[var(--colorNeutralForeground2)] flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z" fill="currentColor"/>
-                  </svg>
-                </div>
-                <span class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground1)] leading-snug">
-                  WebView 调试
-                </span>
-              </div>
-              <div
-                class="relative w-9 h-5 rounded-full cursor-pointer transition-colors duration-[var(--durationFast)] flex-shrink-0"
-                classList={{
-                  "bg-[var(--colorBrandBackground)]": webDebugEnabled(),
-                  "bg-[var(--colorNeutralStroke2)]": !webDebugEnabled(),
-                }}
-                onClick={async () => {
-                  const next = !webDebugEnabled();
-                  const result = await setNativeDebug(next);
-                  setWebDebugEnabled(result);
-                }}
-                role="switch"
-                aria-checked={webDebugEnabled()}
-                tabindex="0"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    const next = !webDebugEnabled();
-                    setNativeDebug(next).then((r) => setWebDebugEnabled(r));
-                  }
-                }}
-              >
-                <div
-                  class="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-[var(--elevation2)] transition-transform duration-[var(--durationFast)]"
-                  style={{
-                    transform: webDebugEnabled() ? "translateX(1.375rem)" : "translateX(0.125rem)",
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
     </PageTransition>
   );

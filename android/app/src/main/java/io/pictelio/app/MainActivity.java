@@ -26,10 +26,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(PredictiveBackPlugin.class);
-        registerPlugin(WebDebugPlugin.class);
         super.onCreate(savedInstanceState);
-        // 从 SharedPreferences 读取用户设置，应用 WebView 调试状态
-        WebDebugPlugin.applyOnCreate(this);
+        // 调试模式 — 需要时取消注释，下次启动生效（release 构建记得改回来）
+        // WebView.setWebContentsDebuggingEnabled(true);
     }
 
     @Override

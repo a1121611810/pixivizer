@@ -26,7 +26,6 @@ import {
   loadAutoCheckUpdatePreference,
 } from "./stores/uiStore";
 import { checkForUpdate } from "./services/updateService";
-import { getWebDebugEnabled, setWebDebugEnabled } from "./services/webDebugService";
 import {
   initPredictiveBack,
   setPredictiveBackEnabled,
@@ -112,10 +111,6 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     if (autoCheckUpdate()) {
       checkForUpdate(); // fire-and-forget, non-blocking
     }
-
-    // Sync WebView debug state from native plugin
-    const debugEnabled = await getWebDebugEnabled();
-    setWebDebugEnabled(debugEnabled);
 
     // Initialize route stack tracking
     clearRouteStack();
