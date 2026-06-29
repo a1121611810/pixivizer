@@ -56,16 +56,11 @@ const UPDATE_URL = "https://raw.githubusercontent.com/a1121611810/pixivizer/main
  */
 export async function checkForUpdate(): Promise<CheckResult> {
   try {
-    console.log("[updateService] 检查更新:", UPDATE_URL);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      console.warn("[updateService] 10秒超时，取消请求");
-      controller.abort();
-    }, 10_000);
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
 
     const res = await fetch(UPDATE_URL, { signal: controller.signal });
     clearTimeout(timeoutId);
-    console.log("[updateService] 响应:", res.status, res.ok);
 
     if (!res.ok) {
       console.warn(`[updateService] version.json 返回 ${res.status}`);
@@ -73,10 +68,8 @@ export async function checkForUpdate(): Promise<CheckResult> {
     }
 
     const data = await res.json();
-    console.log("[updateService] 远程版本:", data.version);
 
     const hasUpdate = isNewer(APP_VERSION, data.version);
-    console.log("[updateService] 比较:", APP_VERSION, "vs", data.version, "=>", hasUpdate);
 
     const result: CheckResult = {
       hasUpdate,

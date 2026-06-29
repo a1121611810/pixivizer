@@ -140,15 +140,10 @@ public class MainActivity extends BridgeActivity {
     private WebResourceResponse interceptGithubApi(String url, WebResourceRequest request) {
         if (url == null || !url.contains("/github-api/")) return null;
 
-        android.util.Log.d("Pictelio", "[interceptGithubApi] 拦截请求: " + url);
-
         try {
             String path = url.substring(url.indexOf("/github-api/") + "/github-api/".length());
             String targetUrl = "https://api.github.com/" + path;
 
-            android.util.Log.d("Pictelio", "[interceptGithubApi] 代理到: " + targetUrl);
-
-            // 使用系统网络栈连接（随手机代理/VPN 状态自动路由）
             HttpURLConnection conn = (HttpURLConnection) new URL(targetUrl).openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(10000);
@@ -189,8 +184,6 @@ public class MainActivity extends BridgeActivity {
                 }
             }
 
-            android.util.Log.d("Pictelio", "[interceptGithubApi] GitHub 响应: " + statusCode);
-
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             byte[] data = new byte[8192];
             int n;
@@ -220,7 +213,6 @@ public class MainActivity extends BridgeActivity {
                     new java.io.ByteArrayInputStream(buffer.toByteArray())
             );
         } catch (Exception e) {
-            android.util.Log.e("Pictelio", "[interceptGithubApi] 异常: " + e.getMessage());
             e.printStackTrace();
             return null;
         }

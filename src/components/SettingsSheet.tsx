@@ -168,15 +168,12 @@ interface ConfirmDialogProps {
 async function handleCheckUpdate() {
   if (isCheckingUpdate()) return;
   setIsCheckingUpdate(true);
-  console.log("[checkUpdate] 开始检查更新...");
   const result = await checkForUpdate();
-  console.log("[checkUpdate] 结果:", JSON.stringify(result));
   setHasUpdate(result.hasUpdate);
   setLatestVersion(result.latestVersion);
   setLatestReleaseUrl(result.latestReleaseUrl);
   setIsCheckingUpdate(false);
   setCheckCompleted(true);
-  // If update available, open the release page
   if (result.hasUpdate && result.latestReleaseUrl) {
     window.open(result.latestReleaseUrl, "_blank", "noopener,noreferrer");
   }
