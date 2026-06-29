@@ -1,0 +1,2 @@
+⚡ 性能
+  perf(updateService): 为 GitHub API 请求添加 10 秒超时保护，避免网络不可达时 UI 无限期等待
