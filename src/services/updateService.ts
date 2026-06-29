@@ -65,12 +65,20 @@ const GITHUB_API_URL = `${GITHUB_API_BASE}/repos/a1121611810/pixivizer/releases/
  */
 export async function checkForUpdate(): Promise<CheckResult> {
   try {
+    // Abort after 10 seconds to prevent the UI spinner from hanging forever
+    // when the network cannot reach GitHub API (common in some regions).
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
     const res = await fetch(GITHUB_API_URL, {
       headers: {
         Accept: "application/vnd.github.v3+json",
         "User-Agent": `Pictelio/${APP_VERSION}`,
       },
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       console.warn(`[updateService] GitHub API responded with ${res.status}`);
