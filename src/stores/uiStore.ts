@@ -93,6 +93,9 @@ const initialState = () => {
     latestReleaseUrl: "",
     latestChangelog: "",
     isCheckingUpdate: false,
+
+    // WebView 调试
+    webDebugEnabled: false,
   };
 };
 
@@ -418,6 +421,11 @@ export const setLatestChangelog = (v: string) => setState("latestChangelog", v);
 
 export const isCheckingUpdate = () => state.isCheckingUpdate;
 export const setIsCheckingUpdate = (v: boolean) => setState("isCheckingUpdate", v);
+
+// ── WebView 调试 ──
+
+export const webDebugEnabled = () => state.webDebugEnabled;
+export const setWebDebugEnabled = (v: boolean) => setState("webDebugEnabled", v);
 
 // ── 主题持久化 ──
 

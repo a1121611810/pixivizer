@@ -52,9 +52,11 @@ function isNewer(local: string, remote: string): boolean {
 
 // ── Core fetch ──
 
-// dev 模式走 Vite proxy（避免代理拦截 GitHub），production 直连
-const GITHUB_API_BASE = import.meta.env.DEV ? "/github-api" : "https://api.github.com";
-const GITHUB_API_URL = `${GITHUB_API_BASE}/repos/a1121611810/pixivizer/releases/latest`;
+// 统一走 /github-api 路径：
+//   - dev 模式：Vite dev server 代理到 GitHub API
+//   - Android 生产：MainActivity 原生 WebViewClient 拦截并代理
+//   - Web 生产（较少用）：需要服务端配置反向代理
+const GITHUB_API_URL = `/github-api/repos/a1121611810/pixivizer/releases/latest`;
 
 /**
  * Fetch the latest stable release from GitHub and compare
