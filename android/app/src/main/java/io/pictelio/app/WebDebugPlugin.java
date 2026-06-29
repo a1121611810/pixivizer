@@ -1,7 +1,8 @@
 package io.pictelio.app;
 
+import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.util.Log;
 import android.webkit.WebView;
 
 import com.getcapacitor.JSObject;
@@ -17,18 +18,21 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 @CapacitorPlugin(name = "WebDebug")
 public class WebDebugPlugin extends Plugin {
 
+    private static final String TAG = "WebDebugPlugin";
     private static final String PREFS_NAME = "WebDebugPrefs";
     private static final String KEY_ENABLED = "webview_debug_enabled";
 
     /**
      * 设置 WebView 调试开关。
      * 即时生效并持久化到 SharedPreferences。
+     *
+     * 注意：WebView.setWebContentsDebuggingEnabled 必须在 UI 线程调用。
      */
     @PluginMethod
     public void setEnabled(PluginCall call) {
-        boolean enabled = call.getBoolean("enabled", false);
+        final boolean enabled = call.getBoolean("enabled", false);
 
-        // 写入 SharedPreferences（应用重启后仍然保持）
+        // 写入 SharedPreferences（可在后台线程执行）
         Context ctx = getContext();
         if (ctx != null) {
             ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -37,8 +41,17 @@ public class WebDebugPlugin extends Plugin {
                     .apply();
         }
 
-        // 立即生效（静态方法，影响当前进程所有 WebView）
-        WebView.setWebContentsDebuggingEnabled(enabled);
+        // WebView.setWebContentsDebuggingEnabled 必须在 UI 线程调用
+        final Activity activity = getActivity();
+        if (activity != null) {
+            activity.runOnUiThread(() -> {
+                try {
+                    WebView.setWebContentsDebuggingEnabled(enabled);
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to set WebView debugging", e);
+                }
+            });
+        }
 
         JSObject ret = new JSObject();
         ret.put("enabled", enabled);
