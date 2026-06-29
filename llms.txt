@@ -2,30 +2,28 @@
 
 > A third-party Pixiv illustration browser built with SolidJS, packaged as a native Android app with Capacitor.
 
-## Key features
+Pictelio is a mobile-first single-page application that lets users browse Pixiv illustrations through a clean, modern interface. The app communicates with Pixiv's private API to deliver a native-feeling experience entirely in the browser, with optional Android packaging via Capacitor.
 
-- **Feed**: Recommended illustrations feed with virtual scrolling
-- **Illust Detail**: Full-size illustration viewer with zoom and pan
-- **Login**: Pixiv OAuth login
-- **Bookmarks**: Manage bookmarked illustrations
-- **Personal Center**: User profile and settings
-- **Settings**: Theme (light/dark/system), proxy configuration, language
-- **Search**: Tab-based feed search
-- **User Illusts**: Browse illustrations by specific users
-- **Age Confirmation**: Age verification gate
-- **Debug Image**: Image debugging tool
+Key capabilities: infinite virtual-scrolling feed of recommended and followed illustrations, full-screen image viewer with touch gestures, Pixiv OAuth login, bookmark management, personal center with user illustration browsing, configurable theme (light/dark/system), proxy settings for region-restricted access, and tab-based search.
 
-## Links
+Authentication is handled through Pixiv's OAuth endpoint. API requests are proxied through the app's backend to avoid CORS issues and support proxy configuration.
 
-- Homepage: https://a1121611810.github.io/pixivizer/
-- Privacy Policy: /privacy-policy.html
-- GitHub: https://github.com/a1121611810/pixivizer
+## Pages
 
-## Tech stack
+- [Feed (Recommended)](/): Main illustration recommendation feed with virtual scrolling
+- [Feed (Following)](/following): Illustrations from followed artists
+- [Illust Detail](/illust/:id): Full-size viewer with zoom, pan, and metadata
+- [Login](/login): Pixiv OAuth sign-in page
+- [Bookmarks](/bookmarks): Saved and bookmarked illustrations
+- [Personal Center](/me): User profile, preferences, and stats
+- [User Illusts](/user/:id/illusts): Browse illustrations by a specific artist
+- [Settings](/me): Theme (light/dark/system), proxy, language configuration
+- [About](/about): App information, version, and credits
+- [Age Confirmation](/age-confirmation): Age verification gate
 
-- SolidJS 1.9 (UI framework)
-- Vite 8 (build tool)
-- TypeScript 6
-- UnoCSS 66 (utility-first CSS)
-- Capacitor 8 (native Android wrapper)
-- pixiv-api (third-party Pixiv API integration)
+## Optional
+
+- [GitHub Repository](https://github.com/a1121611810/pixivizer): Full source code, issue tracker, and release downloads
+- [Privacy Policy](/privacy-policy.html): Data collection, storage, and privacy practices
+- [Pixiv API](https://github.com/zijin0/pixiv-api): Third-party Pixiv API client library used by the app
+- [Google Site Verification](/google6dcb87af9dbd350f.html): Domain ownership verification file
