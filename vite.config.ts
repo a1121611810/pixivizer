@@ -21,6 +21,9 @@ const proxyAgent = new HttpsProxyAgent(proxyUrl) as unknown;
 // Vite+ 的 UserConfig 拼接了 Vite 全量类型 + Rolldown 类型 + lint/fmt/test 扩展，
 // 类型比对时 TS 递归深度超限。整体断言为 any 规避，运行时仍由 Vite/Vite+ 校验配置。
 export default defineConfig({
+  // 部署到 GitHub Pages (/pixivizer/) 时需设置 BASE_PATH=/pixivizer/
+  // 本地开发 / Android 打包使用默认 "/"
+  base: process.env.BASE_PATH || "/",
   plugins: [solid(), UnoCSS()],
   define: {
     APP_VERSION: JSON.stringify(pkg.version),
