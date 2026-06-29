@@ -1,0 +1,4 @@
+🧹 杂项
+  chore: 清理调试日志，准备发布
+🐛 修复
+  fix: 检查更新改用 raw.githubusercontent.com 静态 version.json
