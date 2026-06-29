@@ -1,4 +1,13 @@
-import { type Component, onMount, Show, createSignal, onCleanup } from "solid-js";
+import {
+  type Component,
+  onMount,
+  Show,
+  createSignal,
+  onCleanup,
+  lazy,
+  Suspense,
+  ErrorBoundary,
+} from "solid-js";
 import { Route, Router, useNavigate, useLocation, useBeforeLeave } from "@solidjs/router";
 import type { RouteSectionProps } from "@solidjs/router";
 import { App as CapApp } from "@capacitor/app";
@@ -26,15 +35,15 @@ import {
 } from "./services/predictiveBack";
 import { loadReportedIds } from "./stores/reportStore";
 import { loadBlockedIds } from "./stores/blockStore";
-import Login from "./routes/Login";
-import AgeConfirmation from "./routes/AgeConfirmation";
-import IllustDetail from "./routes/IllustDetail";
-import DebugImage from "./routes/DebugImage";
-import Bookmarks from "./routes/Bookmarks";
-import TabFeedPage from "./routes/TabFeedPage";
-import PersonalCenter from "./routes/PersonalCenter";
-import UserIllusts from "./routes/UserIllusts";
-import About from "./routes/About";
+const Login = lazy(() => import("./routes/Login"));
+const AgeConfirmation = lazy(() => import("./routes/AgeConfirmation"));
+const IllustDetail = lazy(() => import("./routes/IllustDetail"));
+const DebugImage = lazy(() => import("./routes/DebugImage"));
+const Bookmarks = lazy(() => import("./routes/Bookmarks"));
+const TabFeedPage = lazy(() => import("./routes/TabFeedPage"));
+const PersonalCenter = lazy(() => import("./routes/PersonalCenter"));
+const UserIllusts = lazy(() => import("./routes/UserIllusts"));
+const About = lazy(() => import("./routes/About"));
 import PredictiveBackContainer from "./components/PredictiveBackContainer";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
@@ -237,7 +246,34 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
           </div>
         }
       >
-        <PredictiveBackContainer>{props.children}</PredictiveBackContainer>
+        <ErrorBoundary
+          fallback={(err, reset) => (
+            <div class="flex flex-col items-center justify-center min-h-screen gap-4 p-8">
+              <p class="text-[var(--colorStatusDangerForeground1)] text-lg font-semibold">
+                页面加载失败
+              </p>
+              <p class="text-[var(--colorNeutralForeground2)] text-sm text-center max-w-xs">
+                {err?.message ?? "未知错误"}
+              </p>
+              <button
+                class="px-4 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-white text-sm font-medium"
+                onClick={reset}
+              >
+                重试
+              </button>
+            </div>
+          )}
+        >
+          <Suspense
+            fallback={
+              <div class="flex items-center justify-center min-h-[60vh]">
+                <div class="w-5 h-5 [border-width:var(--strokeWidthThick)] border-solid [border-color:var(--colorNeutralStroke2)] [border-top-color:var(--colorBrandStroke1)] rounded-[var(--borderRadiusCircular)] animate-spin" />
+              </div>
+            }
+          >
+            <PredictiveBackContainer>{props.children}</PredictiveBackContainer>
+          </Suspense>
+        </ErrorBoundary>
       </Show>
 
       {/* Exit hint toast */}
@@ -250,17 +286,13 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
   );
 };
 
-const IllustDetailRoute: Component<RouteSectionProps> = () => {
-  return <IllustDetail />;
-};
-
 const App: Component = () => {
   return (
     <Router root={RootLayout}>
       <Route path="/login" component={Login} />
       <Route path="/recommended" component={() => <TabFeedPage tab="recommended" />} />
       <Route path="/following" component={() => <TabFeedPage tab="follow" />} />
-      <Route path="/illust/:id" component={IllustDetailRoute} />
+      <Route path="/illust/:id" component={IllustDetail} />
       <Route path="/debug" component={DebugImage} />
       <Route path="/bookmarks" component={Bookmarks} />
       <Route path="/me" component={PersonalCenter} />

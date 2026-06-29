@@ -1,22 +1,74 @@
-import { createSignal } from "solid-js";
+import { createSignal, createResource } from "solid-js";
 import { loadBookmarks, loadNext } from "../api/illust";
 import { user } from "./authStore";
 import type { PixivIllust, RestrictType } from "../api/types";
 import { filterFeedIllusts } from "../utils/r18Filter";
 
-// ── Signals ──
-const [illusts, setIllusts] = createSignal<PixivIllust[]>([]);
-const [nextUrl, setNextUrl] = createSignal<string | null>(null);
-const [loading, setLoading] = createSignal(false);
-const [error, setError] = createSignal<string | null>(null);
+// ── Restrict signal (user-controlled filter) ──
 const [restrict, setRestrictSignal] = createSignal<RestrictType>("public");
+
+// ── Resource: auto-fetches when user or restrict changes ──
+const [bookmarkResource, { mutate, refetch }] = createResource(
+  // Source: returns false when not logged in to prevent fetch
+  () => {
+    const u = user();
+    if (!u?.id) return false;
+    return { userId: u.id, restrict: restrict() };
+  },
+  // Fetcher: calls Pixiv API with 429 retry logic
+  async ({ userId, restrict }) => {
+    let attempt = 0;
+    while (true) {
+      try {
+        const data = await loadBookmarks(userId, restrict);
+        return { illusts: data.illusts, nextUrl: data.next_url };
+      } catch (e) {
+        const msg = (e as { message?: string }).message ?? "";
+        // 429 Too Many Requests — retry up to 3 times with 3s delay
+        if ((msg.includes("429") || msg.includes("频繁")) && attempt < 3) {
+          attempt++;
+          await new Promise((r) => setTimeout(r, 3000));
+          continue;
+        }
+        throw e; // re-throw to set resource.error
+      }
+    }
+  },
+  { initialValue: { illusts: [] as PixivIllust[], nextUrl: null as string | null } },
+);
+
+// ── Derived exports (backward-compatible with previous signal API) ──
+
+/** Filtered illusts (R18/R18G + blocked users applied) */
+export const illusts = () => {
+  const data = bookmarkResource();
+  return data ? filterFeedIllusts(data.illusts) : [];
+};
+
+/** Next page URL for pagination */
+export const nextUrl = () => bookmarkResource()?.nextUrl ?? null;
+
+/** Whether the main fetch is in progress */
+export const loading = () => bookmarkResource.loading;
+
+/**
+ * Normalized error message.
+ * Maps known Pixiv API errors to user-friendly Chinese messages.
+ */
+export const error = () => {
+  const err = bookmarkResource.error;
+  if (!err) return null;
+  const msg = (err as { message?: string }).message ?? String(err);
+  if (msg.includes("401") || msg.includes("UNAUTHORIZED")) return "登录已过期，请重新登录";
+  if (msg.includes("429") || msg.includes("频繁")) return "请求太频繁，3 秒后自动重试...";
+  if (msg.includes("NETWORK") || msg.includes("网络")) return "网络连接失败，请检查网络后重试";
+  return `加载收藏列表失败: ${msg}`;
+};
+
+export { restrict };
 
 // ── Scroll persistence ──
 let scrollY = 0;
-/** 是否已经完成过首次加载（无论结果如何），防止空列表触发无限请求 */
-let loaded = false;
-
-export { illusts, nextUrl, loading, error, restrict };
 
 export function saveBookmarkScroll() {
   scrollY = window.scrollY;
@@ -28,98 +80,49 @@ export function getBookmarkScrollY(): number {
 
 // ── Actions ──
 
-/** 确保数据已加载（无数据时自动加载，有数据时 no-op） */
+/**
+ * Ensure data is loaded.
+ * With createResource, this is mostly a no-op since the resource auto-fetches.
+ * Only triggers a fetch if the resource hasn't started yet.
+ */
 export function ensureLoaded() {
-  if (loaded || illusts().length > 0 || loading() || error()) return;
-  forceLoad();
-}
-
-async function forceLoad() {
-  if (loading()) return;
-  const userId = user()?.id;
-  if (!userId) {
-    setError("请先登录");
-    return;
-  }
-  setLoading(true);
-  setError(null);
-  try {
-    const data = await loadBookmarks(userId, restrict());
-    setIllusts(filterFeedIllusts(data.illusts));
-    setNextUrl(data.next_url);
-    setLoading(false);
-    loaded = true;
-  } catch (e) {
-    const msg = (e as { message?: string }).message ?? "加载失败";
-    if (msg.includes("401") || msg.includes("UNAUTHORIZED")) {
-      setError("登录已过期，请重新登录");
-    } else if (msg.includes("429") || msg.includes("频繁")) {
-      setError("请求太频繁，3 秒后自动重试...");
-      setLoading(false);
-      setTimeout(() => {
-        if (error()?.includes("频繁")) {
-          setError(null);
-          forceLoad();
-        }
-      }, 3000);
-      return;
-    } else if (msg.includes("NETWORK") || msg.includes("网络")) {
-      setError("网络连接失败，请检查网络后重试");
-    } else {
-      setError(`加载收藏列表失败: ${msg}`);
-    }
-    setLoading(false);
-    loaded = true;
+  if (bookmarkResource.state === "unresolved" || bookmarkResource.state === "errored") {
+    refetch();
   }
 }
 
-/** 加载下一页 */
+/**
+ * Load next page of bookmarks.
+ * Uses mutate to append data optimistically to the existing list.
+ */
 export async function fetchMore() {
-  if (!nextUrl() || loading()) return;
-  setLoading(true);
-  try {
-    const data = await loadNext(nextUrl()!);
-    setIllusts([...illusts(), ...filterFeedIllusts(data.illusts)]);
-    setNextUrl(data.next_url);
-    setLoading(false);
-  } catch (e) {
-    setError((e as { message?: string }).message ?? "加载失败");
-    setLoading(false);
-  }
+  const current = bookmarkResource();
+  if (!current?.nextUrl || bookmarkResource.loading) return;
+  const data = await loadNext(current.nextUrl);
+  mutate((prev) =>
+    prev
+      ? {
+          illusts: [...prev.illusts, ...data.illusts],
+          nextUrl: data.next_url,
+        }
+      : prev,
+  );
 }
 
-/** 下拉刷新：重新加载第一页并替换全部数据 */
+/**
+ * Pull-to-refresh: re-fetch the first page, replacing all data.
+ * Delegates to createResource's refetch which re-runs the fetcher.
+ */
 export async function refresh() {
-  setLoading(true);
-  setError(null);
-  loaded = false;
-  try {
-    const userId = user()?.id;
-    if (!userId) {
-      setError("请先登录");
-      setLoading(false);
-      return;
-    }
-    const data = await loadBookmarks(userId, restrict());
-    setIllusts(filterFeedIllusts(data.illusts));
-    setNextUrl(data.next_url);
-    setLoading(false);
-    loaded = true;
-  } catch (e) {
-    const msg = (e as { message?: string }).message ?? "加载失败";
-    setError(`刷新失败: ${msg}`);
-    setLoading(false);
-    loaded = true;
-  }
+  refetch();
 }
 
-/** 切换公开/非公开收藏，清空列表并重新加载 */
+/**
+ * Switch between public/private bookmarks.
+ * Changing the restrict signal triggers auto-refetch via createResource's source tracking.
+ */
 export function setRestrict(r: RestrictType) {
   if (restrict() === r) return;
   setRestrictSignal(r);
-  setIllusts([]);
-  setNextUrl(null);
-  setError(null);
-  loaded = false;
-  ensureLoaded();
+  // Source change triggers automatic re-fetch — no manual action needed
 }
