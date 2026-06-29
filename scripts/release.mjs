@@ -103,7 +103,8 @@ function classifyCommit(msg) {
   if (msg.startsWith("fix(") || msg.startsWith("fix:")) return "🐛 修复";
   if (msg.startsWith("perf(") || msg.startsWith("perf:")) return "⚡ 性能";
   if (msg.startsWith("docs(") || msg.startsWith("docs:") || msg.startsWith("📝")) return "📝 文档";
-  if (msg.startsWith("chore(") || msg.startsWith("chore:") || msg.startsWith("🔧")) return "🧹 杂项";
+  if (msg.startsWith("chore(") || msg.startsWith("chore:") || msg.startsWith("🔧"))
+    return "🧹 杂项";
   if (msg.startsWith("refactor(") || msg.startsWith("refactor:")) return "♻️ 重构";
   if (msg.startsWith("style(") || msg.startsWith("style:")) return "💄 样式";
   if (msg.startsWith("test(") || msg.startsWith("test:")) return "🧪 测试";
