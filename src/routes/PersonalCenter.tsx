@@ -4,6 +4,7 @@ import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
 import { resolveImageUrl } from "../utils/imageLoader";
 import { unfollowUser, followUser } from "../api/illust";
+import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 
 function AvatarFallback(props: { class?: string }) {
   return (
@@ -115,20 +116,13 @@ const PersonalCenter: Component<Props> = (props) => {
     window.scrollTo(0, 0);
   });
 
-  let sentinelRef: HTMLDivElement | undefined;
-
-  onMount(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting && !loading()) {
-          if (activeTab() === "following") loadMoreFollowing();
-          else loadMoreFollowers();
-        }
-      },
-      { rootMargin: "200px" },
-    );
-    if (sentinelRef) observer.observe(sentinelRef);
-    return () => observer.disconnect();
+  const { attach: sentinelAttach } = createSentinelPaginator({
+    rootMargin: "200px",
+    enabled: () => !loading(),
+    onTrigger: () => {
+      if (activeTab() === "following") loadMoreFollowing();
+      else loadMoreFollowers();
+    },
   });
 
   // R18 开关切换时自动刷新关注列表
@@ -409,7 +403,7 @@ const PersonalCenter: Component<Props> = (props) => {
               </p>
             )}
 
-            <div ref={sentinelRef} class="h-1" />
+            <div ref={sentinelAttach} class="h-1" />
           </div>
         </div>
       </PageTransition>

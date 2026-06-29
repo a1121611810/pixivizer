@@ -1,4 +1,4 @@
-import { onMount, onCleanup, createSignal, createEffect, For, createMemo } from "solid-js";
+import { createSignal, createEffect, For, createMemo } from "solid-js";
 import type { Component } from "solid-js";
 import ImageCard from "./ImageCard";
 import LazyImageCard from "./LazyImageCard";
@@ -7,6 +7,7 @@ import SkeletonCard from "./SkeletonCard";
 import PullIndicator from "./PullIndicator";
 import type { PullZone } from "./PullIndicator";
 import type { PixivIllust } from "../api/types";
+import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 
 interface Props {
   illusts: PixivIllust[];
@@ -30,7 +31,11 @@ const LAYOUT_COLUMNS: Record<string, string> = {
 };
 
 const VirtualFeed: Component<Props> = (props) => {
-  let sentinel: HTMLDivElement | undefined;
+  const { attach: sentinelAttach } = createSentinelPaginator({
+    rootMargin: "0px 0px 30% 0px",
+    enabled: () => props.hasMore && !props.loading,
+    onTrigger: () => props.onLoadMore(),
+  });
 
   const PULL_THRESHOLD = 60;
   const SETTINGS_THRESHOLD = 130;
@@ -94,19 +99,6 @@ const VirtualFeed: Component<Props> = (props) => {
       setPullPhase("idle");
     }
   }
-
-  onMount(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && props.hasMore && !props.loading) {
-          props.onLoadMore();
-        }
-      },
-      { rootMargin: "0px 0px 30% 0px" },
-    );
-    if (sentinel) observer.observe(sentinel);
-    onCleanup(() => observer.disconnect());
-  });
 
   return (
     <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
@@ -175,7 +167,7 @@ const VirtualFeed: Component<Props> = (props) => {
           </p>
         )}
 
-        <div ref={sentinel} class="h-1" />
+        <div ref={sentinelAttach} class="h-1" />
       </div>
     </div>
   );
