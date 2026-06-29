@@ -140,34 +140,39 @@ public class MainActivity extends BridgeActivity {
     private WebResourceResponse interceptGithubApi(String url, WebResourceRequest request) {
         if (url == null || !url.contains("/github-api/")) return null;
 
+        android.util.Log.d("Pictelio", "[interceptGithubApi] 拦截请求: " + url);
+
         try {
             String path = url.substring(url.indexOf("/github-api/") + "/github-api/".length());
             String targetUrl = "https://api.github.com/" + path;
 
+            android.util.Log.d("Pictelio", "[interceptGithubApi] 代理到: " + targetUrl);
+
+            // 使用系统网络栈连接（随手机代理/VPN 状态自动路由）
             HttpURLConnection conn = (HttpURLConnection) new URL(targetUrl).openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(15000);
 
-            // 转发 WebView 请求中的关键头
+            // GitHub API 强校验这些头，显式设置确保正确
+            conn.setRequestProperty("Accept", "application/vnd.github.v3+json");
+            conn.setRequestProperty("User-Agent", "Pictelio-Android/1.0");
+
+            // 转发 WebView 请求中的其他头（Accept 和 User-Agent 已显式设置）
             Map<String, String> webViewHeaders = request.getRequestHeaders();
             if (webViewHeaders != null) {
                 for (Map.Entry<String, String> header : webViewHeaders.entrySet()) {
                     String key = header.getKey();
-                    // 跳过 WebView 内部自动添加的 Host/Origin/Referer 等
                     if (!key.equalsIgnoreCase("Host")
                             && !key.equalsIgnoreCase("Origin")
                             && !key.equalsIgnoreCase("Referer")
                             && !key.equalsIgnoreCase("Connection")
-                            && !key.equalsIgnoreCase("Accept-Encoding")) {
+                            && !key.equalsIgnoreCase("Accept-Encoding")
+                            && !key.equalsIgnoreCase("User-Agent")
+                            && !key.equalsIgnoreCase("Accept")) {
                         conn.setRequestProperty(key, header.getValue());
                     }
                 }
-            }
-
-            // 如果 WebView 没有传 User-Agent，设一个默认值
-            if (conn.getRequestProperty("User-Agent") == null) {
-                conn.setRequestProperty("User-Agent", "Pictelio-Android/1.0");
             }
 
             int statusCode;
@@ -183,6 +188,8 @@ public class MainActivity extends BridgeActivity {
                     input = new java.io.ByteArrayInputStream(new byte[0]);
                 }
             }
+
+            android.util.Log.d("Pictelio", "[interceptGithubApi] GitHub 响应: " + statusCode);
 
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             byte[] data = new byte[8192];
@@ -213,6 +220,7 @@ public class MainActivity extends BridgeActivity {
                     new java.io.ByteArrayInputStream(buffer.toByteArray())
             );
         } catch (Exception e) {
+            android.util.Log.e("Pictelio", "[interceptGithubApi] 异常: " + e.getMessage());
             e.printStackTrace();
             return null;
         }

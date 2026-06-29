@@ -10,14 +10,6 @@
 
 // ── Types ──
 
-interface GitHubRelease {
-  tag_name: string;
-  html_url: string;
-  body: string;
-  published_at: string;
-  prerelease: boolean;
-}
-
 export interface CheckResult {
   hasUpdate: boolean;
   latestVersion: string;
@@ -52,11 +44,8 @@ function isNewer(local: string, remote: string): boolean {
 
 // ── Core fetch ──
 
-// 统一走 /github-api 路径：
-//   - dev 模式：Vite dev server 代理到 GitHub API
-//   - Android 生产：MainActivity 原生 WebViewClient 拦截并代理
-//   - Web 生产（较少用）：需要服务端配置反向代理
-const GITHUB_API_URL = `/github-api/repos/a1121611810/pixivizer/releases/latest`;
+// 通过 raw.githubusercontent.com 获取版本信息（不被代理拦截）
+const UPDATE_URL = "https://raw.githubusercontent.com/a1121611810/pixivizer/main/website/version.json";
 
 /**
  * Fetch the latest stable release from GitHub and compare
@@ -67,46 +56,39 @@ const GITHUB_API_URL = `/github-api/repos/a1121611810/pixivizer/releases/latest`
  */
 export async function checkForUpdate(): Promise<CheckResult> {
   try {
-    // Abort after 10 seconds to prevent the UI spinner from hanging forever
-    // when the network cannot reach GitHub API (common in some regions).
+    console.log("[updateService] 检查更新:", UPDATE_URL);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10_000);
+    const timeoutId = setTimeout(() => {
+      console.warn("[updateService] 10秒超时，取消请求");
+      controller.abort();
+    }, 10_000);
 
-    const res = await fetch(GITHUB_API_URL, {
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-        "User-Agent": `Pictelio/${APP_VERSION}`,
-      },
-      signal: controller.signal,
-    });
-
+    const res = await fetch(UPDATE_URL, { signal: controller.signal });
     clearTimeout(timeoutId);
+    console.log("[updateService] 响应:", res.status, res.ok);
 
     if (!res.ok) {
-      console.warn(`[updateService] GitHub API responded with ${res.status}`);
+      console.warn(`[updateService] version.json 返回 ${res.status}`);
       return cachedResult ?? noUpdateResult();
     }
 
-    const release: GitHubRelease = await res.json();
+    const data = await res.json();
+    console.log("[updateService] 远程版本:", data.version);
 
-    // Skip pre-releases
-    if (release.prerelease) {
-      console.warn(`[updateService] Latest release is a pre-release, skipping`);
-      return cachedResult ?? noUpdateResult();
-    }
+    const hasUpdate = isNewer(APP_VERSION, data.version);
+    console.log("[updateService] 比较:", APP_VERSION, "vs", data.version, "=>", hasUpdate);
 
-    const hasUpdate = isNewer(APP_VERSION, release.tag_name);
     const result: CheckResult = {
       hasUpdate,
-      latestVersion: release.tag_name.replace(/^v/, ""),
-      latestReleaseUrl: release.html_url,
-      latestChangelog: release.body || "",
+      latestVersion: String(data.version || "").replace(/^v/, ""),
+      latestReleaseUrl: data.url || "",
+      latestChangelog: data.changelog || "",
     };
 
     cachedResult = result;
     return result;
   } catch (err) {
-    console.warn("[updateService] Failed to check for update:", err);
+    console.warn("[updateService] 异常:", err);
     return cachedResult ?? noUpdateResult();
   }
 }

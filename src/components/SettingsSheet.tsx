@@ -36,11 +36,13 @@ import {
   hasUpdate,
   isCheckingUpdate,
   latestVersion,
+  checkCompleted,
   setAutoCheckUpdate,
   setHasUpdate,
   setIsCheckingUpdate,
   setLatestReleaseUrl,
   setLatestVersion,
+  setCheckCompleted,
   resetUiStore,
 } from "../stores/uiStore";
 import { isLoggedIn, logout } from "../stores/authStore";
@@ -166,11 +168,14 @@ interface ConfirmDialogProps {
 async function handleCheckUpdate() {
   if (isCheckingUpdate()) return;
   setIsCheckingUpdate(true);
+  console.log("[checkUpdate] 开始检查更新...");
   const result = await checkForUpdate();
+  console.log("[checkUpdate] 结果:", JSON.stringify(result));
   setHasUpdate(result.hasUpdate);
   setLatestVersion(result.latestVersion);
   setLatestReleaseUrl(result.latestReleaseUrl);
   setIsCheckingUpdate(false);
+  setCheckCompleted(true);
   // If update available, open the release page
   if (result.hasUpdate && result.latestReleaseUrl) {
     window.open(result.latestReleaseUrl, "_blank", "noopener,noreferrer");
@@ -1202,16 +1207,21 @@ const SettingsSheet: Component = () => {
                     style="animation: spin 1s linear infinite"
                   />
                 </Show>
-                {/* Latest version tag — only visible after check */}
-                <Show when={!isCheckingUpdate() && latestVersion() !== ""}>
+                {/* Latest version tag — visible after check completes */}
+                <Show when={checkCompleted() && !isCheckingUpdate()}>
                   <span
                     class="[font-size:var(--fontSizeBase200)] font-semibold leading-snug"
                     classList={{
-                      "text-[var(--colorStatusSuccessForeground1)]": !hasUpdate(),
+                      "text-[var(--colorStatusSuccessForeground1)]": !hasUpdate() && latestVersion() !== "",
                       "text-[var(--colorBrandForeground1)]": hasUpdate(),
+                      "text-[var(--colorNeutralForeground3)]": latestVersion() === "",
                     }}
                   >
-                    {hasUpdate() ? `v${latestVersion()} ✨` : `v${APP_VERSION} ✅`}
+                    {latestVersion() !== ""
+                      ? hasUpdate()
+                        ? `v${latestVersion()} ✨`
+                        : `v${APP_VERSION} ✅`
+                      : `v${APP_VERSION} 🔄`}
                   </span>
                 </Show>
               </div>

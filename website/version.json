@@ -1,0 +1,5 @@
+{
+  "version": "1.5.5",
+  "url": "https://github.com/a1121611810/pixivizer/releases/latest",
+  "changelog": "修复检查更新功能 — 改用 GitHub Pages 静态文件替代 API"
+}

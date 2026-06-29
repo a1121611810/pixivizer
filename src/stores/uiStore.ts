@@ -93,6 +93,7 @@ const initialState = () => {
     latestReleaseUrl: "",
     latestChangelog: "",
     isCheckingUpdate: false,
+    checkCompleted: false,
   };
 };
 
@@ -418,6 +419,9 @@ export const setLatestChangelog = (v: string) => setState("latestChangelog", v);
 
 export const isCheckingUpdate = () => state.isCheckingUpdate;
 export const setIsCheckingUpdate = (v: boolean) => setState("isCheckingUpdate", v);
+
+export const checkCompleted = () => state.checkCompleted;
+export const setCheckCompleted = (v: boolean) => setState("checkCompleted", v);
 
 // ── 主题持久化 ──
 
