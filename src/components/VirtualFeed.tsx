@@ -102,7 +102,7 @@ const VirtualFeed: Component<Props> = (props) => {
           props.onLoadMore();
         }
       },
-      { rootMargin: "0px 0px 70% 0px" },
+      { rootMargin: "0px 0px 30% 0px" },
     );
     if (sentinel) observer.observe(sentinel);
     onCleanup(() => observer.disconnect());
@@ -148,7 +148,7 @@ const VirtualFeed: Component<Props> = (props) => {
                         }),
                   }}
                 >
-                  {index() < 8 ? (
+                  {index() < 4 ? (
                     <ImageCard illust={illust} onClick={props.onIllustClick} />
                   ) : (
                     <LazyImageCard illust={illust} onClick={props.onIllustClick} />

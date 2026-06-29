@@ -8,13 +8,13 @@ import { setPredictiveBackEnabled } from "../services/predictiveBack";
 
 type Tab = "recommended" | "follow" | "bookmarks" | "me";
 export type { Tab };
-export type Theme = "dark" | "light";
+export type Theme = "light" | "dark" | "system";
 export type ImageQuality = "medium" | "large" | "original";
 export type CacheSize = number;
 export type LayoutMode = "waterfall" | "single" | "grid";
 
 const [currentTab, setCurrentTab] = createSignal<Tab>("recommended");
-const [theme, setTheme] = createSignal<Theme>("light");
+const [theme, setTheme] = createSignal<Theme>("system");
 const [showSettingsSheet, setShowSettingsSheet] = createSignal(false);
 const [listQuality, setListQuality] = createSignal<ImageQuality>("medium");
 const [detailQuality, setDetailQuality] = createSignal<ImageQuality>("medium");
@@ -28,6 +28,7 @@ export const MODE_COLUMNS: Record<LayoutMode, number> = {
   grid: 3,
 };
 
+const PREF_KEY_THEME = "theme";
 const PREF_KEY_LAYOUT_MODE = "layout_mode";
 const PREF_KEY_USE_PREDICTIVE_BACK = "use_predictive_back";
 const PREF_KEY_AUTO_HIDE_NAV_BAR = "auto_hide_nav_bar";
@@ -121,11 +122,44 @@ async function setUsePredictiveBack(enabled: boolean): Promise<void> {
   }
 }
 
-// Sync theme class to <html> whenever it changes
+// ── 主题系统（浅色 / 深色 / 跟随系统）──
+
+/** 根据 OS 偏好获取当前系统主题（安全兜底） */
+function getSystemTheme(): "dark" | "light" {
+  try {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
+/** 根据用户选择的 theme 计算出实际生效的主题 */
+function computeResolvedTheme(userTheme: Theme): "dark" | "light" {
+  return userTheme === "system" ? getSystemTheme() : userTheme;
+}
+
+// resolvedTheme：实际生效的主题（用户选 system 时跟随 OS）
+const [resolvedTheme, setResolvedTheme] = createSignal<"dark" | "light">(
+  computeResolvedTheme(theme()),
+);
+
+// 监听系统主题变化，用户选 "system" 时自动跟随
+try {
+  const mql = window.matchMedia("(prefers-color-scheme: dark)");
+  mql.addEventListener("change", () => {
+    if (theme() === "system") {
+      setResolvedTheme(getSystemTheme());
+    }
+  });
+} catch {
+  // 测试环境或 SSR 中 window.matchMedia 不可用，静默跳过
+}
+
+// Sync resolvedTheme 到 <html> class
 createRoot(() => {
   createEffect(() => {
     const root = document.documentElement;
-    if (theme() === "dark") {
+    if (resolvedTheme() === "dark") {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
@@ -302,9 +336,36 @@ async function loadAutoCheckUpdatePreference(): Promise<void> {
   }
 }
 
+// ── 主题持久化 ──
+
+async function setThemePersisted(newTheme: Theme): Promise<void> {
+  setTheme(newTheme);
+  setResolvedTheme(computeResolvedTheme(newTheme));
+  try {
+    await Preferences.set({ key: PREF_KEY_THEME, value: newTheme });
+    // 双写 localStorage 供防 FOUC 内联脚本使用
+    localStorage.setItem(PREF_KEY_THEME, newTheme);
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist theme", e);
+  }
+}
+
+async function loadThemePreference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_THEME });
+    const userTheme: Theme =
+      value === "light" || value === "dark" || value === "system" ? value : "system";
+    setTheme(userTheme);
+    setResolvedTheme(computeResolvedTheme(userTheme));
+  } catch (e) {
+    console.warn("[uiStore] Failed to load theme preference", e);
+    setResolvedTheme(getSystemTheme());
+  }
+}
+
 /** 重置所有 UI 设置为默认值，并尽可能持久化。 */
 export async function resetUiStore(): Promise<void> {
-  setTheme("light");
+  await setThemePersisted("system");
   setListQuality("medium");
   setDetailQuality("medium");
   setCacheSize(600);
@@ -327,6 +388,9 @@ export {
   setCurrentTab,
   theme,
   setTheme,
+  resolvedTheme,
+  setThemePersisted,
+  loadThemePreference,
   showSettingsSheet,
   setShowSettingsSheet,
   layoutMode,

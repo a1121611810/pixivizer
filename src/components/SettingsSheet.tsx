@@ -5,7 +5,9 @@ import {
   showSettingsSheet,
   setShowSettingsSheet,
   theme,
-  setTheme,
+  resolvedTheme,
+  setThemePersisted,
+  type Theme,
   listQuality,
   setListQuality,
   detailQuality,
@@ -139,8 +141,8 @@ const FluentIcon: Component<{ name: IconName; size?: number; active?: boolean }>
   );
 };
 
-function toggleTheme() {
-  setTheme(theme() === "dark" ? "light" : "dark");
+function handleThemeChange(newTheme: Theme) {
+  setThemePersisted(newTheme);
 }
 
 // Prevent body scroll when touching the scrim while sheet is open
@@ -451,7 +453,7 @@ const SettingsSheet: Component = () => {
 
           {/* ── Settings rows ── */}
           <div class="px-5 py-3 flex flex-col">
-            {/* Theme toggle row */}
+            {/* Theme picker row */}
             <div class="flex items-center justify-between py-3">
               <div class="flex items-center gap-3">
                 <div class="relative w-6 h-6 flex-shrink-0">
@@ -464,7 +466,7 @@ const SettingsSheet: Component = () => {
                     style={{
                       position: "absolute",
                       inset: 0,
-                      opacity: theme() === "dark" ? 0 : 1,
+                      opacity: resolvedTheme() === "dark" ? 0 : 1,
                       transition: "opacity var(--durationFast) var(--curveEasyEase)",
                     }}
                   >
@@ -479,7 +481,7 @@ const SettingsSheet: Component = () => {
                     style={{
                       position: "absolute",
                       inset: 0,
-                      opacity: theme() === "dark" ? 1 : 0,
+                      opacity: resolvedTheme() === "dark" ? 1 : 0,
                       transition: "opacity var(--durationFast) var(--curveEasyEase)",
                     }}
                   >
@@ -488,34 +490,34 @@ const SettingsSheet: Component = () => {
                 </div>
                 <div>
                   <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                    深色模式
+                    主题
                   </p>
                   <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                    {theme() === "dark" ? "已开启 · 点击关闭" : "已关闭 · 点击开启"}
+                    {theme() === "light"
+                      ? "始终浅色"
+                      : theme() === "dark"
+                        ? "始终深色"
+                        : "跟随系统"}
                   </p>
                 </div>
               </div>
 
-              {/* Toggle switch — uses classList for reliable Solid reactivity */}
-              <button
-                onClick={toggleTheme}
-                role="switch"
-                aria-checked={theme() === "dark"}
-                aria-label="深色模式"
-                class="relative flex-shrink-0 w-14 h-7 p-0 rounded-[var(--borderRadiusCircular)] appearance-none border-0 outline-none cursor-pointer transition-colors duration-[var(--durationNormal)]"
-                classList={{
-                  "bg-[var(--colorCompoundBrandBackground)]": theme() === "dark",
-                  "bg-[var(--colorNeutralStrokeAccessible)]": theme() !== "dark",
-                }}
-              >
-                <span
-                  class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)]"
-                  classList={{
-                    "translate-x-[28px]": theme() === "dark",
-                    "translate-x-0.5": theme() !== "dark",
-                  }}
-                />
-              </button>
+              {/* Three-segment theme selector */}
+              <div class="flex rounded-[var(--borderRadiusCircular)] overflow-hidden border border-[var(--colorNeutralStroke2)]">
+                {(["light", "system", "dark"] as const).map((t) => (
+                  <button
+                    onClick={() => handleThemeChange(t)}
+                    class={`px-3 py-1.5 text-xs font-medium transition-colors duration-[var(--durationNormal)] ${
+                      theme() === t
+                        ? "bg-[var(--colorCompoundBrandBackground)] text-white"
+                        : "bg-transparent text-[var(--colorNeutralForeground2)] hover:text-[var(--colorNeutralForeground1)]"
+                    }`}
+                    aria-label={t === "light" ? "浅色" : t === "dark" ? "深色" : "跟随系统"}
+                  >
+                    {t === "light" ? "☀️ 浅色" : t === "dark" ? "🌙 深色" : "🔄 跟随"}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* 自动隐藏导航栏开关行 */}

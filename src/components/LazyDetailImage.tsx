@@ -1,47 +1,47 @@
-import { type Component, createSignal, onMount, onCleanup } from "solid-js";
+import type { Component } from "solid-js";
 import PixivImage from "./PixivImage";
+import { createViewportLazy } from "../primitives/useViewportLazy";
 
 interface Props {
+  /** 用户设定质量的图片 URL（medium / large） */
   src: string;
   pageIndex: number;
   totalPages: number;
-  width?: number;
-  height?: number;
+  width: number;
+  height: number;
   onClick: () => void;
+  /** 父组件跟踪的当前可见页码，用于精准控制预加载数量 */
+  visiblePage?: number;
 }
 
 /**
- * 详情页多图懒加载组件：仅当容器接近视口（400px 预热距）才渲染 PixivImage，
- * 之前用 aspect-ratio 占位保持布局稳定。一旦渲染则永久常驻。
+ * 详情页多图懒加载组件：
+ *
+ * 加载由 visiblePage 信号驱动：pageIndex <= visiblePage + 1 的图片立即加载，
+ * 其余保持在 aspect-ratio 占位状态。无 visiblePage 时退回到 IntersectionObserver 兜底。
  */
 const LazyDetailImage: Component<Props> = (props) => {
-  const [everVisible, setEverVisible] = createSignal(false);
-  let el: HTMLDivElement | undefined;
-
-  onMount(() => {
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          setEverVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "400px" },
-    );
-    observer.observe(el);
-    onCleanup(() => observer.disconnect());
+  const { everVisible, attach } = createViewportLazy({
+    rootMargin: "100px",
+    initialVisible:
+      props.visiblePage !== undefined ? props.pageIndex <= props.visiblePage + 1 : false,
+    externalVisible: () => {
+      const vp = props.visiblePage;
+      if (vp === undefined) return false;
+      return props.pageIndex <= vp + 1;
+    },
+    skipObserver: props.visiblePage !== undefined,
   });
 
   return (
     <div
-      ref={el}
+      ref={attach}
       class="relative cursor-pointer"
       data-page-index={props.pageIndex}
       onClick={props.onClick}
     >
       {everVisible() ? (
-        <>
+        <div class="relative">
           <PixivImage
             src={props.src}
             alt={`page ${props.pageIndex + 1}`}
@@ -57,13 +57,11 @@ const LazyDetailImage: Component<Props> = (props) => {
               {props.pageIndex + 1} / {props.totalPages}
             </span>
           </span>
-        </>
+        </div>
       ) : (
         <div
           style={{
-            ...(props.width && props.height
-              ? { "aspect-ratio": `${props.width} / ${props.height}` }
-              : { "min-height": "200px" }),
+            "aspect-ratio": `${props.width} / ${props.height}`,
             background: "var(--colorNeutralBackground2)",
             "border-radius": "var(--borderRadiusMedium)",
           }}

@@ -25,6 +25,8 @@ export interface PixivIllustImageUrls {
   square_medium: string;
   medium: string;
   large: string;
+  /** 全尺寸原图，只在 meta_pages 下有（meta_single_page 用单独的 original_image_url） */
+  original?: string;
 }
 
 export interface PixivIllustMetaPage {

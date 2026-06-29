@@ -11,6 +11,7 @@ import {
   loadLayoutModePreference,
   loadShowDetailStairsPreference,
   loadAgePreference,
+  loadThemePreference,
   ageConfirmed,
   autoCheckUpdate,
   loadAutoCheckUpdatePreference,
@@ -83,6 +84,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     });
 
     // Load persisted preferences (async)
+    await loadThemePreference();
     await loadPredictiveBackPreference();
     await loadAutoHideNavBarPreference();
     await loadShowR18Preference();

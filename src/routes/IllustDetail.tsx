@@ -295,7 +295,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     if (!i) return [];
     const q = detailQuality();
     if (i.page_count > 1) {
-      // 多图：medium → medium, large/original → large（meta_pages 没有 original）
+      // 多图：按用户设定质量取 URL，同时 api 返回的 meta_pages 还含 original
       return i.meta_pages.map((p) => (q === "medium" ? p.image_urls.medium : p.image_urls.large));
     }
     // 单图
@@ -306,6 +306,16 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
       return [i.image_urls.medium];
     }
     return [i.image_urls.large];
+  };
+
+  /** 原图 URL 列表，用于全屏查看器 */
+  const originalImageUrls = () => {
+    const i = illust();
+    if (!i) return [];
+    if (i.page_count > 1) {
+      return i.meta_pages.map((p) => p.image_urls.original ?? p.image_urls.large);
+    }
+    return [i.meta_single_page.original_image_url ?? i.image_urls.large];
   };
 
   function scrollToPage(index: number) {
@@ -416,14 +426,21 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
             {/* Images — multi-page: vertical stack; single: cover + tap */}
             {illust()!.page_count > 1 ? (
               <div class="flex flex-col px-3" style={{ gap: "var(--spacingVerticalS)" }}>
-                {imageUrls().map((url, i) => (
-                  <LazyDetailImage
-                    src={url}
-                    pageIndex={i}
-                    totalPages={imageUrls().length}
-                    onClick={() => openViewer(i)}
-                  />
-                ))}
+                {illust()!.meta_pages.map((page, i) => {
+                  const q = detailQuality();
+                  const src = q === "medium" ? page.image_urls.medium : page.image_urls.large;
+                  return (
+                    <LazyDetailImage
+                      src={src}
+                      pageIndex={i}
+                      totalPages={illust()!.page_count}
+                      onClick={() => openViewer(i)}
+                      visiblePage={currentVisiblePage()}
+                      width={illust()!.width}
+                      height={illust()!.height}
+                    />
+                  );
+                })}
               </div>
             ) : illust()!.type === "ugoira" ? (
               <div
@@ -644,7 +661,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
 
         {viewerOpen() && illust()!.type !== "ugoira" && (
           <ImageViewer
-            imageUrls={imageUrls()}
+            imageUrls={originalImageUrls()}
             initialPage={viewerStartPage()}
             onClose={closeViewer}
           />
