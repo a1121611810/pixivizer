@@ -670,11 +670,13 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
           />
         )}
 
-        <ReportSheet
-          illustId={illust()?.id ?? 0}
-          isOpen={showReportSheet()}
-          onClose={() => setShowReportSheet(false)}
-        />
+        <Show when={showReportSheet()}>
+          <ReportSheet
+            illustId={illust()?.id ?? 0}
+            isOpen
+            onClose={() => setShowReportSheet(false)}
+          />
+        </Show>
       </div>
     </PageTransition>
   );

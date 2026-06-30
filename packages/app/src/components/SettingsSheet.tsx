@@ -183,7 +183,8 @@ const SettingsSheet: Component = () => {
       {showSettingsSheet() && (
       <fluent-drawer
         position="top"
-        open
+        type="nonModal"
+        ref={(el) => { setTimeout(() => (el as any).show(), 0); }}
         on:close={close}
       >
         {/* Drag handle (visual affordance, non-functional in v1) */}
@@ -927,7 +928,9 @@ const SettingsSheet: Component = () => {
       </fluent-drawer>
       )}
 
-      <BlocklistSheet isOpen={showBlocklist()} onClose={() => setShowBlocklist(false)} />
+      <Show when={showBlocklist()}>
+        <BlocklistSheet isOpen onClose={() => setShowBlocklist(false)} />
+      </Show>
 
       <fluent-dialog
         open={dialogState()?.type === "clear"}

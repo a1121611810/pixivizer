@@ -16,7 +16,9 @@ const BlocklistSheet: Component<BlocklistSheetProps> = (props) => {
   }
 
   return (
-    <fluent-drawer position="bottom" open={props.isOpen} on:close={close}>
+    <fluent-drawer type="nonModal" position="bottom"
+      ref={(el) => { setTimeout(() => (el as any).show(), 0); }}
+      on:close={close}>
       {/* Drag handle */}
       <div class="flex justify-center pt-2 pb-1">
         <div class="w-10 h-1 rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralStroke1)]" />
