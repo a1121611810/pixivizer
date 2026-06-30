@@ -1,4 +1,4 @@
-import { createSignal, createEffect, createMemo, onCleanup } from "solid-js"
+import { createSignal, createMemo, onMount, onCleanup } from "solid-js"
 import type { Accessor } from "solid-js"
 import type { MasonryLayout, ScrollWindow } from "./types"
 import { computeWindow } from "./computeMasonryLayout"
@@ -6,6 +6,8 @@ import { computeWindow } from "./computeMasonryLayout"
 export interface VirtualScrollOptions {
   layout: Accessor<MasonryLayout>
   overscan?: number
+  /** If true, use window scroll instead of a container element */
+  useWindowScroll?: boolean
 }
 
 export interface VirtualScrollResult {
@@ -20,20 +22,72 @@ export interface VirtualScrollResult {
     height: string
   }
   scrollTop: Accessor<number>
+  /** Container ref for container scroll mode */
   containerRef: (el: HTMLDivElement) => void
+  /** Set scroll position (supports both modes) */
   setScrollTop: (y: number) => void
 }
 
 /**
  * SolidJS primitive that consumes a MasonryLayout and produces
  * a virtual window of visible items + absolute positioning styles.
- * The scroll container is managed internally.
+ *
+ * Supports two modes:
+ * - useWindowScroll=false (default): manages an internal scroll container
+ * - useWindowScroll=true: listens to window scroll (Feed.tsx uses this)
  */
 export function createVirtualScroll(opts: VirtualScrollOptions): VirtualScrollResult {
   const overscan = opts.overscan ?? 400
+  const useWindow = opts.useWindowScroll ?? false
   const [scrollTop, setScrollTop] = createSignal(0)
-  const [viewportHeight, setViewportHeight] = createSignal(800)
-  let containerEl: HTMLDivElement | undefined
+  const [viewportHeight, setViewportHeight] = createSignal(
+    typeof window !== "undefined" ? window.innerHeight : 800,
+  )
+
+  // ── Window scroll mode ──
+  if (useWindow) {
+    const onScroll = () => {
+      setScrollTop(window.scrollY)
+    }
+
+    const onResize = () => {
+      setViewportHeight(window.innerHeight)
+    }
+
+    onMount(() => {
+      setScrollTop(window.scrollY)
+      window.addEventListener("scroll", onScroll, { passive: true })
+      window.addEventListener("resize", onResize)
+    })
+
+    onCleanup(() => {
+      window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("resize", onResize)
+    })
+  }
+
+  // ── Container scroll mode ──
+
+  function containerRef(el: HTMLDivElement) {
+    if (!el) return
+
+    const onScroll = () => {
+      setScrollTop(el.scrollTop)
+    }
+    el.addEventListener("scroll", onScroll, { passive: true })
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setViewportHeight(entry.contentRect.height)
+      }
+    })
+    resizeObserver.observe(el)
+
+    onCleanup(() => {
+      el.removeEventListener("scroll", onScroll)
+      resizeObserver.disconnect()
+    })
+  }
 
   const visibleRange = createMemo(() => {
     const layout = opts.layout()
@@ -62,28 +116,6 @@ export function createVirtualScroll(opts: VirtualScrollOptions): VirtualScrollRe
       width: `${item.width}px`,
       height: `${item.height}px`,
     }
-  }
-
-  function containerRef(el: HTMLDivElement) {
-    containerEl = el
-    if (!el) return
-
-    const onScroll = () => {
-      setScrollTop(el.scrollTop)
-    }
-    el.addEventListener("scroll", onScroll, { passive: true })
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setViewportHeight(entry.contentRect.height)
-      }
-    })
-    resizeObserver.observe(el)
-
-    onCleanup(() => {
-      el.removeEventListener("scroll", onScroll)
-      resizeObserver.disconnect()
-    })
   }
 
   return {

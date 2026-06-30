@@ -31,8 +31,8 @@ export function createLayout(
     }
 
     if (mode === "single") {
-      const items = illusts().map((ill, i) => {
-        const ar = ill.width > 0 && ill.height > 0 ? ill.width / ill.height : 1
+      const items = illusts().map((_ill, i) => {
+        const ar = _ill.width > 0 && _ill.height > 0 ? _ill.width / _ill.height : 1
         const h = cw / ar
         return { index: i, x: 0, y: i * (h + g), width: cw, height: h, column: 0 }
       })
@@ -44,7 +44,7 @@ export function createLayout(
 
     if (mode === "grid") {
       const rowHeight = 200
-      const items = illusts().map((ill, i) => {
+      const items = illusts().map((_ill, i) => {
         const col = i % cc
         const row = Math.floor(i / cc)
         return {

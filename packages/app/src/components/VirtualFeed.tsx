@@ -23,6 +23,8 @@ interface Props {
   emptyText?: string
   skipAnimation?: boolean
   layoutMode?: LayoutMode
+  /** Scroll restoration offset (from feedStore.getFeedScrollY), applied on mount */
+  restoreScrollTop?: number
 }
 
 const LAYOUT_COLUMNS: Record<LayoutMode, number> = {
@@ -46,8 +48,8 @@ const VirtualFeed: Component<Props> = (props) => {
   const MAX_PULL = 200
   const [pullDistance, setPullDistance] = createSignal(0)
   const [pullPhase, setPullPhase] = createSignal<PullZone>("idle")
-  const [containerEl, setContainerEl] = createSignal<HTMLDivElement | undefined>()
   let touchStartY = 0
+  let initialRestored = false
 
   createEffect(() => {
     if (pullPhase() === "refreshing" && !props.loading) {
@@ -58,8 +60,7 @@ const VirtualFeed: Component<Props> = (props) => {
 
   function handleTouchStart(e: TouchEvent) {
     if (props.loading) return
-    const el = containerEl()
-    if (el && el.scrollTop > 5) return
+    if (window.scrollY > 5) return
     touchStartY = e.touches[0].clientY
     setPullPhase("pulling")
   }
@@ -98,12 +99,11 @@ const VirtualFeed: Component<Props> = (props) => {
     }
   }
 
-  // ── Container width via ResizeObserver ──
+  // ── Container width ──
   const [containerWidth, setContainerWidth] = createSignal(0)
 
   function onContainerRef(el: HTMLDivElement) {
     if (!el) return
-    setContainerEl(el)
     setContainerWidth(el.clientWidth)
 
     const ro = new ResizeObserver((entries) => {
@@ -119,7 +119,8 @@ const VirtualFeed: Component<Props> = (props) => {
   const columnCount = createMemo(() => LAYOUT_COLUMNS[layoutMode()])
   const columnWidth = createMemo(() => {
     const cc = columnCount()
-    return (containerWidth() - GAP * (cc - 1)) / cc
+    const cw = containerWidth()
+    return cw > 0 ? (cw - GAP * (cc - 1)) / cc : 150 // fallback width
   })
 
   const layout = createLayout(
@@ -130,32 +131,32 @@ const VirtualFeed: Component<Props> = (props) => {
     layoutMode,
   )
 
-  // ── Virtual scroll ──
+  // ── Virtual scroll (window scroll mode) ──
   const vs = createVirtualScroll({
     layout,
     overscan: 400,
+    useWindowScroll: true,
   })
 
-  // Combine scroll container ref with container width tracking
-  function combinedRef(el: HTMLDivElement) {
-    vs.containerRef(el)
-    onContainerRef(el)
-  }
+  // ── Scroll restoration ──
+  createEffect(() => {
+    const restore = props.restoreScrollTop
+    if (!initialRestored && restore && restore > 0) {
+      initialRestored = true
+      requestAnimationFrame(() => {
+        window.scrollTo(0, restore)
+      })
+    } else if (!initialRestored && props.restoreScrollTop === undefined) {
+      initialRestored = true // no restore needed
+    }
+  })
 
   return (
     <div
-      ref={combinedRef}
+      ref={onContainerRef}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      class="px-3 py-4"
-      style={{
-        overflow: "auto",
-        contain: "strict",
-        width: "100%",
-        height: "100%",
-        position: "relative",
-      }}
     >
       <PullIndicator
         zone={pullPhase()}
@@ -171,31 +172,42 @@ const VirtualFeed: Component<Props> = (props) => {
       )}
 
       {props.loading && props.illusts.length === 0 && pullPhase() !== "refreshing" && (
-        <div>加载中...</div>
+        <div class="px-3 py-4">
+          <div style={{ padding: 'var(--spacingVerticalL) 0' }}>加载中...</div>
+        </div>
       )}
 
-      {/* Virtualized items container — only visible items rendered */}
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          height: `${vs.totalHeight()}px`,
-        }}
-      >
-        <For each={props.illusts.slice(vs.visibleRange().startIndex, vs.visibleRange().endIndex + 1)}>
-          {(illust, i) => {
-            const realIndex = vs.visibleRange().startIndex + i()
-            return (
-              <div style={vs.getItemStyle(realIndex)}>
-                {realIndex < 4 ? (
-                  <ImageCard illust={illust} onClick={props.onIllustClick} />
-                ) : (
-                  <LazyImageCard illust={illust} onClick={props.onIllustClick} />
-                )}
-              </div>
-            )
+      {/* Virtualized items container */}
+      <div class="px-3">
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: `${vs.totalHeight() || 1}px`,
           }}
-        </For>
+        >
+          <For
+            each={
+              vs.visibleRange().endIndex >= vs.visibleRange().startIndex
+                ? props.illusts.slice(vs.visibleRange().startIndex, vs.visibleRange().endIndex + 1)
+                : []
+            }
+          >
+            {(illust, i) => {
+              const baseIndex = vs.visibleRange().startIndex
+              const realIndex = baseIndex + i()
+              return (
+                <div style={vs.getItemStyle(realIndex)}>
+                  {realIndex < 4 ? (
+                    <ImageCard illust={illust} onClick={props.onIllustClick} />
+                  ) : (
+                    <LazyImageCard illust={illust} onClick={props.onIllustClick} />
+                  )}
+                </div>
+              )
+            }}
+          </For>
+        </div>
       </div>
 
       {props.loading && props.illusts.length > 0 && pullPhase() !== "refreshing" && (
@@ -214,8 +226,7 @@ const VirtualFeed: Component<Props> = (props) => {
         </p>
       )}
 
-      {/* Sentinel for infinite scroll — placed at the end of content */}
-      <div ref={sentinelAttach} style={{ height: "1px", width: "100%" }} />
+      <div ref={sentinelAttach} class="h-1" />
     </div>
   )
 }

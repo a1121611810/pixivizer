@@ -30,9 +30,9 @@ allowBuilds:
   esbuild: true
   # pnpm install 会自动列出待审批的包到这里
 
-# ── 依赖解析优化 ──
+  # ── 依赖解析优化 ──
 
-# 子依赖按时间点解析：防止子依赖劫持
+  # 子依赖按时间点解析：防止子依赖劫持
 resolutionMode: time-based
 
 # 允许屏蔽特定废弃包的提醒
@@ -49,5 +49,4 @@ updateConfig:
   ignoreDependencies:
     - capacitor-secure-storage-plugin
 
-# ── 补丁记录（pnpm patch 自动写入）──
-patchedDependencies: {}
+storeDir: /Users/lilianda/Library/pnpm/store/v11
