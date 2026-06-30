@@ -23,6 +23,7 @@ import { execFile, execFileSync } from "node:child_process";
 import { resolve as resolvePath, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
+import { createInterface } from "node:readline";
 
 const rootDir = resolvePath(dirname(fileURLToPath(import.meta.url)), "..");
 const apkPath = "android/app/build/outputs/apk/release/app-release.apk";
@@ -176,6 +177,112 @@ async function patchJavaCompat() {
     }),
   );
   return results.reduce((a, b) => a + b, 0);
+}
+
+async function askQuestion(query) {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(query, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+async function interactivePickCommits(commits) {
+  console.log(`\n自上次发布以来的提交（共 ${commits.length} 个）:`);
+  console.log("输入编号选择，支持格式: 1 3 5-8  (空格分隔, -表示范围)");
+  console.log("  a = 全选  |  回车 = 空  |  q = 退出\n");
+
+  // Display numbered list
+  const items = commits.map((line) => line.replace(/^[0-9a-f]+\s+/, ""));
+  for (let i = 0; i < items.length; i++) {
+    const cat = items[i].startsWith("feat") ? "✨" :
+                items[i].startsWith("fix") ? "🐛" :
+                items[i].startsWith("perf") ? "⚡" :
+                items[i].startsWith("chore") ? "🧹" :
+                items[i].startsWith("refactor") ? "♻️" :
+                items[i].startsWith("docs") ? "📝" : "🔧";
+    console.log(`  ${(i + 1).toString().padStart(3)}  ${cat}  ${items[i]}`);
+  }
+
+  // Loop until valid selection or exit
+  while (true) {
+    const answer = await askQuestion("\n输入编号: ");
+
+    if (answer === "q") {
+      console.log("[release] 已退出");
+      process.exit(0);
+    }
+
+    let indices;
+    if (answer === "a") {
+      indices = items.map((_, i) => i);
+    } else if (answer === "") {
+      indices = [];
+    } else {
+      indices = [];
+      const parts = answer.split(/\s+/);
+      let valid = true;
+      for (const part of parts) {
+        if (/^\d+$/.test(part)) {
+          const idx = parseInt(part, 10) - 1;
+          if (idx >= 0 && idx < items.length) indices.push(idx);
+        } else if (/^(\d+)-(\d+)$/.test(part)) {
+          const [, s, e] = part.match(/^(\d+)-(\d+)$/);
+          const start = parseInt(s, 10) - 1;
+          const end = parseInt(e, 10) - 1;
+          if (start >= 0 && end < items.length && start <= end) {
+            for (let j = start; j <= end; j++) indices.push(j);
+          } else {
+            valid = false;
+          }
+        } else {
+          valid = false;
+        }
+      }
+      if (!valid || indices.length === 0 && parts.some(p => p !== "")) {
+        console.log("  ⚠ 格式错误，请重新输入");
+        continue;
+      }
+    }
+
+    // Deduplicate and sort
+    indices = [...new Set(indices)].sort((a, b) => a - b);
+    const selected = indices.map((i) => items[i]);
+
+    // Show preview grouped by category
+    console.log(`\n已选 ${selected.length} 个提交，生成的 changelog：\n`);
+    const preview = generateChangelogPreview(selected);
+    console.log(preview);
+
+    const confirm = await askQuestion("\n确认使用? (Y/n/e=重新编辑): ");
+    if (confirm.toLowerCase() === "n") {
+      console.log("[release] 已取消");
+      process.exit(0);
+    } else if (confirm.toLowerCase() === "e") {
+      continue;
+    } else {
+      return selected;
+    }
+  }
+}
+
+function generateChangelogPreview(selected) {
+  const groups = {};
+  for (const msg of selected) {
+    const category = classifyCommit(msg);
+    if (!groups[category]) groups[category] = [];
+    groups[category].push(msg);
+  }
+  const lines = [];
+  for (const [cat, items] of Object.entries(groups)) {
+    lines.push(`${cat}`);
+    for (const item of items) {
+      lines.push(`  ${item}`);
+    }
+  }
+  return lines.join("\n") || "（无内容）";
 }
 
 async function main() {
