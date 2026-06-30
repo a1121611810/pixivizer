@@ -159,7 +159,7 @@ const SettingsSheet: Component = () => {
   }
 
   return (
-    <Show when={showSettingsSheet()}>
+    <>
       {/* Age gate hint toast */}
       <Show when={ageGateMessage()}>
         <fluent-message-bar
@@ -965,7 +965,7 @@ const SettingsSheet: Component = () => {
           前往 Pixiv
         </fluent-button>
       </fluent-dialog>
-    </Show>
+    </>
   );
 };
 
