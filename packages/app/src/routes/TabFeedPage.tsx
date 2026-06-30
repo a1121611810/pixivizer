@@ -3,9 +3,7 @@ import {
   onMount,
   onCleanup,
   Show,
-  createSignal,
   createMemo,
-  createEffect,
 } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
@@ -20,13 +18,12 @@ import {
   saveTabScroll,
   isFeedCached,
   getFeedScrollY,
-  getTabRawIllusts,
-  followRestrict,
-  setFollowRestrict,
+  followTab,
+  setFollowTab,
 } from "../stores/feedStore";
-import { setCurrentTab, setShowSettingsSheet, layoutMode, isAdult } from "../stores/uiStore";
+import { setCurrentTab, setShowSettingsSheet, layoutMode } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
-import type { PixivIllust, RestrictType } from "../api/types";
+import type { PixivIllust } from "../api/types";
 import { user, isLoggedIn } from "../stores/authStore";
 import UserAvatar from "../components/UserAvatar";
 import VirtualFeed from "../components/VirtualFeed";
@@ -38,7 +35,6 @@ interface Props {
   tab: Tab;
 }
 
-type FollowSubTab = "all" | "r18" | "r18g";
 
 const r18Handler = () => refresh();
 const layoutHandler = () => refresh();
@@ -52,26 +48,9 @@ function scrollToTop() {
 const TabFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
   const cached = isFeedCached(props.tab);
-  const [followSubTab, setFollowSubTab] = createSignal<FollowSubTab>("all");
 
-  // 如果年龄确认不是成年人，则回到“全部”子标签并隐藏 R-18 子标签
-  createEffect(() => {
-    if (!isAdult() && followSubTab() !== "all") {
-      setFollowSubTab("all");
-    }
-  });
-
-  // Filter illusts based on follow sub-tab selection.
-  // "全部" uses the globally-filtered illusts() (respects R18/R18G toggles).
-  // "R18" use raw data from tabIllusts so sub-tab filtering is independent of global toggles.
   const filteredIllusts = createMemo<PixivIllust[]>(() => {
-    if (props.tab !== "follow") return illusts();
-    const sub = followSubTab();
-    if (sub === "all") return illusts();
-    // Use raw unfiltered data for sub-tab specific filtering
-    const raw = getTabRawIllusts("follow");
-    if (sub === "r18") return raw.filter((i) => i.x_restrict === 1 || i.x_restrict === 2);
-    return illusts();
+    return illusts(); // feedStore.computeFollowIllusts() already handles follow tab filtering
   });
 
   // Set current tab on mount so feedStore knows which data to fetch
@@ -136,60 +115,32 @@ const TabFeedPage: Component<Props> = (props) => {
             </button>
           </header>
 
-          {/* ── 关注页双层过滤 ── */}
+          {/* ── 关注页三层过滤 ── */}
           <Show when={props.tab === "follow"}>
             <div class="sticky top-12 z-10 surface-appbar px-4 pb-2" onDblClick={scrollToTop}>
-              {/* 第1层：公开/非公开 — 紧凑型，次要操作 */}
-              <div class="flex items-center justify-between mb-2">
-                <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] select-none">
-                  浏览范围
-                </span>
-                <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-0.5 gap-0.5">
-                  {(
-                    [
-                      { key: "public", label: "公开" },
-                      { key: "private", label: "非公开" },
-                    ] as { key: RestrictType; label: string }[]
-                  ).map((r) => (
-                    <button
-                      class="py-[var(--spacingVerticalSNudge)] px-[var(--spacingHorizontalS)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase100)] font-medium transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
-                      classList={{
-                        "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
-                          followRestrict() === r.key,
-                        "bg-transparent text-[var(--colorNeutralForeground3)]":
-                          followRestrict() !== r.key,
-                      }}
-                      onClick={() => {
-                        if (followRestrict() !== r.key) {
-                          setFollowRestrict(r.key);
-                          refresh();
-                        }
-                      }}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {/* 第2层：全部 / R-18 — 主要过滤（R-18 仅在成年人确认后显示） */}
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
                 {(
                   [
-                    { key: "all", label: "全部" },
-                    ...(isAdult() ? [{ key: "r18" as const, label: "R-18" }] : []),
-                  ] as { key: FollowSubTab; label: string }[]
-                ).map((sub) => (
+                    { key: "all" as const, label: "全部" },
+                    { key: "public" as const, label: "公开" },
+                    { key: "private" as const, label: "非公开" },
+                  ]
+                ).map((opt) => (
                   <button
                     class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                     classList={{
                       "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
-                        followSubTab() === sub.key,
+                        followTab() === opt.key,
                       "bg-transparent text-[var(--colorNeutralForeground2)]":
-                        followSubTab() !== sub.key,
+                        followTab() !== opt.key,
                     }}
-                    onClick={() => setFollowSubTab(sub.key)}
+                    onClick={() => {
+                      if (followTab() !== opt.key) {
+                        setFollowTab(opt.key);
+                      }
+                    }}
                   >
-                    {sub.label}
+                    {opt.label}
                   </button>
                 ))}
               </div>
