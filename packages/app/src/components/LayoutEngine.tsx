@@ -34,8 +34,7 @@ export function createLayout(
 
     if (mode === "single") {
       const items = illusts().map((_ill, i) => {
-        const effectiveH = _ill.type === "ugoira" ? Math.round(_ill.height * 0.75) : _ill.height
-        const aspectRatio = effectiveH > 0 ? _ill.width / effectiveH : 1
+        const aspectRatio = _ill.width > 0 && _ill.height > 0 ? _ill.width / _ill.height : 1
         const h = cw / aspectRatio + CARD_INFO_HEIGHT
         return { index: i, x: 0, y: i * (h + g), width: cw, height: h, column: 0 }
       })
@@ -72,10 +71,7 @@ export function createLayout(
 
     // Waterfall
     const input: ComputeMasonryInput = {
-      items: illusts().map((ill) => ({
-        width: ill.width,
-        height: ill.type === "ugoira" ? Math.round(ill.height * 0.75) : ill.height,
-      })),
+      items: illusts().map((ill) => ({ width: ill.width, height: ill.height })),
       columnWidth: cw,
       columnCount: cc,
       gap: g,
@@ -85,10 +81,7 @@ export function createLayout(
     // Incremental append if data grew
     if (prev && prev.items.length > 0 && count > prev.items.length) {
       const newRaw = illusts().slice(prev.items.length)
-      const newItems = newRaw.map((ill) => ({
-        width: ill.width,
-        height: ill.type === "ugoira" ? Math.round(ill.height * 0.75) : ill.height,
-      }))
+      const newItems = newRaw.map((ill) => ({ width: ill.width, height: ill.height }))
       return appendToLayout(prev, newItems)
     }
 
