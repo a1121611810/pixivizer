@@ -257,26 +257,12 @@ const ConfirmDialog: Component<ConfirmDialogProps> = (props) => {
               {props.body}
             </p>
             <div class="flex gap-3 justify-end">
-              <button
-                class="btn-secondary min-h-10 px-4"
-                onClick={close}
-                aria-label={props.cancelText}
-              >
+              <fluent-button appearance="secondary" on:click={close}>
                 {props.cancelText}
-              </button>
-              <button
-                class="min-h-10 px-4 rounded-[var(--borderRadiusMedium)] font-semibold [font-size:var(--fontSizeBase300)] transition-all active:scale-[0.97] appearance-none border outline-none cursor-pointer focus-visible:outline-none focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]"
-                classList={{
-                  "bg-[var(--colorStatusDangerBackground1)] text-white border-[var(--colorStatusDangerBackground1)] hover:opacity-90 active:opacity-80":
-                    props.confirmVariant === "danger",
-                  "bg-[var(--colorBrandBackground)] text-white border-[var(--colorBrandBackground)] hover:bg-[var(--colorBrandBackgroundHover)] active:bg-[var(--colorBrandBackgroundPressed)]":
-                    props.confirmVariant !== "danger",
-                }}
-                onClick={confirm}
-                aria-label={props.confirmText}
-              >
+              </fluent-button>
+              <fluent-button appearance="primary" on:click={confirm}>
                 {props.confirmText}
-              </button>
+              </fluent-button>
             </div>
           </div>
         </div>
@@ -440,14 +426,14 @@ const SettingsSheet: Component = () => {
             <h2 class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
               设置
             </h2>
-            <button class="btn-icon" onClick={close} aria-label="关闭设置">
+            <fluent-button appearance="subtle" aria-label="关闭设置" on:click={close}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path
                   d="M15.14 4.86a.67.67 0 0 0-.95 0L10 9.05 5.81 4.86a.67.67 0 0 0-.95.95L9.05 10l-4.19 4.19a.67.67 0 0 0 .95.95L10 10.95l4.19 4.19a.67.67 0 0 0 .95-.95L10.95 10l4.19-4.19a.67.67 0 0 0 0-.95z"
                   fill="currentColor"
                 />
               </svg>
-            </button>
+            </fluent-button>
           </div>
 
           {/* Divider */}
@@ -628,13 +614,9 @@ const SettingsSheet: Component = () => {
                   </div>
                 </div>
 
-                <button
-                  class="btn-secondary py-2 px-4"
-                  onClick={reconfirmAge}
-                  aria-label="重新确认年龄"
-                >
+                <fluent-button appearance="secondary" on:click={reconfirmAge}>
                   重新确认
-                </button>
+                </fluent-button>
               </div>
             </Show>
 
