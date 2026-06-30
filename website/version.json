@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.0.0",
-  "changelog": "✨ 新功能\n\nFluent UI 组件全线替换 — 按钮、文本域、开关、单选、对话框、抽屉、Toast、头像、徽章、Spinner、Divider\n提取共享 FluentIcon 组件\nrelease 脚本 --interactive 交互模式\n关注页双源缓存 + SegmentedControl\n⚡ 性能\n\n图片代理响应直接流式转发\n🐛 修复\n\nFluent 组件适配（textarea、dra"
+  "version": "2.1.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.1.0",
+  "changelog": "虚拟化瀑布流引擎 — 替换 CSS columns 全量渲染，改用最短列算法 + 绝对定位，DOM 节点从数百降至 ~30。布局计算用 Comlink 放到 Web Worker。\n\n支持 waterfall / single / grid 三种布局\n增量追加（fetchMore 只算新增条目）\n滚动预判提前预热缓存\n视觉修复：\n\n卡片信息区高度对齐 80px，SkeletonCard 同步 78"
 }
