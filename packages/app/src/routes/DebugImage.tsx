@@ -37,6 +37,7 @@ const DebugImage: Component = () => {
         </h1>
 
         <fluent-textarea
+          style="--inline-size:100%"
           placeholder="粘贴 i.pximg.net 图片 URL..."
           value={testUrl()}
           on:input={(e) => setTestUrl((e.target as any).value)}
