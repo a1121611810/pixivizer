@@ -195,7 +195,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  packages/app:
     dependencies:
       '@capacitor/android':
         specifier: ^8.4.0
@@ -270,6 +272,8 @@ importers:
       vitest:
         specifier: ^4.1.9
         version: 4.1.9(@types/node@26.0.1)(@vitest/browser-preview@4.1.9)(happy-dom@20.10.6)(vite@8.1.0(@types/node@26.0.1)(jiti@2.7.0))
+
+  packages/website: {}
 
 packages:
 

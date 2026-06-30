@@ -254,7 +254,7 @@ async function main() {
 
     // 更新 GitHub Pages 的版本文件（供 app 内检查更新使用）
     await writeText(
-      "website/version.json",
+      "../../packages/website/version.json",
       JSON.stringify(
         {
           version: newVersion,
