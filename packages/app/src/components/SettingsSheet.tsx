@@ -155,8 +155,11 @@ const SettingsSheet: Component = () => {
   });
 
   function close() {
+    console.log("[SETTINGS] close called");
     setShowSettingsSheet(false);
   }
+
+  console.log("[SETTINGS] rendering, showSettingsSheet =", showSettingsSheet());
 
   return (
     <>
@@ -180,7 +183,12 @@ const SettingsSheet: Component = () => {
         </fluent-message-bar>
       </Show>
 
-      <fluent-drawer position="top" open={showSettingsSheet()} on:close={close}>
+      <fluent-drawer
+        position="top"
+        open={showSettingsSheet()}
+        on:close={close}
+        ref={(el) => console.log("[SETTINGS] drawer element created, open=", showSettingsSheet())}
+      >
         {/* Drag handle (visual affordance, non-functional in v1) */}
         <div class="flex justify-center pt-2 pb-1">
           <div class="w-10 h-1 rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralStroke1)]" />

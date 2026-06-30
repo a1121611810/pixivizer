@@ -96,7 +96,7 @@ const TabFeedPage: Component<Props> = (props) => {
               </Show>
             </h1>
             <div
-              onClick={() => setShowSettingsSheet(true)}
+              onClick={() => { console.log("[TABFEED] settings icon clicked"); setShowSettingsSheet(true); }}
               style="display:inline-flex"
             >
               <fluent-button
