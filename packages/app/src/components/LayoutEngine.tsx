@@ -2,7 +2,7 @@ import { createMemo } from "solid-js"
 import type { Accessor } from "solid-js"
 import type { MasonryLayout, LayoutMode } from "../primitives/types"
 import type { ComputeMasonryInput } from "../primitives/computeMasonryLayout"
-import { computeMasonryLayout, appendToLayout } from "../primitives/computeMasonryLayout"
+import { computeMasonryLayout, appendToLayout, CARD_INFO_HEIGHT } from "../primitives/computeMasonryLayout"
 import type { PixivIllust } from "../api/types"
 
 /**
@@ -33,7 +33,7 @@ export function createLayout(
     if (mode === "single") {
       const items = illusts().map((_ill, i) => {
         const ar = _ill.width > 0 && _ill.height > 0 ? _ill.width / _ill.height : 1
-        const h = cw / ar
+        const h = cw / ar + CARD_INFO_HEIGHT
         return { index: i, x: 0, y: i * (h + g), width: cw, height: h, column: 0 }
       })
       const totalHeight = items.length > 0

@@ -12,6 +12,9 @@ export interface ComputeMasonryInput {
  * Input `items` each have width/height to derive aspect ratio.
  * Returns full MasonryLayout.
  */
+/** Height of the info section below each image card (title + user name + follow button + padding) */
+export const CARD_INFO_HEIGHT = 56
+
 export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout {
   const { items, columnWidth, columnCount, gap } = input
   const nextY = new Array<number>(columnCount).fill(0)
@@ -27,7 +30,7 @@ export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout 
     }
 
     const aspectRatio = width > 0 && height > 0 ? width / height : 1
-    const cardHeight = columnWidth / aspectRatio
+    const cardHeight = columnWidth / aspectRatio + CARD_INFO_HEIGHT
 
     result[i] = {
       index: i,
@@ -90,7 +93,7 @@ export function appendToLayout(
     }
 
     const aspectRatio = width > 0 && height > 0 ? width / height : 1
-    const cardHeight = existing.columnWidth / aspectRatio
+    const cardHeight = existing.columnWidth / aspectRatio + CARD_INFO_HEIGHT
     const idx = startIndex + i
 
     appended.push({
