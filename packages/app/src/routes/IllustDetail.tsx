@@ -1,5 +1,6 @@
 import {
   type Component,
+  Show,
   createSignal,
   onMount,
   onCleanup,
@@ -417,17 +418,14 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
             </header>
 
             {/* Toast confirmation */}
-            {toastMessage() && (
-              <div
-                class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-[var(--colorStatusSuccessBackground2)] text-[var(--colorStatusSuccessForeground1)] border border-[var(--colorStatusSuccessForeground1)] rounded-[var(--borderRadius2XLarge)] shadow-[var(--elevation8)] px-5 py-2.5 [font-size:var(--fontSizeBase200)] font-medium whitespace-nowrap pointer-events-none transition-all duration-[var(--durationGentle)]"
-                style={{
-                  animation:
-                    "fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both",
-                }}
+            <Show when={toastMessage()}>
+              <fluent-message-bar
+                intent="success"
+                style="position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:60;pointer-events:none"
               >
                 {toastMessage()}
-              </div>
-            )}
+              </fluent-message-bar>
+            </Show>
 
             {/* Images — multi-page: vertical stack; single: cover + tap */}
             {illust()!.page_count > 1 ? (

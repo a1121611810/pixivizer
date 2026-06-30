@@ -183,26 +183,22 @@ const SettingsSheet: Component = () => {
     <Show when={showSettingsSheet()}>
       {/* Age gate hint toast */}
       <Show when={ageGateMessage()}>
-        <div
-          class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-[var(--colorStatusWarningBackground2)] text-[var(--colorStatusWarningForeground1)] border border-[var(--colorStatusWarningForeground1)] rounded-[var(--borderRadius2XLarge)] shadow-[var(--elevation8)] px-5 py-2.5 [font-size:var(--fontSizeBase200)] font-medium whitespace-nowrap pointer-events-none transition-all duration-[var(--durationGentle)]"
-          style={{
-            animation: "fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both",
-          }}
+        <fluent-message-bar
+          intent="warning"
+          style="position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:60;pointer-events:none"
         >
           {ageGateMessage()}
-        </div>
+        </fluent-message-bar>
       </Show>
 
       {/* Action success toast */}
       <Show when={actionToast()}>
-        <div
-          class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-[var(--colorStatusSuccessBackground2)] text-[var(--colorStatusSuccessForeground1)] border border-[var(--colorStatusSuccessForeground1)] rounded-[var(--borderRadius2XLarge)] shadow-[var(--elevation8)] px-5 py-2.5 [font-size:var(--fontSizeBase200)] font-medium whitespace-nowrap pointer-events-none transition-all duration-[var(--durationGentle)]"
-          style={{
-            animation: "fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both",
-          }}
+        <fluent-message-bar
+          intent="success"
+          style="position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:60;pointer-events:none"
         >
           {actionToast()}
-        </div>
+        </fluent-message-bar>
       </Show>
 
       <div class="fixed inset-0 z-50" style={pbStyle()}>
