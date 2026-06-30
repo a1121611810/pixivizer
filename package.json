@@ -20,7 +20,8 @@
     "release:github": "pnpm --filter pictelio-app release:github",
     "release": "pnpm --filter pictelio-app release",
     "release:dry": "pnpm --filter pictelio-app release:dry",
-    "deploy": "node scripts/deploy.mjs"
+    "deploy": "node scripts/deploy.mjs",
+    "deploy:dry": "node scripts/deploy.mjs --dry-run"
   },
   "devEngines": {
     "packageManager": {
