@@ -332,11 +332,11 @@ async function main() {
   } else if (bumpMinor) {
     bumpType = "minor";
   }
-  const newVersion = versionArg || bump(currentVersion, bumpType);
-  const { major, minor, patch } = parseVersion(newVersion);
-  const versionCode = major * 10000 + minor * 100 + patch;
-  const tag = `v${newVersion}`;
-  const title = `Pictelio v${newVersion}`;
+  let newVersion = versionArg || bump(currentVersion, bumpType);
+  const parsed = parseVersion(newVersion);
+  let versionCode = parsed.major * 10000 + parsed.minor * 100 + parsed.patch;
+  let tag = `v${newVersion}`;
+  let title = `Pictelio v${newVersion}`;
 
   log(`当前版本: ${currentVersion}`);
   log(
@@ -345,33 +345,51 @@ async function main() {
   log(`标签: ${tag}`);
   console.log("");
 
-  // ── 2. 收集变更日志 ──
-  const lastTag = await getLastTag();
-  const commits = lastTag ? await getGitLogSince(lastTag) : [];
-  log(`自 ${lastTag || "初始提交"} 以来共 ${commits.length} 个提交`);
+  let changelog;
 
-  // ═══════════════════════════════════════════════════
-  // 自定义 changelog：只包含依赖更新和当前修复
-  // ═══════════════════════════════════════════════════
-  const changes = [
-    "🧹 依赖升级",
-    "  - 升级 5 个依赖：@capacitor/core@8.4.1, @capacitor/cli@8.4.1, @types/node@26.0.1, unocss@66.7.3, vite@8.1.0",
-    "  - pnpm 供应链安全配置（minimumReleaseAge, trustPolicy, blockExoticSubdeps）",
-    "  - lint 修复与代码清理",
-    "",
-    "🐛 修复",
-    "  - 个人中心返回列表时保留滚动位置和缓存状态",
-    "  - 修复 TabFeedPage 组件初始化时 cached 变量读取 currentTab() 时序错误",
-    "",
-  ];
-  const changelog = changes.join("\n");
+  if (isInteractive) {
+    // ── Interactive mode: user picks commits and version ──
+    const lastTag = await getLastTag();
+    const commits = lastTag ? await getGitLogSince(lastTag) : [];
+    log(`自 ${lastTag || "初始提交"} 以来共 ${commits.length} 个提交`);
 
-  // 如需恢复自动生成，取消注释下面一行并注释上面的代码：
-  // const changelog = commits.length > 0 ? generateChangelog(commits) : "小修复与改进";
+    const selectedCommits = await interactivePickCommits(commits);
+    changelog = generateChangelogPreview(selectedCommits) || "小修复与改进";
 
-  log("自定义 changelog：");
-  console.log(changelog);
-  console.log("");
+    const versionPick = await interactivePickVersion(currentVersion);
+    // Override the auto-detected version
+    const newVersionInteractive = versionPick.version;
+    const { major: mi, minor: mn, patch: pt } = parseVersion(newVersionInteractive);
+    // Update all version-related variables
+    newVersion = newVersionInteractive;
+    versionCode = mi * 10000 + mn * 100 + pt;
+    tag = `v${newVersion}`;
+    title = `Pictelio v${newVersion}`;
+
+    log(`目标版本: ${newVersion} (versionCode: ${versionCode}) [${versionPick.type}]`);
+    console.log("");
+    log("最终 changelog：");
+    console.log(changelog);
+    console.log("");
+  } else {
+    // ── Auto mode: existing logic ──
+    const changes = [
+      "🧹 依赖升级",
+      "  - 升级 5 个依赖：@capacitor/core@8.4.1, @capacitor/cli@8.4.1, @types/node@26.0.1, unocss@66.7.3, vite@8.1.0",
+      "  - pnpm 供应链安全配置（minimumReleaseAge, trustPolicy, blockExoticSubdeps）",
+      "  - lint 修复与代码清理",
+      "",
+      "🐛 修复",
+      "  - 个人中心返回列表时保留滚动位置和缓存状态",
+      "  - 修复 TabFeedPage 组件初始化时 cached 变量读取 currentTab() 时序错误",
+      "",
+    ];
+    changelog = changes.join("\n");
+
+    log("自定义 changelog：");
+    console.log(changelog);
+    console.log("");
+  }
 
   if (dryRun) {
     log("[dry-run] 以上是将会检测到的变更，继续展示后续步骤...");
