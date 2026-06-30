@@ -107,23 +107,25 @@ async function getGitLogSince(tag) {
   return raw.split("\n").filter(Boolean);
 }
 
+const CATEGORY_ENTRIES = [
+  { prefixes: ["feat(", "feat:"], emoji: "✨", category: "✨ 新功能" },
+  { prefixes: ["fix(", "fix:"], emoji: "🐛", category: "🐛 修复" },
+  { prefixes: ["perf(", "perf:"], emoji: "⚡", category: "⚡ 性能" },
+  { prefixes: ["docs(", "docs:", "📝"], emoji: "📝", category: "📝 文档" },
+  { prefixes: ["chore(", "chore:", "🔧"], emoji: "🧹", category: "🧹 杂项" },
+  { prefixes: ["refactor(", "refactor:"], emoji: "♻️", category: "♻️ 重构" },
+  { prefixes: ["style(", "style:"], emoji: "💄", category: "💄 样式" },
+  { prefixes: ["test(", "test:"], emoji: "🧪", category: "🧪 测试" },
+];
+
 function classifyCommit(msg) {
-  if (msg.startsWith("feat(") || msg.startsWith("feat:")) return "✨ 新功能";
-  if (msg.startsWith("fix(") || msg.startsWith("fix:")) return "🐛 修复";
-  if (msg.startsWith("perf(") || msg.startsWith("perf:")) return "⚡ 性能";
-  if (msg.startsWith("docs(") || msg.startsWith("docs:") || msg.startsWith("📝")) return "📝 文档";
-  if (msg.startsWith("chore(") || msg.startsWith("chore:") || msg.startsWith("🔧"))
-    return "🧹 杂项";
-  if (msg.startsWith("refactor(") || msg.startsWith("refactor:")) return "♻️ 重构";
-  if (msg.startsWith("style(") || msg.startsWith("style:")) return "💄 样式";
-  if (msg.startsWith("test(") || msg.startsWith("test:")) return "🧪 测试";
-  return "🔧 其他";
+  const entry = CATEGORY_ENTRIES.find((e) => e.prefixes.some((p) => msg.startsWith(p)));
+  return entry ? entry.category : "🔧 其他";
 }
 
-function generateChangelog(commits) {
+function formatChangelog(messages) {
   const groups = {};
-  for (const line of commits) {
-    const msg = line.replace(/^[0-9a-f]+\s+/, "");
+  for (const msg of messages) {
     const category = classifyCommit(msg);
     if (!groups[category]) groups[category] = [];
     groups[category].push(msg);
@@ -136,6 +138,14 @@ function generateChangelog(commits) {
     }
   }
   return lines.join("\n") || "小修复与改进";
+}
+
+function generateChangelog(commits) {
+  return formatChangelog(commits.map((line) => line.replace(/^[0-9a-f]+\s+/, "")));
+}
+
+function generateChangelogPreview(selected) {
+  return formatChangelog(selected);
 }
 
 function parseVersion(v) {
@@ -199,12 +209,8 @@ async function interactivePickCommits(commits) {
   // Display numbered list
   const items = commits.map((line) => line.replace(/^[0-9a-f]+\s+/, ""));
   for (let i = 0; i < items.length; i++) {
-    const cat = items[i].startsWith("feat") ? "✨" :
-                items[i].startsWith("fix") ? "🐛" :
-                items[i].startsWith("perf") ? "⚡" :
-                items[i].startsWith("chore") ? "🧹" :
-                items[i].startsWith("refactor") ? "♻️" :
-                items[i].startsWith("docs") ? "📝" : "🔧";
+    const entry = CATEGORY_ENTRIES.find((e) => e.prefixes.some((p) => items[i].startsWith(p)));
+    const cat = entry ? entry.emoji : "🔧";
     console.log(`  ${(i + 1).toString().padStart(3)}  ${cat}  ${items[i]}`);
   }
 
@@ -270,23 +276,6 @@ async function interactivePickCommits(commits) {
   }
 }
 
-function generateChangelogPreview(selected) {
-  const groups = {};
-  for (const msg of selected) {
-    const category = classifyCommit(msg);
-    if (!groups[category]) groups[category] = [];
-    groups[category].push(msg);
-  }
-  const lines = [];
-  for (const [cat, items] of Object.entries(groups)) {
-    lines.push(`${cat}`);
-    for (const item of items) {
-      lines.push(`  ${item}`);
-    }
-  }
-  return lines.join("\n") || "（无内容）";
-}
-
 async function interactivePickVersion(currentVersion) {
   console.log(`\n当前版本: ${currentVersion}\n`);
   console.log("版本递增方式:");
@@ -297,7 +286,7 @@ async function interactivePickVersion(currentVersion) {
 
   while (true) {
     const answer = await askQuestion("选择 (1-4): ");
-    switch (answer.trim()) {
+    switch (answer) {
       case "1":
         return { type: "patch", version: bump(currentVersion, "patch") };
       case "2":
@@ -306,8 +295,8 @@ async function interactivePickVersion(currentVersion) {
         return { type: "major", version: bump(currentVersion, "major") };
       case "4": {
         const custom = await askQuestion("输入版本号 (格式 x.y.z): ");
-        if (/^\d+\.\d+\.\d+$/.test(custom.trim())) {
-          return { type: "custom", version: custom.trim() };
+        if (/^\d+\.\d+\.\d+$/.test(custom)) {
+          return { type: "custom", version: custom };
         }
         console.log("  ⚠ 格式错误，请输入 x.y.z 格式（如 2.0.0）");
         break;
