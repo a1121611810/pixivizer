@@ -72,7 +72,7 @@ const Feed: Component = () => {
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
               Pictelio
             </h1>
-            <div onClick={() => { console.log("[FEED] settings icon clicked"); setShowSettingsSheet(true); }} style="display:inline-flex">
+            <div onClick={() => setShowSettingsSheet(true)} style="display:inline-flex">
               <fluent-button
                 appearance="subtle"
                 aria-label="设置"

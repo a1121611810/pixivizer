@@ -155,11 +155,8 @@ const SettingsSheet: Component = () => {
   });
 
   function close() {
-    console.log("[SETTINGS] close called");
     setShowSettingsSheet(false);
   }
-
-  console.log("[SETTINGS] rendering, showSettingsSheet =", showSettingsSheet());
 
   return (
     <>
@@ -187,7 +184,6 @@ const SettingsSheet: Component = () => {
         position="top"
         open={showSettingsSheet()}
         on:close={close}
-        ref={(el) => console.log("[SETTINGS] drawer element created, open=", showSettingsSheet())}
       >
         {/* Drag handle (visual affordance, non-functional in v1) */}
         <div class="flex justify-center pt-2 pb-1">
