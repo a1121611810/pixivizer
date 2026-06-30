@@ -52,13 +52,6 @@ const TabFeedPage: Component<Props> = (props) => {
   onMount(() => {
     setCurrentTab(props.tab);
     ensureLoaded();
-    // Restore scroll if cached
-    if (cached) {
-      const y = getFeedScrollY(props.tab);
-      if (y > 0) {
-        requestAnimationFrame(() => window.scrollTo(0, y));
-      }
-    }
   });
 
   // Save scroll + R18 auto refresh
@@ -155,6 +148,7 @@ const TabFeedPage: Component<Props> = (props) => {
             onSettingsOpen={() => setShowSettingsSheet(true)}
             skipAnimation={cached}
             layoutMode={layoutMode()}
+            restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
           />
         </div>
       </PageTransition>

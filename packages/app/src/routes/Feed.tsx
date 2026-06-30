@@ -26,15 +26,11 @@ const Feed: Component = () => {
   const navigate = useNavigate();
   const cached = isFeedCached();
   let prevTab = currentTab();
+  let scrollRestored = false;
 
-  // Restore scroll when returning to a cached feed
+  // Mark feed mounted on first render
   onMount(() => {
-    if (cached) {
-      requestAnimationFrame(() => {
-        window.scrollTo(0, getFeedScrollY());
-      });
-      markFeedMounted();
-    }
+    markFeedMounted();
   });
 
   // Save scroll when leaving the feed page entirely
@@ -54,13 +50,9 @@ const Feed: Component = () => {
     // Save scroll for the tab we're leaving
     if (tab !== prevTab && (prevTab === "recommended" || prevTab === "follow")) {
       saveTabScroll(prevTab);
+      scrollRestored = false; // reset flag for new tab
     }
     prevTab = tab;
-    // Restore scroll for the tab we're switching to
-    const savedY = getFeedScrollY();
-    if (savedY > 0) {
-      requestAnimationFrame(() => window.scrollTo(0, savedY));
-    }
     untrack(() => ensureLoaded());
   });
 
@@ -99,6 +91,7 @@ const Feed: Component = () => {
             onSettingsOpen={() => setShowSettingsSheet(true)}
             skipAnimation={cached}
             layoutMode={layoutMode()}
+            restoreScrollTop={!scrollRestored && cached ? getFeedScrollY() : undefined}
           />
         </div>
       </PageTransition>
