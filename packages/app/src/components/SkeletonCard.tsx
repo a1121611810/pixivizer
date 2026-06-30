@@ -39,7 +39,7 @@ const SkeletonCard: Component<Props> = (props) => {
           }}
         />
         <div
-          class="h-3 rounded w-1/2"
+          class="h-10 rounded w-1/2"
           style={{
             background:
               "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
