@@ -141,9 +141,9 @@ const PersonalCenter: Component<Props> = (props) => {
         <div class="pb-16">
           {/* Header */}
           <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3">
-            <button onClick={() => navigate(-1)} class="btn-icon flex-shrink-0" aria-label="返回">
+            <fluent-button appearance="subtle" aria-label="返回" on:click={() => navigate(-1)}>
               ←
-            </button>
+            </fluent-button>
 
             <span class="relative flex-1 min-w-0 h-full flex items-center">
               {/* 收起态：小头像 + 名称 (absolute overlay) */}

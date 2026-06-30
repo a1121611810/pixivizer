@@ -59,12 +59,12 @@ const AgeGate: Component = () => {
         </div>
 
         <div class="flex flex-col gap-2">
-          <button class="btn-primary w-full py-2.5" onClick={confirmAdult}>
+          <fluent-button appearance="primary" style="width:100%" on:click={confirmAdult}>
             已满 18 岁
-          </button>
-          <button class="btn-secondary w-full py-2.5" onClick={confirmMinor}>
+          </fluent-button>
+          <fluent-button appearance="secondary" style="width:100%" on:click={confirmMinor}>
             未满 18 岁
-          </button>
+          </fluent-button>
         </div>
       </div>
     </div>

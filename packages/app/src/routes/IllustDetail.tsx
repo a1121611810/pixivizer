@@ -340,9 +340,9 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
             <p class="text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase300)]">
               {error()}
             </p>
-            <button class="btn-secondary" onClick={() => navigate(-1)}>
+            <fluent-button appearance="secondary" on:click={() => navigate(-1)}>
               返回
-            </button>
+            </fluent-button>
           </div>
         )}
 
@@ -351,9 +351,9 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
             <p class="text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase300)]">
               该作者已被屏蔽
             </p>
-            <button class="btn-secondary" onClick={() => navigate(-1)}>
+            <fluent-button appearance="secondary" on:click={() => navigate(-1)}>
               返回
-            </button>
+            </fluent-button>
           </div>
         )}
 
@@ -361,20 +361,20 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
           <>
             {/* App bar header */}
             <header class="relative flex items-center gap-3 px-4 py-3 surface-appbar sticky top-0 z-10">
-              <button onClick={() => navigate(-1)} class="btn-icon text-lg" aria-label="返回">
+              <fluent-button appearance="subtle" aria-label="返回" on:click={() => navigate(-1)}>
                 ←
-              </button>
+              </fluent-button>
               <h2 class="text-[var(--colorNeutralForeground1)] font-semibold truncate flex-1 [font-size:var(--fontSizeBase300)]">
                 {illust()!.title}
               </h2>
-              <button
-                class="btn-icon text-lg"
-                onClick={() => setShowActionMenu((v) => !v)}
+              <fluent-button
+                appearance="subtle"
+                on:click={() => setShowActionMenu((v) => !v)}
                 aria-label="更多"
                 aria-expanded={showActionMenu()}
               >
                 ⋮
-              </button>
+              </fluent-button>
 
               {/* Action menu */}
               {showActionMenu() && (

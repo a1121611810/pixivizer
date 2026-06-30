@@ -75,14 +75,14 @@ const BlocklistSheet: Component<BlocklistSheetProps> = (props) => {
             <h2 class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
               屏蔽列表
             </h2>
-            <button class="btn-icon" onClick={close} aria-label="关闭">
+            <fluent-button appearance="subtle" aria-label="关闭" on:click={close}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path
                   d="M15.14 4.86a.67.67 0 0 0-.95 0L10 9.05 5.81 4.86a.67.67 0 0 0-.95.95L9.05 10l-4.19 4.19a.67.67 0 0 0 .95.95L10 10.95l4.19 4.19a.67.67 0 0 0 .95-.95L10.95 10l4.19-4.19a.67.67 0 0 0 0-.95z"
                   fill="currentColor"
                 />
               </svg>
-            </button>
+            </fluent-button>
           </div>
 
           {/* Divider */}
@@ -121,13 +121,13 @@ const BlocklistSheet: Component<BlocklistSheetProps> = (props) => {
                         用户 ID: {userId}
                       </p>
                     </div>
-                    <button
-                      class="btn-secondary flex-shrink-0 ml-3"
-                      onClick={() => unblockUser(userId)}
+                    <fluent-button
+                      appearance="secondary"
+                      on:click={() => unblockUser(userId)}
                       aria-label={`取消屏蔽用户 ${userId}`}
                     >
                       取消屏蔽
-                    </button>
+                    </fluent-button>
                   </div>
                 ))}
               </div>

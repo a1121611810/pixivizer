@@ -122,14 +122,14 @@ const About: Component = () => {
       <div class="min-h-screen pb-16">
         {/* Sticky header — same pattern as PersonalCenter */}
         <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3">
-          <button onClick={() => navigate(-1)} class="btn-icon flex-shrink-0" aria-label="返回">
+          <fluent-button appearance="subtle" aria-label="返回" on:click={() => navigate(-1)}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M15.53 4.22a.75.75 0 0 1 0 1.06L8.81 12l6.72 6.72a.75.75 0 1 1-1.06 1.06l-7.25-7.25a.75.75 0 0 1 0-1.06l7.25-7.25a.75.75 0 0 1 1.06 0z"
                 fill="currentColor"
               />
             </svg>
-          </button>
+          </fluent-button>
           <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] flex-1">
             关于
           </h1>

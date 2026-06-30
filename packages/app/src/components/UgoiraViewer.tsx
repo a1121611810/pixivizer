@@ -125,9 +125,9 @@ const UgoiraViewer: Component<Props> = (props) => {
       {error() && (
         <div class="text-[var(--colorOverlayForeground)] text-center px-6">
           <p class="[font-size:var(--fontSizeBase300)] mb-4">{error()}</p>
-          <button class="btn-secondary" onClick={props.onClose}>
+          <fluent-button appearance="secondary" on:click={props.onClose}>
             返回
-          </button>
+          </fluent-button>
         </div>
       )}
 

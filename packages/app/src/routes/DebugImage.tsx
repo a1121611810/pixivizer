@@ -44,9 +44,9 @@ const DebugImage: Component = () => {
           onInput={(e) => setTestUrl(e.currentTarget.value)}
         />
 
-        <button class="btn-primary mb-4" onClick={testFetch}>
+        <fluent-button appearance="primary" on:click={testFetch}>
           测试加载
-        </button>
+        </fluent-button>
 
         <pre class="surface-card p-3 rounded-[var(--borderRadiusMedium)] [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground2)] mb-4 whitespace-pre-wrap">
           {result()}

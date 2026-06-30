@@ -1,10 +1,4 @@
-import {
-  type Component,
-  onMount,
-  onCleanup,
-  Show,
-  createMemo,
-} from "solid-js";
+import { type Component, onMount, onCleanup, Show, createMemo } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
   illusts,
@@ -34,7 +28,6 @@ import SettingsSheet from "../components/SettingsSheet";
 interface Props {
   tab: Tab;
 }
-
 
 const r18Handler = () => refresh();
 const layoutHandler = () => refresh();
@@ -102,9 +95,9 @@ const TabFeedPage: Component<Props> = (props) => {
                 <span class="truncate max-w-[120px]">{user()!.name}</span>
               </Show>
             </h1>
-            <button
-              class="btn-icon"
-              onClick={() => setShowSettingsSheet(true)}
+            <fluent-button
+              appearance="subtle"
+              on:click={() => setShowSettingsSheet(true)}
               onDblClick={(e) => e.stopPropagation()}
               aria-label="设置"
             >
@@ -114,20 +107,18 @@ const TabFeedPage: Component<Props> = (props) => {
                   fill="currentColor"
                 />
               </svg>
-            </button>
+            </fluent-button>
           </header>
 
           {/* ── 关注页三层过滤 ── */}
           <Show when={props.tab === "follow"}>
             <div class="sticky top-12 z-10 surface-appbar px-4 pb-2" onDblClick={scrollToTop}>
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
-                {(
-                  [
-                    { key: "all" as const, label: "全部" },
-                    { key: "public" as const, label: "公开" },
-                    { key: "private" as const, label: "非公开" },
-                  ]
-                ).map((opt) => (
+                {[
+                  { key: "all" as const, label: "全部" },
+                  { key: "public" as const, label: "公开" },
+                  { key: "private" as const, label: "非公开" },
+                ].map((opt) => (
                   <button
                     class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                     classList={{

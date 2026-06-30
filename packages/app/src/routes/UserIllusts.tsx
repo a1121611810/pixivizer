@@ -56,9 +56,9 @@ const UserIllusts: Component = () => {
       <PageTransition>
         <div class="pb-16">
           <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3">
-            <button onClick={() => navigate(-1)} class="btn-icon" aria-label="返回">
+            <fluent-button appearance="subtle" aria-label="返回" on:click={() => navigate(-1)}>
               ←
-            </button>
+            </fluent-button>
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none truncate">
               {(viewedUser() || user())?.name ?? ""} 的作品
             </h1>

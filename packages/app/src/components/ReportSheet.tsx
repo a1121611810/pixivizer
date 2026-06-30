@@ -103,14 +103,14 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
             <h2 class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
               举报作品
             </h2>
-            <button class="btn-icon" onClick={close} aria-label="关闭">
+            <fluent-button appearance="subtle" aria-label="关闭" on:click={close}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path
                   d="M15.14 4.86a.67.67 0 0 0-.95 0L10 9.05 5.81 4.86a.67.67 0 0 0-.95.95L9.05 10l-4.19 4.19a.67.67 0 0 0 .95.95L10 10.95l4.19 4.19a.67.67 0 0 0 .95-.95L10.95 10l4.19-4.19a.67.67 0 0 0 0-.95z"
                   fill="currentColor"
                 />
               </svg>
-            </button>
+            </fluent-button>
           </div>
 
           {/* Divider */}
@@ -168,13 +168,14 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
 
           {/* Submit button */}
           <div class="px-5 pb-6 pt-2">
-            <button
-              class="btn-primary w-full justify-center py-3"
+            <fluent-button
+              appearance="primary"
+              style="width:100%"
               disabled={!selectedReason() || submitting() || alreadyReported()}
-              onClick={handleSubmit}
+              on:click={handleSubmit}
             >
               {alreadyReported() ? "已举报" : submitting() ? "提交中…" : "提交举报"}
-            </button>
+            </fluent-button>
             <p class="mt-3 text-center [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
               提交后将打开邮件客户端发送举报详情
             </p>
