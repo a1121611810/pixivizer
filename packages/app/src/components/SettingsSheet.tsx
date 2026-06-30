@@ -109,6 +109,8 @@ const SettingsSheet: Component = () => {
   async function handleLogout() {
     try {
       await logout();
+      close();
+      navigate("/login", { replace: true });
       setActionToast("已退出登录");
     } catch {
       setActionToast("退出登录失败");
@@ -123,6 +125,8 @@ const SettingsSheet: Component = () => {
       resetReportedIds();
       await Preferences.clear();
       await resetUiStore();
+      close();
+      navigate("/login", { replace: true });
       setActionToast("本地数据已清除");
     } catch {
       setActionToast("清除失败，请重试");
