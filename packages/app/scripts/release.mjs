@@ -425,10 +425,9 @@ async function main() {
     await writeText(changelogPath, changelog);
     ok(`Changelog 已写入 ${changelogPath}`);
 
-    // 更新 GitHub Pages 的版本文件（供 app 内检查更新使用）
-    await writeText(
-      "../../packages/website/version.json",
-      JSON.stringify(
+    // 更新 version.json（供 app 内检查更新使用）
+    // 同时写入新旧路径，兼容已发布的旧版 APK
+    const verJson = JSON.stringify(
         {
           version: newVersion,
           url: `https://github.com/a1121611810/pixivizer/releases/tag/${tag}`,
@@ -436,14 +435,21 @@ async function main() {
         },
         null,
         2,
-      ) + "\n",
+      ) + "\n";
+    await writeText(
+      "../../packages/website/version.json",
+      verJson,
     );
-    ok(`website/version.json 已更新 (${newVersion})`);
+    await writeText(
+      "../../website/version.json",
+      verJson,
+    );
+    ok(`version.json 已更新 (${newVersion})`);
   } else {
     log(`[dry-run] 将更新 package.json → ${newVersion}`);
     log(`[dry-run] 将运行 sync-android-version (versionCode → ${versionCode})`);
     log(`[dry-run] 将写入 changelog → fastlane/.../changelogs/${versionCode}.txt`);
-    log(`[dry-run] 将更新 website/version.json → ${newVersion}`);
+    log(`[dry-run] 将更新 version.json → ${newVersion}`);
   }
   console.log("");
 
