@@ -70,6 +70,18 @@ const sections: AboutSection[] = [
         url: "https://github.com/microsoft/fluentui-system-icons",
       },
       {
+        label: "Fluent UI Web Components",
+        value: "基于 FAST 的 Fluent Web 组件库",
+        icon: "wrench",
+        url: "https://github.com/microsoft/fluentui/tree/master/packages/web-components",
+      },
+      {
+        label: "Microsoft FAST",
+        value: "自适应 Web Component 引擎",
+        icon: "info",
+        url: "https://github.com/microsoft/fast",
+      },
+      {
         label: "pixivts",
         value: "Pixiv API 封装 (book000)",
         icon: "wrench",
