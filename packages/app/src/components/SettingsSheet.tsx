@@ -543,29 +543,11 @@ const SettingsSheet: Component = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => setAutoHideNavBar(!autoHideNavBar())}
-                role="switch"
-                aria-checked={autoHideNavBar()}
+              <fluent-switch
+                checked={autoHideNavBar()}
+                on:change={() => setAutoHideNavBar(!autoHideNavBar())}
                 aria-label="自动隐藏导航栏"
-                class="relative flex-shrink-0 w-14 min-h-10 px-0 py-[var(--spacingVerticalSNudge)] appearance-none border-0 outline-none rounded-[var(--borderRadiusCircular)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)] flex items-center justify-center active:scale-[0.98] cursor-pointer"
-              >
-                <span
-                  class="relative block w-14 h-7 rounded-[var(--borderRadiusCircular)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-                  classList={{
-                    "bg-[var(--colorCompoundBrandBackground)]": autoHideNavBar(),
-                    "bg-[var(--colorNeutralStrokeAccessible)]": !autoHideNavBar(),
-                  }}
-                >
-                  <span
-                    class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-                    classList={{
-                      "translate-x-[28px]": autoHideNavBar(),
-                      "translate-x-0.5": !autoHideNavBar(),
-                    }}
-                  />
-                </span>
-              </button>
+              />
             </div>
 
             {/* 显示 R18 内容开关行 */}
@@ -589,29 +571,11 @@ const SettingsSheet: Component = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => requireAdult(() => setShowR18(!showR18()))}
-                role="switch"
-                aria-checked={showR18()}
+              <fluent-switch
+                checked={showR18()}
+                on:change={() => requireAdult(() => setShowR18(!showR18()))}
                 aria-label="显示 R18 内容"
-                class="relative flex-shrink-0 w-14 min-h-10 px-0 py-[var(--spacingVerticalSNudge)] appearance-none border-0 outline-none rounded-[var(--borderRadiusCircular)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)] flex items-center justify-center active:scale-[0.98] cursor-pointer"
-              >
-                <span
-                  class="relative block w-14 h-7 rounded-[var(--borderRadiusCircular)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-                  classList={{
-                    "bg-[var(--colorCompoundBrandBackground)]": showR18(),
-                    "bg-[var(--colorNeutralStrokeAccessible)]": !showR18(),
-                  }}
-                >
-                  <span
-                    class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-                    classList={{
-                      "translate-x-[28px]": showR18(),
-                      "translate-x-0.5": !showR18(),
-                    }}
-                  />
-                </span>
-              </button>
+              />
             </div>
 
             {/* 显示 R-18G 内容开关行 */}
@@ -635,29 +599,11 @@ const SettingsSheet: Component = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => requireAdult(() => setShowR18G(!showR18G()))}
-                role="switch"
-                aria-checked={showR18G()}
+              <fluent-switch
+                checked={showR18G()}
+                on:change={() => requireAdult(() => setShowR18G(!showR18G()))}
                 aria-label="显示 R-18G 内容"
-                class="relative flex-shrink-0 w-14 min-h-10 px-0 py-[var(--spacingVerticalSNudge)] appearance-none border-0 outline-none rounded-[var(--borderRadiusCircular)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)] flex items-center justify-center active:scale-[0.98] cursor-pointer"
-              >
-                <span
-                  class="relative block w-14 h-7 rounded-[var(--borderRadiusCircular)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-                  classList={{
-                    "bg-[var(--colorCompoundBrandBackground)]": showR18G(),
-                    "bg-[var(--colorNeutralStrokeAccessible)]": !showR18G(),
-                  }}
-                >
-                  <span
-                    class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-                    classList={{
-                      "translate-x-[28px]": showR18G(),
-                      "translate-x-0.5": !showR18G(),
-                    }}
-                  />
-                </span>
-              </button>
+              />
             </div>
 
             {/* 重新确认年龄 */}
@@ -763,44 +709,14 @@ const SettingsSheet: Component = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() =>
+              <fluent-switch
+                checked={usePredictiveBack()}
+                on:change={() =>
                   isPredictiveBackSupported() && setUsePredictiveBack(!usePredictiveBack())
                 }
-                role="switch"
-                aria-checked={usePredictiveBack()}
-                aria-label="预测性返回手势"
                 disabled={!isPredictiveBackSupported()}
-                class="relative flex-shrink-0 w-14 min-h-10 px-0 py-[var(--spacingVerticalSNudge)] appearance-none border-0 outline-none rounded-[var(--borderRadiusCircular)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)] flex items-center justify-center active:scale-[0.98]"
-                classList={{
-                  "cursor-pointer": isPredictiveBackSupported(),
-                  "cursor-not-allowed": !isPredictiveBackSupported(),
-                }}
-              >
-                <span
-                  class="relative block w-14 h-7 rounded-[var(--borderRadiusCircular)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-                  classList={{
-                    "bg-[var(--colorCompoundBrandBackground)] hover:bg-[var(--colorCompoundBrandBackgroundHover)]":
-                      usePredictiveBack() && isPredictiveBackSupported(),
-                    "bg-[var(--colorNeutralStrokeAccessible)] hover:bg-[var(--colorNeutralStrokeAccessibleHover)]":
-                      !usePredictiveBack() && isPredictiveBackSupported(),
-                    "bg-[var(--colorNeutralStrokeDisabled)]": !isPredictiveBackSupported(),
-                  }}
-                >
-                  <span
-                    class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-                    classList={{
-                      "bg-[var(--colorNeutralForegroundOnBrand)]":
-                        usePredictiveBack() && isPredictiveBackSupported(),
-                      "bg-[var(--colorNeutralBackground1)]":
-                        !usePredictiveBack() && isPredictiveBackSupported(),
-                      "bg-[var(--colorNeutralForegroundDisabled)]": !isPredictiveBackSupported(),
-                      "translate-x-[28px]": usePredictiveBack() && isPredictiveBackSupported(),
-                      "translate-x-0.5": !usePredictiveBack() || !isPredictiveBackSupported(),
-                    }}
-                  />
-                </span>
-              </button>
+                aria-label="预测性返回手势"
+              />
             </div>
 
             {/* Layout mode selector */}
@@ -871,29 +787,11 @@ const SettingsSheet: Component = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => setShowDetailStairs(!showDetailStairs())}
-                role="switch"
-                aria-checked={showDetailStairs()}
+              <fluent-switch
+                checked={showDetailStairs()}
+                on:change={() => setShowDetailStairs(!showDetailStairs())}
                 aria-label="详情页楼梯导航"
-                class="relative flex-shrink-0 w-14 min-h-10 px-0 py-[var(--spacingVerticalSNudge)] appearance-none border-0 outline-none rounded-[var(--borderRadiusCircular)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)] flex items-center justify-center active:scale-[0.98] cursor-pointer"
-              >
-                <span
-                  class="relative block w-14 h-7 rounded-[var(--borderRadiusCircular)] transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-                  classList={{
-                    "bg-[var(--colorCompoundBrandBackground)]": showDetailStairs(),
-                    "bg-[var(--colorNeutralStrokeAccessible)]": !showDetailStairs(),
-                  }}
-                >
-                  <span
-                    class="absolute top-0.5 left-0 w-6 h-6 rounded-[var(--borderRadiusCircular)] bg-white shadow-[var(--elevation4)] transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
-                    classList={{
-                      "translate-x-[28px]": showDetailStairs(),
-                      "translate-x-0.5": !showDetailStairs(),
-                    }}
-                  />
-                </span>
-              </button>
+              />
             </div>
 
             {/* Divider before quality settings */}
@@ -1120,20 +1018,7 @@ const SettingsSheet: Component = () => {
             </p>
 
             {/* 启动时检查更新 — toggle row */}
-            <div
-              class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
-              onClick={() => setAutoCheckUpdate(!autoCheckUpdate())}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setAutoCheckUpdate(!autoCheckUpdate());
-                }
-              }}
-              role="switch"
-              aria-checked={autoCheckUpdate()}
-              tabindex="0"
-              aria-label="启动时检查更新"
-            >
+            <div class="flex items-center justify-between py-3">
               <div class="flex items-center gap-3 min-w-0 flex-1">
                 <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)] flex items-center justify-center">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1152,24 +1037,12 @@ const SettingsSheet: Component = () => {
                   </p>
                 </div>
               </div>
-              <div
-                class="flex-shrink-0 w-11 h-5 rounded-full relative transition-colors duration-[var(--durationFast)]"
-                style={{
-                  "background-color": autoCheckUpdate()
-                    ? "var(--colorCompoundBrandBackground)"
-                    : "var(--colorNeutralStroke2)",
-                }}
-              >
-                <div
-                  class="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-[var(--elevation2)] transition-transform duration-[var(--durationFast)]"
-                  style={{
-                    transform: autoCheckUpdate() ? "translateX(1.375rem)" : "translateX(0.125rem)",
-                  }}
-                />
-              </div>
+              <fluent-switch
+                checked={autoCheckUpdate()}
+                on:change={() => setAutoCheckUpdate(!autoCheckUpdate())}
+                aria-label="启动时检查更新"
+              />
             </div>
-
-            {/* 检查更新 — button row */}
             <div
               class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
               onClick={handleCheckUpdate}
