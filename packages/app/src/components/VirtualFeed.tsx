@@ -34,7 +34,7 @@ const LAYOUT_COLUMNS: Record<LayoutMode, number> = {
   grid: 3,
 }
 
-const GAP = 12 // matches var(--spacingHorizontalM)
+const GAP = 16 // card spacing (horizontal & vertical)
 
 const VirtualFeed: Component<Props> = (props) => {
   const { attach: sentinelAttach } = createSentinelPaginator({
@@ -216,7 +216,10 @@ const VirtualFeed: Component<Props> = (props) => {
               const baseIndex = vs.visibleRange().startIndex
               const realIndex = baseIndex + i()
               return (
-                <div style={vs.getItemStyle(realIndex)}>
+                <div
+                  style={vs.getItemStyle(realIndex)}
+                  class="bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] overflow-hidden"
+                >
                   {realIndex < 4 ? (
                     <ImageCard illust={illust} onClick={props.onIllustClick} />
                   ) : (
