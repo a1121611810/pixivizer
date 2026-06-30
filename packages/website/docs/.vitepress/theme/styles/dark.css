@@ -100,7 +100,5 @@
 
 /* ── 暗色 Acrylic ── */
 .dark .VPNav {
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
   border-bottom: 1px solid var(--fluent-color-grey-14);
 }

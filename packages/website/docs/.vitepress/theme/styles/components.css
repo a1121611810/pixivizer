@@ -105,13 +105,18 @@
 
 /* ── 导航栏 ── */
 .VPNav {
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
   border-bottom: 1px solid var(--fluent-color-grey-94);
 }
 
 .VPNavBar {
   height: var(--vp-nav-height);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.dark .VPNavBar {
+  background: rgba(20, 20, 20, 0.65);
 }
 
 /* ── 移动端导航菜单 ── */
