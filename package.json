@@ -23,6 +23,7 @@
     "deploy": "node scripts/deploy.mjs",
     "deploy:dry": "node scripts/deploy.mjs --dry-run"
   },
+  "packageManager": "pnpm@11.9.0",
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
