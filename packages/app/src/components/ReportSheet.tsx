@@ -1,4 +1,4 @@
-import { type Component, Show, createSignal } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import {
   reportIllust,
   hasReported,
@@ -74,54 +74,22 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
       <fluent-divider style="margin-inline:20px"></fluent-divider>
 
       {/* Reason list */}
-      <div class="px-5 py-3 flex flex-col gap-2">
-        <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
-          请选择举报原因：
-        </p>
+      <p class="px-5 pt-3 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
+        请选择举报原因：
+      </p>
+      <fluent-radio-group
+        value={selectedReason()}
+        on:change={(e) => setSelectedReason(e.detail.value)}
+      >
         {REASONS.map((reason) => (
-          <button
-            class="flex items-center gap-3 px-3 py-3 rounded-[var(--borderRadiusMedium)] transition-all active:scale-[0.98] appearance-none border-none outline-none cursor-pointer text-left focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[var(--colorStrokeFocus2)]"
-            classList={{
-              "bg-[var(--colorBrandBackgroundSelected)] text-[var(--colorNeutralForeground1)]":
-                selectedReason() === reason,
-              "bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground1Hover)] hover:text-[var(--colorNeutralForeground1)]":
-                selectedReason() !== reason,
-            }}
-            onClick={() => setSelectedReason(reason)}
-            aria-pressed={selectedReason() === reason}
+          <fluent-radio
+            value={reason}
             disabled={alreadyReported()}
           >
-            <span
-              class="w-5 h-5 rounded-[var(--borderRadiusCircular)] border flex items-center justify-center flex-shrink-0 transition-colors"
-              classList={{
-                "border-[var(--colorBrandBackground)] bg-[var(--colorBrandBackground)]":
-                  selectedReason() === reason,
-                "border-[var(--colorNeutralStrokeAccessible)] bg-transparent":
-                  selectedReason() !== reason,
-              }}
-            >
-              <Show when={selectedReason() === reason}>
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                  class="text-[var(--colorNeutralForegroundOnBrand)]"
-                >
-                  <path
-                    d="M8.22 16.72a.75.75 0 0 1-1.06 0l-3.25-3.25a.75.75 0 1 1 1.06-1.06l2.72 2.72 7.72-7.72a.75.75 0 1 1 1.06 1.06l-8.25 8.25z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </Show>
-            </span>
-            <span class="[font-size:var(--fontSizeBase300)] font-semibold">
-              {REPORT_REASON_LABELS[reason]}
-            </span>
-          </button>
+            {REPORT_REASON_LABELS[reason]}
+          </fluent-radio>
         ))}
-      </div>
+      </fluent-radio-group>
 
       {/* Submit button */}
       <div class="px-5 pb-6 pt-2">
