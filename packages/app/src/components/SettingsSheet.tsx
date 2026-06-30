@@ -181,12 +181,15 @@ const SettingsSheet: Component = () => {
       </Show>
 
       {showSettingsSheet() && (
-      <fluent-drawer
-        position="top"
-        type="nonModal"
-        ref={(el) => { setTimeout(() => (el as any).show(), 0); }}
-        on:close={close}
-      >
+        <div class="fixed inset-0 z-50">
+          {/* Scrim — click to close */}
+          <div class="absolute inset-0" style="background-color:var(--colorScrim)" onClick={close} />
+
+          {/* Sheet — slides down from top */}
+          <div
+            class="absolute top-0 left-0 right-0 surface-appbar rounded-b-[var(--borderRadius4XLarge)] shadow-[var(--elevation28)]"
+            style="max-height:50vh;overflow-y:auto;animation:fluent-slide-down var(--durationGentle) var(--curveDecelerateMid) both"
+          >
         {/* Drag handle (visual affordance, non-functional in v1) */}
         <div class="flex justify-center pt-2 pb-1">
           <div class="w-10 h-1 rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralStroke1)]" />
@@ -925,7 +928,8 @@ const SettingsSheet: Component = () => {
             />
           </svg>
         </div>
-      </fluent-drawer>
+      </div>
+      </div>
       )}
 
       <Show when={showBlocklist()}>
