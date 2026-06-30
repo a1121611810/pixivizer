@@ -150,14 +150,13 @@ function bump(v, part) {
 async function patchJavaCompat() {
   // 临时将 Capacitor 各库的 Java 21 → 17，匹配当前环境 JDK
   const gradleFiles = [
-    "node_modules/@capacitor/android/capacitor/build.gradle",
-    "node_modules/@capacitor/app/android/build.gradle",
-    "node_modules/@capacitor/preferences/android/build.gradle",
-    "node_modules/@capacitor/device/android/build.gradle",
-    "node_modules/capacitor-secure-storage-plugin/android/build.gradle",
+    "node_modules/.pnpm/@capacitor+android@8.4.1_@capacitor+core@8.4.0/node_modules/@capacitor/android/capacitor/build.gradle",
+    "node_modules/.pnpm/@capacitor+app@8.1.0_@capacitor+core@8.4.0/node_modules/@capacitor/app/android/build.gradle",
+    "node_modules/.pnpm/@capacitor+preferences@8.0.1_@capacitor+core@8.4.0/node_modules/@capacitor/preferences/android/build.gradle",
+    "node_modules/.pnpm/@capacitor+device@8.0.2_@capacitor+core@8.4.0/node_modules/@capacitor/device/android/build.gradle",
+    "node_modules/.pnpm/capacitor-secure-storage-plugin@0.13.0_@capacitor+core@8.4.0/node_modules/capacitor-secure-storage-plugin/android/build.gradle",
     "android/app/capacitor.build.gradle",
     "android/capacitor-cordova-android-plugins/build.gradle",
-    "android/app/build.gradle",
   ];
   const results = await Promise.all(
     gradleFiles.map(async (f) => {
@@ -205,27 +204,8 @@ async function main() {
   const lastTag = await getLastTag();
   const commits = lastTag ? await getGitLogSince(lastTag) : [];
   log(`自 ${lastTag || "初始提交"} 以来共 ${commits.length} 个提交`);
-
-  // ═══════════════════════════════════════════════════
-  // 自定义 changelog：只包含依赖更新和当前修复
-  // ═══════════════════════════════════════════════════
-  const changes = [
-    "🧹 依赖升级",
-    "  - 升级 5 个依赖：@capacitor/core@8.4.1, @capacitor/cli@8.4.1, @types/node@26.0.1, unocss@66.7.3, vite@8.1.0",
-    "  - pnpm 供应链安全配置（minimumReleaseAge, trustPolicy, blockExoticSubdeps）",
-    "  - lint 修复与代码清理",
-    "",
-    "🐛 修复",
-    "  - 个人中心返回列表时保留滚动位置和缓存状态",
-    "  - 修复 TabFeedPage 组件初始化时 cached 变量读取 currentTab() 时序错误",
-    "",
-  ];
-  const changelog = changes.join("\n");
-
-  // 如需恢复自动生成，取消注释下面一行并注释上面的代码：
-  // const changelog = commits.length > 0 ? generateChangelog(commits) : "小修复与改进";
-
-  log("自定义 changelog：");
+  const changelog = commits.length > 0 ? generateChangelog(commits) : "小修复与改进";
+  log("生成的 changelog：");
   console.log(changelog);
   console.log("");
 
@@ -306,9 +286,6 @@ async function main() {
     await run("pnpm", ["run", "sync:android-version"], { stdio: "inherit" });
     await run("pnpm", ["run", "build"], { stdio: "inherit" });
     await run("pnpm", ["run", "cap:sync"], { stdio: "inherit" });
-    // cap:sync 会重新生成 capacitor.build.gradle（VERSION_21），需要重新修补
-    const patchedAfterSync = await patchJavaCompat();
-    if (patchedAfterSync > 0) ok(`cap:sync 后重新修补 ${patchedAfterSync} 个 Gradle 文件`);
     // 使用 /tmp/gr 作为 Gradle 缓存避免系统 .gradle 锁问题
     await run("./gradlew", ["assembleRelease"], {
       cwd: resolvePath(rootDir, "android"),

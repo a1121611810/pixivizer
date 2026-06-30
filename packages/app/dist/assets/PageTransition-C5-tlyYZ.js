@@ -1,0 +1,1 @@
+import{Ct as e,Ft as t,Lt as n,Tt as r,bt as i,zt as a}from"./index-CgE82Njj.js";var o=r(`<div style="transition:opacity var(--durationNormal) var(--curveEasyEase)">`),s=r=>{let[s,c]=n(!1);return a(()=>{requestAnimationFrame(()=>c(!0))}),(()=>{var n=o();return i(n,()=>r.children),t(t=>e(n,`opacity`,s()?`1`:`0`)),n})()};export{s as t};
