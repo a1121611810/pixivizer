@@ -285,6 +285,37 @@ function generateChangelogPreview(selected) {
   return lines.join("\n") || "（无内容）";
 }
 
+async function interactivePickVersion(currentVersion) {
+  console.log(`\n当前版本: ${currentVersion}\n`);
+  console.log("版本递增方式:");
+  console.log(`  1) patch  (${currentVersion} → ${bump(currentVersion, "patch")}) — 小修复`);
+  console.log(`  2) minor  (${currentVersion} → ${bump(currentVersion, "minor")}) — 新功能`);
+  console.log(`  3) major  (${currentVersion} → ${bump(currentVersion, "major")}) — 大改版`);
+  console.log("  4) 自定义版本号\n");
+
+  while (true) {
+    const answer = await askQuestion("选择 (1-4): ");
+    switch (answer.trim()) {
+      case "1":
+        return { type: "patch", version: bump(currentVersion, "patch") };
+      case "2":
+        return { type: "minor", version: bump(currentVersion, "minor") };
+      case "3":
+        return { type: "major", version: bump(currentVersion, "major") };
+      case "4": {
+        const custom = await askQuestion("输入版本号 (格式 x.y.z): ");
+        if (/^\d+\.\d+\.\d+$/.test(custom.trim())) {
+          return { type: "custom", version: custom.trim() };
+        }
+        console.log("  ⚠ 格式错误，请输入 x.y.z 格式（如 2.0.0）");
+        break;
+      }
+      default:
+        console.log("  ⚠ 请输入 1-4");
+    }
+  }
+}
+
 async function main() {
   log("Pictelio 一键发布脚本");
   if (dryRun) log("[dry-run 模式] 仅预览，不会执行任何写入/推送操作");
