@@ -14,7 +14,7 @@ export interface ComputeMasonryInput {
  * Returns full MasonryLayout.
  */
 /** Height of the info section below each image card (title + user name + follow button + padding) */
-export const CARD_INFO_HEIGHT = 56
+export const CARD_INFO_HEIGHT = 80
 
 export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout {
   const { items, columnWidth, columnCount, gap, columnGap } = input
