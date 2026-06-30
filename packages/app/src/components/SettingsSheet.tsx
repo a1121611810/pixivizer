@@ -239,7 +239,12 @@ const SettingsSheet: Component = () => {
             <h2 class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
               设置
             </h2>
-            <fluent-button appearance="subtle" aria-label="关闭设置" on:click={close}>
+            <fluent-button
+              appearance="subtle"
+              aria-label="关闭设置"
+              on:click={close}
+              style="min-width:32px;width:32px;height:32px;padding:0"
+            >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path
                   d="M15.14 4.86a.67.67 0 0 0-.95 0L10 9.05 5.81 4.86a.67.67 0 0 0-.95.95L9.05 10l-4.19 4.19a.67.67 0 0 0 .95.95L10 10.95l4.19 4.19a.67.67 0 0 0 .95-.95L10.95 10l4.19-4.19a.67.67 0 0 0 0-.95z"

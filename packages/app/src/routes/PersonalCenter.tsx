@@ -141,7 +141,12 @@ const PersonalCenter: Component<Props> = (props) => {
         <div class="pb-16">
           {/* Header */}
           <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3">
-            <fluent-button appearance="subtle" aria-label="返回" on:click={() => navigate(-1)}>
+            <fluent-button
+              appearance="subtle"
+              aria-label="返回"
+              on:click={() => navigate(-1)}
+              style="min-width:32px;width:32px;height:32px;padding:0"
+            >
               ←
             </fluent-button>
 

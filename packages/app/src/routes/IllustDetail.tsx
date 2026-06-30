@@ -361,7 +361,12 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
           <>
             {/* App bar header */}
             <header class="relative flex items-center gap-3 px-4 py-3 surface-appbar sticky top-0 z-10">
-              <fluent-button appearance="subtle" aria-label="返回" on:click={() => navigate(-1)}>
+              <fluent-button
+                appearance="subtle"
+                aria-label="返回"
+                on:click={() => navigate(-1)}
+                style="min-width:32px;width:32px;height:32px;padding:0"
+              >
                 ←
               </fluent-button>
               <h2 class="text-[var(--colorNeutralForeground1)] font-semibold truncate flex-1 [font-size:var(--fontSizeBase300)]">
@@ -372,6 +377,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
                 on:click={() => setShowActionMenu((v) => !v)}
                 aria-label="更多"
                 aria-expanded={showActionMenu()}
+                style="min-width:32px;width:32px;height:32px;padding:0"
               >
                 ⋮
               </fluent-button>

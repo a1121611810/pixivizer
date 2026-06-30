@@ -100,6 +100,7 @@ const TabFeedPage: Component<Props> = (props) => {
               on:click={() => setShowSettingsSheet(true)}
               onDblClick={(e) => e.stopPropagation()}
               aria-label="设置"
+              style="min-width:32px;width:32px;height:32px;padding:0"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path
