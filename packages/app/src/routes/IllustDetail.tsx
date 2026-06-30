@@ -488,11 +488,12 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
             <div class="px-4 py-4 space-y-4">
               {/* User info */}
               <div class="flex items-center gap-3">
-                <fluent-avatar
-                  src={illust()!.user.profile_image_urls.medium ?? undefined}
+                <PixivImage
+                  src={illust()!.user.profile_image_urls.medium ?? ""}
                   alt={illust()!.user.name}
-                  size="32"
-                  shape="circular"
+                  width={40}
+                  height={40}
+                  class="w-10 h-10 rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
                 />
                 <div>
                   <p class="text-[var(--colorNeutralForeground1)] font-semibold [font-size:var(--fontSizeBase300)]">
@@ -670,12 +671,11 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
           />
         )}
 
-        <Show when={showReportSheet()}>
-          <ReportSheet
-            illustId={illust()?.id ?? 0}
-            onClose={() => setShowReportSheet(false)}
-          />
-        </Show>
+        <ReportSheet
+          illustId={illust()?.id ?? 0}
+          isOpen={showReportSheet()}
+          onClose={() => setShowReportSheet(false)}
+        />
       </div>
     </PageTransition>
   );
