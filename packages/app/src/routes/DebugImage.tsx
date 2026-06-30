@@ -36,13 +36,11 @@ const DebugImage: Component = () => {
           图片加载调试
         </h1>
 
-        <textarea
-          class="input input-mono mb-3 resize-none"
-          rows={3}
+        <fluent-textarea
           placeholder="粘贴 i.pximg.net 图片 URL..."
           value={testUrl()}
-          onInput={(e) => setTestUrl(e.currentTarget.value)}
-        />
+          on:input={(e) => setTestUrl((e.target as any).value)}
+        ></fluent-textarea>
 
         <fluent-button appearance="primary" on:click={testFetch}>
           测试加载
