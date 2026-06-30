@@ -114,6 +114,39 @@
   height: var(--vp-nav-height);
 }
 
+/* ── 移动端导航菜单 ── */
+.VPNavScreen {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dark .VPNavScreen {
+  background: rgba(20, 20, 20, 0.85) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.VPNavScreen .VPNavScreenMenuLink {
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--fluent-color-grey-94);
+}
+
+.dark .VPNavScreen .VPNavScreenMenuLink {
+  border-bottom-color: var(--fluent-color-grey-20);
+}
+
+.VPNavScreen .VPNavScreenAppearance {
+  margin-top: 16px;
+}
+
+.VPNavScreen .VPSocialLinks {
+  margin-top: 12px;
+  gap: 12px;
+}
+
 .VPNavBarMenuLink {
   font-size: 14px;
   font-weight: 500;
