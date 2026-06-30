@@ -74,7 +74,6 @@ const Login: Component = () => {
         <div style={S.fieldGroup}>
           <p style={S.label}>粘贴你的 Pixiv refresh_token</p>
           <fluent-textarea
-            style={S.textarea}
             placeholder="粘贴 refresh_token..."
             value={tokenInput()}
             on:input={(e) => setTokenInput((e.target as any).value)}
