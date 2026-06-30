@@ -49,4 +49,4 @@ updateConfig:
   ignoreDependencies:
     - capacitor-secure-storage-plugin
 
-storeDir: /Users/lilianda/Library/pnpm/store/v11
+
