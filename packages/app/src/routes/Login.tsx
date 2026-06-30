@@ -85,9 +85,9 @@ const Login: Component = () => {
 
         {error() && <div style={S.error}>{error()}</div>}
 
-        <button type="submit" disabled={submitting()} style={S.btn}>
+        <fluent-button appearance="primary" disabled={submitting()} style="width:100%" on:click={handleSubmit}>
           {submitting() ? "登录中..." : "登录"}
-        </button>
+        </fluent-button>
 
         <p style={S.disclaimer}>
           本应用与 Pixiv 官方无任何关联，不存储、托管或分发任何图片内容。所有插画均来自 Pixiv 公开
