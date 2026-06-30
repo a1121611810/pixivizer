@@ -220,7 +220,7 @@ const VirtualFeed: Component<Props> = (props) => {
               return (
                 <div
                   style={vs.getItemStyle(realIndex)}
-                  class="bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] overflow-hidden"
+                  class="bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] shadow-[var(--elevation2)]"
                 >
                   {realIndex < 4 ? (
                     <ImageCard illust={illust} onClick={props.onIllustClick} />
