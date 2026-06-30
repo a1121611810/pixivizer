@@ -33,6 +33,12 @@ const bumpMajor = args.includes("--major");
 const bumpMinor = args.includes("--minor");
 // `--patch` default — no explicit check needed, falls through as default
 const versionArg = args.find((a) => a.startsWith("--version="))?.split("=")[1];
+const isInteractive = args.includes("--interactive") || args.includes("-i");
+
+if (isInteractive && !process.stdin.isTTY) {
+  console.error("[release] ❌ --interactive 模式需要 TTY 终端");
+  process.exit(1);
+}
 
 // ── 工具函数 ──
 
