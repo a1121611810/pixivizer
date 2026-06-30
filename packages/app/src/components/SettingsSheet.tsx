@@ -77,6 +77,7 @@ function openDeleteAccountPage() {
 }
 
 const SettingsSheet: Component = () => {
+  console.log("[SETTINGS] render, showSettingsSheet =", showSettingsSheet());
   const navigate = useNavigate();
   const [ageGateMessage, setAgeGateMessage] = createSignal<string | null>(null);
   const [showBlocklist, setShowBlocklist] = createSignal(false);

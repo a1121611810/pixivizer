@@ -127,7 +127,11 @@ export const setThemePersisted = async (newTheme: Theme): Promise<void> => {
 };
 
 export const showSettingsSheet = () => state.showSettingsSheet;
-export const setShowSettingsSheet = (v: boolean) => setState("showSettingsSheet", v);
+export const setShowSettingsSheet = (v: boolean) => {
+  console.log("[uiStore] setShowSettingsSheet →", v, "| before:", state.showSettingsSheet);
+  setState("showSettingsSheet", v);
+  console.log("[uiStore] after setState →", state.showSettingsSheet);
+};
 
 export const layoutMode = () => state.layoutMode;
 export const setLayoutMode = async (mode: LayoutMode): Promise<void> => {
