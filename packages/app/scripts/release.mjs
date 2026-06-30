@@ -20,7 +20,7 @@
  *   PICTELIO_KEY_PASSWORD        - key 密码（必须）
  */
 
-import { readFile, writeFile, stat } from "node:fs/promises";
+import { readFile, writeFile, stat, mkdir } from "node:fs/promises";
 import { execFile, execFileSync } from "node:child_process";
 import { resolve as resolvePath, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -422,6 +422,7 @@ async function main() {
 
     // 写入 changelog
     const changelogPath = `fastlane/metadata/android/en-US/changelogs/${versionCode}.txt`;
+    await mkdir(dirname(resolvePath(rootDir, changelogPath)), { recursive: true });
     await writeText(changelogPath, changelog);
     ok(`Changelog 已写入 ${changelogPath}`);
 
@@ -436,10 +437,12 @@ async function main() {
         null,
         2,
       ) + "\n";
+    await mkdir(dirname(resolvePath(rootDir, "../../packages/website/version.json")), { recursive: true });
     await writeText(
       "../../packages/website/version.json",
       verJson,
     );
+    await mkdir(dirname(resolvePath(rootDir, "../../website/version.json")), { recursive: true });
     await writeText(
       "../../website/version.json",
       verJson,
