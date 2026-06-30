@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════
    Pictelio Fluent Design Theme
    配色取自 App 实际品牌色 (packages/app/src/styles/tokens.css)
+   动效参考 Microsoft Fluent Design System
    ═══════════════════════════════════════════════════════ */
 
 /* ── 品牌色 ── */
@@ -10,13 +11,11 @@
   --vp-c-brand-3: #7ab8e8;
   --vp-c-brand-soft: rgba(43, 87, 154, 0.08);
 
-  /* ── 文字 ── */
   --vp-c-text-1: #2c2822;
   --vp-c-text-2: #4a453e;
   --vp-c-text-3: #696358;
   --vp-c-text-muted: #bbb5aa;
 
-  /* ── 背景 ── */
   --vp-c-bg: #fefcf8;
   --vp-c-bg-soft: #f7f4ee;
   --vp-c-bg-muted: #f0ece4;
@@ -24,7 +23,6 @@
   --vp-c-bg-elv: #ffffff;
   --vp-c-bg-soft-up: #ffffff;
 
-  /* ── 边框/分割线 ── */
   --vp-c-border: #dcd7ce;
   --vp-c-divider: #e6e2d8;
   --vp-c-gutter: #e6e2d8;
@@ -40,7 +38,6 @@
   --vp-button-brand-active-bg: #162e5e;
   --vp-button-brand-active-text: #ffffff;
 
-  /* ── 按钮 (alt) ── */
   --vp-button-alt-border: #cdc8be;
   --vp-button-alt-bg: #f7f4ee;
   --vp-button-alt-text: #2c2822;
@@ -64,7 +61,7 @@
   --vp-nav-bg-color: #ffffff;
   --vp-nav-height: 56px;
 
-  /* ── 卡片 (feature) ── */
+  /* ── 卡片 ── */
   --vp-home-hero-name-color: #2b579a;
   --vp-home-hero-name-background: transparent;
   --vp-home-hero-image-background-image: none;
@@ -72,16 +69,13 @@
   --vp-home-feature-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.04);
   --vp-home-feature-hover-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
 
-  /* ── Code ── */
   --vp-code-block-bg: #f7f4ee;
   --vp-code-line-highlight-bg: rgba(43, 87, 154, 0.08);
   --vp-code-line-number-color: #cdc8be;
 
-  /* ── Search ── */
   --vp-search-box-bg: #ffffff;
   --vp-search-result-bg: #ffffff;
 
-  /* ── 自定义块 ── */
   --vp-custom-block-tip-border: #5a9fd4;
   --vp-custom-block-tip-text: #2c2822;
   --vp-custom-block-tip-bg: rgba(90, 159, 212, 0.08);
@@ -137,25 +131,195 @@
   --vp-search-result-bg: #2d2d2d;
 }
 
-/* ── Hero 区域优化 ── */
-.VPHomeHero .name {
-  line-height: 1.1;
+/* ═══════════════════════════════════════════════════════
+   🎬 Fluent Design 动效
+   ═══════════════════════════════════════════════════════ */
+
+/* ── 基础过渡 (Fluent Reveal / Depth) ── */
+*,
+*::before,
+*::after {
+  transition-duration: 0.2s;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1); /* Fluent easing */
 }
 
-/* ── Feature 卡片 Fluent 风格 ── */
+/* ── Hero 入场动画 ── */
+.VPHomeHero {
+  animation: hero-enter 0.6s ease-out both;
+}
+
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.VPHomeHero .hero-logo,
+.VPHomeHero :first-child {
+  animation: hero-content-enter 0.4s ease-out 0.2s both;
+}
+
+@keyframes hero-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Feature 卡片 ── */
 .VPFeature {
   border: 1px solid var(--vp-c-border);
   border-radius: 4px;
-  transition: box-shadow 0.2s ease;
+  transition:
+    box-shadow 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+    border-color 0.25s ease;
+  animation: card-enter 0.4s ease-out both;
+}
+
+.VPFeature:nth-child(1) { animation-delay: 0.05s; }
+.VPFeature:nth-child(2) { animation-delay: 0.1s; }
+.VPFeature:nth-child(3) { animation-delay: 0.15s; }
+.VPFeature:nth-child(4) { animation-delay: 0.2s; }
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .VPFeature:hover {
+  transform: translateY(-2px);
   border-color: var(--vp-c-brand-2);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
-/* ── 下载按钮区 ── */
+/* ── Feature 卡片 Reveal Glow (Fluent Reveal 效果) ── */
+.VPFeature {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.VPFeature::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    600px circle at var(--mouseX, 50%) var(--mouseY, 50%),
+    rgba(90, 159, 212, 0.06) 0%,
+    transparent 40%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.VPFeature:hover::before {
+  opacity: 1;
+}
+
+.VPFeature > * {
+  position: relative;
+  z-index: 1;
+}
+
+.VPFeature:hover .VPFeature :deep(svg) {
+  transform: scale(1.05);
+}
+
+/* ── 按钮 Hover 动效 ── */
+.vp-doc .VPButton,
+.VPButton {
+  position: relative;
+  overflow: hidden;
+  transition:
+    background 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
+}
+
+.VPButton:hover {
+  transform: translateY(-1px);
+}
+
+.VPButton:active {
+  transform: translateY(0);
+}
+
+/* ── 按钮 Ripple (通过 FluentRipple 组件实现) ── */
+
+/* ── 导航栏 ── */
+.VPNavBarMenuLink {
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.VPNavBarMenuLink::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--vp-c-brand-1);
+  transition:
+    width 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+    left 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  border-radius: 1px;
+}
+
+.VPNavBarMenuLink:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+.dark .VPNavBarMenuLink::after {
+  background: var(--vp-c-brand-1);
+}
+
+/* ── 卡片入口动画 (Scroll Reveal) ── */
+.VPFeature {
+  view-timeline-name: --card;
+  view-timeline-axis: block;
+  animation-timeline: --card;
+  animation-range: entry 0% entry 100%;
+}
+
+/* ── 免责声明框 ── */
 .disclaimer-box {
   border-left: 3px solid var(--vp-c-brand-1);
+  border-radius: 4px;
+  animation: disclaimer-enter 0.5s ease-out both;
+  animation-delay: 0.3s;
+}
+
+@keyframes disclaimer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── 页脚 ── */
@@ -163,7 +327,17 @@
   border-top: 1px solid var(--vp-c-divider);
 }
 
-/* ── 导航链接 hover ── */
-.VPNavBarMenuLink:hover {
-  color: var(--vp-c-brand-1);
+/* ── Hero 区域 ── */
+.VPHomeHero .name {
+  line-height: 1.1;
+}
+
+/* ── 动效减弱偏好 ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
