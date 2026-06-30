@@ -1,0 +1,169 @@
+/* ═══════════════════════════════════════════════════════
+   Pictelio Fluent Design Theme
+   配色取自 App 实际品牌色 (packages/app/src/styles/tokens.css)
+   ═══════════════════════════════════════════════════════ */
+
+/* ── 品牌色 ── */
+:root {
+  --vp-c-brand-1: #2b579a;
+  --vp-c-brand-2: #5a9fd4;
+  --vp-c-brand-3: #7ab8e8;
+  --vp-c-brand-soft: rgba(43, 87, 154, 0.08);
+
+  /* ── 文字 ── */
+  --vp-c-text-1: #2c2822;
+  --vp-c-text-2: #4a453e;
+  --vp-c-text-3: #696358;
+  --vp-c-text-muted: #bbb5aa;
+
+  /* ── 背景 ── */
+  --vp-c-bg: #fefcf8;
+  --vp-c-bg-soft: #f7f4ee;
+  --vp-c-bg-muted: #f0ece4;
+  --vp-c-bg-alt: #e6e2d8;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-bg-soft-up: #ffffff;
+
+  /* ── 边框/分割线 ── */
+  --vp-c-border: #dcd7ce;
+  --vp-c-divider: #e6e2d8;
+  --vp-c-gutter: #e6e2d8;
+
+  /* ── 按钮 (brand) ── */
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-bg: #2b579a;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-hover-bg: #1e4080;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-active-border: transparent;
+  --vp-button-brand-active-bg: #162e5e;
+  --vp-button-brand-active-text: #ffffff;
+
+  /* ── 按钮 (alt) ── */
+  --vp-button-alt-border: #cdc8be;
+  --vp-button-alt-bg: #f7f4ee;
+  --vp-button-alt-text: #2c2822;
+  --vp-button-alt-hover-border: #cdc8be;
+  --vp-button-alt-hover-bg: #f0ece4;
+  --vp-button-alt-hover-text: #2c2822;
+  --vp-button-alt-active-border: #cdc8be;
+  --vp-button-alt-active-bg: #e6e2d8;
+  --vp-button-alt-active-text: #2c2822;
+
+  /* ── 字体 ── */
+  --vp-font-family-base: "Segoe UI", "Segoe UI Variable", -apple-system, BlinkMacSystemFont,
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --vp-font-family-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", Menlo, monospace;
+
+  /* ── 圆角 (Fluent: 2px / 4px) ── */
+  --vp-border-radius: 2px;
+  --vp-border-radius-small: 2px;
+
+  /* ── 导航栏 ── */
+  --vp-nav-bg-color: #ffffff;
+  --vp-nav-height: 56px;
+
+  /* ── 卡片 (feature) ── */
+  --vp-home-hero-name-color: #2b579a;
+  --vp-home-hero-name-background: transparent;
+  --vp-home-hero-image-background-image: none;
+  --vp-home-hero-image-filter: none;
+  --vp-home-feature-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --vp-home-feature-hover-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+
+  /* ── Code ── */
+  --vp-code-block-bg: #f7f4ee;
+  --vp-code-line-highlight-bg: rgba(43, 87, 154, 0.08);
+  --vp-code-line-number-color: #cdc8be;
+
+  /* ── Search ── */
+  --vp-search-box-bg: #ffffff;
+  --vp-search-result-bg: #ffffff;
+
+  /* ── 自定义块 ── */
+  --vp-custom-block-tip-border: #5a9fd4;
+  --vp-custom-block-tip-text: #2c2822;
+  --vp-custom-block-tip-bg: rgba(90, 159, 212, 0.08);
+  --vp-custom-block-info-border: #cdc8be;
+  --vp-custom-block-info-text: #2c2822;
+  --vp-custom-block-info-bg: rgba(205, 200, 190, 0.08);
+}
+
+/* ── 暗色模式 ── */
+.dark {
+  --vp-c-brand-1: #7ab8e8;
+  --vp-c-brand-2: #5a9fd4;
+  --vp-c-brand-3: #2b579a;
+  --vp-c-brand-soft: rgba(122, 184, 232, 0.12);
+
+  --vp-c-text-1: #e6e2d8;
+  --vp-c-text-2: #cdc8be;
+  --vp-c-text-3: #bbb5aa;
+
+  --vp-c-bg: #1e1e1e;
+  --vp-c-bg-soft: #252525;
+  --vp-c-bg-muted: #2d2d2d;
+  --vp-c-bg-alt: #333333;
+  --vp-c-bg-elv: #2d2d2d;
+
+  --vp-c-border: #3d3d3d;
+  --vp-c-divider: #333333;
+
+  --vp-button-brand-bg: #5a9fd4;
+  --vp-button-brand-hover-bg: #4a8fc4;
+  --vp-button-brand-active-bg: #3a7fb4;
+  --vp-button-brand-text: #1e1e1e;
+  --vp-button-brand-hover-text: #1e1e1e;
+  --vp-button-brand-active-text: #1e1e1e;
+
+  --vp-button-alt-border: #3d3d3d;
+  --vp-button-alt-bg: #252525;
+  --vp-button-alt-text: #e6e2d8;
+  --vp-button-alt-hover-border: #3d3d3d;
+  --vp-button-alt-hover-bg: #2d2d2d;
+  --vp-button-alt-hover-text: #e6e2d8;
+  --vp-button-alt-active-border: #3d3d3d;
+  --vp-button-alt-active-bg: #333333;
+  --vp-button-alt-active-text: #e6e2d8;
+
+  --vp-nav-bg-color: #252525;
+
+  --vp-home-feature-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --vp-home-feature-hover-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+  --vp-code-block-bg: #252525;
+  --vp-search-box-bg: #2d2d2d;
+  --vp-search-result-bg: #2d2d2d;
+}
+
+/* ── Hero 区域优化 ── */
+.VPHomeHero .name {
+  line-height: 1.1;
+}
+
+/* ── Feature 卡片 Fluent 风格 ── */
+.VPFeature {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 4px;
+  transition: box-shadow 0.2s ease;
+}
+
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-2);
+}
+
+/* ── 下载按钮区 ── */
+.disclaimer-box {
+  border-left: 3px solid var(--vp-c-brand-1);
+}
+
+/* ── 页脚 ── */
+.VPFooter {
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+/* ── 导航链接 hover ── */
+.VPNavBarMenuLink:hover {
+  color: var(--vp-c-brand-1);
+}
