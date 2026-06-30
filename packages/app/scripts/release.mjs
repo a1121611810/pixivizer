@@ -249,14 +249,14 @@ async function interactivePickCommits(commits) {
           valid = false;
         }
       }
-      if (!valid || indices.length === 0 && parts.some(p => p !== "")) {
+      if (!valid || (indices.length === 0 && parts.some((p) => p !== ""))) {
         console.log("  ⚠ 格式错误，请重新输入");
         continue;
       }
     }
 
     // Deduplicate and sort
-    indices = [...new Set(indices)].sort((a, b) => a - b);
+    indices = [...new Set(indices)].toSorted((a, b) => a - b);
     const selected = indices.map((i) => items[i]);
 
     // Show preview grouped by category
@@ -428,7 +428,8 @@ async function main() {
 
     // 更新 version.json（供 app 内检查更新使用）
     // 同时写入新旧路径，兼容已发布的旧版 APK
-    const verJson = JSON.stringify(
+    const verJson =
+      JSON.stringify(
         {
           version: newVersion,
           url: `https://github.com/a1121611810/pixivizer/releases/tag/${tag}`,
@@ -437,16 +438,12 @@ async function main() {
         null,
         2,
       ) + "\n";
-    await mkdir(dirname(resolvePath(rootDir, "../../packages/website/version.json")), { recursive: true });
-    await writeText(
-      "../../packages/website/version.json",
-      verJson,
-    );
+    await mkdir(dirname(resolvePath(rootDir, "../../packages/website/version.json")), {
+      recursive: true,
+    });
+    await writeText("../../packages/website/version.json", verJson);
     await mkdir(dirname(resolvePath(rootDir, "../../website/version.json")), { recursive: true });
-    await writeText(
-      "../../website/version.json",
-      verJson,
-    );
+    await writeText("../../website/version.json", verJson);
     ok(`version.json 已更新 (${newVersion})`);
   } else {
     log(`[dry-run] 将更新 package.json → ${newVersion}`);

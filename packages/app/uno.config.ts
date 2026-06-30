@@ -30,17 +30,6 @@ export default defineConfig({
     "image-card":
       "bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] overflow-hidden shadow-[var(--elevation2)] border border-[var(--colorNeutralStroke2)] cursor-pointer transition-all active:scale-[0.98] select-none max-w-full",
 
-    // ── Buttons (Fluent 2 anatomy: 14px/600, 32px min-height, 4px radius, 16px h-pad) ──
-    btn: "inline-flex items-center justify-center gap-[var(--spacingHorizontalXS)] rounded-[var(--borderRadiusMedium)] font-semibold [font-size:var(--fontSizeBase300)] [line-height:var(--lineHeightBase300)] min-h-8 px-[var(--spacingHorizontalL)] border border-[var(--colorNeutralStroke1)] transition-all active:scale-[0.97] select-none appearance-none outline-none cursor-pointer focus-visible:outline-none focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]",
-    "btn-primary":
-      "btn bg-[var(--colorBrandBackground)] text-white border-[var(--colorBrandBackground)] hover:bg-[var(--colorBrandBackgroundHover)] hover:border-[var(--colorBrandBackgroundHover)] active:bg-[var(--colorBrandBackgroundPressed)] active:border-[var(--colorBrandBackgroundPressed)] disabled:opacity-50 disabled:cursor-not-allowed",
-    "btn-secondary":
-      "btn bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] border-[var(--colorNeutralStroke1)] hover:bg-[var(--colorNeutralBackground1Hover)] hover:border-[var(--colorNeutralStrokeAccessible)] active:bg-[var(--colorNeutralBackground1Pressed)] active:border-[var(--colorNeutralStrokeAccessible)] disabled:opacity-50 disabled:cursor-not-allowed",
-    "btn-subtle":
-      "btn bg-transparent text-[var(--colorNeutralForeground2)] border-transparent hover:bg-[var(--colorNeutralBackground1Hover)] active:bg-[var(--colorNeutralBackground1Pressed)] disabled:opacity-50 disabled:cursor-not-allowed",
-    "btn-icon":
-      "inline-flex items-center justify-center w-8 h-8 rounded-[var(--borderRadiusMedium)] text-[var(--colorNeutralForeground2)] bg-transparent border-transparent hover:bg-[var(--colorNeutralBackground1Hover)] active:bg-[var(--colorNeutralBackground1Pressed)] active:scale-90 transition-all select-none",
-
     // ── Input fields (Fluent 2) ──
     input:
       "w-full px-[var(--spacingHorizontalMNudge)] py-[var(--spacingVerticalSNudge)] rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] text-[var(--fontSizeBase300)] leading-[var(--lineHeightBase300)] border border-[var(--colorNeutralStroke1)] placeholder:text-[var(--colorNeutralForegroundDisabled)] focus:outline-none focus:border-[var(--colorBrandStroke1)] focus:shadow-[0_0_0_1px_var(--colorBrandStroke1)] transition-all disabled:opacity-50 disabled:bg-[var(--colorNeutralBackground2)]",
@@ -49,10 +38,6 @@ export default defineConfig({
     // ── Form label (Caption 1: 12px/400) ──
     label:
       "text-[var(--fontSizeBase200)] font-400 text-[var(--colorNeutralForeground2)] leading-[var(--lineHeightBase200)]",
-
-    // ── Badge (Fluent 2 Tag) ──
-    badge:
-      "inline-flex items-center rounded-[var(--borderRadiusCircular)] px-[var(--spacingHorizontalS)] py-[var(--spacingVerticalXXS)] text-[var(--fontSizeBase200)] font-400 text-[var(--colorNeutralForeground2)] bg-[var(--colorNeutralBackground2)] border border-[var(--colorNeutralStroke2)]",
 
     // ── Segmented control (Fluent toggle buttons) ──
     segmented:
@@ -63,17 +48,6 @@ export default defineConfig({
       "segmented-item bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]",
     "segmented-item-inactive":
       "segmented-item bg-transparent text-[var(--colorNeutralForeground2)] hover:text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)]",
-
-    // ── Divider ──
-    divider: "border-t border-[var(--colorNeutralStroke2)]",
-
-    // ── Spinner (Fluent ProgressRing: thick neutral stroke + brand top edge) ──
-    spinner:
-      "[border-width:var(--strokeWidthThicker)] border-solid [border-color:var(--colorNeutralStroke2)] [border-top-color:var(--colorBrandStroke1)] rounded-[var(--borderRadiusCircular)] animate-spin",
-
-    // ── Image badge overlay (card corner label) ──
-    "badge-overlay":
-      "flex items-center gap-1 bg-[var(--colorImageBadgeBackground)] backdrop-blur-sm rounded-[var(--borderRadiusSmall)] px-1.5 py-0.5 text-[var(--colorImageBadgeForeground)] [font-size:var(--fontSizeBase100)] font-medium select-none pointer-events-none",
 
     // ── Bottom Navigation Bar (Fluent 2 floating pill pattern) ──
     "bottom-nav": "fixed bottom-0 left-0 right-0 z-30 flex justify-center px-4 select-none",

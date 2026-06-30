@@ -561,7 +561,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
               {/* Tags */}
               <div class="flex flex-wrap gap-1.5">
                 {illust()!.tags.map((tag) => (
-                  <span class="badge">{tag.translated_name || tag.name}</span>
+                  <fluent-badge appearance="subtle">{tag.translated_name || tag.name}</fluent-badge>
                 ))}
               </div>
 

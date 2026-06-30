@@ -14,9 +14,7 @@ interface Props {
  * 从 illust 数据中提取骨架屏所需的宽高。
  * 优先使用 API 返回的 width/height，缺失时从主图 URL 解析。
  */
-function getSkeletonDimensions(
-  illust: PixivIllust,
-): { width: number; height: number } | null {
+function getSkeletonDimensions(illust: PixivIllust): { width: number; height: number } | null {
   if (illust.width > 0 && illust.height > 0) {
     return { width: illust.width, height: illust.height };
   }

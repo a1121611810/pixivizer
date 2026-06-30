@@ -12,8 +12,7 @@ interface Props {
  *  如果传入 width/height，使用正确的 aspect-ratio 避免布局回退；
  *  否则回退 1:1（初始加载无数据时）。 */
 const SkeletonCard: Component<Props> = (props) => {
-  const aspectRatio =
-    props.width && props.height ? `${props.width} / ${props.height}` : "1 / 1";
+  const aspectRatio = props.width && props.height ? `${props.width} / ${props.height}` : "1 / 1";
 
   return (
     <div class="image-card break-inside-avoid mb-3">
