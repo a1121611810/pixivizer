@@ -114,7 +114,7 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
           </div>
 
           {/* Divider */}
-          <div class="divider mx-5" />
+          <fluent-divider style="margin-inline:20px"></fluent-divider>
 
           {/* Reason list */}
           <div class="px-5 py-3 flex flex-col gap-2">

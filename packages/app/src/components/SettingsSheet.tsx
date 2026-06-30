@@ -339,7 +339,7 @@ const SettingsSheet: Component = () => {
           </div>
 
           {/* Divider */}
-          <div class="divider mx-5" />
+          <fluent-divider style="margin-inline:20px"></fluent-divider>
 
           {/* ── Settings rows ── */}
           <div class="px-5 py-3 flex flex-col">
@@ -679,7 +679,7 @@ const SettingsSheet: Component = () => {
             </div>
 
             {/* Divider before quality settings */}
-            <div class="divider my-1" />
+            <fluent-divider style="margin-block:4px"></fluent-divider>
 
             {/* List image quality */}
             <div class="py-2">
@@ -733,7 +733,7 @@ const SettingsSheet: Component = () => {
           </div>
 
           {/* Divider before cache size */}
-          <div class="divider my-1" />
+          <fluent-divider style="margin-block:4px"></fluent-divider>
 
           {/* Image cache size */}
           <div class="px-5 py-2">
@@ -774,7 +774,7 @@ const SettingsSheet: Component = () => {
           </div>
 
           {/* Divider */}
-          <div class="divider mx-5" />
+          <fluent-divider style="margin-inline:20px"></fluent-divider>
 
           {/* ── Account & data section ── */}
           <div class="px-5 py-3 flex flex-col">
@@ -893,7 +893,7 @@ const SettingsSheet: Component = () => {
           </div>
 
           {/* Divider */}
-          <div class="divider mx-5" />
+          <fluent-divider style="margin-inline:20px"></fluent-divider>
 
           {/* ── 检测更新 ── */}
           <div class="px-5 py-3 flex flex-col">
@@ -956,10 +956,7 @@ const SettingsSheet: Component = () => {
               <div class="flex items-center gap-2 flex-shrink-0 ml-3">
                 {/* Loading spinner */}
                 <Show when={isCheckingUpdate()}>
-                  <div
-                    class="w-4 h-4 [border-width:var(--strokeWidthThick)] border-solid [border-color:var(--colorNeutralStroke2)] [border-top-color:var(--colorBrandStroke1)] rounded-[var(--borderRadiusCircular)]"
-                    style="animation: spin 1s linear infinite"
-                  />
+                  <fluent-spinner size="tiny"></fluent-spinner>
                 </Show>
                 {/* Latest version tag — visible after check completes */}
                 <Show when={checkCompleted() && !isCheckingUpdate()}>
@@ -984,7 +981,7 @@ const SettingsSheet: Component = () => {
           </div>
 
           {/* Divider */}
-          <div class="divider mx-5" />
+          <fluent-divider style="margin-inline:20px"></fluent-divider>
 
           {/* About entry — clickable row */}
           <div

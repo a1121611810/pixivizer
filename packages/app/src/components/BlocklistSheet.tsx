@@ -86,7 +86,7 @@ const BlocklistSheet: Component<BlocklistSheetProps> = (props) => {
           </div>
 
           {/* Divider */}
-          <div class="divider mx-5" />
+          <fluent-divider style="margin-inline:20px"></fluent-divider>
 
           {/* Blocked user list */}
           <div class="px-5 py-3 min-h-[160px]">

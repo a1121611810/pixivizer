@@ -215,7 +215,9 @@ const About: Component = () => {
                     ) : (
                       inner
                     )}
-                    {idx < arr.length - 1 && <div class="mx-4 divider" />}
+                    {idx < arr.length - 1 && (
+                      <fluent-divider style="margin-inline:16px"></fluent-divider>
+                    )}
                   </>
                 );
               })}

@@ -5,11 +5,11 @@ interface Props {
   text?: string;
 }
 
-const sizes = { sm: "w-5 h-5", md: "w-8 h-8", lg: "w-12 h-12" };
+const sizeMap = { sm: "tiny", md: "small", lg: "medium" } as const;
 
 const LoadingSpinner: Component<Props> = (props) => (
   <div class="flex flex-col items-center justify-center gap-3 py-8">
-    <div class={`${sizes[props.size ?? "md"]} spinner`} />
+    <fluent-spinner size={sizeMap[props.size ?? "md"]} />
     {props.text && (
       <p class="text-[var(--colorNeutralForegroundDisabled)] text-[var(--fontSizeBase200)]">
         {props.text}
