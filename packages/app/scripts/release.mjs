@@ -222,7 +222,7 @@ async function interactivePickCommits(commits) {
       indices = [];
     } else {
       indices = [];
-      const parts = answer.split(/\s+/);
+      const parts = answer.split(/\s+/).filter(Boolean);
       let valid = true;
       for (const part of parts) {
         if (/^\d+$/.test(part)) {
