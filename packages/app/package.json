@@ -34,6 +34,8 @@
     "@capacitor/core": "^8.4.1",
     "@capacitor/device": "^8.0.2",
     "@capacitor/preferences": "^8.0.1",
+    "@fluentui/tokens": "1.0.0-alpha.23",
+    "@fluentui/web-components": "3.0.0-rc.31",
     "@solidjs/router": "^0.16.1",
     "capacitor-secure-storage-plugin": "^0.13.0",
     "https-proxy-agent": "^9.1.0",

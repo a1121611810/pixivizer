@@ -214,6 +214,12 @@ importers:
       '@capacitor/preferences':
         specifier: ^8.0.1
         version: 8.0.1(@capacitor/core@8.4.1)
+      '@fluentui/tokens':
+        specifier: 1.0.0-alpha.23
+        version: 1.0.0-alpha.23
+      '@fluentui/web-components':
+        specifier: 3.0.0-rc.31
+        version: 3.0.0-rc.31(@microsoft/fast-element@3.0.0)(@microsoft/focusgroup-polyfill@1.5.0)
       '@solidjs/router':
         specifier: ^0.16.1
         version: 0.16.1(solid-js@1.9.13)
@@ -655,6 +661,16 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@fluentui/tokens@1.0.0-alpha.23':
+    resolution: {integrity: sha512-uxrzF9Z+J10naP0pGS7zPmzSkspSS+3OJDmYIK3o1nkntQrgBXq3dBob4xSlTDm5aOQ0kw6EvB9wQgtlyy4eKQ==}
+
+  '@fluentui/web-components@3.0.0-rc.31':
+    resolution: {integrity: sha512-Zjyyv7AII1pjNZ6T5w0vjSxTqSBXKX6jEsiZ1TAY/qex2Mh3T4z/uCX/oOtpKyU0ivLyoMc4PKyTiJrgqeWvmQ==}
+    engines: {node: ^22.0.0 || ^24.0.0}
+    peerDependencies:
+      '@microsoft/fast-element': ^3.0.0
+      '@microsoft/focusgroup-polyfill': ^1.5.0
+
   '@iconify-json/simple-icons@1.2.87':
     resolution: {integrity: sha512-8YciStObhSji3OZFmWAWK6kBujyqO5bLCxeDwLxf3CR3F4PVelq7keC2LBvgTqviWzSTysj5/g4PCFLiAMVGsw==}
 
@@ -715,6 +731,12 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@microsoft/fast-element@3.0.0':
+    resolution: {integrity: sha512-XjOUCGT0zSueOzNyelA6qq+Gvu6QiC1mT1s9Th2xwoqVTHsUV9xr7zJO74ZHoiT2+/jIXu7/wnVgalug0b1RzQ==}
+
+  '@microsoft/focusgroup-polyfill@1.5.0':
+    resolution: {integrity: sha512-2tw+AISULD5xhP+wIqUheej5wZbwiuPaqjuCa8A8jLdq2ikklZBIvSDLLa6j7zbDbtV5BXnrYgSuyW1Bj5JA4A==}
 
   '@napi-rs/wasm-runtime@1.1.6':
     resolution: {integrity: sha512-ZLv/JdUfkvOy9eCnnBaGfiO+XimbjebAeO+MRQqD/B+FR1tnRN0tpKSJHRbE8sFfS6aqsXZ67TQjfwfsxULVbg==}
@@ -1493,6 +1515,9 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@swc/helpers@0.5.23':
+    resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -3518,6 +3543,17 @@ snapshots:
   '@esbuild/win32-x64@0.21.5':
     optional: true
 
+  '@fluentui/tokens@1.0.0-alpha.23':
+    dependencies:
+      '@swc/helpers': 0.5.23
+
+  '@fluentui/web-components@3.0.0-rc.31(@microsoft/fast-element@3.0.0)(@microsoft/focusgroup-polyfill@1.5.0)':
+    dependencies:
+      '@fluentui/tokens': 1.0.0-alpha.23
+      '@microsoft/fast-element': 3.0.0
+      '@microsoft/focusgroup-polyfill': 1.5.0
+      tslib: 2.8.1
+
   '@iconify-json/simple-icons@1.2.87':
     dependencies:
       '@iconify/types': 2.0.0
@@ -3628,6 +3664,10 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@microsoft/fast-element@3.0.0': {}
+
+  '@microsoft/focusgroup-polyfill@1.5.0': {}
 
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
@@ -4077,6 +4117,10 @@ snapshots:
       solid-js: 1.9.13
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@swc/helpers@0.5.23':
+    dependencies:
+      tslib: 2.8.1
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -5797,6 +5841,8 @@ time:
   '@capacitor/core@8.4.1': '2026-06-19T09:02:21.581Z'
   '@capacitor/device@8.0.2': '2026-03-25T17:14:42.709Z'
   '@capacitor/preferences@8.0.1': '2026-02-12T18:04:12.324Z'
+  '@fluentui/tokens@1.0.0-alpha.23': '2026-01-22T17:02:10.707Z'
+  '@fluentui/web-components@3.0.0-rc.31': '2026-06-29T04:08:36.340Z'
   '@resvg/resvg-js@2.6.2': '2024-03-26T13:43:37.598Z'
   '@solidjs/router@0.16.1': '2026-03-17T23:16:42.276Z'
   '@types/node@26.0.1': '2026-06-24T20:33:01.352Z'
