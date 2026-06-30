@@ -1,5 +1,9 @@
 import DefaultTheme from "vitepress/theme";
-import "./style.css";
+import "./styles/tokens.css";
+import "./styles/base.css";
+import "./styles/components.css";
+import "./styles/effects.css";
+import "./styles/dark.css";
 import FluentGlow from "./components/FluentGlow.vue";
 import FluentRipple from "./components/FluentRipple.vue";
 
