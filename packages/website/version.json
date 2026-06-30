@@ -1,0 +1,5 @@
+{
+  "version": "1.5.6",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v1.5.6",
+  "changelog": "🧹 杂项\n  chore: 清理调试日志，准备发布\n🐛 修复\n  fix: 检查更新改用 raw.githubusercontent.com 静态 version.json"
+}

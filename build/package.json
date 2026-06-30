@@ -1,0 +1,10 @@
+{
+  "name": "pictelio-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pictelio landing page - GitHub Pages static site",
+  "type": "module",
+  "scripts": {
+    "build": "node ../../scripts/deploy.mjs"
+  }
+}

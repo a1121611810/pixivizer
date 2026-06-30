@@ -1,0 +1,1526 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Pictelio - 第三方 Pixiv 客户端，为 Android 打造。浏览推荐与关注 feed、查看作品详情、管理内容过滤，尽在简洁优雅的本地应用。"
+    />
+    <title>Pictelio - 第三方 Pixiv 客户端</title>
+    <link rel="canonical" href="https://a1121611810.github.io/pixivizer/" />
+    <link rel="preconnect" href="https://github.com" />
+    <link rel="dns-prefetch" href="https://pixiv.net" />
+    <style>
+      :root {
+        /* ── Pictelio brand ── */
+        --colorPictelioDeep: #2b579a;
+        --colorPictelioMid: #5a9fd4;
+        --colorPictelioLight: #7ab8e8;
+        --colorPictelioBgSubtle: #ede6d8;
+
+        --brandPrimary: var(--colorBrandBackground);
+        --brandOnPrimary: var(--colorNeutralForegroundOnBrand);
+
+        /* ── Typography ── */
+        --fontFamilyBase:
+          "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto,
+          "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+
+        /* ── Font sizes (Fluent type ramp) ── */
+        --fontSizeBase200: 12px;
+        --fontSizeBase300: 14px;
+        --fontSizeBase400: 16px;
+        --fontSizeBase500: 20px;
+        --fontSizeBase600: 24px;
+        --fontSizeHero700: clamp(24px, 1.2vw + 20px, 28px);
+        --fontSizeHero800: clamp(28px, 1.5vw + 22px, 32px);
+        --fontSizeHero900: clamp(32px, 2vw + 24px, 40px);
+        --fontSizeHero1000: clamp(40px, 3vw + 28px, 56px);
+
+        /* ── Line heights ── */
+        --lineHeightBase100: 1.4;
+        --lineHeightBase200: 1.333;
+        --lineHeightBase300: 1.4286;
+        --lineHeightBase400: 1.375;
+        --lineHeightBase500: 1.4;
+
+        /* ── Font weights ── */
+        --fontWeightRegular: 400;
+        --fontWeightMedium: 500;
+        --fontWeightSemibold: 600;
+        --fontWeightBold: 700;
+
+        /* ── Border radius ── */
+        --borderRadiusSmall: 2px;
+        --borderRadiusMedium: 4px;
+        --borderRadiusLarge: 6px;
+        --borderRadiusXLarge: 8px;
+        --borderRadius2XLarge: 12px;
+        --borderRadius3XLarge: 16px;
+        --borderRadius4XLarge: 24px;
+        --borderRadiusCircular: 10000px;
+
+        /* ── Stroke widths ── */
+        --strokeWidthThin: 1px;
+        --strokeWidthThick: 2px;
+
+        /* ── Spacing (4px grid) ── */
+        --spacingHorizontalS: 8px;
+        --spacingHorizontalM: 12px;
+        --spacingHorizontalL: 16px;
+        --spacingHorizontalXL: 20px;
+        --spacingHorizontalXXL: 24px;
+        --spacingHorizontalXXXL: 32px;
+
+        --spacingVerticalXS: 4px;
+        --spacingVerticalS: 8px;
+        --spacingVerticalM: 12px;
+        --spacingVerticalL: 16px;
+        --spacingVerticalXL: 20px;
+        --spacingVerticalXXL: 24px;
+        --spacingVerticalXXXL: 32px;
+        --spacingVerticalXXXXL: 48px;
+
+        /* ── Motion durations ── */
+        --durationFast: 150ms;
+        --durationNormal: 200ms;
+        --durationGentle: 250ms;
+        --durationSlow: 300ms;
+
+        /* ── Motion easing curves (Fluent) ── */
+        --curveDecelerateMid: cubic-bezier(0, 0, 0, 1);
+        --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
+        --curveAccelerateMid: cubic-bezier(0.33, 0, 0, 1);
+        --curveLinear: cubic-bezier(0, 0, 1, 1);
+
+        /* ── Colors: Light theme ── */
+        --colorNeutralBackground1: #ffffff;
+        --colorNeutralBackground2: #fafafa;
+        --colorNeutralBackground3: #f5f5f5;
+        --colorNeutralBackground1Hover: #f5f5f5;
+        --colorNeutralBackground1Pressed: #ebebeb;
+
+        --colorNeutralBackgroundAlpha: color-mix(
+          in srgb,
+          var(--colorNeutralBackground1) 80%,
+          transparent
+        );
+
+        --colorNeutralForeground1: #242424;
+        --colorNeutralForeground2: #424242;
+        --colorNeutralForeground3: #616161;
+        --colorNeutralForegroundDisabled: #bdbdbd;
+
+        --colorNeutralStroke1: #d1d1d1;
+        --colorNeutralStroke2: #e0e0e0;
+
+        --colorBrandBackground: var(--colorPictelioDeep);
+        --colorBrandBackgroundHover: #3a6fb5;
+        --colorBrandBackgroundPressed: #1e3d6e;
+        --colorBrandForeground1: var(--colorPictelioDeep);
+        --colorBrandForegroundLink: var(--colorPictelioDeep);
+        --colorBrandForegroundLinkHover: var(--colorPictelioMid);
+        --colorBrandForegroundLinkPressed: #1e3d6e;
+        --colorNeutralForegroundOnBrand: #ffffff;
+
+        --shadowAmbient: rgba(0, 0, 0, 0.12);
+        --shadowKey: rgba(0, 0, 0, 0.14);
+
+        --elevation2: 0 0 2px var(--shadowAmbient), 0 1px 2px var(--shadowKey);
+        --elevation4: 0 0 2px var(--shadowAmbient), 0 2px 4px var(--shadowKey);
+        --elevation8: 0 0 2px var(--shadowAmbient), 0 4px 8px var(--shadowKey);
+        --elevation16: 0 0 2px var(--shadowAmbient), 0 8px 16px var(--shadowKey);
+
+        /* ── Mica & Acrylic ── */
+        --micaBase: #f3f3f3;
+        --micaBaseDark: #1a1a1a;
+        --acrylicBackground: rgba(255, 255, 255, 0.5);
+        --acrylicBorder: rgba(0, 0, 0, 0.06);
+        --acrylicBlur: 40px;
+        --acrylicCardBackground: rgba(255, 255, 255, 0.4);
+        --acrylicCardBlur: 20px;
+        --acrylicCardBorder: rgba(0, 0, 0, 0.06);
+        --revealHighlight: radial-gradient(
+          circle at var(--mouseX, 50%) var(--mouseY, 50%),
+          rgba(43, 87, 154, 0.08) 0%,
+          transparent 60%
+        );
+        --elevationWin11: 0 2px 8px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.04);
+        --elevationWin11Hover: 0 4px 16px rgba(0, 0, 0, 0.12), 0 16px 48px rgba(0, 0, 0, 0.06);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --colorNeutralBackground1: #292929;
+          --colorNeutralBackground2: #1f1f1f;
+          --colorNeutralBackground3: #141414;
+          --colorNeutralBackground1Hover: #333333;
+          --colorNeutralBackground1Pressed: #3d3d3d;
+
+          --colorNeutralForeground1: #ffffff;
+          --colorNeutralForeground2: #d6d6d6;
+          --colorNeutralForeground3: #adadad;
+          --colorNeutralForegroundDisabled: #5c5c5c;
+
+          --colorNeutralStroke1: #666666;
+          --colorNeutralStroke2: #4d4d4d;
+
+          --colorBrandBackground: var(--colorPictelioMid);
+          --colorBrandBackgroundHover: var(--colorPictelioLight);
+          --colorBrandBackgroundPressed: #4285b4;
+          --colorBrandForeground1: var(--colorPictelioLight);
+          --colorBrandForegroundLink: var(--colorPictelioLight);
+          --colorBrandForegroundLinkHover: #8fc9f0;
+
+          --shadowAmbient: rgba(0, 0, 0, 0.24);
+          --shadowKey: rgba(0, 0, 0, 0.28);
+
+          --colorPictelioBgSubtle: #1a2438;
+
+          --micaBase: var(--micaBaseDark);
+          --acrylicBackground: rgba(32, 32, 32, 0.7);
+          --acrylicBorder: rgba(255, 255, 255, 0.08);
+          --acrylicCardBackground: rgba(32, 32, 32, 0.6);
+          --acrylicCardBorder: rgba(255, 255, 255, 0.08);
+          --revealHighlight: radial-gradient(
+            circle at var(--mouseX, 50%) var(--mouseY, 50%),
+            rgba(90, 159, 212, 0.12) 0%,
+            transparent 60%
+          );
+          --elevationWin11: 0 2px 8px rgba(0, 0, 0, 0.24), 0 8px 32px rgba(0, 0, 0, 0.16);
+          --elevationWin11Hover: 0 4px 16px rgba(0, 0, 0, 0.32), 0 16px 48px rgba(0, 0, 0, 0.24);
+        }
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        /* scroll restoration on refresh should jump, not animate */
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--fontFamilyBase);
+        font-size: var(--fontSizeBase400);
+        line-height: var(--lineHeightBase400);
+        color: var(--colorNeutralForeground1);
+        background-color: var(--colorNeutralBackground1);
+        background-image:
+          radial-gradient(ellipse at 80% 0%, var(--colorPictelioBgSubtle) 0%, transparent 60%),
+          radial-gradient(ellipse at 20% 100%, rgba(43, 87, 154, 0.03) 0%, transparent 40%);
+        background-attachment: fixed;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      a {
+        color: var(--colorBrandForegroundLink);
+        text-decoration: none;
+        transition: color var(--durationFast) var(--curveEasyEase);
+      }
+
+      a:hover {
+        color: var(--colorBrandForegroundLinkHover);
+        text-decoration: underline;
+      }
+
+      a:focus-visible {
+        outline: var(--strokeWidthThick) solid var(--colorBrandForeground1);
+        outline-offset: 2px;
+        border-radius: var(--borderRadiusSmall);
+      }
+
+      /* ── Header ── */
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--acrylicBackground);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid var(--acrylicBorder);
+      }
+
+      .header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: var(--spacingVerticalM) var(--spacingHorizontalXL);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacingHorizontalM);
+        color: var(--colorNeutralForeground1);
+        font-weight: var(--fontWeightSemibold);
+        font-size: var(--fontSizeBase500);
+        text-decoration: none;
+      }
+
+      .brand:hover {
+        color: var(--colorNeutralForeground1);
+        text-decoration: none;
+      }
+
+      .brand-logo {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+      }
+
+      .header-nav {
+        display: flex;
+        align-items: center;
+        gap: var(--spacingHorizontalXL);
+      }
+
+      .header-nav a {
+        font-size: var(--fontSizeBase300);
+        font-weight: var(--fontWeightMedium);
+        color: var(--colorNeutralForeground2);
+      }
+
+      .header-nav a:hover {
+        color: var(--colorNeutralForeground1);
+      }
+
+      /* ── Hero ── */
+      .hero {
+        position: relative;
+        padding: var(--spacingVerticalXXXXL) var(--spacingHorizontalXL);
+        background: none;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--acrylicBackground);
+        backdrop-filter: blur(var(--acrylicBlur));
+        -webkit-backdrop-filter: blur(var(--acrylicBlur));
+        border-bottom: 1px solid var(--acrylicBorder);
+        pointer-events: none;
+      }
+
+      .hero-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--spacingVerticalXXXL);
+        align-items: center;
+      }
+
+      @media (min-width: 768px) {
+        .hero-inner {
+          grid-template-columns: 1.2fr 0.8fr;
+        }
+
+        .hero-visual {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+      }
+
+      .hero-logo {
+        width: 96px;
+        height: 96px;
+        margin-bottom: var(--spacingVerticalL);
+        filter: drop-shadow(var(--elevation8));
+      }
+
+      .hero-title {
+        margin: 0;
+        font-size: var(--fontSizeHero1000);
+        font-weight: var(--fontWeightBold);
+        line-height: 1.1;
+        color: var(--colorNeutralForeground1);
+      }
+
+      .hero-title span {
+        color: var(--colorBrandForeground1);
+      }
+
+      .hero-tagline {
+        margin: var(--spacingVerticalL) 0 0;
+        font-size: var(--fontSizeHero700);
+        color: var(--colorNeutralForeground2);
+        max-width: 560px;
+        line-height: var(--lineHeightBase500);
+      }
+
+      .hero-ctas {
+        margin-top: var(--spacingVerticalXXL);
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacingHorizontalL);
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacingHorizontalS);
+        min-height: 40px;
+        padding: var(--spacingVerticalM) var(--spacingHorizontalXXL);
+        border-radius: var(--borderRadiusCircular);
+        font-family: inherit;
+        font-size: var(--fontSizeBase400);
+        font-weight: var(--fontWeightSemibold);
+        line-height: 1;
+        text-decoration: none;
+        cursor: pointer;
+        border: 1px solid transparent;
+        background-color: transparent;
+        color: inherit;
+        transition:
+          background-color var(--durationFast) var(--curveEasyEase),
+          color var(--durationFast) var(--curveEasyEase),
+          transform var(--durationFast) var(--curveEasyEase),
+          box-shadow var(--durationFast) var(--curveEasyEase),
+          opacity var(--durationFast) var(--curveEasyEase);
+        touch-action: manipulation;
+      }
+
+      .button:hover {
+        text-decoration: none;
+      }
+
+      .button:active {
+        transform: scale(0.98);
+      }
+
+      .button:focus-visible {
+        outline: var(--strokeWidthThick) solid var(--colorBrandForeground1);
+        outline-offset: 2px;
+      }
+
+      .button:disabled,
+      .button[aria-disabled="true"] {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .button:disabled:hover,
+      .button[aria-disabled="true"]:hover {
+        text-decoration: none;
+      }
+
+      .button-primary {
+        color: var(--colorNeutralForegroundOnBrand);
+        background-color: var(--colorBrandBackground);
+        box-shadow: var(--elevation4);
+      }
+
+      .button-primary:hover {
+        color: var(--colorNeutralForegroundOnBrand);
+        background-color: var(--colorBrandBackgroundHover);
+        box-shadow: var(--elevation8);
+      }
+
+      .button-primary:active {
+        background-color: var(--colorBrandBackgroundPressed);
+      }
+
+      .button-secondary {
+        color: var(--colorNeutralForeground1);
+        background-color: var(--colorNeutralBackground1);
+        border-color: var(--colorNeutralStroke1);
+        box-shadow: var(--elevation2);
+      }
+
+      .button-secondary:hover:not(:disabled):not([aria-disabled="true"]) {
+        background-color: var(--colorNeutralBackground1Hover);
+        border-color: var(--colorNeutralStroke1);
+      }
+
+      .button-secondary:active:not(:disabled):not([aria-disabled="true"]) {
+        background-color: var(--colorNeutralBackground1Pressed);
+      }
+
+      .button-secondary:disabled,
+      .button-secondary[aria-disabled="true"] {
+        background-color: var(--colorNeutralBackground2);
+        border-color: var(--colorNeutralStroke2);
+        color: var(--colorNeutralForegroundDisabled);
+      }
+
+      .button-note {
+        font-size: var(--fontSizeBase200);
+        font-weight: var(--fontWeightRegular);
+        opacity: 0.8;
+        margin-left: var(--spacingHorizontalXS);
+      }
+
+      .hero-visual {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      /* ── Win11 Window Mockup ── */
+      .win-window {
+        width: 100%;
+        max-width: 360px;
+        border-radius: var(--borderRadius2XLarge);
+        overflow: hidden;
+        background: var(--acrylicBackground);
+        backdrop-filter: blur(var(--acrylicBlur));
+        -webkit-backdrop-filter: blur(var(--acrylicBlur));
+        border: 1px solid var(--acrylicBorder);
+        box-shadow: var(--elevationWin11);
+        transition: box-shadow var(--durationGentle) var(--curveEasyEase);
+      }
+
+      .win-window:hover {
+        box-shadow: var(--elevationWin11Hover);
+      }
+
+      .win-titlebar {
+        display: flex;
+        align-items: center;
+        gap: var(--spacingHorizontalS);
+        padding: 10px var(--spacingHorizontalM);
+        background: rgba(255, 255, 255, 0.08);
+        border-bottom: 1px solid var(--acrylicBorder);
+        user-select: none;
+      }
+
+      .win-titlebar-dots {
+        display: flex;
+        gap: 7px;
+      }
+
+      .win-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: var(--borderRadiusCircular);
+        transition: filter var(--durationFast) var(--curveEasyEase);
+      }
+
+      .win-dot-close {
+        background: #e81123;
+      }
+      .win-dot-min {
+        background: #f7b731;
+      }
+      .win-dot-max {
+        background: #28a745;
+      }
+
+      .win-dot:hover {
+        filter: brightness(1.4);
+      }
+
+      .win-titlebar-text {
+        font-size: var(--fontSizeBase200);
+        color: var(--colorNeutralForeground3);
+        margin-left: var(--spacingHorizontalS);
+      }
+
+      .win-content {
+        padding: var(--spacingVerticalL);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 400px;
+      }
+
+      /* ── Phone Frame inside Window ── */
+      .win-phone-frame {
+        width: 200px;
+        height: 400px;
+        border-radius: var(--borderRadius3XLarge);
+        background: #1a1a2e;
+        border: 2px solid var(--colorNeutralStroke2);
+        box-shadow: var(--elevation8);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .win-phone-notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 24px;
+        background: #1a1a2e;
+        border-radius: 0 0 16px 16px;
+        z-index: 2;
+      }
+
+      .win-phone-screen {
+        width: 100%;
+        height: 100%;
+        padding: 24px 0 0;
+      }
+
+      .win-phone-placeholder svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* ── Sections ── */
+      .section {
+        padding: var(--spacingVerticalXXXXL) var(--spacingHorizontalXL);
+      }
+
+      .section-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .section-title {
+        margin: 0 0 var(--spacingVerticalXL);
+        font-size: var(--fontSizeHero800);
+        font-weight: var(--fontWeightBold);
+        color: var(--colorNeutralForeground1);
+        text-align: center;
+      }
+
+      .section-lead {
+        margin: 0 auto var(--spacingVerticalXXXL);
+        font-size: var(--fontSizeBase500);
+        color: var(--colorNeutralForeground2);
+        text-align: center;
+        max-width: 640px;
+        line-height: var(--lineHeightBase500);
+      }
+
+      /* ── Feature cards ── */
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacingHorizontalXL);
+        margin-top: var(--spacingVerticalXXXXL);
+      }
+
+      @media (max-width: 480px) {
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .feature-card {
+        position: relative;
+        overflow: hidden;
+        padding: var(--spacingVerticalXXXL) var(--spacingHorizontalXXL);
+        border-radius: var(--borderRadius2XLarge);
+        background: var(--acrylicCardBackground);
+        backdrop-filter: blur(var(--acrylicCardBlur));
+        -webkit-backdrop-filter: blur(var(--acrylicCardBlur));
+        border: 1px solid var(--acrylicCardBorder);
+        box-shadow: var(--elevationWin11);
+        transition:
+          transform var(--durationGentle) var(--curveEasyEase),
+          box-shadow var(--durationGentle) var(--curveEasyEase);
+        cursor: default;
+      }
+
+      .feature-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: var(--revealHighlight);
+        opacity: 0;
+        transition: opacity var(--durationFast) var(--curveEasyEase);
+        pointer-events: none;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--elevationWin11Hover);
+      }
+
+      .feature-card:hover::before {
+        opacity: 1;
+      }
+
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--borderRadiusXLarge);
+        background-color: var(--colorPictelioBgSubtle);
+        color: var(--colorBrandForeground1);
+        margin-bottom: var(--spacingVerticalL);
+      }
+
+      .feature-icon svg {
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+      }
+
+      .feature-title {
+        margin: 0 0 var(--spacingVerticalS);
+        font-size: var(--fontSizeBase500);
+        font-weight: var(--fontWeightSemibold);
+        color: var(--colorNeutralForeground1);
+      }
+
+      .feature-desc {
+        margin: 0;
+        color: var(--colorNeutralForeground2);
+        font-size: var(--fontSizeBase300);
+        line-height: var(--lineHeightBase300);
+      }
+
+      /* ── Disclaimer ── */
+      .disclaimer {
+        background-color: var(--colorNeutralBackground2);
+        border-top: 1px solid var(--colorNeutralStroke2);
+        border-bottom: 1px solid var(--colorNeutralStroke2);
+      }
+
+      .disclaimer-box {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
+        background-color: var(--colorPictelioBgSubtle);
+        border: 1px solid var(--colorNeutralStroke2);
+        border-radius: var(--borderRadius3XLarge);
+      }
+
+      .disclaimer-title {
+        display: flex;
+        align-items: center;
+        gap: var(--spacingHorizontalS);
+        margin: 0 0 var(--spacingVerticalM);
+        font-size: var(--fontSizeBase500);
+        font-weight: var(--fontWeightSemibold);
+        color: var(--colorNeutralForeground1);
+      }
+
+      .disclaimer-box p {
+        margin: 0;
+        color: var(--colorNeutralForeground2);
+        font-size: var(--fontSizeBase300);
+        line-height: var(--lineHeightBase300);
+      }
+
+      .disclaimer-box p + p {
+        margin-top: var(--spacingVerticalM);
+      }
+
+      /* ── Download section ── */
+      .download-options {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--spacingHorizontalXL);
+        max-width: 720px;
+        margin: 0 auto;
+      }
+
+      @media (min-width: 640px) {
+        .download-options {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      .download-card {
+        padding: var(--spacingVerticalXXXXL) var(--spacingHorizontalXXL);
+        border-radius: var(--borderRadius2XLarge);
+        background: var(--acrylicCardBackground);
+        backdrop-filter: blur(var(--acrylicCardBlur));
+        -webkit-backdrop-filter: blur(var(--acrylicCardBlur));
+        border: 1px solid var(--acrylicCardBorder);
+        box-shadow: var(--elevationWin11);
+        position: relative;
+        transition:
+          transform var(--durationGentle) var(--curveEasyEase),
+          box-shadow var(--durationGentle) var(--curveEasyEase);
+      }
+
+      .download-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--elevationWin11Hover);
+      }
+
+      .download-card .button {
+        margin-top: auto;
+      }
+
+      .download-card h3 {
+        margin: 0 0 var(--spacingVerticalS);
+        font-size: var(--fontSizeBase500);
+        font-weight: var(--fontWeightSemibold);
+      }
+
+      .download-card p {
+        margin: 0 0 var(--spacingVerticalXL);
+        color: var(--colorNeutralForeground2);
+        font-size: var(--fontSizeBase300);
+        line-height: var(--lineHeightBase300);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: var(--spacingVerticalXS) var(--spacingHorizontalM);
+        border-radius: var(--borderRadiusCircular);
+        font-size: var(--fontSizeBase200);
+        font-weight: var(--fontWeightSemibold);
+        background-color: var(--colorPictelioBgSubtle);
+        color: var(--colorBrandForeground1);
+        margin-bottom: var(--spacingVerticalM);
+      }
+
+      /* ── Footer ── */
+      .site-footer {
+        padding: var(--spacingVerticalXXL) var(--spacingHorizontalXL);
+        background-color: var(--colorNeutralBackground2);
+        border-top: 1px solid var(--colorNeutralStroke2);
+      }
+
+      .footer-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacingVerticalL);
+        align-items: center;
+        text-align: center;
+      }
+
+      @media (min-width: 640px) {
+        .footer-inner {
+          flex-direction: row;
+          justify-content: space-between;
+          text-align: left;
+        }
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacingHorizontalXL);
+        justify-content: center;
+      }
+
+      .footer-links a {
+        font-size: var(--fontSizeBase300);
+        color: var(--colorNeutralForeground2);
+      }
+
+      .footer-links a:hover {
+        color: var(--colorNeutralForeground1);
+      }
+
+      .footer-copy {
+        margin: 0;
+        font-size: var(--fontSizeBase300);
+        color: var(--colorNeutralForeground3);
+      }
+
+      .placeholder {
+        display: inline;
+        padding: 0 var(--spacingHorizontalS);
+        border-radius: var(--borderRadiusSmall);
+        background-color: var(--colorPictelioBgSubtle);
+        color: var(--colorBrandForeground1);
+        font-weight: var(--fontWeightSemibold);
+      }
+
+      .placeholder-notice {
+        margin: 0;
+        font-size: var(--fontSizeBase300);
+        font-weight: var(--fontWeightSemibold);
+        color: var(--colorBrandForeground1);
+      }
+
+      /* ── Utility ── */
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      /* ── Trust Signals ── */
+      .fingerprint-row {
+        display: flex;
+        align-items: center;
+        gap: var(--spacingHorizontalS);
+        margin-top: var(--spacingVerticalL);
+        padding: var(--spacingVerticalS) var(--spacingHorizontalM);
+        background: var(--acrylicCardBackground);
+        border-radius: var(--borderRadiusMedium);
+        font-size: var(--fontSizeBase200);
+      }
+
+      .fingerprint-label {
+        color: var(--colorNeutralForeground3);
+        font-weight: var(--fontWeightMedium);
+      }
+
+      .fingerprint-value {
+        font-family: "Cascadia Code", "SF Mono", "Fira Code", "Consolas", monospace;
+        color: var(--colorNeutralForeground2);
+        letter-spacing: 0.05em;
+      }
+
+      .fingerprint-copy {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: var(--borderRadiusSmall);
+        background: transparent;
+        color: var(--colorNeutralForeground3);
+        cursor: pointer;
+        transition:
+          background var(--durationFast) var(--curveEasyEase),
+          color var(--durationFast) var(--curveEasyEase);
+        margin-left: auto;
+      }
+
+      .fingerprint-copy:hover {
+        background: var(--colorNeutralBackground1Hover);
+        color: var(--colorNeutralForeground1);
+      }
+
+      .fingerprint-copy:active {
+        background: var(--colorNeutralBackground1Pressed);
+      }
+      /* ── Scroll Reveal ── */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(24px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 0.6s cubic-bezier(0.33, 0, 0.67, 1),
+          transform 0.6s cubic-bezier(0.33, 0, 0.67, 1);
+      }
+
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* ── Nav Underline Animation (Fluent) ── */
+      .header-nav a {
+        position: relative;
+        text-decoration: none;
+      }
+
+      .header-nav a::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        border-radius: 1px;
+        background: currentColor;
+        transition:
+          width var(--durationGentle) var(--curveEasyEase),
+          left var(--durationGentle) var(--curveEasyEase);
+      }
+
+      .header-nav a:hover::after {
+        width: 100%;
+        left: 0;
+      }
+
+      /* ── Button Ripple (Fluent) ── */
+      .button {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .button::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at var(--rippleX, 50%) var(--rippleY, 50%),
+          rgba(255, 255, 255, 0.3) 0%,
+          transparent 60%
+        );
+        opacity: 0;
+        transition: opacity 0.4s ease-out;
+        pointer-events: none;
+      }
+
+      .button:active::after {
+        opacity: 1;
+        transition: opacity 0s;
+      }
+
+      /* ── Hero Logo Gentle Float ── */
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+
+      .hero-logo {
+        animation: float 4s var(--curveEasyEase) infinite;
+      }
+
+      /* ── Win11 Window Subtle Glow ── */
+      @keyframes glowPulse {
+        0%,
+        100% {
+          box-shadow: var(--elevationWin11);
+        }
+        50% {
+          box-shadow: var(--elevationWin11Hover);
+        }
+      }
+
+      .win-window {
+        animation: glowPulse 4s var(--curveEasyEase) infinite;
+      }
+
+      /* ── Download CTA Gentle Pulse ── */
+      @keyframes ctaPulse {
+        0%,
+        100% {
+          box-shadow: var(--elevation4);
+        }
+        50% {
+          box-shadow:
+            0 0 0 4px rgba(43, 87, 154, 0.15),
+            var(--elevation8);
+        }
+      }
+
+      .download-card:first-child .button-primary {
+        animation: ctaPulse 3s var(--curveEasyEase) infinite;
+      }
+
+      /* ── Staggered Entrance Delays ── */
+      .features-grid .feature-card:nth-child(1) {
+        transition-delay: 0s;
+      }
+      .features-grid .feature-card:nth-child(2) {
+        transition-delay: 0.1s;
+      }
+      .features-grid .feature-card:nth-child(3) {
+        transition-delay: 0.2s;
+      }
+      .features-grid .feature-card:nth-child(4) {
+        transition-delay: 0.3s;
+      }
+
+      .download-options .download-card:nth-child(1) {
+        transition-delay: 0s;
+      }
+      .download-options .download-card:nth-child(2) {
+        transition-delay: 0.15s;
+      }
+
+      /* ── Win11 Dot Hover Glow ── */
+      .win-dot-close:hover {
+        box-shadow: 0 0 8px #e81123;
+      }
+      .win-dot-min:hover {
+        box-shadow: 0 0 8px #f7b731;
+      }
+      .win-dot-max:hover {
+        box-shadow: 0 0 8px #28a745;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="Pictelio 首页">
+          <svg
+            class="brand-logo"
+            viewBox="0 0 192 192"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <defs>
+              <filter id="brandLogoShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow
+                  dx="0"
+                  dy="4"
+                  stdDeviation="6"
+                  flood-color="#000000"
+                  flood-opacity="0.08"
+                />
+              </filter>
+            </defs>
+            <rect
+              x="12"
+              y="12"
+              width="168"
+              height="168"
+              rx="44"
+              fill="#ffffff"
+              filter="url(#brandLogoShadow)"
+            />
+            <svg x="36" y="36" width="120" height="120" viewBox="0 0 64 64">
+              <path
+                d="M18 12 C18 12 16 28 19 52 C19 52 22 54 24 50 C26 47 24 39 26 33 C26 33 37 35 45 27 C51 21 47 13 38 11 C31 9 24 12 18 12 Z"
+                fill="#2b579a"
+              />
+              <path
+                d="M22 16 C22 16 21 28 23 46"
+                fill="none"
+                stroke="#5a9fd4"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+              <circle cx="42" cy="19" r="2" fill="#7ab8e8" />
+              <circle cx="46" cy="25" r="1.5" fill="#7ab8e8" />
+            </svg>
+          </svg>
+          Pictelio
+        </a>
+        <nav class="header-nav" aria-label="主导航">
+          <a href="#features">功能</a>
+          <a href="#download">下载</a>
+          <a href="privacy-policy.html">隐私政策</a>
+          <a href="https://github.com/a1121611810/pixivizer" target="_blank" rel="noopener"
+            >GitHub</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-inner">
+          <div class="hero-content reveal">
+            <svg
+              class="hero-logo"
+              viewBox="0 0 192 192"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <defs>
+                <filter id="heroLogoShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow
+                    dx="0"
+                    dy="6"
+                    stdDeviation="10"
+                    flood-color="#000000"
+                    flood-opacity="0.10"
+                  />
+                </filter>
+              </defs>
+              <rect
+                x="12"
+                y="12"
+                width="168"
+                height="168"
+                rx="44"
+                fill="#ffffff"
+                filter="url(#heroLogoShadow)"
+              />
+              <svg x="36" y="36" width="120" height="120" viewBox="0 0 64 64">
+                <path
+                  d="M18 12 C18 12 16 28 19 52 C19 52 22 54 24 50 C26 47 24 39 26 33 C26 33 37 35 45 27 C51 21 47 13 38 11 C31 9 24 12 18 12 Z"
+                  fill="#2b579a"
+                />
+                <path
+                  d="M22 16 C22 16 21 28 23 46"
+                  fill="none"
+                  stroke="#5a9fd4"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+                <circle cx="42" cy="19" r="2" fill="#7ab8e8" />
+                <circle cx="46" cy="25" r="1.5" fill="#7ab8e8" />
+              </svg>
+            </svg>
+            <h1 id="hero-title" class="hero-title">
+              <span>Pictelio</span><br />
+              第三方 Pixiv 客户端
+            </h1>
+            <p class="hero-tagline">
+              为 Android
+              打造的简洁浏览体验。发现推荐与关注作品，沉浸式查看大图，安全可控的内容过滤，一切尽在本地。
+            </p>
+            <div class="hero-ctas">
+              <a
+                class="button button-primary"
+                href="https://github.com/a1121611810/pixivizer/releases"
+                target="_blank"
+                rel="noopener"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                  />
+                </svg>
+                GitHub Releases 下载
+              </a>
+              <button
+                type="button"
+                class="button button-secondary"
+                disabled
+                aria-describedby="fdroid-note"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 3h18v18H3V3zm2 2v14h14V5H5zm3 3h2v2H8V8zm4 0h2v2h-2V8zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2zm-4 4h2v2H8v-2zm4 0h2v2h-2v-2z"
+                  />
+                </svg>
+                F-Droid
+                <span class="button-note">即将上架</span>
+              </button>
+              <span id="fdroid-note" class="visually-hidden"
+                >F-Droid 版本尚未上架，当前为占位按钮</span
+              >
+            </div>
+          </div>
+          <div class="hero-visual reveal" aria-hidden="true">
+            <div class="win-window">
+              <div class="win-titlebar">
+                <div class="win-titlebar-dots">
+                  <span class="win-dot win-dot-close"></span>
+                  <span class="win-dot win-dot-min"></span>
+                  <span class="win-dot win-dot-max"></span>
+                </div>
+                <span class="win-titlebar-text">Pictelio</span>
+              </div>
+              <div class="win-content">
+                <div class="win-phone-frame">
+                  <div class="win-phone-notch"></div>
+                  <div class="win-phone-screen">
+                    <div class="win-phone-placeholder">
+                      <svg viewBox="0 0 240 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="240" height="480" fill="#1a1a2e" />
+                        <rect x="16" y="48" width="208" height="32" rx="8" fill="#2a2a4e" />
+                        <rect x="16" y="96" width="120" height="16" rx="4" fill="#3a3a5e" />
+                        <rect x="16" y="128" width="208" height="200" rx="12" fill="#2a2a4e" />
+                        <circle cx="120" cy="280" r="40" fill="#3a3a5e" />
+                        <rect x="16" y="350" width="60" height="80" rx="8" fill="#2a2a4e" />
+                        <rect x="88" y="350" width="60" height="80" rx="8" fill="#2a2a4e" />
+                        <rect x="160" y="350" width="60" height="80" rx="8" fill="#2a2a4e" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section" aria-labelledby="features-title">
+        <div class="section-inner">
+          <h2 id="features-title" class="section-title reveal">核心功能</h2>
+          <p class="section-lead">
+            Pictelio 提供流畅的插画浏览体验，所有数据均通过 Pixiv 官方 API 获取并在本地处理。
+          </p>
+          <div class="features-grid">
+            <article class="feature-card reveal">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                </svg>
+              </div>
+              <h3 class="feature-title">推荐与关注 feed</h3>
+              <p class="feature-desc">
+                快速切换「推荐」与「关注」标签，沉浸式浏览 Pixiv 每日精选与你关注的创作者动态。
+              </p>
+            </article>
+
+            <article class="feature-card reveal">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <circle cx="8.5" cy="9.5" r="1.5" fill="currentColor" />
+                  <path d="M21 15l-5-5L5 16" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h3 class="feature-title">作品详情与大图浏览</h3>
+              <p class="feature-desc">
+                查看单页或多页作品，支持缩放、滑动翻页与 Ugoira 动图播放，还原插画细节。
+              </p>
+            </article>
+
+            <article class="feature-card reveal">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+              </div>
+              <h3 class="feature-title">年龄门与 R-18/R-18G 过滤</h3>
+              <p class="feature-desc">
+                内置年龄确认与分级内容过滤，帮助你在应用设置中管理敏感内容的显示权限。
+              </p>
+            </article>
+
+            <article class="feature-card reveal">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                  />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+              <h3 class="feature-title">举报与屏蔽</h3>
+              <p class="feature-desc">
+                遇到不适内容？一键举报或屏蔽用户/标签，打造更符合个人偏好的浏览环境。
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="download" class="section" aria-labelledby="download-title">
+        <div class="section-inner">
+          <h2 id="download-title" class="section-title reveal">获取 Pictelio</h2>
+          <p class="section-lead">当前公共版本通过 GitHub Releases 分发，F-Droid 上架准备中。</p>
+          <div class="download-options">
+            <div class="download-card reveal">
+              <span class="badge">推荐</span>
+              <h3>GitHub Releases</h3>
+              <p>下载最新 APK，适用于 Android 8.0 及以上版本。源码公开可审计。</p>
+              <a
+                class="button button-primary"
+                href="https://github.com/a1121611810/pixivizer/releases"
+                target="_blank"
+                rel="noopener"
+              >
+                前往下载
+              </a>
+              <div class="fingerprint-row">
+                <span class="fingerprint-label">SHA-256:</span>
+                <code class="fingerprint-value">AB3F...E7D2</code>
+                <button
+                  type="button"
+                  class="fingerprint-copy"
+                  aria-label="复制指纹"
+                  data-fingerprint="AB3F...E7D2"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="download-card reveal">
+              <span class="badge">即将上架</span>
+              <h3>F-Droid</h3>
+              <p>F-Droid 上架准备中，通过后将在此提供直达链接。</p>
+              <button
+                type="button"
+                class="button button-secondary"
+                disabled
+                aria-describedby="fdroid-note-2"
+              >
+                敬请期待
+              </button>
+              <span id="fdroid-note-2" class="visually-hidden">F-Droid 版本尚未上架</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section disclaimer" aria-labelledby="disclaimer-title">
+        <div class="section-inner">
+          <div class="disclaimer-box">
+            <h2 id="disclaimer-title" class="disclaimer-title">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              免责声明
+            </h2>
+            <p>
+              Pictelio 是一款由社区开发的<strong>第三方 Pixiv 客户端</strong>，与 Pixiv
+              株式会社及其关联公司不存在任何关联、赞助或认可关系。Pixiv 及其 logo 为 Pixiv
+              株式会社的商标或注册商标。本应用<strong>仅供学习与研究目的</strong>使用。
+            </p>
+            <p>
+              应用中展示的所有插画均来自
+              <a href="https://www.pixiv.net" target="_blank" rel="noopener">Pixiv</a>
+              公开
+              API，版权归原作者所有。本项目<strong>不存储、托管、分发或修改</strong>任何受版权保护的内容，
+              它仅作为第三方客户端，检索 Pixiv 公开 API 中已有的数据。
+            </p>
+            <p>
+              使用 Pictelio 时请遵守
+              <a href="https://www.pixiv.net/terms/?page=term" target="_blank" rel="noopener"
+                >Pixiv 服务条款</a
+              >
+              与相关法律法规。<strong>请在 24 小时内删除本应用及相关数据</strong>，
+              除非你获得版权所有者的明确许可。开发者不对用户生成或传播的内容负责。
+            </p>
+            <p>使用本软件即表示你已阅读并理解此免责声明。如不同意，请勿使用或分发本项目。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <nav class="footer-links" aria-label="页脚导航">
+          <a href="index.html">首页</a>
+          <a href="privacy-policy.html">隐私政策</a>
+          <a href="https://github.com/a1121611810/pixivizer" target="_blank" rel="noopener"
+            >GitHub</a
+          >
+        </nav>
+        <div>
+          <p class="footer-copy">
+            © 2026 <span class="placeholder">a1121611810</span>. Pictelio 为第三方开源项目，与 Pixiv
+            无关。
+          </p>
+          <p class="placeholder-notice">
+            隐私联系邮箱与举报联系邮箱均已设置为 a1121611810@outlook.com。
+          </p>
+        </div>
+      </div>
+    </footer>
+    <script>
+      // Reveal highlight effect - mouse-position-aware gradient on cards
+      document.querySelectorAll(".feature-card").forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = (((e.clientX - rect.left) / rect.width) * 100).toFixed(1);
+          const y = (((e.clientY - rect.top) / rect.height) * 100).toFixed(1);
+          card.style.setProperty("--mouseX", x + "%");
+          card.style.setProperty("--mouseY", y + "%");
+        });
+      });
+
+      // Button ripple effect (Fluent style)
+      document.querySelectorAll(".button").forEach((btn) => {
+        btn.addEventListener("mousedown", (e) => {
+          const rect = btn.getBoundingClientRect();
+          const x = (((e.clientX - rect.left) / rect.width) * 100).toFixed(1);
+          const y = (((e.clientY - rect.top) / rect.height) * 100).toFixed(1);
+          btn.style.setProperty("--rippleX", x + "%");
+          btn.style.setProperty("--rippleY", y + "%");
+        });
+      });
+
+      // Fingerprint copy to clipboard
+      document.querySelectorAll(".fingerprint-copy").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const text = btn.dataset.fingerprint;
+          try {
+            await navigator.clipboard.writeText(text);
+            const original = btn.innerHTML;
+            btn.innerHTML =
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
+            setTimeout(() => (btn.innerHTML = original), 2000);
+          } catch (e) {
+            // fallback - do nothing
+          }
+        });
+      });
+      // Scroll reveal animation
+      const revealObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              revealObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
+      );
+
+      document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+    </script>
+  </body>
+</html>
