@@ -45,7 +45,8 @@ function isNewer(local: string, remote: string): boolean {
 // ── Core fetch ──
 
 // 通过 raw.githubusercontent.com 获取版本信息（不被代理拦截）
-const UPDATE_URL = "https://raw.githubusercontent.com/a1121611810/pixivizer/main/website/version.json";
+const UPDATE_URL =
+  "https://raw.githubusercontent.com/a1121611810/pixivizer/main/website/version.json";
 
 /**
  * Fetch the latest stable release from GitHub and compare

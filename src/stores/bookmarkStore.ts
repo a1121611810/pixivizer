@@ -7,6 +7,31 @@ import { filterFeedIllusts } from "../utils/r18Filter";
 // ── Restrict signal (user-controlled filter) ──
 const [restrict, setRestrictSignal] = createSignal<RestrictType>("public");
 
+// ── Retry helper: wraps Pixiv API call with 429 backoff ──
+/* eslint-disable no-await-in-loop -- intentional sequential retry with backoff */
+async function fetchBookmarksWithRetry(
+  userId: string,
+  restrictVal: RestrictType,
+): Promise<{ illusts: PixivIllust[]; nextUrl: string | null }> {
+  let attempt = 0;
+  while (true) {
+    try {
+      const data = await loadBookmarks(userId, restrictVal);
+      return { illusts: data.illusts, nextUrl: data.next_url };
+    } catch (e) {
+      const msg = (e as { message?: string }).message ?? "";
+      // 429 Too Many Requests — retry up to 3 times with 3s delay
+      if ((msg.includes("429") || msg.includes("频繁")) && attempt < 3) {
+        attempt++;
+        await new Promise((r) => setTimeout(r, 3000));
+        continue;
+      }
+      throw e; // re-throw to set resource.error
+    }
+  }
+}
+/* eslint-enable no-await-in-loop */
+
 // ── Resource: auto-fetches when user or restrict changes ──
 const [bookmarkResource, { mutate, refetch }] = createResource(
   // Source: returns false when not logged in to prevent fetch
@@ -16,23 +41,8 @@ const [bookmarkResource, { mutate, refetch }] = createResource(
     return { userId: u.id, restrict: restrict() };
   },
   // Fetcher: calls Pixiv API with 429 retry logic
-  async ({ userId, restrict }) => {
-    let attempt = 0;
-    while (true) {
-      try {
-        const data = await loadBookmarks(userId, restrict);
-        return { illusts: data.illusts, nextUrl: data.next_url };
-      } catch (e) {
-        const msg = (e as { message?: string }).message ?? "";
-        // 429 Too Many Requests — retry up to 3 times with 3s delay
-        if ((msg.includes("429") || msg.includes("频繁")) && attempt < 3) {
-          attempt++;
-          await new Promise((r) => setTimeout(r, 3000));
-          continue;
-        }
-        throw e; // re-throw to set resource.error
-      }
-    }
+  async ({ userId, restrict: restrictVal }) => {
+    return fetchBookmarksWithRetry(userId, restrictVal);
   },
   { initialValue: { illusts: [] as PixivIllust[], nextUrl: null as string | null } },
 );

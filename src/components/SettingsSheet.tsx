@@ -1209,7 +1209,8 @@ const SettingsSheet: Component = () => {
                   <span
                     class="[font-size:var(--fontSizeBase200)] font-semibold leading-snug"
                     classList={{
-                      "text-[var(--colorStatusSuccessForeground1)]": !hasUpdate() && latestVersion() !== "",
+                      "text-[var(--colorStatusSuccessForeground1)]":
+                        !hasUpdate() && latestVersion() !== "",
                       "text-[var(--colorBrandForeground1)]": hasUpdate(),
                       "text-[var(--colorNeutralForeground3)]": latestVersion() === "",
                     }}

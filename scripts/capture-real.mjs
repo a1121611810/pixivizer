@@ -7,7 +7,7 @@
 
 import { chromium } from "playwright";
 import { join } from "node:path";
-import { existsSync, mkdirSync, copyFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, copyFileSync } from "node:fs";
 
 const BASE_URL = "http://localhost:5173";
 const OUT_EN = join(
@@ -47,14 +47,6 @@ function ensureDirs() {
   for (const dir of [OUT_EN, OUT_ZH]) {
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   }
-}
-
-function saveScreenshot(buffer, filename) {
-  const enPath = join(OUT_EN, filename);
-  const zhPath = join(OUT_ZH, filename);
-  writeFileSync(enPath, buffer);
-  copyFileSync(enPath, zhPath);
-  log(`Saved ${filename} (${buffer.length} bytes)`);
 }
 
 async function dismissAgeGate(page) {

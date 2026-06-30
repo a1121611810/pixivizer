@@ -1,1 +1,53 @@
+# ═══════════════════════════════════════════
+# pnpm-workspace.yaml — 项目配置
+# ═══════════════════════════════════════════
+
+# ── 工作区 ──
+packages:
+  - "."
+  - "packages/*"
+
+# ── 供应链安全 ──
+
+# 新包冷却期：24 小时内发布的包禁止安装
+# 防止攻击者利用刚发布的热门包恶意版本
+minimumReleaseAge: 1440
+
+# 阻止信任降级：如果某包之前有来源证明/签名，
+# 新版本若缺少则会安装失败
+trustPolicy: no-downgrade
+
+# 超过 30 天（43200 min）的旧包跳过信任检查
+# 这些版本发布时 npm 尚未普及 provenance 签名机制
+trustPolicyIgnoreAfter: 43200
+
+# 禁止传递依赖从 git/URL 等不可信来源安装
+blockExoticSubdeps: true
+
+# 管控 postinstall 脚本（当前项目无此类依赖
+# 以后新增包若有 install 脚本需手动加入白名单）
+allowBuilds:
+  esbuild: true
+  # pnpm install 会自动列出待审批的包到这里
+
+# ── 依赖解析优化 ──
+
+# 子依赖按时间点解析：防止子依赖劫持
+resolutionMode: time-based
+
+# 允许屏蔽特定废弃包的提醒
+allowedDeprecatedVersions:
+  request: "*"
+
+# ── 开发体验 ──
+
+# 跨平台 bash 模拟（Windows/Mac/Linux 脚本统一）
+shellEmulator: true
+
+# 忽略不打算升级的包（pnpm outdated 不再提示）
+updateConfig:
+  ignoreDependencies:
+    - capacitor-secure-storage-plugin
+
+# ── 补丁记录（pnpm patch 自动写入）──
 patchedDependencies: {}

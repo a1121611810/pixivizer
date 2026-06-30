@@ -222,7 +222,6 @@ const About: Component = () => {
             </div>
           </section>
         ))}
-
       </div>
     </PageTransition>
   );

@@ -36,22 +36,24 @@
 
 ## 涉及文件
 
-| 文件 | 操作 | 说明 |
-|------|------|------|
+| 文件                                                            | 操作 | 说明                                           |
+| --------------------------------------------------------------- | ---- | ---------------------------------------------- |
 | `android/app/src/main/java/io/pictelio/app/WebDebugPlugin.java` | 新建 | Capacitor 插件，暴露 setEnabled / getIsEnabled |
-| `android/app/src/main/java/io/pictelio/app/MainActivity.java` | 修改 | 注册插件 + onCreate 读取 SharedPreferences |
-| `src/stores/uiStore.ts` | 修改 | 新增 webDebugEnabled 状态 + 初始化方法 |
-| `src/services/webDebugService.ts` | 新建 | 封装插件调用 |
-| `src/routes/About.tsx` | 修改 | 添加「开发者选项」区块 + 开关 |
+| `android/app/src/main/java/io/pictelio/app/MainActivity.java`   | 修改 | 注册插件 + onCreate 读取 SharedPreferences     |
+| `src/stores/uiStore.ts`                                         | 修改 | 新增 webDebugEnabled 状态 + 初始化方法         |
+| `src/services/webDebugService.ts`                               | 新建 | 封装插件调用                                   |
+| `src/routes/About.tsx`                                          | 修改 | 添加「开发者选项」区块 + 开关                  |
 
 ## 数据流
 
 ### 启动时
+
 1. `MainActivity.onCreate()` → 读 SharedPreferences key `webview_debug_enabled`
 2. 若为 true → `WebView.setWebContentsDebuggingEnabled(true)`
 3. JS 侧 `App.tsx` → 调用 `WebDebugPlugin.getIsEnabled()` → 同步到 store
 
 ### 用户切换时
+
 1. About 页面开关变化 → 调用 `webDebugService.setEnabled(bool)`
 2. service → `WebDebugPlugin.setEnabled({ enabled: bool })`
 3. Plugin → 写入 SharedPreferences + `WebView.setWebContentsDebuggingEnabled(bool)`
