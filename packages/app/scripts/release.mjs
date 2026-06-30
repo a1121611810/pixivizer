@@ -14,6 +14,8 @@
  *   pnpm run release -- --dry-run      # 预览模式，不实际执行
  *   pnpm run release -- --interactive   # 交互模式：手动选择提交和版本
  *   pnpm run release -i                 # 同上，简写
+ *   pnpm run release -- --custom        # 自定义模式：粘贴自己的发布文案
+ *   pnpm run release -c                 # 同上，简写
  *
  * 环境变量:
  *   PICTELIO_KEYSTORE_PASSWORD   - keystore 密码（必须）
@@ -37,9 +39,15 @@ const bumpMinor = args.includes("--minor");
 // `--patch` default — no explicit check needed, falls through as default
 const versionArg = args.find((a) => a.startsWith("--version="))?.split("=")[1];
 const isInteractive = args.includes("--interactive") || args.includes("-i");
+const isCustom = args.includes("--custom") || args.includes("-c");
 
 if (isInteractive && !process.stdin.isTTY) {
   console.error("[release] ❌ --interactive 模式需要 TTY 终端");
+  process.exit(1);
+}
+
+if (isCustom && !process.stdin.isTTY) {
+  console.error("[release] ❌ --custom 模式需要 TTY 终端");
   process.exit(1);
 }
 
@@ -201,6 +209,24 @@ async function askQuestion(query) {
   });
 }
 
+async function readCustomChangelog() {
+  console.log("\n请粘贴你的自定义发布文案：");
+  console.log("输入完成后，在新行输入 EOF 结束\n");
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const lines = [];
+  for await (const line of rl) {
+    if (line.trim() === "EOF") break;
+    lines.push(line);
+  }
+  rl.close();
+  const text = lines.join("\n").trim();
+  if (!text) {
+    console.log("  ⚠ 文案为空，请重新输入");
+    return readCustomChangelog();
+  }
+  return text;
+}
+
 async function interactivePickCommits(commits) {
   console.log(`\n自上次发布以来的提交（共 ${commits.length} 个）:`);
   console.log("输入编号选择，支持格式: 1 3 5-8  (空格分隔, -表示范围)");
@@ -338,7 +364,33 @@ async function main() {
 
   let changelog;
 
-  if (isInteractive) {
+  if (isCustom) {
+    // ── Custom mode: user pastes their own changelog ──
+    log("自定义发布模式");
+    changelog = await readCustomChangelog();
+
+    console.log("\n你的发布文案：");
+    console.log("─".repeat(40));
+    console.log(changelog);
+    console.log("─".repeat(40));
+
+    const ok = await askQuestion("\n确认使用? (Y/n): ");
+    if (ok.toLowerCase() === "n") {
+      console.log("[release] 已取消");
+      process.exit(0);
+    }
+
+    const versionPick = await interactivePickVersion(currentVersion);
+    const newVersionInteractive = versionPick.version;
+    const { major: mi, minor: mn, patch: pt } = parseVersion(newVersionInteractive);
+    newVersion = newVersionInteractive;
+    versionCode = mi * 10000 + mn * 100 + pt;
+    tag = `v${newVersion}`;
+    title = `Pictelio v${newVersion}`;
+
+    log(`目标版本: ${newVersion} (versionCode: ${versionCode}) [${versionPick.type}]`);
+    console.log("");
+  } else if (isInteractive) {
     // ── Interactive mode: user picks commits and version ──
     const lastTag = await getLastTag();
     const commits = lastTag ? await getGitLogSince(lastTag) : [];
