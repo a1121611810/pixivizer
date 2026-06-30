@@ -44,11 +44,14 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
   }
 
   return (
-    <fluent-drawer type="nonModal" position="bottom"
-      ref={(el) => { setTimeout(() => (el as any).show(), 0); }}
-      on:close={close}>
-      {/* Drag handle */}
-      <div class="flex justify-center pt-2 pb-1">
+    <div class="fixed inset-0 z-50">
+      <div class="absolute inset-0" style="background-color:var(--colorScrim)" onClick={close} />
+      <div
+        class="absolute bottom-0 left-0 right-0 surface-appbar rounded-t-[var(--borderRadius4XLarge)] shadow-[var(--elevation28)]"
+        style="max-height:70vh;overflow-y:auto;animation:fluent-slide-down var(--durationGentle) var(--curveDecelerateMid) both"
+      >
+        {/* Drag handle */}
+        <div class="flex justify-center pt-2 pb-1">
         <div class="w-10 h-1 rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralStroke1)]" />
       </div>
 
@@ -107,7 +110,8 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
           提交后将打开邮件客户端发送举报详情
         </p>
       </div>
-    </fluent-drawer>
+      </div>
+    </div>
   );
 };
 

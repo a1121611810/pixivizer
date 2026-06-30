@@ -933,7 +933,7 @@ const SettingsSheet: Component = () => {
       )}
 
       <Show when={showBlocklist()}>
-        <BlocklistSheet isOpen onClose={() => setShowBlocklist(false)} />
+        <BlocklistSheet onClose={() => setShowBlocklist(false)} />
       </Show>
 
       <fluent-dialog

@@ -673,7 +673,6 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
         <Show when={showReportSheet()}>
           <ReportSheet
             illustId={illust()?.id ?? 0}
-            isOpen
             onClose={() => setShowReportSheet(false)}
           />
         </Show>
