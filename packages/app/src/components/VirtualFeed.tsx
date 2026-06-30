@@ -178,6 +178,7 @@ const VirtualFeed: Component<Props> = (props) => {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      class="px-3"
     >
       <PullIndicator
         zone={pullPhase()}
@@ -199,15 +200,14 @@ const VirtualFeed: Component<Props> = (props) => {
       )}
 
       {/* Virtualized items container */}
-      <div class="px-3">
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            height: `${vs.totalHeight() || 1}px`,
-          }}
-        >
-          <For
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          height: `${vs.totalHeight() || 1}px`,
+        }}
+      >
+        <For
             each={
               vs.visibleRange().endIndex >= vs.visibleRange().startIndex
                 ? props.illusts.slice(vs.visibleRange().startIndex, vs.visibleRange().endIndex + 1)
@@ -232,7 +232,6 @@ const VirtualFeed: Component<Props> = (props) => {
             }}
           </For>
         </div>
-      </div>
 
       {props.loading && props.illusts.length > 0 && pullPhase() !== "refreshing" && (
         <LoadingSpinner text="加载中..." />
