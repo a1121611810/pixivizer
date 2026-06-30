@@ -1,5 +1,5 @@
 import { createStore, produce } from "solid-js/store";
-import { batch } from "solid-js";
+import { batch, createEffect } from "solid-js";
 import { loadRecommended, loadFollow, loadNext } from "../api/illust";
 import type { PixivIllust, ContentType } from "../api/types";
 import { currentTab } from "./uiStore";
@@ -74,6 +74,16 @@ export function computeFollowIllusts(): PixivIllust[] {
   return filterFeedIllusts(mergeAndSort(pub, priv));
 }
 
+// Recompute illusts when follow tab changes (filter tabs have no effect otherwise)
+createEffect(() => {
+  const tab = currentTab();
+  if (tab === "follow") {
+    batch(() => {
+      setState("illusts", computeFollowIllusts());
+    });
+  }
+});
+
 // ── Actions ──
 
 export function ensureLoaded() {
@@ -84,7 +94,11 @@ export function ensureLoaded() {
     const privCached = tabIllusts["follow_private"] !== undefined;
     if (pubCached || privCached) {
       setState("illusts", computeFollowIllusts());
-      setState("nextUrl", tabNextUrl[tab] || null);
+      setState("nextUrl", tab === "follow" 
+        ? (state.followTab === "public" ? tabNextUrl["follow_public"] 
+          : state.followTab === "private" ? tabNextUrl["follow_private"]
+          : tabNextUrl["follow_public"] || tabNextUrl["follow_private"]) || null
+        : tabNextUrl[tab] || null);
     }
     if (!tabLoaded[tab]) {
       if (!pubCached && !privCached) {
@@ -136,6 +150,12 @@ export async function refresh() {
 }
 
 export function saveTabScroll(tab: string) {
+  if (tab === "follow") {
+    // Don't save tabNextUrl["follow"] — it's never used for follow
+    // The per-source nextUrls are already maintained in tabNextUrl["follow_public"/"follow_private"]
+    tabScrollY[tab] = window.scrollY;
+    return;
+  }
   tabNextUrl[tab] = state.nextUrl;
   tabScrollY[tab] = window.scrollY;
 }
@@ -204,7 +224,11 @@ export async function fetchFollow() {
     if (currentTab() === "follow") {
       batch(() => {
         setState("illusts", computeFollowIllusts());
-        setState("nextUrl", null);
+        const ft = state.followTab;
+        const effectiveNext = ft === "public" ? tabNextUrl["follow_public"]
+          : ft === "private" ? tabNextUrl["follow_private"]
+          : tabNextUrl["follow_public"] || tabNextUrl["follow_private"];
+        setState("nextUrl", effectiveNext);
       });
     }
     // Set error only when both failed; partial failure is a warning
@@ -257,6 +281,7 @@ export async function fetchMore() {
       tabNextUrl["follow_public"] = data.next_url;
       setState(produce((s) => {
         s.illusts.push(...filterFeedIllusts(data.illusts));
+        s.nextUrl = tabNextUrl["follow_public"];
       }));
     } else if (fTab === "private") {
       // Load more for private only
@@ -267,6 +292,7 @@ export async function fetchMore() {
       tabNextUrl["follow_private"] = data.next_url;
       setState(produce((s) => {
         s.illusts.push(...filterFeedIllusts(data.illusts));
+        s.nextUrl = tabNextUrl["follow_private"];
       }));
     } else {
       // "all" mode — load the source with older tail first;
@@ -297,6 +323,7 @@ export async function fetchMore() {
       if (loaded) {
         setState(produce((s) => {
           s.illusts = computeFollowIllusts();
+          s.nextUrl = tabNextUrl["follow_public"] || tabNextUrl["follow_private"];
         }));
       } else {
         setState("loading", false);

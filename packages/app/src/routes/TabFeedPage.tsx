@@ -50,6 +50,8 @@ const TabFeedPage: Component<Props> = (props) => {
   const cached = isFeedCached(props.tab);
 
   const filteredIllusts = createMemo<PixivIllust[]>(() => {
+    // Track followTab changes so filter updates immediately
+    followTab();
     return illusts(); // feedStore.computeFollowIllusts() already handles follow tab filtering
   });
 
