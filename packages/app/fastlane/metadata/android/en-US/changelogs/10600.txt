@@ -1,8 +1,0 @@
-🧹 依赖升级
-  - 升级 5 个依赖：@capacitor/core@8.4.1, @capacitor/cli@8.4.1, @types/node@26.0.1, unocss@66.7.3, vite@8.1.0
-  - pnpm 供应链安全配置（minimumReleaseAge, trustPolicy, blockExoticSubdeps）
-  - lint 修复与代码清理
-
-🐛 修复
-  - 个人中心返回列表时保留滚动位置和缓存状态
-  - 修复 TabFeedPage 组件初始化时 cached 变量读取 currentTab() 时序错误

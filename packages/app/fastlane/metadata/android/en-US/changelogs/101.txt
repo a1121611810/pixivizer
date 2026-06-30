@@ -1,1 +1,0 @@
-Initial release of Pictelio for Android. This unofficial third-party Pixiv client includes recommendations, following feed, bookmarks, work detail viewer, R-18/R-18G filtering with age gate, report/block, and ugoira support.
