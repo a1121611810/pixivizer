@@ -1,7 +1,7 @@
 import { createStore, produce } from "solid-js/store";
 import { batch } from "solid-js";
 import { loadRecommended, loadFollow, loadNext } from "../api/illust";
-import type { PixivIllust, ContentType, RestrictType } from "../api/types";
+import type { PixivIllust, ContentType } from "../api/types";
 import { currentTab } from "./uiStore";
 import { filterFeedIllusts } from "../utils/r18Filter";
 
@@ -12,11 +12,15 @@ const [state, setState] = createStore({
   loading: false,
   refreshing: false,
   error: null as string | null,
-  followRestrict: "public" as RestrictType,
+  followTab: "all" as "all" | "public" | "private",
 });
 
 // ── Tab cache (non-reactive data store) ──
 // Caches raw API data per tab so tab switching doesn't re-fetch.
+// Follow-specific keys used:
+//   tabIllusts["follow_public"], tabNextUrl["follow_public"]
+//   tabIllusts["follow_private"], tabNextUrl["follow_private"]
+// Non-follow tabs keep using tabIllusts["recommended"] etc.
 const tabScrollY: Record<string, number> = {};
 const tabIllusts: Record<string, PixivIllust[]> = {};
 const tabNextUrl: Record<string, string | null> = {};
@@ -29,20 +33,71 @@ export const nextUrl = () => state.nextUrl;
 export const loading = () => state.loading;
 export const refreshing = () => state.refreshing;
 export const error = () => state.error;
-export const followRestrict = () => state.followRestrict;
-export const setFollowRestrict = (r: RestrictType) => setState("followRestrict", r);
+export const followTab = () => state.followTab;
+export const setFollowTab = (t: "all" | "public" | "private") => setState("followTab", t);
 
-/** 获取指定 Tab 的原始作品数据（未经全局 R18/R18G 过滤） */
-export function getTabRawIllusts(tab: string): PixivIllust[] {
-  return tabIllusts[tab] || [];
+/**
+ * 合并两个已按 create_date 降序排列的数组，保持全局时间降序。
+ * 用于「全部」视图下合并 public + private 两路数据。
+ */
+function mergeAndSort(a: PixivIllust[], b: PixivIllust[]): PixivIllust[] {
+  const result: PixivIllust[] = [];
+  let i = 0, j = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i].create_date >= b[j].create_date) {
+      result.push(a[i++]);
+    } else {
+      result.push(b[j++]);
+    }
+  }
+  result.push(...a.slice(i), ...b.slice(j));
+  return result;
+}
+
+/**
+ * 根据当前 followTab 和双缓存计算出当前视图应展示的作品列表。
+ * 全部 → mergeAndSort(public, private) 后 filterFeedIllusts
+ * 公开 → filterFeedIllusts(tabIllusts["follow_public"])
+ * 非公开 → filterFeedIllusts(tabIllusts["follow_private"])
+ */
+function computeFollowIllusts(): PixivIllust[] {
+  const tab = currentTab();
+  if (tab !== "follow") return filterFeedIllusts(tabIllusts[tab] ?? []);
+  const fTab = state.followTab;
+  if (fTab === "public") return filterFeedIllusts(tabIllusts["follow_public"] ?? []);
+  if (fTab === "private") return filterFeedIllusts(tabIllusts["follow_private"] ?? []);
+  // "all" — merge both sources
+  const pub = tabIllusts["follow_public"] ?? [];
+  const priv = tabIllusts["follow_private"] ?? [];
+  if (pub.length === 0) return filterFeedIllusts(priv);
+  if (priv.length === 0) return filterFeedIllusts(pub);
+  return filterFeedIllusts(mergeAndSort(pub, priv));
 }
 
 // ── Actions ──
 
 export function ensureLoaded() {
   const tab = currentTab();
+  if (tab === "follow") {
+    // Follow tab: show cached data if available
+    const pubCached = tabIllusts["follow_public"] !== undefined;
+    const privCached = tabIllusts["follow_private"] !== undefined;
+    if (pubCached || privCached) {
+      setState("illusts", computeFollowIllusts());
+      setState("nextUrl", tabNextUrl[tab] || null);
+    }
+    if (!tabLoaded[tab]) {
+      if (!pubCached && !privCached) {
+        setState("illusts", []);
+      }
+      fetchFollow();
+      tabLoaded[tab] = true;
+    }
+    return;
+  }
+
+  // Non-follow tabs (recommended etc.)
   if (tabLoaded[tab]) {
-    // Already loaded — restore cached data with filtering
     if (tabIllusts[tab]) {
       batch(() => {
         setState("illusts", filterFeedIllusts(tabIllusts[tab]));
@@ -51,8 +106,6 @@ export function ensureLoaded() {
     }
     return;
   }
-
-  // Restore cached raw data if available (return visit)
   if (tabIllusts[tab]) {
     batch(() => {
       setState("illusts", filterFeedIllusts(tabIllusts[tab]));
@@ -61,13 +114,9 @@ export function ensureLoaded() {
     tabLoaded[tab] = true;
     return;
   }
-
-  // Fresh load — clear old data to show skeleton
   setState("illusts", []);
   if (tab === "recommended") {
     fetchRecommended();
-  } else if (tab === "follow") {
-    fetchFollow();
   }
   tabLoaded[tab] = true;
 }
@@ -132,14 +181,20 @@ export async function fetchFollow() {
   setState("loading", true);
   setState("error", null);
   try {
-    const data = await loadFollow(state.followRestrict);
-    // Cache raw data; illusts uses filtered version
-    tabIllusts["follow"] = data.illusts;
-    tabNextUrl["follow"] = data.next_url;
+    const [publicData, privateData] = await Promise.all([
+      loadFollow("public"),
+      loadFollow("private"),
+    ]);
+    // Cache both sources
+    tabIllusts["follow_public"] = publicData.illusts;
+    tabIllusts["follow_private"] = privateData.illusts;
+    tabNextUrl["follow_public"] = publicData.next_url;
+    tabNextUrl["follow_private"] = privateData.next_url;
+    // Update display if current tab is follow
     if (currentTab() === "follow") {
       batch(() => {
-        setState("illusts", filterFeedIllusts(data.illusts));
-        setState("nextUrl", data.next_url);
+        setState("illusts", computeFollowIllusts());
+        setState("nextUrl", null); // nextUrl semantics: for "all" view, nextUrl is managed per-source
       });
     }
   } catch (e) {
@@ -150,23 +205,83 @@ export async function fetchFollow() {
 }
 
 export async function fetchMore() {
-  if (!state.nextUrl || state.loading) return;
+  if (state.loading) return;
   const tab = currentTab();
-  setState("loading", true);
-  try {
-    const data = await loadNext(state.nextUrl);
-    // Append raw data to tab cache
-    if (tab === "recommended" || tab === "follow") {
+  if (tab !== "follow") {
+    // Non-follow tabs — existing behavior
+    if (!state.nextUrl) return;
+    setState("loading", true);
+    try {
+      const data = await loadNext(state.nextUrl);
       tabIllusts[tab] = [...(tabIllusts[tab] || []), ...data.illusts];
-    }
-    batch(() => {
-      setState(
-        produce((s) => {
+      batch(() => {
+        setState(produce((s) => {
           s.illusts.push(...filterFeedIllusts(data.illusts));
           s.nextUrl = data.next_url;
-        }),
-      );
-    });
+        }));
+      });
+    } catch (e) {
+      setState("error", (e as { message?: string }).message ?? "加载失败");
+    } finally {
+      setState("loading", false);
+    }
+    return;
+  }
+
+  // Follow tab — per-source pagination
+  setState("loading", true);
+  try {
+    const fTab = state.followTab;
+    if (fTab === "public") {
+      // Load more for public only
+      const pubNext = tabNextUrl["follow_public"];
+      if (!pubNext) { setState("loading", false); return; }
+      const data = await loadNext(pubNext);
+      tabIllusts["follow_public"] = [...(tabIllusts["follow_public"] || []), ...data.illusts];
+      tabNextUrl["follow_public"] = data.next_url;
+      setState(produce((s) => {
+        s.illusts.push(...filterFeedIllusts(data.illusts));
+      }));
+    } else if (fTab === "private") {
+      // Load more for private only
+      const privNext = tabNextUrl["follow_private"];
+      if (!privNext) { setState("loading", false); return; }
+      const data = await loadNext(privNext);
+      tabIllusts["follow_private"] = [...(tabIllusts["follow_private"] || []), ...data.illusts];
+      tabNextUrl["follow_private"] = data.next_url;
+      setState(produce((s) => {
+        s.illusts.push(...filterFeedIllusts(data.illusts));
+      }));
+    } else {
+      // "all" mode — load the source with older tail first
+      const pubIllusts = tabIllusts["follow_public"] || [];
+      const privIllusts = tabIllusts["follow_private"] || [];
+      const pubOldest = pubIllusts.length > 0 ? pubIllusts[pubIllusts.length - 1].create_date : null;
+      const privOldest = privIllusts.length > 0 ? privIllusts[privIllusts.length - 1].create_date : null;
+
+      if (pubOldest === null && privOldest === null) { setState("loading", false); return; }
+      if (privOldest === null || (pubOldest !== null && pubOldest >= privOldest)) {
+        // Load public next page
+        const pubNext = tabNextUrl["follow_public"];
+        if (!pubNext) { setState("loading", false); return; }
+        const data = await loadNext(pubNext);
+        tabIllusts["follow_public"] = [...pubIllusts, ...data.illusts];
+        tabNextUrl["follow_public"] = data.next_url;
+        setState(produce((s) => {
+          s.illusts = computeFollowIllusts();
+        }));
+      } else {
+        // Load private next page
+        const privNext = tabNextUrl["follow_private"];
+        if (!privNext) { setState("loading", false); return; }
+        const data = await loadNext(privNext);
+        tabIllusts["follow_private"] = [...privIllusts, ...data.illusts];
+        tabNextUrl["follow_private"] = data.next_url;
+        setState(produce((s) => {
+          s.illusts = computeFollowIllusts();
+        }));
+      }
+    }
   } catch (e) {
     setState("error", (e as { message?: string }).message ?? "加载失败");
   } finally {
