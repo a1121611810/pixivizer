@@ -12,6 +12,8 @@
  *   pnpm run release -- --major        # 递增 major 版本 (1.2.0 → 2.0.0，大改版)
  *   pnpm run release -- --version=2.0.0   # 指定完整版本号
  *   pnpm run release -- --dry-run      # 预览模式，不实际执行
+ *   pnpm run release -- --interactive   # 交互模式：手动选择提交和版本
+ *   pnpm run release -i                 # 同上，简写
  *
  * 环境变量:
  *   PICTELIO_KEYSTORE_PASSWORD   - keystore 密码（必须）
