@@ -6,25 +6,6 @@ import { resolveImageUrl } from "../utils/imageLoader";
 import { unfollowUser, followUser } from "../api/illust";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 
-function AvatarFallback(props: { class?: string }) {
-  return (
-    <div
-      class={`flex items-center justify-center bg-[var(--colorNeutralBackground2)] ${props.class || ""}`}
-    >
-      <svg
-        width="60%"
-        height="60%"
-        viewBox="0 0 24 24"
-        fill="none"
-        class="text-[var(--colorNeutralForegroundDisabled)]"
-      >
-        <circle cx="12" cy="8" r="4" fill="currentColor" />
-        <path d="M5 21c0-4 3.1-7 7-7s7 3 7 7" fill="currentColor" />
-      </svg>
-    </div>
-  );
-}
-
 function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: string }): string {
   const src = urls.medium || urls.px_170x170 || urls.px_50x50 || "";
   return resolveImageUrl(src);
@@ -160,17 +141,14 @@ const PersonalCenter: Component<Props> = (props) => {
                 }}
                 aria-hidden={!collapsed()}
               >
-                <div class="relative w-6 h-6 flex-shrink-0">
-                  <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
-                  <Show when={displayUser()}>
-                    <img
-                      src={avatarUrl(displayUser()!.profile_image_urls)}
-                      alt={displayUser()!.name}
-                      class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover"
-                      onError={(e) => ((e.target as HTMLElement).style.display = "none")}
-                    />
-                  </Show>
-                </div>
+                <Show when={displayUser()}>
+                  <fluent-avatar
+                    src={avatarUrl(displayUser()!.profile_image_urls)}
+                    alt={displayUser()!.name}
+                    size="24"
+                    shape="circular"
+                  />
+                </Show>
                 <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
                   {displayUser()?.name}
                 </span>
@@ -205,15 +183,12 @@ const PersonalCenter: Component<Props> = (props) => {
           >
             {/* User info */}
             <div class="flex flex-col items-center px-4 pt-6 pb-3">
-              <div class="relative w-20 h-20">
-                <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
-                <img
-                  src={avatarUrl(displayUser()!.profile_image_urls)}
-                  alt={displayUser()!.name}
-                  class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
-                  onError={(e) => ((e.target as HTMLElement).style.display = "none")}
-                />
-              </div>
+              <fluent-avatar
+                src={avatarUrl(displayUser()!.profile_image_urls)}
+                alt={displayUser()!.name}
+                size="72"
+                shape="circular"
+              />
               <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
                 {displayUser()!.name}
               </h2>
@@ -332,15 +307,12 @@ const PersonalCenter: Component<Props> = (props) => {
                 onClick={() => navigate(`/user/${preview.user.id}`)}
               >
                 <div class="flex items-center gap-3">
-                  <div class="relative w-10 h-10 flex-shrink-0">
-                    <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
-                    <img
-                      src={avatarUrl(preview.user.profile_image_urls)}
-                      alt={preview.user.name}
-                      class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover"
-                      onError={(e) => ((e.target as HTMLElement).style.display = "none")}
-                    />
-                  </div>
+                  <fluent-avatar
+                    src={avatarUrl(preview.user.profile_image_urls)}
+                    alt={preview.user.name}
+                    size="32"
+                    shape="circular"
+                  />
                   <div class="flex-1 min-w-0">
                     <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
                       {preview.user.name}

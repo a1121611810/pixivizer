@@ -1,4 +1,4 @@
-import { type Component, createSignal, createEffect, Show } from "solid-js";
+import { type Component, createSignal, createEffect } from "solid-js";
 import { Capacitor } from "@capacitor/core";
 import { user } from "../stores/authStore";
 import { loadImage, resolveImageUrl } from "../utils/imageLoader";
@@ -7,7 +7,6 @@ const isNative = Capacitor.isNativePlatform();
 
 const UserAvatar: Component = () => {
   const [avatarUrl, setAvatarUrl] = createSignal("");
-  const [errored, setErrored] = createSignal(false);
 
   createEffect(() => {
     const u = user();
@@ -21,29 +20,12 @@ const UserAvatar: Component = () => {
   });
 
   return (
-    <>
-      <Show when={!errored() && avatarUrl()}>
-        <img
-          src={avatarUrl()}
-          class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
-          onError={() => setErrored(true)}
-        />
-      </Show>
-      <Show when={errored() || !avatarUrl()}>
-        <div class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0 flex items-center justify-center bg-[var(--colorNeutralBackground2)]">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            class="text-[var(--colorNeutralForegroundDisabled)]"
-          >
-            <circle cx="12" cy="8" r="4" fill="currentColor" />
-            <path d="M5 21c0-4 3.1-7 7-7s7 3 7 7" fill="currentColor" />
-          </svg>
-        </div>
-      </Show>
-    </>
+    <fluent-avatar
+      src={avatarUrl() || undefined}
+      alt="用户头像"
+      size="24"
+      shape="circular"
+    />
   );
 };
 
