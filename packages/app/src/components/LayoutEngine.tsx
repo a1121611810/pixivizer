@@ -17,6 +17,7 @@ export function createLayout(
   columnWidth: Accessor<number>,
   columnCount: Accessor<number>,
   gap: Accessor<number>,
+  columnGap: Accessor<number>,
   layoutMode: Accessor<LayoutMode>,
 ): Accessor<MasonryLayout> {
   return createMemo<MasonryLayout>((prev) => {
@@ -25,9 +26,10 @@ export function createLayout(
     const cw = columnWidth()
     const cc = columnCount()
     const g = gap()
+    const cg = columnGap()
 
     if (count === 0) {
-      return { items: [], totalHeight: 0, columns: cc, columnWidth: cw, gap: g }
+      return { items: [], totalHeight: 0, columns: cc, columnWidth: cw, gap: g, columnGap: cg }
     }
 
     if (mode === "single") {
@@ -39,7 +41,7 @@ export function createLayout(
       const totalHeight = items.length > 0
         ? items[items.length - 1].y + items[items.length - 1].height
         : 0
-      return { items, totalHeight, columns: 1, columnWidth: cw, gap: g }
+      return { items, totalHeight, columns: 1, columnWidth: cw, gap: g, columnGap: cg }
     }
 
     if (mode === "grid") {
@@ -49,7 +51,7 @@ export function createLayout(
         const row = Math.floor(i / cc)
         return {
           index: i,
-          x: col * (cw + g),
+          x: col * (cw + cg),
           y: row * (rowHeight + g),
           width: cw,
           height: rowHeight,
@@ -63,6 +65,7 @@ export function createLayout(
         columns: cc,
         columnWidth: cw,
         gap: g,
+        columnGap: cg,
       }
     }
 
@@ -72,6 +75,7 @@ export function createLayout(
       columnWidth: cw,
       columnCount: cc,
       gap: g,
+      columnGap: cg,
     }
 
     // Incremental append if data grew

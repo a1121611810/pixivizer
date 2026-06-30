@@ -14,7 +14,8 @@ export interface MasonryLayout {
   totalHeight: number
   columns: number
   columnWidth: number
-  gap: number
+  gap: number       // vertical gap between items
+  columnGap: number  // horizontal gap between columns
 }
 
 export type LayoutMode = "waterfall" | "single" | "grid"

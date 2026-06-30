@@ -4,7 +4,8 @@ export interface ComputeMasonryInput {
   items: ReadonlyArray<{ width: number; height: number }>
   columnWidth: number
   columnCount: number
-  gap: number
+  gap: number           // vertical gap between items
+  columnGap?: number    // horizontal gap between columns (defaults to gap)
 }
 
 /**
@@ -16,7 +17,8 @@ export interface ComputeMasonryInput {
 export const CARD_INFO_HEIGHT = 56
 
 export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout {
-  const { items, columnWidth, columnCount, gap } = input
+  const { items, columnWidth, columnCount, gap, columnGap } = input
+  const hGap = columnGap ?? gap
   const nextY = new Array<number>(columnCount).fill(0)
   const result: MasonryItemLayout[] = new Array(items.length)
 
@@ -34,7 +36,7 @@ export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout 
 
     result[i] = {
       index: i,
-      x: minCol * (columnWidth + gap),
+      x: minCol * (columnWidth + hGap),
       y: nextY[minCol],
       width: columnWidth,
       height: cardHeight,
@@ -50,6 +52,7 @@ export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout 
     columns: columnCount,
     columnWidth,
     gap,
+    columnGap: hGap,
   }
 }
 
@@ -67,10 +70,12 @@ export function appendToLayout(
       columnWidth: existing.columnWidth,
       columnCount: existing.columns,
       gap: existing.gap,
+      columnGap: existing.columnGap,
     })
   }
 
   const colCount = existing.columns
+  const hGap = existing.columnGap ?? existing.gap
   const nextY = new Array<number>(colCount).fill(0)
 
   // Recover column tails from last item per column
@@ -98,7 +103,7 @@ export function appendToLayout(
 
     appended.push({
       index: idx,
-      x: minCol * (existing.columnWidth + existing.gap),
+      x: minCol * (existing.columnWidth + hGap),
       y: nextY[minCol],
       width: existing.columnWidth,
       height: cardHeight,
@@ -114,6 +119,7 @@ export function appendToLayout(
     columns: existing.columns,
     columnWidth: existing.columnWidth,
     gap: existing.gap,
+    columnGap: hGap,
   }
 }
 

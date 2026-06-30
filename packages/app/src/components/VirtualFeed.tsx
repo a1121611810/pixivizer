@@ -34,7 +34,8 @@ const LAYOUT_COLUMNS: Record<LayoutMode, number> = {
   grid: 3,
 }
 
-const GAP = 16 // card spacing (horizontal & vertical)
+const GAP = 12 // horizontal gap between columns
+const VERTICAL_GAP = 24 // vertical gap between cards in a column
 
 const VirtualFeed: Component<Props> = (props) => {
   const { attach: sentinelAttach } = createSentinelPaginator({
@@ -128,6 +129,7 @@ const VirtualFeed: Component<Props> = (props) => {
     () => props.illusts,
     columnWidth,
     columnCount,
+    () => VERTICAL_GAP,
     () => GAP,
     layoutMode,
   )
