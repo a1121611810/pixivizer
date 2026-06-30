@@ -95,14 +95,14 @@ export function markFeedMounted() {
   // no-op: lifecycle hook for Feed component
 }
 
-export function isFeedCached() {
-  const tab = currentTab();
-  return tabLoaded[tab] || tabIllusts[tab] !== undefined;
+export function isFeedCached(tab?: string) {
+  const t = tab ?? currentTab();
+  return tabLoaded[t] || tabIllusts[t] !== undefined;
 }
 
-export function getFeedScrollY() {
-  const tab = currentTab();
-  return tabScrollY[tab] || 0;
+export function getFeedScrollY(tab?: string) {
+  const t = tab ?? currentTab();
+  return tabScrollY[t] || 0;
 }
 
 // ── Internal fetch functions ──

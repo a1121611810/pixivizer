@@ -51,7 +51,7 @@ function scrollToTop() {
 
 const TabFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
-  const cached = isFeedCached();
+  const cached = isFeedCached(props.tab);
   const [followSubTab, setFollowSubTab] = createSignal<FollowSubTab>("all");
 
   // 如果年龄确认不是成年人，则回到“全部”子标签并隐藏 R-18 子标签
@@ -80,7 +80,7 @@ const TabFeedPage: Component<Props> = (props) => {
     ensureLoaded();
     // Restore scroll if cached
     if (cached) {
-      const y = getFeedScrollY();
+      const y = getFeedScrollY(props.tab);
       if (y > 0) {
         requestAnimationFrame(() => window.scrollTo(0, y));
       }
