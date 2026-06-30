@@ -30,10 +30,6 @@ const Bookmarks: Component = () => {
   // Restore scroll position when returning to this page
   onMount(() => {
     setCurrentTab("bookmarks");
-    const savedY = getBookmarkScrollY();
-    if (savedY > 0) {
-      requestAnimationFrame(() => window.scrollTo(0, savedY));
-    }
     // 返回收藏页时静默刷新（已有数据后台更新，无数据由 effect 处理）
     if (illusts().length > 0 && !loading()) {
       refresh();
@@ -123,6 +119,7 @@ const Bookmarks: Component = () => {
             emptyText={restrict() === "public" ? "公开收藏夹为空" : "非公开收藏夹为空"}
             skipAnimation={true}
             layoutMode={layoutMode()}
+            restoreScrollTop={getBookmarkScrollY()}
           />
         </div>
       </PageTransition>
