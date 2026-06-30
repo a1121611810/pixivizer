@@ -22,7 +22,7 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    logo: "/pixivizer/logo.svg",
+    logo: "/logo.svg",
 
     nav: [
       { text: "首页", link: "/" },

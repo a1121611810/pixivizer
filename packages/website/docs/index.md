@@ -6,7 +6,7 @@ hero:
   text: 第三方 Pixiv 客户端
   tagline: 为 Android 打造的简洁浏览体验。发现推荐与关注作品，沉浸式查看大图，安全可控的内容过滤，一切尽在本地。
   image:
-    src: /pixivizer/logo.svg
+    src: /logo.svg
     alt: Pictelio
   actions:
     - theme: brand
