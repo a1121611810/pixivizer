@@ -94,7 +94,7 @@
 }
 
 /* ── 暗色导航下划线 ── */
-.dark .VPNavBarMenuLink::after {
+.dark .VPNavBarMenuLink:hover > span::after {
   background: var(--fluent-color-brand-light-90);
 }
 

@@ -41,9 +41,5 @@ export default defineConfig({
       message: "Pictelio 为第三方开源项目，与 Pixiv 株式会社无关。",
       copyright: `© ${new Date().getFullYear()} a1121611810`,
     },
-
-    search: {
-      provider: "local",
-    },
   },
 });

@@ -117,15 +117,20 @@
 .VPNavBarMenuLink {
   font-size: 14px;
   font-weight: 500;
-  position: relative;
   padding: 0 12px;
   transition: color var(--fluent-duration-fast) var(--fluent-curve-easy-ease);
 }
 
-.VPNavBarMenuLink::after {
+/* 下划线动画放在 span 上，避免与外链图标 ::after 冲突 */
+.VPNavBarMenuLink > span {
+  position: relative;
+  display: inline-block;
+}
+
+.VPNavBarMenuLink > span::after {
   content: "";
   position: absolute;
-  bottom: -1px;
+  bottom: -10px;
   left: 50%;
   width: 0;
   height: 2px;
@@ -136,7 +141,7 @@
     left var(--fluent-duration-normal) var(--fluent-curve-decelerate-mid);
 }
 
-.VPNavBarMenuLink:hover::after {
+.VPNavBarMenuLink:hover > span::after {
   width: 100%;
   left: 0;
 }
