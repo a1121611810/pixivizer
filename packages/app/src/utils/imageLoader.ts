@@ -84,6 +84,29 @@ export function getCacheSize(): number {
   return cache.size;
 }
 
+// ─── URL 尺寸解析 ───
+
+/**
+ * 从 Pixiv CDN URL 中提取图片裁剪尺寸。
+ *
+ * Pixiv CDN URL 格式示例：
+ *   /c/600x1200_90/img-master/img/2026/06/30/13/50/51/146641178_p0_master1200.jpg
+ *   /c/250x250_80/a.jpg
+ *   /custom/600x1200/xxx.jpg
+ *
+ * 返回 { width, height }，无尺寸前缀则返回 null。
+ * 纯函数，O(1) 正则匹配，不涉及网络/IO。
+ */
+export function parsePixivUrlDimensions(url: string): { width: number; height: number } | null {
+  if (!url) return null;
+  const match = url.match(/\/(?:c|custom)\/(\d+)x(\d+)/);
+  if (!match) return null;
+  const w = parseInt(match[1], 10);
+  const h = parseInt(match[2], 10);
+  if (w <= 0 || h <= 0) return null;
+  return { width: w, height: h };
+}
+
 // ─── URL 转换 ───
 
 /**

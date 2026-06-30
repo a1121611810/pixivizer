@@ -75,6 +75,7 @@ const PixivImage: Component<PixivImageProps> = (props) => {
           src={displayUrl()}
           alt={props.alt || ""}
           class={props.class || ""}
+          style={sizingStyle}
           loading={props.loading || "lazy"}
           draggable={props.draggable}
           onClick={props.onClick}
