@@ -9,6 +9,9 @@ dist/*
 .superpowers/
 .DS_Store
 
+# VitePress build output
+packages/website/docs/.vitepress/dist/
+
 # Temporary task reports (in website workspace)
 packages/website/task-*-report.md
 
@@ -16,3 +19,4 @@ packages/website/task-*-report.md
 packages/app/android/app/*.keystore
 packages/app/android/app/*.jks
 packages/app/android/app/release/
+.vitepress/dist/

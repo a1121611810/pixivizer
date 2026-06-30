@@ -26,21 +26,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Prepare build directory
-        run: |
-          mkdir -p _site
-          cp -r packages/website/* _site/
-          rm -f _site/task-*-report.md
-          rm -f _site/unified-logo-mockup.html
-          rm -f _site/package.json
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build VitePress
+        run: pnpm --filter pictelio-website build
+
+      - name: Copy version.json
+        run: cp packages/website/version.json packages/website/docs/.vitepress/dist/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: packages/website/docs/.vitepress/dist
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -1,10 +1,14 @@
 {
   "name": "pictelio-website",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
-  "description": "Pictelio landing page - GitHub Pages static site",
   "type": "module",
   "scripts": {
-    "build": "node ../../scripts/deploy.mjs"
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs"
+  },
+  "dependencies": {
+    "vitepress": "^1.6.3"
   }
 }
