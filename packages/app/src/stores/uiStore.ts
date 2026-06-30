@@ -128,11 +128,7 @@ export const setThemePersisted = async (newTheme: Theme): Promise<void> => {
 // ── 分离的 signal：设置页开关（独立于 createStore 以排除追踪问题）
 const [settingsSheetOpen, setSettingsSheetOpen] = createSignal(false);
 export const showSettingsSheet = () => settingsSheetOpen();
-export const setShowSettingsSheet = (v: boolean) => {
-  console.log("[uiStore] setShowSettingsSheet →", v, "| before:", settingsSheetOpen());
-  setSettingsSheetOpen(v);
-  console.log("[uiStore] after set →", settingsSheetOpen());
-};
+export const setShowSettingsSheet = (v: boolean) => setSettingsSheetOpen(v);
 
 export const layoutMode = () => state.layoutMode;
 export const setLayoutMode = async (mode: LayoutMode): Promise<void> => {

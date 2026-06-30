@@ -77,7 +77,6 @@ function openDeleteAccountPage() {
 }
 
 const SettingsSheet: Component = () => {
-  console.log("[SETTINGS] render, showSettingsSheet =", showSettingsSheet());
   const navigate = useNavigate();
   const [ageGateMessage, setAgeGateMessage] = createSignal<string | null>(null);
   const [showBlocklist, setShowBlocklist] = createSignal(false);
@@ -181,9 +180,10 @@ const SettingsSheet: Component = () => {
         </fluent-message-bar>
       </Show>
 
+      {showSettingsSheet() && (
       <fluent-drawer
         position="top"
-        open={showSettingsSheet()}
+        open
         on:close={close}
       >
         {/* Drag handle (visual affordance, non-functional in v1) */}
@@ -925,6 +925,7 @@ const SettingsSheet: Component = () => {
           </svg>
         </div>
       </fluent-drawer>
+      )}
 
       <BlocklistSheet isOpen={showBlocklist()} onClose={() => setShowBlocklist(false)} />
 
