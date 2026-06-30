@@ -27,7 +27,7 @@ const ImageCard: Component<Props> = (props) => {
   const [bookmarked, setBookmarked] = createSignal(props.illust.is_bookmarked);
   const [privateHint, setPrivateHint] = createSignal(false);
   const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
-  const [ugoiraHeight, setUgoiraHeight] = createSignal(Math.round(h() * 0.75));
+  const [ugoiraHeight] = createSignal(Math.round(h() * 0.75));
   const [isFollowed, setIsFollowed] = createSignal(props.illust.user.is_followed ?? false);
   const [following, setFollowing] = createSignal(false);
   const [mainLoaded, setMainLoaded] = createSignal(false);
@@ -50,28 +50,6 @@ const ImageCard: Component<Props> = (props) => {
       setFollowing(false);
     }
   };
-
-  /** 分析 ugoira 静态帧底部黑边，返回内容实际高度 */
-  function measureUgoiraContent(e: Event) {
-    const target = e.target as HTMLImageElement;
-    if (target.naturalHeight === 0) return;
-    const canvas = document.createElement("canvas");
-    canvas.width = target.naturalWidth;
-    canvas.height = target.naturalHeight;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
-    ctx.drawImage(target, 0, 0);
-    // 从底部向上扫描，找第一个亮度 > 15 的像素行
-    const midX = Math.floor(target.naturalWidth / 2);
-    for (let y = target.naturalHeight - 1; y >= 0; y--) {
-      const p = ctx.getImageData(midX, y, 1, 1).data;
-      if ((p[0] + p[1] + p[2]) / 3 > 15) {
-        // 内容结束行 + 2px 安全余量
-        setUgoiraHeight(Math.min(y + 2, target.naturalHeight));
-        return;
-      }
-    }
-  }
 
   let longPressTimer: ReturnType<typeof setTimeout>;
   let hintTimer: ReturnType<typeof setTimeout>;
@@ -133,10 +111,7 @@ const ImageCard: Component<Props> = (props) => {
               height={h()}
               loading="lazy"
               class="w-full h-full object-cover object-top"
-              onLoad={(e) => {
-                setMainLoaded(true);
-                measureUgoiraContent(e);
-              }}
+              onLoad={() => setMainLoaded(true)}
             />
           </div>
         ) : (
