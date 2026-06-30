@@ -1,6 +1,7 @@
 import { defineConfig } from "vite-plus";
 import solid from "vite-plugin-solid";
 import UnoCSS from "unocss/vite";
+import { VitePWA } from "vite-plugin-pwa";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import postcssPxToRem from "postcss-pxtorem";
@@ -24,7 +25,42 @@ export default defineConfig({
   // 部署到 GitHub Pages (/pixivizer/) 时需设置 BASE_PATH=/pixivizer/
   // 本地开发 / Android 打包使用默认 "/"
   base: process.env.BASE_PATH || "/",
-  plugins: [solid(), UnoCSS()],
+  plugins: [
+    solid(),
+    UnoCSS(),
+    VitePWA({
+      registerType: "autoUpdate",
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,svg,png,ico}"],
+        runtimeCaching: [
+          {
+            // Pixiv images through dev proxy
+            urlPattern: /^\/pixiv-img\//,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "pixiv-images",
+              expiration: {
+                maxEntries: 500,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+            },
+          },
+        ],
+      },
+      manifest: {
+        name: "Pictelio",
+        short_name: "Pictelio",
+        description: "A third-party Pixiv illustration browser",
+        theme_color: "#141414",
+        background_color: "#141414",
+        display: "standalone",
+        icons: [
+          { src: "/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+          { src: "/logo-192x192.png", sizes: "192x192", type: "image/png" },
+        ],
+      },
+    }),
+  ],
   define: {
     APP_VERSION: JSON.stringify(pkg.version),
   },

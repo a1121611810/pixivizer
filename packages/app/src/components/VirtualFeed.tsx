@@ -10,6 +10,7 @@ import type { LayoutMode } from "../primitives/types"
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator"
 import { createVirtualScroll } from "../primitives/createVirtualScroll"
 import { createLayout } from "./LayoutEngine"
+import { loadImage } from "../utils/imageLoader"
 
 interface Props {
   illusts: PixivIllust[]
@@ -136,6 +137,24 @@ const VirtualFeed: Component<Props> = (props) => {
     layout,
     overscan: 400,
     useWindowScroll: true,
+  })
+
+  // ── Scroll prediction: prefetch images just outside visible window ──
+  createEffect(() => {
+    const range = vs.visibleRange()
+    if (range.endIndex < 0) return
+    const illustsList = props.illusts
+    // Prefetch next 10 items beyond visible window
+    const preloadEnd = Math.min(range.endIndex + 10, illustsList.length)
+    for (let i = range.endIndex + 1; i < preloadEnd; i++) {
+      const ill = illustsList[i]
+      if (!ill) break
+      const url = ill.image_urls.medium || ill.image_urls.large
+      if (url) {
+        // Fire-and-forget: warm both SW cache and in-memory LRU cache
+        loadImage(url).catch(() => {})
+      }
+    }
   })
 
   // ── Scroll restoration ──
