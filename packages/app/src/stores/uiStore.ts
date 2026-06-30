@@ -1,4 +1,4 @@
-import { createEffect, createRoot } from "solid-js";
+import { createEffect, createRoot, createSignal } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
@@ -58,7 +58,6 @@ const initialState = () => {
   return {
     // 导航
     currentTab: "recommended" as Tab,
-    showSettingsSheet: false,
 
     // 主题
     theme: initialTheme,
@@ -126,11 +125,13 @@ export const setThemePersisted = async (newTheme: Theme): Promise<void> => {
   }
 };
 
-export const showSettingsSheet = () => state.showSettingsSheet;
+// ── 分离的 signal：设置页开关（独立于 createStore 以排除追踪问题）
+const [settingsSheetOpen, setSettingsSheetOpen] = createSignal(false);
+export const showSettingsSheet = () => settingsSheetOpen();
 export const setShowSettingsSheet = (v: boolean) => {
-  console.log("[uiStore] setShowSettingsSheet →", v, "| before:", state.showSettingsSheet);
-  setState("showSettingsSheet", v);
-  console.log("[uiStore] after setState →", state.showSettingsSheet);
+  console.log("[uiStore] setShowSettingsSheet →", v, "| before:", settingsSheetOpen());
+  setSettingsSheetOpen(v);
+  console.log("[uiStore] after set →", settingsSheetOpen());
 };
 
 export const layoutMode = () => state.layoutMode;
