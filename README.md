@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/logo/pictelio-logo.svg" width="120" height="120" alt="Pictelio Logo">
+  <img src="packages/app/assets/logo/pictelio-logo.svg" width="120" height="120" alt="Pictelio Logo">
   <h1 align="center">Pictelio</h1>
   <p align="center">
     <strong>A third-party Pixiv illustration browser built with SolidJS</strong>
@@ -31,7 +31,7 @@
   <summary><strong>中文</strong> — 点击查看中文版本</summary>
 
   <div align="center">
-    <img src="assets/logo/pictelio-logo.svg" width="80" height="80" alt="Pictelio Logo">
+    <img src="packages/app/assets/logo/pictelio-logo.svg" width="80" height="80" alt="Pictelio Logo">
     <h2>Pictelio</h2>
     <p>基于 SolidJS 的第三方 Pixiv 插画浏览器，通过 Capacitor 打包为 Android 原生应用</p>
   </div>
@@ -47,10 +47,10 @@
         <td align="center"><strong>登录页</strong></td>
       </tr>
       <tr>
-        <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/01_feed.png" width="180" alt="推荐流"></td>
-        <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/02_detail.png" width="180" alt="作品详情"></td>
-        <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/03_settings.png" width="180" alt="设置面板"></td>
-        <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/04_login.png" width="180" alt="登录页"></td>
+        <td><img src="packages/website/docs/public/screenshots/01_feed.png" width="180" alt="推荐流"></td>
+        <td><img src="packages/website/docs/public/screenshots/02_detail.png" width="180" alt="作品详情"></td>
+        <td><img src="packages/website/docs/public/screenshots/03_settings.png" width="180" alt="设置面板"></td>
+        <td><img src="packages/website/docs/public/screenshots/04_login.png" width="180" alt="登录页"></td>
       </tr>
     </table>
   </div>
@@ -184,10 +184,10 @@ pnpm dev
       <td align="center"><strong>Login</strong></td>
     </tr>
     <tr>
-      <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/01_feed.png" width="180" alt="Feed"></td>
-      <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/02_detail.png" width="180" alt="Detail"></td>
-      <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/03_settings.png" width="180" alt="Settings"></td>
-      <td><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/04_login.png" width="180" alt="Login"></td>
+      <td><img src="packages/website/docs/public/screenshots/01_feed.png" width="180" alt="Feed"></td>
+      <td><img src="packages/website/docs/public/screenshots/02_detail.png" width="180" alt="Detail"></td>
+      <td><img src="packages/website/docs/public/screenshots/03_settings.png" width="180" alt="Settings"></td>
+      <td><img src="packages/website/docs/public/screenshots/04_login.png" width="180" alt="Login"></td>
     </tr>
   </table>
 </div>
