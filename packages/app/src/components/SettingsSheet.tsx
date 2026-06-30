@@ -154,17 +154,6 @@ function handleScrimTouchMove(e: TouchEvent) {
   }
 }
 
-interface ConfirmDialogProps {
-  isOpen: boolean;
-  title: string;
-  body: string;
-  cancelText: string;
-  confirmText: string;
-  confirmVariant?: "danger" | "primary";
-  onCancel: () => void;
-  onConfirm: () => void;
-}
-
 async function handleCheckUpdate() {
   if (isCheckingUpdate()) return;
   setIsCheckingUpdate(true);
@@ -183,93 +172,6 @@ function openDeleteAccountPage() {
   // TODO: Install @capacitor/browser and use Browser.open({ url }) for a native in-app/system browser experience.
   window.open("https://www.pixiv.net/leave.php", "_blank", "noopener,noreferrer");
 }
-
-const DIALOG_CLOSE_DURATION_MS = 200; // matches --durationNormal
-
-const ConfirmDialog: Component<ConfirmDialogProps> = (props) => {
-  const [mounted, setMounted] = createSignal(false);
-  const [closing, setClosing] = createSignal(false);
-
-  createEffect(() => {
-    if (props.isOpen) {
-      setMounted(false);
-      setClosing(false);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setMounted(true));
-      });
-    }
-  });
-
-  function close() {
-    setClosing(true);
-    setTimeout(() => {
-      props.onCancel();
-      setClosing(false);
-      setMounted(false);
-    }, DIALOG_CLOSE_DURATION_MS);
-  }
-
-  function confirm() {
-    setClosing(true);
-    setTimeout(() => {
-      props.onConfirm();
-      setClosing(false);
-      setMounted(false);
-    }, DIALOG_CLOSE_DURATION_MS);
-  }
-
-  return (
-    <Show when={props.isOpen}>
-      <div class="fixed inset-0 z-[70]">
-        <div
-          class="absolute inset-0 transition-opacity"
-          style={{
-            "background-color": "var(--colorScrim)",
-            opacity: mounted() && !closing() ? 1 : 0,
-            transition: `opacity var(--durationNormal) var(--curveEasyEase)`,
-          }}
-          onClick={close}
-        />
-        <div class="absolute inset-0 flex items-center justify-center p-5 pointer-events-none">
-          <div
-            class="w-full surface-dialog p-6 pointer-events-auto"
-            style={{ "max-width": "22rem" }} // one-off dialog width; no matching Fluent spacing token
-            style={{
-              transform: mounted() && !closing() ? "scale(1)" : "scale(0.96)",
-              opacity: mounted() && !closing() ? 1 : 0,
-              transition: `transform var(--durationNormal) var(--curveEasyEase), opacity var(--durationNormal) var(--curveEasyEase)`,
-            }}
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="confirm-dialog-title"
-            aria-describedby="confirm-dialog-body"
-          >
-            <h3
-              id="confirm-dialog-title"
-              class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)] mb-2"
-            >
-              {props.title}
-            </h3>
-            <p
-              id="confirm-dialog-body"
-              class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground2)] leading-[var(--lineHeightBase300)] mb-6"
-            >
-              {props.body}
-            </p>
-            <div class="flex gap-3 justify-end">
-              <fluent-button appearance="secondary" on:click={close}>
-                {props.cancelText}
-              </fluent-button>
-              <fluent-button appearance="primary" on:click={confirm}>
-                {props.confirmText}
-              </fluent-button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Show>
-  );
-};
 
 const SettingsSheet: Component = () => {
   const navigate = useNavigate();
@@ -1177,30 +1079,48 @@ const SettingsSheet: Component = () => {
 
       <BlocklistSheet isOpen={showBlocklist()} onClose={() => setShowBlocklist(false)} />
 
-      <ConfirmDialog
-        isOpen={dialogState()?.type === "clear"}
-        title="清除所有本地数据？"
-        body="这将删除本应用在本机保存的全部数据，包括：登录凭证、图片缓存、浏览设置、屏蔽列表、举报记录。此操作不可恢复，但不会删除你的 Pixiv 账号及其在 Pixiv 服务器上的数据。"
-        cancelText="取消"
-        confirmText="确认清除"
-        confirmVariant="danger"
-        onCancel={() => setDialogState(null)}
-        onConfirm={handleClearLocalData}
-      />
+      <fluent-dialog
+        open={dialogState()?.type === "clear"}
+        on:close={() => setDialogState(null)}
+        aria-label="清除所有本地数据？"
+      >
+        <h3 slot="title">清除所有本地数据？</h3>
+        <p>
+          这将删除本应用在本机保存的全部数据，包括：登录凭证、图片缓存、浏览设置、屏蔽列表、举报记录。此操作不可恢复，但不会删除你的
+          Pixiv 账号及其在 Pixiv 服务器上的数据。
+        </p>
+        <fluent-button slot="actions" appearance="secondary" on:click={() => setDialogState(null)}>
+          取消
+        </fluent-button>
+        <fluent-button slot="actions" appearance="primary" on:click={handleClearLocalData}>
+          确认清除
+        </fluent-button>
+      </fluent-dialog>
 
-      <ConfirmDialog
-        isOpen={dialogState()?.type === "deleteAccount"}
-        title="删除 Pixiv 账号？"
-        body="Pictelio 是第三方客户端，无法直接删除你的 Pixiv 账号。点击确认将打开 Pixiv 官方账号删除页面，请按官方流程操作。"
-        cancelText="取消"
-        confirmText="前往 Pixiv"
-        confirmVariant="danger"
-        onCancel={() => setDialogState(null)}
-        onConfirm={() => {
-          setDialogState(null);
-          openDeleteAccountPage();
-        }}
-      />
+      <fluent-dialog
+        open={dialogState()?.type === "deleteAccount"}
+        on:close={() => setDialogState(null)}
+        aria-label="删除 Pixiv 账号？"
+      >
+        <h3 slot="title">删除 Pixiv 账号？</h3>
+        <p>
+          Pictelio 是第三方客户端，无法直接删除你的 Pixiv 账号。点击确认将打开 Pixiv
+          官方账号删除页面，请按官方流程操作。
+        </p>
+        <fluent-button slot="actions" appearance="secondary" on:click={() => setDialogState(null)}>
+          取消
+        </fluent-button>
+        <fluent-button
+          slot="actions"
+          appearance="primary"
+          on:click={() => {
+            setDialogState(null);
+            openDeleteAccountPage();
+          }}
+        >
+          前往 Pixiv
+        </fluent-button>
+      </fluent-dialog>
     </Show>
   );
 };
