@@ -123,6 +123,21 @@ export function resolveImageUrl(originalUrl: string): string {
   return `/pixiv-img/${path}`;
 }
 
+/**
+ * 将第三方图床 URL 转换为 Web 模式下可用的本地代理路径。
+ *
+ * - i.pixiv.re → /pixiv-re/
+ * - i.pixiv.nl → /pixiv-nl/
+ * - 其他（含 i.pximg.net）→ /pixiv-img/ 代理
+ * - 已是代理路径的 URL 直接返回
+ */
+export function toWebProxyUrl(url: string): string {
+  if (!url || url.startsWith("/")) return url;
+  if (url.startsWith("https://i.pixiv.re/")) return url.replace("https://i.pixiv.re", "/pixiv-re");
+  if (url.startsWith("https://i.pixiv.nl/")) return url.replace("https://i.pixiv.nl", "/pixiv-nl");
+  return resolveImageUrl(url);
+}
+
 // ─── 带缓存的图片加载 ───
 
 export interface LoadedImage {
@@ -189,11 +204,12 @@ async function fetchWeb(targetUrl: string, originalUrl: string): Promise<Blob> {
   const urls = getRaceCandidateUrls(targetUrl);
 
   if (urls.length > 1) {
-    return raceFetch(urls, (url) => fetchSingleWeb(url), originalUrl);
+    // Web 模式：所有 race 候选 URL 转为本地代理路径，避免 CORS
+    const webUrls = urls.map(toWebProxyUrl);
+    return raceFetch(webUrls, fetchSingleWeb, toWebProxyUrl(originalUrl));
   }
 
-  const proxyUrl = targetUrl.startsWith("/pixiv-img/") ? targetUrl : resolveImageUrl(targetUrl);
-  return fetchSingleWeb(proxyUrl);
+  return fetchSingleWeb(toWebProxyUrl(targetUrl));
 }
 
 async function fetchSingleWeb(url: string): Promise<Blob> {
