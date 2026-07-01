@@ -182,4 +182,111 @@ describe("fetchMoreMixed", () => {
     expect(illusts().map((i) => i.id)).toEqual([1, 2, 3]);
     expect(loadNext).toHaveBeenCalledWith("next-manga");
   });
+
+  it("falls back to the other source when the preferred source has no next_url", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(1, "2026-07-01T10:00:00+09:00", "illust")],
+      next_url: null,
+    });
+    vi.mocked(loadMangaRecommended).mockResolvedValue({
+      illusts: [createIllust(2, "2026-07-01T12:00:00+09:00", "manga")],
+      next_url: "next-manga",
+    });
+    vi.mocked(loadNext).mockResolvedValue({
+      illusts: [createIllust(3, "2026-07-01T09:00:00+09:00", "manga")],
+      next_url: null,
+    });
+
+    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, illusts } =
+      await import("../feedStore");
+    setRecommendSubTab("mixed");
+    await fetchMixed();
+
+    await fetchMoreMixed();
+    expect(illusts().map((i) => i.id)).toEqual([2, 1, 3]);
+    expect(loadNext).toHaveBeenCalledWith("next-manga");
+  });
+
+  it("clears error on successful load", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+      next_url: "next-illust",
+    });
+    vi.mocked(loadMangaRecommended).mockResolvedValue({
+      illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+      next_url: "next-manga",
+    });
+    vi.mocked(loadNext).mockResolvedValue({
+      illusts: [createIllust(3, "2026-07-01T09:00:00+09:00", "manga")],
+      next_url: null,
+    });
+
+    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, illusts, error } =
+      await import("../feedStore");
+    setRecommendSubTab("mixed");
+    await fetchMixed();
+    await fetchMoreMixed();
+    expect(illusts().map((i) => i.id)).toEqual([1, 2, 3]);
+    expect(error()).toBeNull();
+  });
+
+  it("does not surface error when fallback succeeds", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(1, "2026-07-01T10:00:00+09:00", "illust")],
+      next_url: "next-illust",
+    });
+    vi.mocked(loadMangaRecommended).mockResolvedValue({
+      illusts: [createIllust(2, "2026-07-01T12:00:00+09:00", "manga")],
+      next_url: "next-manga",
+    });
+    vi.mocked(loadNext).mockImplementation(async (url: string) => {
+      if (url === "next-illust") {
+        throw new Error("illust load failed");
+      }
+      return {
+        illusts: [createIllust(3, "2026-07-01T09:00:00+09:00", "manga")],
+        next_url: null,
+      };
+    });
+
+    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, illusts, error } =
+      await import("../feedStore");
+    setRecommendSubTab("mixed");
+    await fetchMixed();
+
+    await fetchMoreMixed();
+    expect(illusts().map((i) => i.id)).toEqual([2, 1, 3]);
+    expect(error()).toBeNull();
+    expect(loadNext).toHaveBeenCalledWith("next-manga");
+  });
+
+  it("aggregates errors when both sources fail", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+      next_url: "next-illust",
+    });
+    vi.mocked(loadMangaRecommended).mockResolvedValue({
+      illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+      next_url: "next-manga",
+    });
+    vi.mocked(loadNext).mockImplementation(async (url: string) => {
+      if (url === "next-manga") {
+        throw new Error("manga load failed");
+      }
+      throw new Error("illust load failed");
+    });
+
+    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, error } =
+      await import("../feedStore");
+    setRecommendSubTab("mixed");
+    await fetchMixed();
+
+    await fetchMoreMixed();
+    expect(error()).toContain("illust load failed");
+    expect(error()).toContain("manga load failed");
+  });
 });

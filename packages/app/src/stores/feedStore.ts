@@ -274,6 +274,7 @@ export async function fetchMixed() {
 
 export async function fetchMoreMixed() {
   if (state.loading) return;
+  setState("loading", true);
   setState("error", null);
 
   const illustsArr = tabIllusts["recommended_illust"] ?? [];
@@ -282,21 +283,19 @@ export async function fetchMoreMixed() {
   const illustOldest = illustsArr.length > 0 ? illustsArr[illustsArr.length - 1].create_date : null;
   const mangaOldest = mangaArr.length > 0 ? mangaArr[mangaArr.length - 1].create_date : null;
 
+  const errors: string[] = [];
+
   const loadSource = async (key: "recommended_illust" | "recommended_manga"): Promise<boolean> => {
     const next = tabNextUrl[key];
     if (!next) return false;
-    setState("loading", true);
     try {
       const data = await loadNext(next);
       tabIllusts[key] = [...(tabIllusts[key] || []), ...data.illusts];
       tabNextUrl[key] = data.next_url;
-      setState("error", null);
       return true;
     } catch (e) {
-      setState("error", (e as { message?: string }).message ?? "加载失败");
+      errors.push((e as { message?: string }).message ?? "加载失败");
       return false;
-    } finally {
-      setState("loading", false);
     }
   };
 
@@ -317,6 +316,12 @@ export async function fetchMoreMixed() {
       );
     });
   }
+
+  if (errors.length > 0 && !loaded) {
+    setState("error", errors.join("; "));
+  }
+
+  setState("loading", false);
 }
 
 export async function fetchFollow() {
