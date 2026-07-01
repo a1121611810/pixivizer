@@ -89,6 +89,26 @@ export default defineConfig({
         },
         agent: proxyAgent,
       },
+      "/pixiv-re": {
+        target: "https://i.pixiv.re",
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/pixiv-re/, ""),
+        headers: {
+          Referer: "https://app-api.pixiv.net/",
+          "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+        },
+        agent: proxyAgent,
+      },
+      "/pixiv-nl": {
+        target: "https://i.pixiv.nl",
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/pixiv-nl/, ""),
+        headers: {
+          Referer: "https://app-api.pixiv.net/",
+          "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+        },
+        agent: proxyAgent,
+      },
       "/pixiv-api": {
         target: "https://app-api.pixiv.net",
         changeOrigin: true,
