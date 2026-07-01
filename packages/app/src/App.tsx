@@ -35,6 +35,7 @@ import {
 } from "./services/predictiveBack";
 import { loadReportedIds } from "./stores/reportStore";
 import { loadBlockedIds } from "./stores/blockStore";
+import { loadImageHostPreference } from "./stores/imageHostStore";
 const Login = lazy(() => import("./routes/Login"));
 const AgeConfirmation = lazy(() => import("./routes/AgeConfirmation"));
 const IllustDetail = lazy(() => import("./routes/IllustDetail"));
@@ -44,6 +45,7 @@ const TabFeedPage = lazy(() => import("./routes/TabFeedPage"));
 const PersonalCenter = lazy(() => import("./routes/PersonalCenter"));
 const UserIllusts = lazy(() => import("./routes/UserIllusts"));
 const About = lazy(() => import("./routes/About"));
+const ImageHostSettings = lazy(() => import("./routes/ImageHostSettings"));
 import PredictiveBackContainer from "./components/PredictiveBackContainer";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
@@ -106,6 +108,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     // Load user content moderation state
     await loadReportedIds();
     await loadBlockedIds();
+    await loadImageHostPreference();
 
     // Silently check for updates on startup if toggle is enabled
     if (autoCheckUpdate()) {
@@ -299,6 +302,7 @@ const App: Component = () => {
       <Route path="/user/:id/illusts" component={UserIllusts} />
       <Route path="/user/:id" component={PersonalCenter} />
       <Route path="/about" component={About} />
+      <Route path="/image-host" component={ImageHostSettings} />
       <Route path="/age-confirmation" component={AgeConfirmation} />
       <Route path="*" component={Login} />
     </Router>

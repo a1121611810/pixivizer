@@ -1,11 +1,11 @@
-import type { MasonryItemLayout, MasonryLayout, ScrollWindow } from "./types"
+import type { MasonryItemLayout, MasonryLayout, ScrollWindow } from "./types";
 
 export interface ComputeMasonryInput {
-  items: ReadonlyArray<{ width: number; height: number }>
-  columnWidth: number
-  columnCount: number
-  gap: number           // vertical gap between items
-  columnGap?: number    // horizontal gap between columns (defaults to gap)
+  items: ReadonlyArray<{ width: number; height: number }>;
+  columnWidth: number;
+  columnCount: number;
+  gap: number; // vertical gap between items
+  columnGap?: number; // horizontal gap between columns (defaults to gap)
 }
 
 /**
@@ -14,25 +14,25 @@ export interface ComputeMasonryInput {
  * Returns full MasonryLayout.
  */
 /** Height of the info section below each image card (title + user name + follow button + padding) */
-export const CARD_INFO_HEIGHT = 80
+export const CARD_INFO_HEIGHT = 80;
 
 export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout {
-  const { items, columnWidth, columnCount, gap, columnGap } = input
-  const hGap = columnGap ?? gap
-  const nextY = new Array<number>(columnCount).fill(0)
-  const result: MasonryItemLayout[] = new Array(items.length)
+  const { items, columnWidth, columnCount, gap, columnGap } = input;
+  const hGap = columnGap ?? gap;
+  const nextY = Array.from<number>({ length: columnCount }).fill(0);
+  const result: MasonryItemLayout[] = Array.from({ length: items.length });
 
   for (let i = 0; i < items.length; i++) {
-    const { width, height } = items[i]
+    const { width, height } = items[i];
 
     // Find shortest column
-    let minCol = 0
+    let minCol = 0;
     for (let c = 1; c < columnCount; c++) {
-      if (nextY[c] < nextY[minCol]) minCol = c
+      if (nextY[c] < nextY[minCol]) minCol = c;
     }
 
-    const aspectRatio = width > 0 && height > 0 ? width / height : 1
-    const cardHeight = columnWidth / aspectRatio + CARD_INFO_HEIGHT
+    const aspectRatio = width > 0 && height > 0 ? width / height : 1;
+    const cardHeight = columnWidth / aspectRatio + CARD_INFO_HEIGHT;
 
     result[i] = {
       index: i,
@@ -41,9 +41,9 @@ export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout 
       width: columnWidth,
       height: cardHeight,
       column: minCol,
-    }
+    };
 
-    nextY[minCol] += cardHeight + gap
+    nextY[minCol] += cardHeight + gap;
   }
 
   return {
@@ -53,7 +53,7 @@ export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout 
     columnWidth,
     gap,
     columnGap: hGap,
-  }
+  };
 }
 
 /**
@@ -71,35 +71,35 @@ export function appendToLayout(
       columnCount: existing.columns,
       gap: existing.gap,
       columnGap: existing.columnGap,
-    })
+    });
   }
 
-  const colCount = existing.columns
-  const hGap = existing.columnGap ?? existing.gap
-  const nextY = new Array<number>(colCount).fill(0)
+  const colCount = existing.columns;
+  const hGap = existing.columnGap ?? existing.gap;
+  const nextY = Array.from<number>({ length: colCount }).fill(0);
 
   // Recover column tails from last item per column
   for (const item of existing.items) {
-    const bottom = item.y + item.height + existing.gap
+    const bottom = item.y + item.height + existing.gap;
     if (bottom > nextY[item.column]) {
-      nextY[item.column] = bottom
+      nextY[item.column] = bottom;
     }
   }
 
-  const appended: MasonryItemLayout[] = []
-  const startIndex = existing.items.length
+  const appended: MasonryItemLayout[] = [];
+  const startIndex = existing.items.length;
 
   for (let i = 0; i < newItems.length; i++) {
-    const { width, height } = newItems[i]
+    const { width, height } = newItems[i];
 
-    let minCol = 0
+    let minCol = 0;
     for (let c = 1; c < colCount; c++) {
-      if (nextY[c] < nextY[minCol]) minCol = c
+      if (nextY[c] < nextY[minCol]) minCol = c;
     }
 
-    const aspectRatio = width > 0 && height > 0 ? width / height : 1
-    const cardHeight = existing.columnWidth / aspectRatio + CARD_INFO_HEIGHT
-    const idx = startIndex + i
+    const aspectRatio = width > 0 && height > 0 ? width / height : 1;
+    const cardHeight = existing.columnWidth / aspectRatio + CARD_INFO_HEIGHT;
+    const idx = startIndex + i;
 
     appended.push({
       index: idx,
@@ -108,9 +108,9 @@ export function appendToLayout(
       width: existing.columnWidth,
       height: cardHeight,
       column: minCol,
-    })
+    });
 
-    nextY[minCol] += cardHeight + existing.gap
+    nextY[minCol] += cardHeight + existing.gap;
   }
 
   return {
@@ -120,7 +120,7 @@ export function appendToLayout(
     columnWidth: existing.columnWidth,
     gap: existing.gap,
     columnGap: hGap,
-  }
+  };
 }
 
 /**
@@ -133,29 +133,29 @@ export function computeWindow(
   viewportHeight: number,
   overscan: number = 400,
 ): ScrollWindow {
-  if (layout.items.length === 0) return { startIndex: 0, endIndex: -1 }
+  if (layout.items.length === 0) return { startIndex: 0, endIndex: -1 };
 
-  const minY = scrollTop - overscan
-  const maxY = scrollTop + viewportHeight + overscan
+  const minY = scrollTop - overscan;
+  const maxY = scrollTop + viewportHeight + overscan;
 
   // Binary search for first item with y + height > minY
-  let lo = 0
-  let hi = layout.items.length
+  let lo = 0;
+  let hi = layout.items.length;
   while (lo < hi) {
-    const mid = (lo + hi) >>> 1
+    const mid = (lo + hi) >>> 1;
     if (layout.items[mid].y + layout.items[mid].height > minY) {
-      hi = mid
+      hi = mid;
     } else {
-      lo = mid + 1
+      lo = mid + 1;
     }
   }
-  const startIndex = lo
+  const startIndex = lo;
 
   // Linear scan forward for end
-  let endIndex = startIndex
+  let endIndex = startIndex;
   while (endIndex < layout.items.length && layout.items[endIndex].y < maxY) {
-    endIndex++
+    endIndex++;
   }
 
-  return { startIndex, endIndex: endIndex - 1 }
+  return { startIndex, endIndex: endIndex - 1 };
 }

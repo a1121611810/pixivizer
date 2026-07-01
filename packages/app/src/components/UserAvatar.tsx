@@ -31,7 +31,13 @@ const UserAvatar: Component = () => {
       </Show>
       <Show when={errored() || !avatarUrl()}>
         <div class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0 flex items-center justify-center bg-[var(--colorNeutralBackground2)]">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="text-[var(--colorNeutralForegroundDisabled)]">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            class="text-[var(--colorNeutralForegroundDisabled)]"
+          >
             <circle cx="12" cy="8" r="4" fill="currentColor" />
             <path d="M5 21c0-4 3.1-7 7-7s7 3 7 7" fill="currentColor" />
           </svg>

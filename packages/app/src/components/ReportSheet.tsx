@@ -52,64 +52,61 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
       >
         {/* Drag handle */}
         <div class="flex justify-center pt-2 pb-1">
-        <div class="w-10 h-1 rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralStroke1)]" />
-      </div>
+          <div class="w-10 h-1 rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralStroke1)]" />
+        </div>
 
-      {/* Header */}
-      <div class="flex items-center justify-between px-5 pt-1 pb-2">
-        <h2 class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
-          举报作品
-        </h2>
-        <fluent-button
-          appearance="subtle"
-          aria-label="关闭"
-          on:click={close}
-          style="min-width:32px;width:32px;height:32px;padding:0"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path
-              d="M15.14 4.86a.67.67 0 0 0-.95 0L10 9.05 5.81 4.86a.67.67 0 0 0-.95.95L9.05 10l-4.19 4.19a.67.67 0 0 0 .95.95L10 10.95l4.19 4.19a.67.67 0 0 0 .95-.95L10.95 10l4.19-4.19a.67.67 0 0 0 0-.95z"
-              fill="currentColor"
-            />
-          </svg>
-        </fluent-button>
-      </div>
-
-      {/* Divider */}
-      <fluent-divider style="margin-inline:20px"></fluent-divider>
-
-      {/* Reason list */}
-      <p class="px-5 pt-3 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
-        请选择举报原因：
-      </p>
-      <fluent-radio-group
-        value={selectedReason()}
-        on:change={(e) => setSelectedReason(e.detail.value)}
-      >
-        {REASONS.map((reason) => (
-          <fluent-radio
-            value={reason}
-            disabled={alreadyReported()}
+        {/* Header */}
+        <div class="flex items-center justify-between px-5 pt-1 pb-2">
+          <h2 class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+            举报作品
+          </h2>
+          <fluent-button
+            appearance="subtle"
+            aria-label="关闭"
+            on:click={close}
+            style="min-width:32px;width:32px;height:32px;padding:0"
           >
-            {REPORT_REASON_LABELS[reason]}
-          </fluent-radio>
-        ))}
-      </fluent-radio-group>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M15.14 4.86a.67.67 0 0 0-.95 0L10 9.05 5.81 4.86a.67.67 0 0 0-.95.95L9.05 10l-4.19 4.19a.67.67 0 0 0 .95.95L10 10.95l4.19 4.19a.67.67 0 0 0 .95-.95L10.95 10l4.19-4.19a.67.67 0 0 0 0-.95z"
+                fill="currentColor"
+              />
+            </svg>
+          </fluent-button>
+        </div>
 
-      {/* Submit button */}
-      <div class="px-5 pb-6 pt-2">
-        <fluent-button
-          appearance="primary"
-          style="width:100%"
-          disabled={!selectedReason() || submitting() || alreadyReported()}
-          on:click={handleSubmit}
-        >
-          {alreadyReported() ? "已举报" : submitting() ? "提交中…" : "提交举报"}
-        </fluent-button>
-        <p class="mt-3 text-center [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
-          提交后将打开邮件客户端发送举报详情
+        {/* Divider */}
+        <fluent-divider style="margin-inline:20px"></fluent-divider>
+
+        {/* Reason list */}
+        <p class="px-5 pt-3 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
+          请选择举报原因：
         </p>
-      </div>
+        <fluent-radio-group
+          value={selectedReason()}
+          on:change={(e) => setSelectedReason(e.detail.value)}
+        >
+          {REASONS.map((reason) => (
+            <fluent-radio value={reason} disabled={alreadyReported()}>
+              {REPORT_REASON_LABELS[reason]}
+            </fluent-radio>
+          ))}
+        </fluent-radio-group>
+
+        {/* Submit button */}
+        <div class="px-5 pb-6 pt-2">
+          <fluent-button
+            appearance="primary"
+            style="width:100%"
+            disabled={!selectedReason() || submitting() || alreadyReported()}
+            on:click={handleSubmit}
+          >
+            {alreadyReported() ? "已举报" : submitting() ? "提交中…" : "提交举报"}
+          </fluent-button>
+          <p class="mt-3 text-center [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
+            提交后将打开邮件客户端发送举报详情
+          </p>
+        </div>
       </div>
     </div>
   );

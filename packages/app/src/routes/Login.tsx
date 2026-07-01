@@ -85,7 +85,12 @@ const Login: Component = () => {
 
         {error() && <div style={S.error}>{error()}</div>}
 
-        <fluent-button appearance="primary" disabled={submitting()} style="width:100%" on:click={handleSubmit}>
+        <fluent-button
+          appearance="primary"
+          disabled={submitting()}
+          style="width:100%"
+          on:click={handleSubmit}
+        >
           {submitting() ? "登录中..." : "登录"}
         </fluent-button>
 

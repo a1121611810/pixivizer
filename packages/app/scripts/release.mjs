@@ -148,10 +148,6 @@ function formatChangelog(messages) {
   return lines.join("\n") || "小修复与改进";
 }
 
-function generateChangelog(commits) {
-  return formatChangelog(commits.map((line) => line.replace(/^[0-9a-f]+\s+/, "")));
-}
-
 function generateChangelogPreview(selected) {
   return formatChangelog(selected);
 }
@@ -242,6 +238,7 @@ async function interactivePickCommits(commits) {
 
   // Loop until valid selection or exit
   while (true) {
+    // eslint-disable-next-line no-await-in-loop
     const answer = await askQuestion("\n输入编号: ");
 
     if (answer === "q") {
@@ -290,6 +287,7 @@ async function interactivePickCommits(commits) {
     const preview = generateChangelogPreview(selected);
     console.log(preview);
 
+    // eslint-disable-next-line no-await-in-loop
     const confirm = await askQuestion("\n确认使用? (Y/n/e=重新编辑): ");
     if (confirm.toLowerCase() === "n") {
       console.log("[release] 已取消");
@@ -311,6 +309,7 @@ async function interactivePickVersion(currentVersion) {
   console.log("  4) 自定义版本号\n");
 
   while (true) {
+    // eslint-disable-next-line no-await-in-loop
     const answer = await askQuestion("选择 (1-4): ");
     switch (answer) {
       case "1":
@@ -320,6 +319,7 @@ async function interactivePickVersion(currentVersion) {
       case "3":
         return { type: "major", version: bump(currentVersion, "major") };
       case "4": {
+        // eslint-disable-next-line no-await-in-loop
         const custom = await askQuestion("输入版本号 (格式 x.y.z): ");
         if (/^\d+\.\d+\.\d+$/.test(custom)) {
           return { type: "custom", version: custom };
@@ -374,8 +374,8 @@ async function main() {
     console.log(changelog);
     console.log("─".repeat(40));
 
-    const ok = await askQuestion("\n确认使用? (Y/n): ");
-    if (ok.toLowerCase() === "n") {
+    const answer = await askQuestion("\n确认使用? (Y/n): ");
+    if (answer.toLowerCase() === "n") {
       console.log("[release] 已取消");
       process.exit(0);
     }

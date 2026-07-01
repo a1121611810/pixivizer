@@ -1,4 +1,6 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
+import { isImageHostEnabled } from "../stores/imageHostStore";
+import { getEffectiveImageUrlAsync, getRaceCandidateUrls } from "../services/imageHostService";
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -149,14 +151,19 @@ export async function loadImage(originalUrl: string): Promise<LoadedImage> {
     return { url: cachedUrl, cleanup: () => {} };
   }
 
-  // 2. 加载图片
+  // 2. 解析图床代理 URL
+  const targetUrl = isImageHostEnabled()
+    ? await getEffectiveImageUrlAsync(originalUrl)
+    : originalUrl;
+
+  // 3. 加载图片
   try {
     let blob: Blob;
 
     if (isNative) {
-      blob = await fetchNative(originalUrl);
+      blob = await fetchNative(targetUrl, originalUrl);
     } else {
-      blob = await fetchWeb(originalUrl);
+      blob = await fetchWeb(targetUrl, originalUrl);
     }
 
     // 3. 存入缓存（cacheSet 创建持久 Blob URL）
@@ -177,10 +184,20 @@ export async function loadImage(originalUrl: string): Promise<LoadedImage> {
   }
 }
 
-/** Web 模式：通过 Vite 代理获取图片 */
-async function fetchWeb(originalUrl: string): Promise<Blob> {
-  const proxyUrl = resolveImageUrl(originalUrl);
-  const resp = await fetch(proxyUrl);
+/** Web 模式：通过 Vite 代理或图床代理获取图片 */
+async function fetchWeb(targetUrl: string, originalUrl: string): Promise<Blob> {
+  const urls = getRaceCandidateUrls(targetUrl);
+
+  if (urls.length > 1) {
+    return raceFetch(urls, (url) => fetchSingleWeb(url), originalUrl);
+  }
+
+  const proxyUrl = targetUrl.startsWith("/pixiv-img/") ? targetUrl : resolveImageUrl(targetUrl);
+  return fetchSingleWeb(proxyUrl);
+}
+
+async function fetchSingleWeb(url: string): Promise<Blob> {
+  const resp = await fetch(url);
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const blob = await resp.blob();
   if (blob.size === 0) throw new Error("Empty response");
@@ -188,10 +205,20 @@ async function fetchWeb(originalUrl: string): Promise<Blob> {
 }
 
 /** Native 模式：通过 CapacitorHttp 获取图片 */
-async function fetchNative(originalUrl: string): Promise<Blob> {
+async function fetchNative(targetUrl: string, originalUrl: string): Promise<Blob> {
+  const urls = getRaceCandidateUrls(targetUrl);
+
+  if (urls.length > 1) {
+    return raceFetch(urls, (url) => fetchSingleNative(url), originalUrl);
+  }
+
+  return fetchSingleNative(targetUrl);
+}
+
+async function fetchSingleNative(url: string): Promise<Blob> {
   const resp = await CapacitorHttp.request({
     method: "GET",
-    url: originalUrl,
+    url,
     headers: {
       Referer: "https://app-api.pixiv.net/",
       "User-Agent": "PixivIOSApp/7.16.9 (iOS 16.4.1; iPad13,4)",
@@ -210,4 +237,30 @@ async function fetchNative(originalUrl: string): Promise<Blob> {
   const decoded = await fetch(dataUrl);
   if (!decoded.ok) throw new Error(`Failed to decode image: HTTP ${decoded.status}`);
   return decoded.blob();
+}
+
+/**
+ * 并发请求多个候选 URL，返回最快成功响应。
+ *
+ * 所有请求通过 Promise.any 竞速；全部失败时回退到默认代理 URL。
+ */
+async function raceFetch<T>(
+  urls: string[],
+  fetcher: (url: string) => Promise<T>,
+  fallbackUrl: string,
+): Promise<T> {
+  const pending = urls.map(async (url): Promise<T> => {
+    try {
+      return await fetcher(url);
+    } catch {
+      throw new Error(`Failed: ${url}`);
+    }
+  });
+
+  try {
+    return await Promise.any(pending);
+  } catch {
+    console.warn(`[ImageCache] All race candidates failed, fallback to ${fallbackUrl}`);
+    return fetcher(fallbackUrl);
+  }
 }
