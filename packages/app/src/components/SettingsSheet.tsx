@@ -618,147 +618,143 @@ const SettingsSheet: Component = () => {
               </div>
             </div>
 
-            {/* Divider before image host proxy */}
+            {/* Divider before image */}
             <fluent-divider style="margin-inline:20px"></fluent-divider>
 
-            {/* 图床代理入口 */}
-            <div
-              class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
-              onClick={() => {
-                closeSettingsSheet();
-                navigate("/image-host");
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
+            <div class="px-5 py-3 flex flex-col">
+              {/* 图床代理入口 */}
+              <div
+                class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
+                onClick={() => {
                   closeSettingsSheet();
                   navigate("/image-host");
-                }
-              }}
-              role="button"
-              tabindex="0"
-              aria-label="图床代理"
-            >
-              <div class="flex items-center gap-3">
-                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
-                  <FluentIcon name="image" size={24} />
-                </div>
-                <div>
-                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                    图床代理
-                  </p>
-                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                    {imageHostState().masterEnabled
-                      ? `${modeLabel(imageHostState().mode)} · ${imageHostState().hosts.filter((h) => h.enabled).length} 个图床`
-                      : "使用默认代理"}
-                  </p>
-                </div>
-              </div>
-              <div class="flex items-center gap-2 flex-shrink-0 ml-3">
-                <fluent-switch
-                  checked={imageHostState().masterEnabled}
-                  on:change={() => {
-                    if (!imageHostState().masterEnabled) {
-                      closeSettingsSheet();
-                      navigate("/image-host");
-                    } else {
-                      setMasterEnabled(false);
-                    }
-                  }}
-                  aria-label="启用图床代理"
-                  onClick={(e: MouseEvent) => e.stopPropagation()}
-                />
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                  class="text-[var(--colorNeutralForeground3)]"
-                >
-                  <path
-                    d="M8.22 4.22a.75.75 0 0 1 1.06 0l7.25 7.25a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06-1.06L15.19 12 8.22 5.28a.75.75 0 0 1 0-1.06z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* Divider before cache size */}
-            <fluent-divider style="margin-inline:20px"></fluent-divider>
-
-            {/* Image cache size */}
-            <div class="py-3">
-              <div class="flex items-center justify-between mb-2">
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    closeSettingsSheet();
+                    navigate("/image-host");
+                  }
+                }}
+                role="button"
+                tabindex="0"
+                aria-label="图床代理"
+              >
                 <div class="flex items-center gap-3">
                   <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
-                    <FluentIcon name="server" size={24} />
+                    <FluentIcon name="image" size={24} />
                   </div>
-                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                    图片缓存数
-                  </p>
+                  <div>
+                    <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                      图床代理
+                    </p>
+                    <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                      {imageHostState().masterEnabled
+                        ? `${modeLabel(imageHostState().mode)} · ${imageHostState().hosts.filter((h) => h.enabled).length} 个图床`
+                        : "使用默认代理"}
+                    </p>
+                  </div>
                 </div>
-                <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorCompoundBrandForeground1)]">
-                  {cacheSize()}
-                </span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">
-                  100
-                </span>
-                <input
-                  type="range"
-                  min="100"
-                  max="1000"
-                  step="100"
-                  value={cacheSize()}
-                  onInput={(e) => setCacheSize(Number(e.currentTarget.value))}
-                  class="flex-1 h-1 rounded-[var(--borderRadiusCircular)] cursor-pointer"
-                  style={{
-                    "accent-color": "var(--colorCompoundBrandBackground)",
-                  }}
-                />
-                <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">
-                  1000
-                </span>
-              </div>
-              <p class="mt-2 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                缓存数越大，图片加载越快，但占用的内存也越多。推荐 400~600。
-              </p>
-            </div>
-
-            {/* Divider before DoH */}
-            <fluent-divider style="margin-inline:20px"></fluent-divider>
-
-            {/* 自定义 DNS 解析（实验性，仅 Android） */}
-            <div class="flex items-center justify-between py-3">
-              <div class="flex items-center gap-3">
-                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <div class="flex items-center gap-2 flex-shrink-0 ml-3">
+                  <fluent-switch
+                    checked={imageHostState().masterEnabled}
+                    on:change={() => {
+                      if (!imageHostState().masterEnabled) {
+                        closeSettingsSheet();
+                        navigate("/image-host");
+                      } else {
+                        setMasterEnabled(false);
+                      }
+                    }}
+                    aria-label="启用图床代理"
+                    onClick={(e: MouseEvent) => e.stopPropagation()}
+                  />
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    class="text-[var(--colorNeutralForeground3)]"
+                  >
                     <path
-                      d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm1.75 5.44l-1.22-1.22a.75.75 0 0 0-1.06 0l-1.22 1.22a.75.75 0 1 0 1.06 1.06l.69-.69v4.19a.75.75 0 0 0 1.5 0V8.81l.69.69a.75.75 0 0 0 1.06-1.06z"
+                      d="M8.22 4.22a.75.75 0 0 1 1.06 0l7.25 7.25a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06-1.06L15.19 12 8.22 5.28a.75.75 0 0 1 0-1.06z"
                       fill="currentColor"
                     />
                   </svg>
                 </div>
-                <div>
-                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                    DNS over HTTPS
-                  </p>
-                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                    实验性
-                    {Capacitor.isNativePlatform()
-                      ? " · 仅 Android 生效"
-                      : " · 仅适用于 Android 原生应用"}
-                  </p>
-                </div>
               </div>
-              <fluent-switch
-                checked={useDnsOverride()}
-                disabled={!Capacitor.isNativePlatform()}
-                on:change={() => setUseDnsOverride(!useDnsOverride())}
-                aria-label="DNS over HTTPS"
-              />
+
+              {/* Image cache size */}
+              <div class="py-3">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-3">
+                    <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                      <FluentIcon name="server" size={24} />
+                    </div>
+                    <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                      图片缓存数
+                    </p>
+                  </div>
+                  <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorCompoundBrandForeground1)]">
+                    {cacheSize()}
+                  </span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">
+                    100
+                  </span>
+                  <input
+                    type="range"
+                    min="100"
+                    max="1000"
+                    step="100"
+                    value={cacheSize()}
+                    onInput={(e) => setCacheSize(Number(e.currentTarget.value))}
+                    class="flex-1 h-1 rounded-[var(--borderRadiusCircular)] cursor-pointer"
+                    style={{
+                      "accent-color": "var(--colorCompoundBrandBackground)",
+                    }}
+                  />
+                  <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">
+                    1000
+                  </span>
+                </div>
+                <p class="mt-2 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                  缓存数越大，图片加载越快，但占用的内存也越多。推荐 400~600。
+                </p>
+              </div>
+
+              {/* 自定义 DNS 解析（实验性，仅 Android） */}
+              <div class="flex items-center justify-between py-3">
+                <div class="flex items-center gap-3">
+                  <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm1.75 5.44l-1.22-1.22a.75.75 0 0 0-1.06 0l-1.22 1.22a.75.75 0 1 0 1.06 1.06l.69-.69v4.19a.75.75 0 0 0 1.5 0V8.81l.69.69a.75.75 0 0 0 1.06-1.06z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                      DNS over HTTPS
+                    </p>
+                    <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                      实验性
+                      {Capacitor.isNativePlatform()
+                        ? " · 仅 Android 生效"
+                        : " · 仅适用于 Android 原生应用"}
+                    </p>
+                  </div>
+                </div>
+                <fluent-switch
+                  checked={useDnsOverride()}
+                  disabled={!Capacitor.isNativePlatform()}
+                  on:change={() => setUseDnsOverride(!useDnsOverride())}
+                  aria-label="DNS over HTTPS"
+                />
+              </div>
             </div>
 
             {/* Divider */}
