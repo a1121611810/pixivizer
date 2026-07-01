@@ -279,12 +279,13 @@ export function getFeedScrollY(tab?: string) {
 export async function fetchRecommended(contentType: ContentType = "illust") {
   setState("loading", true);
   setState("error", null);
+  const sourceKey = contentType === "manga" ? "recommended_manga" : "recommended_illust";
   try {
     const data = await loadRecommended(contentType);
     // Cache raw data; illusts uses filtered version
-    tabIllusts["recommended"] = data.illusts;
-    tabNextUrl["recommended"] = data.next_url;
-    if (currentTab() === "recommended") {
+    tabIllusts[sourceKey] = data.illusts;
+    tabNextUrl[sourceKey] = data.next_url;
+    if (currentTab() === "recommended" && recommendSubTab() === (contentType === "manga" ? "manga" : "illust")) {
       batch(() => {
         setState("illusts", filterFeedIllusts(data.illusts));
         setState("nextUrl", data.next_url);
