@@ -1,6 +1,7 @@
 import { type Component, Show, createSignal, createEffect, onCleanup } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import { Preferences } from "@capacitor/preferences";
+import { Capacitor } from "@capacitor/core";
 import FluentIcon from "./ui/FluentIcon";
 import {
   showSettingsSheet,
@@ -687,7 +688,7 @@ const SettingsSheet: Component = () => {
             <fluent-divider style="margin-block:4px"></fluent-divider>
 
             {/* Image cache size */}
-            <div class="px-5 py-2">
+            <div class="py-2">
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
                   <FluentIcon name="server" size={20} />
@@ -724,32 +725,26 @@ const SettingsSheet: Component = () => {
               </p>
             </div>
 
-            {/* 自定义 DNS 解析（实验性） */}
-            <div class="px-5 py-3 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm1.75 5.44l-1.22-1.22a.75.75 0 0 0-1.06 0l-1.22 1.22a.75.75 0 1 0 1.06 1.06l.69-.69v4.19a.75.75 0 0 0 1.5 0V8.81l.69.69a.75.75 0 0 0 1.06-1.06z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                    DNS over HTTPS
-                  </p>
-                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorStatusWarningForeground2)] leading-snug">
-                    实验性 - 仅 Android 生效
-                  </p>
-                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] leading-snug mt-0.5">
-                    绕过 DNS 污染直连 Pixiv
-                    API。开启后可能影响加载速度，部分网络环境可能无法正常使用。
-                  </p>
-                </div>
+            {/* 自定义 DNS 解析（实验性，仅 Android） */}
+            <div class="py-3 flex items-start justify-between gap-4">
+              <div>
+                <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                  DNS over HTTPS
+                </p>
+                <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorStatusWarningForeground2)] leading-snug">
+                  实验性
+                  {Capacitor.isNativePlatform()
+                    ? " · 仅 Android 生效"
+                    : " · 仅适用于 Android 原生应用"}
+                </p>
+                <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] leading-snug mt-0.5">
+                  绕过 DNS 污染直连 Pixiv
+                  API。开启后可能影响加载速度，部分网络环境可能无法正常使用。
+                </p>
               </div>
               <fluent-switch
                 checked={useDnsOverride()}
+                disabled={!Capacitor.isNativePlatform()}
                 on:change={() => setUseDnsOverride(!useDnsOverride())}
                 aria-label="DNS over HTTPS"
               />
