@@ -31,6 +31,7 @@ const PREF_KEY_SHOW_DETAIL_STAIRS = "show_detail_stairs";
 const PREF_KEY_AGE_CONFIRMED = "age_confirmed";
 const PREF_KEY_IS_ADULT = "is_adult";
 const PREF_KEY_AUTO_CHECK_UPDATE = "auto_check_update";
+const PREF_KEY_USE_DNS_OVERRIDE = "use_dns_override";
 const ANDROID_16_API_LEVEL = 36;
 
 // ── 主题辅助函数 ──
@@ -93,6 +94,9 @@ const initialState = () => {
     latestChangelog: "",
     isCheckingUpdate: false,
     checkCompleted: false,
+
+    // 自定义 DNS 解析（实验性，仅 Android）
+    useDnsOverride: false,
   };
 };
 
@@ -403,6 +407,27 @@ export async function loadAutoCheckUpdatePreference(): Promise<void> {
     }
   } catch (e) {
     console.warn("[uiStore] Failed to load autoCheckUpdate preference", e);
+  }
+}
+
+export const useDnsOverride = () => state.useDnsOverride;
+export async function setUseDnsOverride(enabled: boolean): Promise<void> {
+  setState("useDnsOverride", enabled);
+  try {
+    await Preferences.set({ key: PREF_KEY_USE_DNS_OVERRIDE, value: String(enabled) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist useDnsOverride", e);
+  }
+}
+
+export async function loadUseDnsOverridePreference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_USE_DNS_OVERRIDE });
+    if (value !== null) {
+      setState("useDnsOverride", value === "true");
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load useDnsOverride preference", e);
   }
 }
 

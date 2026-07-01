@@ -24,6 +24,7 @@ import {
   ageConfirmed,
   autoCheckUpdate,
   loadAutoCheckUpdatePreference,
+  loadUseDnsOverridePreference,
 } from "./stores/uiStore";
 import { checkForUpdate } from "./services/updateService";
 import {
@@ -104,6 +105,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadShowDetailStairsPreference();
     await loadAgePreference();
     await loadAutoCheckUpdatePreference();
+    await loadUseDnsOverridePreference();
 
     // Load user content moderation state
     await loadReportedIds();
