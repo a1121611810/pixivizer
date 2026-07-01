@@ -2,7 +2,7 @@
 
 - **日期**: 2026-07-01
 - **状态**: 已批准
-- **涉及范围**: imageLoader.ts
+- **涉及范围**: vite.config.ts, imageLoader.ts
 
 ## 问题
 
@@ -10,46 +10,53 @@ Web 开发模式下开启图床代理后，控制台刷满 CORS 错误：
 
 ```
 Access to fetch at 'https://i.pixiv.re/c/...' from origin 'http://localhost:5173'
-has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header
+has been blocked by CORS policy
 ```
 
-图片最终能加载（通过 `loadImage` 的 catch fallback 到 `/pixiv-img/` 代理路径），但加载变慢（需等待所有 race 候选项超时失败）。
+图片最终能加载（`loadImage` 的 catch fallback 到 `/pixiv-img/`），但加载变慢且控制台刷屏。
 
 ## 根因
 
-`fetchWeb()` 在 Web 模式下尝试直接 `fetch()` 第三方图床 URL（`i.pixiv.re`、`i.pixiv.nl` 等），这些服务器不返回 CORS 头，浏览器拦截请求。所有 race 候选项失败后 fallback 到 `i.pximg.net` 直连也会 403（缺 Referer 头）。最终 `loadImage` 的 catch 才使用 `/pixiv-img/` 代理路径成功加载。
+`fetchWeb()` 在 Web 模式下尝试直接 `fetch()` 第三方图床 URL（`i.pixiv.re`、`i.pixiv.nl`），这些服务器不返回 CORS 头。所有 race 候选项失败后 fallback 也失败（`i.pximg.net` 缺 Referer 403）。
 
-第三方图床只适合 Native 模式（CapacitorHttp 无 CORS 限制）。
+第三方图床在 Native 模式（CapacitorHttp）下正常工作，无 CORS 限制。`fetchWeb` 仅在 `isNative === false` 时调用。
 
 ## 修复方案
 
-修改 `imageLoader.ts` 的 `fetchWeb()` 函数——Web 模式下始终使用本地 `/pixiv-img/` 代理路径，不尝试直接请求第三方图床。
+三个改动：
 
-```ts
-// 改动前：尝试 race 多候选 → CORS 失败 → fallback 失败 → loadImage catch 兜底
-async function fetchWeb(targetUrl: string, originalUrl: string): Promise<Blob> {
-  const urls = getRaceCandidateUrls(targetUrl);
-  if (urls.length > 1) {
-    return raceFetch(urls, (url) => fetchSingleWeb(url), originalUrl);
-  }
-  const proxyUrl = targetUrl.startsWith("/pixiv-img/") ? targetUrl : resolveImageUrl(targetUrl);
-  return fetchSingleWeb(proxyUrl);
-}
+### 1. `vite.config.ts` — 添加第三方图床 Vite proxy 入口
 
-// 改动后：直接走本地代理，消除 CORS 错误和延迟
-async function fetchWeb(targetUrl: string, originalUrl: string): Promise<Blob> {
-  const proxyUrl = resolveImageUrl(originalUrl);
-  return fetchSingleWeb(proxyUrl);
-}
-```
+为两个内置第三方图床添加本地代理路径，Web 模式下请求先经过 Vite proxy 再转发到第三方服务器，避免 CORS：
 
-## 效果
+- `/pixiv-re/*` → `https://i.pixiv.re/*`
+- `/pixiv-nl/*` → `https://i.pixiv.nl/*`
 
-- Web 模式：无 CORS 错误，加载速度恢复正常
-- Native 模式：`fetchNative()` 不变，图床代理正常生效
+均使用已有的 `proxyAgent`（系统代理）和 `changeOrigin`。
+
+### 2. `imageLoader.ts` — 新增 `toWebProxyUrl()` 
+
+将第三方 URL 转为 Web 可用的本地代理路径：
+
+- `https://i.pixiv.re/...` → `/pixiv-re/...`
+- `https://i.pixiv.nl/...` → `/pixiv-nl/...`
+- 其他 URL（含 `i.pximg.net`）→ `/pixiv-img/...`（已有 `resolveImageUrl`）
+
+### 3. `imageLoader.ts` — 修改 `fetchWeb()`
+
+Web 模式下，race 候选项和 fallback URL 都通过 `toWebProxyUrl()` 转换为本地代理路径后请求，消除 CORS。
+
+## Web 模式下各代理模式行为
+
+| 模式 | 请求路径 | 效果 |
+|------|---------|------|
+| 并发请求 (race) | `/pixiv-re/...` + `/pixiv-nl/...` 竞速 | ✅ 最快响应 |
+| 负载均衡 (weighted) | `/pixiv-re/...` 或 `/pixiv-nl/...` 随机 | ✅ 按权重 |
+| 最快 IP (fastest-ip) | 固定一个 | ✅ 正常 |
+| 自定义图床 | fallback `/pixiv-img/...` → `i.pximg.net` | ✅ 兜底 |
 
 ## 不涉及范围
 
-- 不修改 `fetchNative()` / `fetchSingleNative()`
-- 不修改 `imageHostStore.ts`、`imageHostService.ts`、Vite config
-- 不修改任何 Native 端行为
+- `fetchNative()` / `fetchSingleNative()` 不变 — Android 原生正常
+- Android `MainActivity.java` 不变 — `shouldInterceptRequest` 无需处理第三方路径
+- `imageHostStore.ts` / `imageHostService.ts` 不变
