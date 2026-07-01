@@ -272,6 +272,53 @@ export async function fetchMixed() {
   }
 }
 
+export async function fetchMoreMixed() {
+  if (state.loading) return;
+  setState("error", null);
+
+  const illustsArr = tabIllusts["recommended_illust"] ?? [];
+  const mangaArr = tabIllusts["recommended_manga"] ?? [];
+
+  const illustOldest = illustsArr.length > 0 ? illustsArr[illustsArr.length - 1].create_date : null;
+  const mangaOldest = mangaArr.length > 0 ? mangaArr[mangaArr.length - 1].create_date : null;
+
+  const loadSource = async (key: "recommended_illust" | "recommended_manga"): Promise<boolean> => {
+    const next = tabNextUrl[key];
+    if (!next) return false;
+    setState("loading", true);
+    try {
+      const data = await loadNext(next);
+      tabIllusts[key] = [...(tabIllusts[key] || []), ...data.illusts];
+      tabNextUrl[key] = data.next_url;
+      setState("error", null);
+      return true;
+    } catch (e) {
+      setState("error", (e as { message?: string }).message ?? "加载失败");
+      return false;
+    } finally {
+      setState("loading", false);
+    }
+  };
+
+  // 优先加载当前合并列表尾部时间较早的那一路
+  const preferIllust =
+    mangaOldest === null || (illustOldest !== null && illustOldest <= mangaOldest);
+
+  const loaded = preferIllust
+    ? (await loadSource("recommended_illust")) || (await loadSource("recommended_manga"))
+    : (await loadSource("recommended_manga")) || (await loadSource("recommended_illust"));
+
+  if (loaded && currentTab() === "recommended" && recommendSubTab() === "mixed") {
+    batch(() => {
+      setState("illusts", computeMixedIllusts());
+      setState(
+        "nextUrl",
+        tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
+      );
+    });
+  }
+}
+
 export async function fetchFollow() {
   setState("loading", true);
   setState("error", null);

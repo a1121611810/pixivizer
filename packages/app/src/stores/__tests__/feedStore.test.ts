@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { loadRecommended, loadMangaRecommended } from "../../api/illust";
+import { loadRecommended, loadMangaRecommended, loadNext } from "../../api/illust";
 import { type PixivIllust } from "../../api/types";
 
 vi.mock("@capacitor/core", async () => {
@@ -135,5 +135,51 @@ describe("fetchMixed", () => {
 
     expect(illusts().map((i) => i.id)).toEqual([1]);
     expect(error()).toBeNull();
+  });
+});
+
+describe("fetchMoreMixed", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    mockCurrentTab = "recommended";
+    vi.mocked(loadRecommended).mockReset();
+    vi.mocked(loadMangaRecommended).mockReset();
+    vi.mocked(loadNext).mockReset();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    (globalThis as any).window = undefined;
+  });
+
+  it("loads more from the source with older tail first", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+      next_url: "next-illust",
+    });
+    vi.mocked(loadMangaRecommended).mockResolvedValue({
+      illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+      next_url: "next-manga",
+    });
+    vi.mocked(loadNext).mockImplementation(async (url: string) => {
+      if (url === "next-manga") {
+        return {
+          illusts: [createIllust(3, "2026-07-01T09:00:00+09:00", "manga")],
+          next_url: null,
+        };
+      }
+      return { illusts: [], next_url: null };
+    });
+
+    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, illusts } =
+      await import("../feedStore");
+    setRecommendSubTab("mixed");
+    await fetchMixed();
+    expect(illusts().map((i) => i.id)).toEqual([1, 2]);
+
+    await fetchMoreMixed();
+    expect(illusts().map((i) => i.id)).toEqual([1, 2, 3]);
+    expect(loadNext).toHaveBeenCalledWith("next-manga");
   });
 });
