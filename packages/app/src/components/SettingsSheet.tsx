@@ -90,15 +90,6 @@ const SettingsSheet: Component = () => {
     { type: "clear" } | { type: "deleteAccount" } | null
   >(null);
 
-  let imageHostSwitchRef: HTMLElement | undefined;
-
-  createEffect(() => {
-    const sw = imageHostSwitchRef as unknown as { checked?: boolean } | undefined;
-    if (sw) {
-      sw.checked = imageHostState().masterEnabled;
-    }
-  });
-
   function reconfirmAge() {
     setAgeConfirmation(false, false);
     navigate("/age-confirmation?reconfirm=true");
@@ -662,11 +653,9 @@ const SettingsSheet: Component = () => {
               </div>
               <div class="flex items-center gap-2 flex-shrink-0 ml-3">
                 <fluent-switch
-                  ref={imageHostSwitchRef}
+                  checked={imageHostState().masterEnabled}
                   on:change={() => {
-                    const sw = imageHostSwitchRef as unknown as { checked?: boolean } | undefined;
-                    const enabled = !!sw?.checked;
-                    if (enabled) {
+                    if (!imageHostState().masterEnabled) {
                       closeSettingsSheet();
                       navigate("/image-host");
                     } else {
