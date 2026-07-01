@@ -233,7 +233,12 @@ const ImageHostSettings: Component = () => {
             ref={radioGroupRef}
             value={imageHostState().mode}
             on:change={(e) => {
-              if (e.detail?.value) setMode(e.detail.value);
+              console.log("[ImageHostSettings] radio change", {
+                detail: e.detail,
+                detailType: typeof e.detail,
+                value: e.detail?.value,
+              });
+              if (e.detail?.value != null) setMode(e.detail.value);
             }}
             disabled={!imageHostState().masterEnabled}
             class="flex flex-col gap-3"
