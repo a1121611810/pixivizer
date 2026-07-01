@@ -206,21 +206,6 @@ const ImageViewer: Component<Props> = (props) => {
         })}
       </div>
 
-      {/* 底部页码指示器 */}
-      {props.imageUrls.length > 1 && (
-        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-          {props.imageUrls.map((_, i) => (
-            <div
-              class={`w-2 h-2 rounded-[var(--borderRadiusCircular)] transition-colors ${
-                i === currentPage()
-                  ? "bg-[var(--colorOverlayForeground)]"
-                  : "bg-[var(--colorOverlaySurface)]"
-              }`}
-            />
-          ))}
-        </div>
-      )}
-
       {/* 关闭按钮 */}
       <button
         class="absolute top-4 left-4 w-10 h-10 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorOverlaySurface)] text-[var(--colorOverlayForeground)] text-xl"
