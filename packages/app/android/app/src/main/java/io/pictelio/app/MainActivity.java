@@ -21,6 +21,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(PredictiveBackPlugin.class);
+        registerPlugin(PictelioHttpPlugin.class);
         super.onCreate(savedInstanceState);
         // 调试模式 — 需要时取消注释，下次启动生效（release 构建记得改回来）
         // WebView.setWebContentsDebuggingEnabled(true);

@@ -1,5 +1,7 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { ApiErrorType, type ApiError } from "./types";
+import { PictelioHttp } from "../native/PictelioHttp";
+import { useDnsOverride } from "../stores/uiStore";
 
 // ─── 端点 ───
 const PIXIV_API_BASE = "https://app-api.pixiv.net";
@@ -130,8 +132,24 @@ async function request<T>(
   try {
     let response;
     if (isNative) {
-      // 原生模式：CapacitorHttp 直连 Pixiv
-      if (method === "GET") {
+      // 原生模式
+      if (method === "POST") {
+        headers["Content-Type"] = "application/x-www-form-urlencoded";
+      }
+      if (useDnsOverride()) {
+        // 自定义 DNS：通过 OkHttp + DoH 绕过 DNS 污染
+        const resp = await PictelioHttp.request({
+          url,
+          method,
+          headers,
+          body: method === "POST" && data ? new URLSearchParams(data).toString() : undefined,
+        });
+        try {
+          response = { status: resp.status, data: JSON.parse(resp.data) };
+        } catch {
+          response = { status: resp.status, data: resp.data };
+        }
+      } else if (method === "GET") {
         response = await CapacitorHttp.request({
           method: "GET",
           url,
@@ -140,7 +158,6 @@ async function request<T>(
         });
       } else {
         const body = data ? new URLSearchParams(data).toString() : "";
-        headers["Content-Type"] = "application/x-www-form-urlencoded";
         response = await CapacitorHttp.request({ method: "POST", url, headers, data: body });
       }
     } else {
