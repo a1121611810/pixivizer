@@ -55,7 +55,7 @@ const TabFeedPage: Component<Props> = (props) => {
   // Set current tab on mount so feedStore knows which data to fetch
   onMount(() => {
     setCurrentTab(props.tab);
-    ensureLoaded();
+    void ensureLoaded();
   });
 
   // Save scroll + R18 auto refresh
