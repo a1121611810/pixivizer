@@ -18,7 +18,7 @@ import {
   setRecommendSubTab,
   type RecommendSubTab,
 } from "../stores/feedStore";
-import { setCurrentTab, setShowSettingsSheet, layoutMode } from "../stores/uiStore";
+import { setCurrentTab, openSettingsDrawer, layoutMode } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import type { PixivIllust } from "../api/types";
 import { user, isLoggedIn } from "../stores/authStore";
@@ -26,7 +26,7 @@ import UserAvatar from "../components/UserAvatar";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsSheet from "../components/SettingsSheet";
+import SettingsDrawer from "../components/SettingsDrawer";
 
 interface Props {
   tab: Tab;
@@ -78,6 +78,23 @@ const TabFeedPage: Component<Props> = (props) => {
           <header
             class="sticky top-0 z-20 surface-appbar h-12 flex items-center justify-between px-4"
             onDblClick={scrollToTop}
+            onTouchStart={(e) => {
+              if (e.touches[0].clientX < 30) {
+                (e.currentTarget as HTMLElement).dataset.swipeStart = String(e.touches[0].clientX);
+              }
+            }}
+            onTouchMove={(e) => {
+              const startX = (e.currentTarget as HTMLElement).dataset.swipeStart;
+              if (!startX) return;
+              const deltaX = e.touches[0].clientX - Number(startX);
+              if (deltaX > 50) {
+                delete (e.currentTarget as HTMLElement).dataset.swipeStart;
+                openSettingsDrawer();
+              }
+            }}
+            onTouchEnd={(e) => {
+              delete (e.currentTarget as HTMLElement).dataset.swipeStart;
+            }}
           >
             <h1
               class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0"
@@ -89,7 +106,7 @@ const TabFeedPage: Component<Props> = (props) => {
                 <span class="truncate max-w-[120px]">{user()!.name}</span>
               </Show>
             </h1>
-            <div onClick={() => setShowSettingsSheet(true)} style="display:inline-flex">
+            <div onClick={() => openSettingsDrawer()} style="display:inline-flex">
               <fluent-button
                 appearance="subtle"
                 aria-label="设置"
@@ -189,7 +206,7 @@ const TabFeedPage: Component<Props> = (props) => {
             onIllustClick={(id) => navigate(`/illust/${id}`)}
             onLoadMore={fetchMore}
             onRefresh={refresh}
-            onSettingsOpen={() => setShowSettingsSheet(true)}
+            onSettingsOpen={() => openSettingsDrawer()}
             skipAnimation={cached}
             layoutMode={layoutMode()}
             restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
@@ -199,7 +216,7 @@ const TabFeedPage: Component<Props> = (props) => {
 
       <NavBar />
 
-      <SettingsSheet />
+      <SettingsDrawer />
     </>
   );
 };

@@ -15,11 +15,11 @@ import {
 } from "../stores/bookmarkStore";
 import { user, isLoggedIn } from "../stores/authStore";
 import UserAvatar from "../components/UserAvatar";
-import { setShowSettingsSheet, setCurrentTab, layoutMode } from "../stores/uiStore";
+import { openSettingsDrawer, setCurrentTab, layoutMode } from "../stores/uiStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsSheet from "../components/SettingsSheet";
+import SettingsDrawer from "../components/SettingsDrawer";
 
 const r18Handler = () => refresh();
 
@@ -112,7 +112,7 @@ const Bookmarks: Component = () => {
             onIllustClick={(id) => navigate(`/illust/${id}`)}
             onLoadMore={fetchMore}
             onRefresh={refresh}
-            onSettingsOpen={() => setShowSettingsSheet(true)}
+            onSettingsOpen={() => openSettingsDrawer()}
             emptyText={restrict() === "public" ? "公开收藏夹为空" : "非公开收藏夹为空"}
             skipAnimation={true}
             layoutMode={layoutMode()}
@@ -123,7 +123,7 @@ const Bookmarks: Component = () => {
 
       <NavBar />
 
-      <SettingsSheet />
+      <SettingsDrawer />
     </>
   );
 };

@@ -14,11 +14,11 @@ import {
   isFeedCached,
   getFeedScrollY,
 } from "../stores/feedStore";
-import { currentTab, setShowSettingsSheet, layoutMode } from "../stores/uiStore";
+import { currentTab, openSettingsDrawer, layoutMode } from "../stores/uiStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsSheet from "../components/SettingsSheet";
+import SettingsDrawer from "../components/SettingsDrawer";
 const Feed: Component = () => {
   const navigate = useNavigate();
   const cached = isFeedCached();
@@ -57,7 +57,7 @@ const Feed: Component = () => {
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
               Pictelio
             </h1>
-            <div onClick={() => setShowSettingsSheet(true)} style="display:inline-flex">
+            <div onClick={() => openSettingsDrawer()} style="display:inline-flex">
               <fluent-button
                 appearance="subtle"
                 aria-label="设置"
@@ -81,7 +81,7 @@ const Feed: Component = () => {
             onIllustClick={(id) => navigate(`/illust/${id}`)}
             onLoadMore={fetchMore}
             onRefresh={refresh}
-            onSettingsOpen={() => setShowSettingsSheet(true)}
+            onSettingsOpen={() => openSettingsDrawer()}
             skipAnimation={cached}
             layoutMode={layoutMode()}
             restoreScrollTop={!scrollRestored && cached ? getFeedScrollY() : undefined}
@@ -91,7 +91,7 @@ const Feed: Component = () => {
 
       <NavBar />
 
-      <SettingsSheet />
+      <SettingsDrawer />
     </>
   );
 };

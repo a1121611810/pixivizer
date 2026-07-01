@@ -15,7 +15,7 @@ import { viewedUser, loadProfile } from "../stores/userStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsSheet from "../components/SettingsSheet";
+import SettingsDrawer from "../components/SettingsDrawer";
 import { layoutMode } from "../stores/uiStore";
 
 const UserIllusts: Component = () => {
@@ -107,7 +107,7 @@ const UserIllusts: Component = () => {
 
       <NavBar />
 
-      <SettingsSheet />
+      <SettingsDrawer />
     </>
   );
 };

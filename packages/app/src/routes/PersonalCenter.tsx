@@ -59,7 +59,7 @@ import {
 } from "../stores/userStore";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsSheet from "../components/SettingsSheet";
+import SettingsDrawer from "../components/SettingsDrawer";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 interface Props {
@@ -419,7 +419,7 @@ const PersonalCenter: Component<Props> = (props) => {
 
       <NavBar />
 
-      <SettingsSheet />
+      <SettingsDrawer />
     </>
   );
 };

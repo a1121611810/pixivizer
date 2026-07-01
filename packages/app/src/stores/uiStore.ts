@@ -129,12 +129,7 @@ export const setThemePersisted = async (newTheme: Theme): Promise<void> => {
   }
 };
 
-// ── 分离的 signal：设置页开关（独立于 createStore 以排除追踪问题）
-const [settingsSheetOpen, setSettingsSheetOpen] = createSignal(false);
-export const showSettingsSheet = () => settingsSheetOpen();
-export const setShowSettingsSheet = (v: boolean) => setSettingsSheetOpen(v);
-
-// ── Drawer 开关（设置抽屉，替代 SettingsSheet）
+// ── Drawer 开关
 const [drawerOpen, setDrawerOpen] = createSignal(false);
 export const showSettingsDrawer = () => drawerOpen();
 export const setShowSettingsDrawer = (v: boolean) => setDrawerOpen(v);
