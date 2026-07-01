@@ -134,6 +134,13 @@ const [settingsSheetOpen, setSettingsSheetOpen] = createSignal(false);
 export const showSettingsSheet = () => settingsSheetOpen();
 export const setShowSettingsSheet = (v: boolean) => setSettingsSheetOpen(v);
 
+// ── Drawer 开关（设置抽屉，替代 SettingsSheet）
+const [drawerOpen, setDrawerOpen] = createSignal(false);
+export const showSettingsDrawer = () => drawerOpen();
+export const setShowSettingsDrawer = (v: boolean) => setDrawerOpen(v);
+export const openSettingsDrawer = () => setDrawerOpen(true);
+export const closeSettingsDrawer = () => setDrawerOpen(false);
+
 export const layoutMode = () => state.layoutMode;
 export const setLayoutMode = async (mode: LayoutMode): Promise<void> => {
   setState("layoutMode", mode);
