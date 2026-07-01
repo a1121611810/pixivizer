@@ -105,7 +105,10 @@ function migrateLegacyState(raw: unknown): ImageHostState {
   }
 
   const mode =
-    legacy.mode === "race" || legacy.mode === "weighted" || legacy.mode === "fastest-ip" || legacy.mode === "single"
+    legacy.mode === "race" ||
+    legacy.mode === "weighted" ||
+    legacy.mode === "fastest-ip" ||
+    legacy.mode === "single"
       ? legacy.mode
       : "weighted";
 
