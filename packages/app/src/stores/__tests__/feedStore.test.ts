@@ -466,3 +466,95 @@ describe("recommended sub-tab routing", () => {
     expect(illusts().map((i) => i.id)).toEqual([5]);
   });
 });
+
+describe("recommended sub-tab regression fixes", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    mockCurrentTab = "recommended";
+    vi.mocked(loadRecommended).mockReset();
+    vi.mocked(loadNext).mockReset();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    (globalThis as any).window = undefined;
+  });
+
+  it("clears error when switching recommended sub-tab", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockRejectedValue(new Error("load fail"));
+
+    const { setRecommendSubTab, fetchMixed, error } = await import("../feedStore");
+    setRecommendSubTab("mixed");
+    await fetchMixed();
+    expect(error()).not.toBeNull();
+
+    setRecommendSubTab("illust");
+    expect(error()).toBeNull();
+  });
+
+  it("saves and restores scroll per recommended sub-tab", async () => {
+    const { setRecommendSubTab, saveTabScroll, getFeedScrollY } = await import("../feedStore");
+
+    (globalThis as any).window = { scrollY: 100 };
+    setRecommendSubTab("illust");
+    saveTabScroll("recommended");
+
+    (globalThis as any).window = { scrollY: 200 };
+    setRecommendSubTab("manga");
+    saveTabScroll("recommended");
+
+    expect(getFeedScrollY("recommended")).toBe(200);
+    setRecommendSubTab("illust");
+    expect(getFeedScrollY("recommended")).toBe(100);
+  });
+
+  it("derives mixed nextUrl from source keys and does not corrupt it on scroll save", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    mockRecommendedResponses(
+      {
+        illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+        next_url: "next-illust",
+      },
+      {
+        illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+        next_url: null,
+      },
+    );
+
+    const { setRecommendSubTab, ensureLoaded, nextUrl, saveTabScroll } =
+      await import("../feedStore");
+    setRecommendSubTab("mixed");
+    await ensureLoaded();
+    expect(nextUrl()).toBe("next-illust");
+
+    saveTabScroll("recommended");
+
+    // Leave and return to mixed; nextUrl should still be derived from source keys
+    setRecommendSubTab("illust");
+    setRecommendSubTab("mixed");
+    await ensureLoaded();
+    expect(nextUrl()).toBe("next-illust");
+  });
+
+  it("ensureLoaded resolves only after the fetch settles", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    let resolveLoad!: (value: { illusts: PixivIllust[]; next_url: string | null }) => void;
+    const loadPromise = new Promise<{ illusts: PixivIllust[]; next_url: string | null }>((r) => {
+      resolveLoad = r;
+    });
+    vi.mocked(loadRecommended).mockReturnValue(loadPromise);
+
+    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../feedStore");
+    setRecommendSubTab("illust");
+    const ensurePromise = ensureLoaded();
+    expect(illusts()).toEqual([]);
+
+    resolveLoad({
+      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+      next_url: null,
+    });
+    await ensurePromise;
+    expect(illusts().map((i) => i.id)).toEqual([1]);
+  });
+});

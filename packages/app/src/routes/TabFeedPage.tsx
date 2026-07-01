@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup, Show, createMemo } from "solid-js";
+import { type Component, onMount, onCleanup, Show, createMemo, createSignal } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
   illusts,
@@ -44,6 +44,7 @@ function scrollToTop() {
 const TabFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
   const cached = isFeedCached(props.tab);
+  const [isSwitchingSubTab, setIsSwitchingSubTab] = createSignal(false);
 
   const filteredIllusts = createMemo<PixivIllust[]>(() => {
     // Track followTab changes so filter updates immediately
@@ -157,12 +158,22 @@ const TabFeedPage: Component<Props> = (props) => {
                       "bg-transparent text-[var(--colorNeutralForeground2)]":
                         recommendSubTab() !== opt.key,
                     }}
+                    disabled={isSwitchingSubTab()}
+                    classList={{
+                      "opacity-50 cursor-not-allowed": isSwitchingSubTab(),
+                    }}
                     onClick={async () => {
-                      if (recommendSubTab() !== opt.key) {
+                      if (isSwitchingSubTab() || recommendSubTab() === opt.key) {
+                        return;
+                      }
+                      setIsSwitchingSubTab(true);
+                      try {
                         saveTabScroll(props.tab);
                         setRecommendSubTab(opt.key);
                         await ensureLoaded();
                         window.scrollTo(0, getFeedScrollY(props.tab));
+                      } finally {
+                        setIsSwitchingSubTab(false);
                       }
                     }}
                   >
