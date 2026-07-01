@@ -3,6 +3,7 @@ import type { Component } from "solid-js";
 import ImageCard from "./ImageCard";
 import LazyImageCard from "./LazyImageCard";
 import SkeletonCard from "./SkeletonCard";
+import GridCard from "./GridCard";
 import LoadingSpinner from "./LoadingSpinner";
 import PullIndicator from "./PullIndicator";
 import type { PullZone } from "./PullIndicator";
@@ -280,8 +281,14 @@ const VirtualFeed: Component<Props> = (props) => {
               <div
                 style={vs.getItemStyle(realIndex)}
                 class="bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] shadow-[var(--elevation2)]"
+                classList={{
+                  "overflow-hidden": layoutMode() === "grid",
+                  "h-full": layoutMode() === "grid",
+                }}
               >
-                {realIndex < 4 ? (
+                {layoutMode() === "grid" ? (
+                  <GridCard illust={illust} onClick={props.onIllustClick} />
+                ) : realIndex < 4 ? (
                   <ImageCard illust={illust} onClick={props.onIllustClick} />
                 ) : (
                   <LazyImageCard illust={illust} onClick={props.onIllustClick} />
