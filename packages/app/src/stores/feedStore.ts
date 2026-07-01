@@ -1,6 +1,6 @@
 import { createStore, produce } from "solid-js/store";
 import { batch, createEffect } from "solid-js";
-import { loadRecommended, loadFollow, loadNext } from "../api/illust";
+import { loadRecommended, loadMangaRecommended, loadFollow, loadNext } from "../api/illust";
 import type { PixivIllust, ContentType } from "../api/types";
 import { currentTab } from "./uiStore";
 import { filterFeedIllusts } from "../utils/r18Filter";
@@ -80,6 +80,9 @@ export function computeFollowIllusts(): PixivIllust[] {
   return filterFeedIllusts(mergeAndSort(pub, priv));
 }
 
+const byCreateDateDesc = (a: PixivIllust, b: PixivIllust) =>
+  b.create_date.localeCompare(a.create_date);
+
 /**
  * 计算综合推荐：合并插画源和漫画源，按 create_date 降序排序后过滤。
  */
@@ -88,7 +91,9 @@ export function computeMixedIllusts(): PixivIllust[] {
   const manga = tabIllusts["recommended_manga"] ?? [];
   if (illust.length === 0) return filterFeedIllusts(manga);
   if (manga.length === 0) return filterFeedIllusts(illust);
-  return filterFeedIllusts(mergeAndSort(illust, manga));
+  return filterFeedIllusts(
+    mergeAndSort(illust.toSorted(byCreateDateDesc), manga.toSorted(byCreateDateDesc)),
+  );
 }
 
 // Recompute illusts when follow tab changes (filter tabs have no effect otherwise)
@@ -211,6 +216,52 @@ export async function fetchRecommended(contentType: ContentType = "illust") {
         setState("illusts", filterFeedIllusts(data.illusts));
         setState("nextUrl", data.next_url);
       });
+    }
+  } catch (e) {
+    setState("error", (e as { message?: string }).message ?? "加载失败");
+  } finally {
+    setState("loading", false);
+  }
+}
+
+export async function fetchMixed() {
+  setState("loading", true);
+  setState("error", null);
+  const errors: string[] = [];
+
+  try {
+    const [illustResult, mangaResult] = await Promise.allSettled([
+      loadRecommended("illust"),
+      loadMangaRecommended(),
+    ]);
+
+    if (illustResult.status === "fulfilled") {
+      tabIllusts["recommended_illust"] = illustResult.value.illusts;
+      tabNextUrl["recommended_illust"] = illustResult.value.next_url;
+    } else {
+      errors.push((illustResult.reason as { message?: string }).message ?? "插画推荐加载失败");
+    }
+
+    if (mangaResult.status === "fulfilled") {
+      tabIllusts["recommended_manga"] = mangaResult.value.illusts;
+      tabNextUrl["recommended_manga"] = mangaResult.value.next_url;
+    } else {
+      errors.push((mangaResult.reason as { message?: string }).message ?? "漫画推荐加载失败");
+    }
+
+    if (currentTab() === "recommended" && recommendSubTab() === "mixed") {
+      batch(() => {
+        setState("illusts", computeMixedIllusts());
+        setState("nextUrl", tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"]);
+      });
+    }
+
+    if (errors.length > 0) {
+      if (errors.length === 2) {
+        setState("error", errors.join("; "));
+      } else {
+        console.warn("fetchMixed: partial failure —", errors.join("; "));
+      }
     }
   } catch (e) {
     setState("error", (e as { message?: string }).message ?? "加载失败");
