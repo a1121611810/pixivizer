@@ -246,6 +246,7 @@ const ImageHostSettings: Component = () => {
                   <fluent-radio
                     id={inputId}
                     value={option.value}
+                    checked={imageHostState().mode === option.value}
                     disabled={!imageHostState().masterEnabled}
                   />
                   <label
