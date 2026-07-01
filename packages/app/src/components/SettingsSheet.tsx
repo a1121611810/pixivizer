@@ -191,7 +191,7 @@ const SettingsSheet: Component = () => {
           <div
             class="absolute inset-0"
             style="background-color:var(--colorScrim)"
-            onClick={close}
+            onClick={closeSettingsSheet}
           />
 
           {/* Sheet — slides down from top */}
@@ -212,7 +212,7 @@ const SettingsSheet: Component = () => {
               <fluent-button
                 appearance="subtle"
                 aria-label="关闭设置"
-                on:click={close}
+                on:click={closeSettingsSheet}
                 style="min-width:32px;width:32px;height:32px;padding:0"
               >
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
