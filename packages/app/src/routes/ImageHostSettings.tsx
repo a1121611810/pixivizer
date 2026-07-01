@@ -4,6 +4,7 @@ import {
   imageHostState,
   setMasterEnabled,
   setMode,
+  setSelectedHostId,
   updateHost,
   resetBuiltInHost,
   resetAllBuiltInHosts,
@@ -252,6 +253,11 @@ const ImageHostSettings: Component = () => {
                 label: "最快 IP 地址",
                 desc: "探测后固定使用延迟最低的图床，30 秒刷新",
               },
+              {
+                value: "single" as const,
+                label: "单一图床",
+                desc: "指定使用某一个图床，不轮询",
+              },
             ].map((option) => {
               const inputId = `mode-${option.value}`;
               return (
@@ -285,6 +291,55 @@ const ImageHostSettings: Component = () => {
               );
             })}
           </fluent-radio-group>
+
+          {/* 单一图床模式：图床选择器 */}
+          <Show when={imageHostState().mode === "single" && imageHostState().masterEnabled}>
+            <div class="mt-3 flex flex-col gap-1.5">
+              <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
+                选择要使用的图床
+              </p>
+              <For each={imageHostState().hosts.filter((h) => h.enabled)}>
+                {(host) => (
+                  <div
+                    class="flex items-center gap-3 p-3 rounded-[var(--borderRadiusMedium)] cursor-pointer transition-colors"
+                    classList={{
+                      "bg-[var(--colorCompoundBrandBackground)] text-white":
+                        imageHostState().selectedHostId === host.id,
+                      "bg-[var(--colorNeutralBackground2)] hover:bg-[var(--colorNeutralBackground1Hover)]":
+                        imageHostState().selectedHostId !== host.id,
+                    }}
+                    onClick={() => setSelectedHostId(host.id)}
+                    role="button"
+                    tabindex="0"
+                    aria-label={`使用 ${host.name}`}
+                  >
+                    <div class="flex-1 min-w-0">
+                      <p class="[font-size:var(--fontSizeBase300)] font-semibold truncate">
+                        {host.name}
+                      </p>
+                      <p class="[font-size:var(--fontSizeBase200)] truncate opacity-80">
+                        {host.baseUrl}
+                      </p>
+                    </div>
+                    <Show when={imageHostState().selectedHostId === host.id}>
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M9 16.17L5.53 12.7a.75.75 0 0 0-1.06 1.06l4 4a.75.75 0 0 0 1.06 0l10-10a.75.75 0 0 0-1.06-1.06L9 16.17z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </Show>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Show>
         </div>
 
         {/* Host list */}

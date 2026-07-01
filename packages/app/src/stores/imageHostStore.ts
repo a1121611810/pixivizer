@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 import { Preferences } from "@capacitor/preferences";
 
-export type ImageHostMode = "race" | "weighted" | "fastest-ip";
+export type ImageHostMode = "race" | "weighted" | "fastest-ip" | "single";
 
 export interface ImageHost {
   id: string;
@@ -24,6 +24,7 @@ export interface ProbeResult {
 interface ImageHostState {
   masterEnabled: boolean;
   mode: ImageHostMode;
+  selectedHostId: string | null;
   hosts: ImageHost[];
   probeResults: ProbeResult[];
   fastestHostId: string | null;
@@ -66,6 +67,7 @@ function defaultState(): ImageHostState {
   return {
     masterEnabled: false,
     mode: "weighted",
+    selectedHostId: null,
     hosts: BUILT_IN_HOSTS.map((h) => ({ ...h })),
     probeResults: [],
     fastestHostId: null,
@@ -103,13 +105,14 @@ function migrateLegacyState(raw: unknown): ImageHostState {
   }
 
   const mode =
-    legacy.mode === "race" || legacy.mode === "weighted" || legacy.mode === "fastest-ip"
+    legacy.mode === "race" || legacy.mode === "weighted" || legacy.mode === "fastest-ip" || legacy.mode === "single"
       ? legacy.mode
       : "weighted";
 
   return {
     masterEnabled: Boolean(legacy.masterEnabled),
     mode,
+    selectedHostId: legacy.selectedHostId ?? null,
     hosts,
     probeResults: [],
     fastestHostId: legacy.fastestHostId ?? null,
@@ -144,6 +147,20 @@ export function setMode(mode: ImageHostMode): void {
     mode,
     fastestHostId: null,
     fastestHostExpiresAt: null,
+    // "single" mode auto-selects first enabled host
+    selectedHostId:
+      mode === "single"
+        ? state().selectedHostId || getEnabledHosts()[0]?.id || null
+        : state().selectedHostId,
+  };
+  setState(next);
+  void persist(next);
+}
+
+export function setSelectedHostId(hostId: string | null): void {
+  const next = {
+    ...state(),
+    selectedHostId: hostId,
   };
   setState(next);
   void persist(next);
@@ -239,7 +256,13 @@ export function setProbeResults(results: ProbeResult[]): void {
 }
 
 export function modeLabel(mode: ImageHostMode): string {
-  return mode === "race" ? "并发请求" : mode === "weighted" ? "负载均衡" : "最快 IP 地址";
+  return mode === "race"
+    ? "并发请求"
+    : mode === "weighted"
+      ? "负载均衡"
+      : mode === "fastest-ip"
+        ? "最快 IP 地址"
+        : "单一图床";
 }
 
 export async function loadImageHostPreference(): Promise<void> {

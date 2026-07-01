@@ -97,6 +97,13 @@ export function getEffectiveImageUrl(originalUrl: string): string {
   const enabled = getEnabledHosts();
   if (enabled.length === 0) return originalUrl;
 
+  if (state.mode === "single") {
+    const host = enabled.find((h) => h.id === state.selectedHostId);
+    if (host) return transformUrl(originalUrl, host.baseUrl);
+    // 无选中或选中不可用，退回到第一个启用的
+    return transformUrl(originalUrl, enabled[0].baseUrl);
+  }
+
   if (state.mode === "fastest-ip") {
     const fastest = getFastestHost();
     if (fastest) {
@@ -144,11 +151,17 @@ export async function getEffectiveImageUrlAsync(originalUrl: string): Promise<st
   return transformUrl(originalUrl, enabled[0].baseUrl);
 }
 
-/** 返回 race 模式下所有启用的候选 URL。 */
+/** 返回 race 模式下所有启用的候选 URL，single 模式下只返回选中图床的 URL。 */
 export function getRaceCandidateUrls(originalUrl: string): string[] {
   if (!isImageHostActive()) return [originalUrl];
   const enabled = getEnabledHosts();
   if (enabled.length === 0) return [originalUrl];
+  // single 模式：只返回选中图床的 URL
+  if (imageHostState().mode === "single") {
+    const host = enabled.find((h) => h.id === imageHostState().selectedHostId);
+    if (host) return [transformUrl(originalUrl, host.baseUrl)];
+    return [transformUrl(originalUrl, enabled[0].baseUrl)];
+  }
   return enabled.map((host) => transformUrl(originalUrl, host.baseUrl));
 }
 
