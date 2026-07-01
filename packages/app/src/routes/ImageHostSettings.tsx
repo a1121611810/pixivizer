@@ -1,4 +1,4 @@
-import { type Component, createSignal, Show, For } from "solid-js";
+import { type Component, createSignal, Show, For, createEffect } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
   imageHostState,
@@ -25,6 +25,25 @@ const ImageHostSettings: Component = () => {
 
   const [isProbing, setIsProbing] = createSignal(false);
   const [probeToast, setProbeToast] = createSignal<string | null>(null);
+
+  let confirmDialogRef: HTMLElement | undefined;
+  let editDialogRef: HTMLElement | undefined;
+
+  createEffect(() => {
+    if (showConfirmDialog()) {
+      (confirmDialogRef as unknown as { show?: () => void })?.show?.();
+    } else {
+      (confirmDialogRef as unknown as { hide?: () => void })?.hide?.();
+    }
+  });
+
+  createEffect(() => {
+    if (editingHost() !== null) {
+      (editDialogRef as unknown as { show?: () => void })?.show?.();
+    } else {
+      (editDialogRef as unknown as { hide?: () => void })?.hide?.();
+    }
+  });
 
   function handleToggle(enabled: boolean) {
     if (enabled) {
@@ -363,7 +382,7 @@ const ImageHostSettings: Component = () => {
       </div>
 
       {/* Confirmation dialog */}
-      <fluent-dialog open={showConfirmDialog()} on:close={cancelEnable} aria-label="开启图床代理？">
+      <fluent-dialog ref={confirmDialogRef} on:close={cancelEnable} aria-label="开启图床代理？">
         <h3 slot="title">开启图床代理？</h3>
         <div class="flex flex-col gap-2">
           <p>图片将通过你配置的第三方服务器加载。</p>
@@ -379,7 +398,7 @@ const ImageHostSettings: Component = () => {
       </fluent-dialog>
 
       {/* Edit dialog */}
-      <fluent-dialog open={editingHost() !== null} on:close={closeEdit} aria-label="编辑图床">
+      <fluent-dialog ref={editDialogRef} on:close={closeEdit} aria-label="编辑图床">
         <h3 slot="title">编辑图床</h3>
         <div class="flex flex-col gap-4 min-w-[280px]">
           <Show when={editError()}>
