@@ -81,7 +81,6 @@ const Feed: Component = () => {
           </header>
 
           <VirtualFeed
-            key={layoutMode()}
             illusts={illusts()}
             loading={loading() || refreshing()}
             error={error()}

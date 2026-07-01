@@ -108,7 +108,11 @@ export function createLayout(
 
   createEffect(async () => {
     const mode = layoutMode();
-    if (mode !== "waterfall") return;
+    if (mode !== "waterfall") {
+      // 非 waterfall 模式：清除可能残留的 worker 计算结果
+      setWorkerLayout(null);
+      return;
+    }
     const count = illusts().length;
     if (count < 10) return; // small dataset, worker overhead not worth it
     const cw = columnWidth();

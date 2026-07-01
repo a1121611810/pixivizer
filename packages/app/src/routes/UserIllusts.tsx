@@ -100,7 +100,6 @@ const UserIllusts: Component = () => {
           </div>
 
           <VirtualFeed
-            key={layoutMode()}
             illusts={illusts()}
             loading={loading()}
             error={error()}
