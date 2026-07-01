@@ -16,6 +16,10 @@ export function loadRecommended(
   });
 }
 
+export function loadMangaRecommended(): Promise<PixivIllustListResponse> {
+  return loadRecommended("manga");
+}
+
 export function loadFollow(restrict: RestrictType = "public"): Promise<PixivIllustListResponse> {
   return apiClient.get<PixivIllustListResponse>("/v2/illust/follow", {
     restrict,
