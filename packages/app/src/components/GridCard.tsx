@@ -1,7 +1,7 @@
 import { type Component, createSignal } from "solid-js";
 import type { PixivIllust } from "../api/types";
 import { listQuality } from "../stores/uiStore";
-import { addBookmark, deleteBookmark } from "../api/illust";
+import { addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import PixivImage from "./PixivImage";
 import HeartBurstEffect from "./HeartBurstEffect";
 import { resolveImageUrl } from "../utils/imageLoader";
@@ -23,9 +23,30 @@ const GridCard: Component<Props> = (props) => {
   const [bookmarked, setBookmarked] = createSignal(props.illust.is_bookmarked);
   const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
   const [privateHint, setPrivateHint] = createSignal(false);
+  const [isFollowed, setIsFollowed] = createSignal(props.illust.user.is_followed ?? false);
+  const [following, setFollowing] = createSignal(false);
 
   let longPressTimer: ReturnType<typeof setTimeout>;
   let hintTimer: ReturnType<typeof setTimeout>;
+
+  const toggleFollow = async (e: MouseEvent) => {
+    e.stopPropagation();
+    if (following()) return;
+    const prev = isFollowed();
+    setIsFollowed(!prev);
+    setFollowing(true);
+    try {
+      if (prev) {
+        await unfollowUser(props.illust.user.id);
+      } else {
+        await followUser(props.illust.user.id);
+      }
+    } catch {
+      setIsFollowed(prev);
+    } finally {
+      setFollowing(false);
+    }
+  };
 
   const showPrivateToast = () => {
     setPrivateHint(true);
@@ -142,10 +163,27 @@ const GridCard: Component<Props> = (props) => {
         )}
       </div>
       {/* Compact info bar */}
-      <div class="px-1.5 py-1 flex items-center gap-1 min-h-[32px]">
-        <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground1)] truncate flex-1 leading-tight">
+      <div class="px-1.5 py-1 flex flex-col gap-0.5 min-h-[52px] justify-center">
+        <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground1)] truncate leading-tight font-medium">
           {props.illust.title}
         </p>
+        <div class="flex items-center gap-1 min-w-0">
+          <span class="[font-size:var(--fontSizeBase75)] text-[var(--colorNeutralForeground3)] truncate flex-1 min-w-0">
+            @{props.illust.user.name}
+          </span>
+          <button
+            class="flex-shrink-0 [font-size:var(--fontSizeBase75)] font-semibold cursor-pointer select-none transition-colors active:scale-95 appearance-none border-none bg-transparent p-0 leading-none"
+            classList={{
+              "text-[var(--colorBrandForeground1)]": !isFollowed(),
+              "text-[var(--colorStatusDangerForeground2)]": isFollowed(),
+            }}
+            onClick={toggleFollow}
+            disabled={following()}
+            aria-label={isFollowed() ? "取消关注" : "关注"}
+          >
+            {following() ? "…" : isFollowed() ? "已关注" : "关注"}
+          </button>
+        </div>
       </div>
     </div>
   );
