@@ -64,6 +64,7 @@ export const BUILT_IN_HOSTS: ImageHost[] = [
 ];
 
 function defaultState(): ImageHostState {
+  console.log("[imageHostStore] defaultState called");
   return {
     masterEnabled: false,
     mode: "weighted",
@@ -76,7 +77,13 @@ function defaultState(): ImageHostState {
 }
 
 function migrateLegacyState(raw: unknown): ImageHostState {
+  console.log("[imageHostStore] migrateLegacyState input", {
+    type: typeof raw,
+    isNull: raw === null,
+    mode: (raw as any)?.mode,
+  });
   if (typeof raw !== "object" || raw === null) {
+    console.log("[imageHostStore] migrateLegacyState fallback to default");
     return defaultState();
   }
 
@@ -128,6 +135,11 @@ const [state, setState] = createSignal<ImageHostState>(defaultState());
 export const imageHostState = state;
 
 async function persist(snapshot: ImageHostState): Promise<void> {
+  console.log("[imageHostStore] persist", {
+    mode: snapshot.mode,
+    selectedHostId: snapshot.selectedHostId,
+    masterEnabled: snapshot.masterEnabled,
+  });
   try {
     await Preferences.set({ key: PREF_KEY, value: JSON.stringify(snapshot) });
   } catch (e) {
@@ -145,6 +157,7 @@ export function setMasterEnabled(enabled: boolean): void {
 }
 
 export function setMode(mode: ImageHostMode): void {
+  console.log("[imageHostStore] setMode", { mode, prevSelectedHostId: state().selectedHostId });
   const next = {
     ...state(),
     mode,
@@ -161,6 +174,7 @@ export function setMode(mode: ImageHostMode): void {
 }
 
 export function setSelectedHostId(hostId: string | null): void {
+  console.log("[imageHostStore] setSelectedHostId", { hostId });
   const next = {
     ...state(),
     selectedHostId: hostId,
@@ -271,9 +285,19 @@ export function modeLabel(mode: ImageHostMode): string {
 export async function loadImageHostPreference(): Promise<void> {
   try {
     const { value } = await Preferences.get({ key: PREF_KEY });
+    console.log("[imageHostStore] loadImageHostPreference", {
+      hasValue: value !== null,
+      valuePreview: value?.substring(0, 60),
+    });
     if (value !== null) {
       const parsed = JSON.parse(value);
       setState(migrateLegacyState(parsed));
+      console.log("[imageHostStore] loadImageHostPreference after migrate", {
+        mode: imageHostState().mode,
+        selectedHostId: imageHostState().selectedHostId,
+      });
+    } else {
+      console.log("[imageHostStore] loadImageHostPreference no saved data");
     }
   } catch (e) {
     console.warn("[imageHostStore] Failed to load preference", e);
