@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { loadRecommended, loadMangaRecommended, loadNext } from "../../api/illust";
+import { loadRecommended, loadNext } from "../../api/illust";
 import { type PixivIllust } from "../../api/types";
 
 vi.mock("@capacitor/core", async () => {
@@ -12,7 +12,6 @@ vi.mock("@capacitor/core", async () => {
 
 vi.mock("../../api/illust", () => ({
   loadRecommended: vi.fn(),
-  loadMangaRecommended: vi.fn(),
   loadFollow: vi.fn(),
   loadNext: vi.fn(),
 }));
@@ -55,6 +54,16 @@ function createIllust(
   } as PixivIllust;
 }
 
+function mockRecommendedResponses(
+  illustResponse: { illusts: PixivIllust[]; next_url: string | null },
+  mangaResponse: { illusts: PixivIllust[]; next_url: string | null },
+) {
+  vi.mocked(loadRecommended).mockImplementation(async (type) => {
+    if (type === "manga") return mangaResponse;
+    return illustResponse;
+  });
+}
+
 describe("saveTabScroll", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -91,7 +100,6 @@ describe("fetchMixed", () => {
     vi.resetModules();
     mockCurrentTab = "recommended";
     vi.mocked(loadRecommended).mockReset();
-    vi.mocked(loadMangaRecommended).mockReset();
   });
 
   afterEach(() => {
@@ -101,17 +109,19 @@ describe("fetchMixed", () => {
 
   it("merges illust and manga by create_date descending", async () => {
     (globalThis as any).window = { scrollY: 0 };
-    vi.mocked(loadRecommended).mockResolvedValue({
-      illusts: [
-        createIllust(1, "2026-07-01T09:00:00+09:00", "illust"),
-        createIllust(3, "2026-07-01T11:00:00+09:00", "illust"),
-      ],
-      next_url: "https://app-api.pixiv.net/v1/illust/recommended?content_type=illust&offset=30",
-    });
-    vi.mocked(loadMangaRecommended).mockResolvedValue({
-      illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
-      next_url: "https://app-api.pixiv.net/v1/illust/recommended?content_type=manga&offset=30",
-    });
+    mockRecommendedResponses(
+      {
+        illusts: [
+          createIllust(1, "2026-07-01T09:00:00+09:00", "illust"),
+          createIllust(3, "2026-07-01T11:00:00+09:00", "illust"),
+        ],
+        next_url: "https://app-api.pixiv.net/v1/illust/recommended?content_type=illust&offset=30",
+      },
+      {
+        illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+        next_url: "https://app-api.pixiv.net/v1/illust/recommended?content_type=manga&offset=30",
+      },
+    );
 
     const { setRecommendSubTab, illusts, fetchMixed } = await import("../feedStore");
     setRecommendSubTab("mixed");
@@ -123,11 +133,10 @@ describe("fetchMixed", () => {
 
   it("shows partial data when one source fails", async () => {
     (globalThis as any).window = { scrollY: 0 };
-    vi.mocked(loadRecommended).mockResolvedValue({
-      illusts: [createIllust(1, "2026-07-01T09:00:00+09:00", "illust")],
-      next_url: null,
+    vi.mocked(loadRecommended).mockImplementation(async (type) => {
+      if (type === "manga") throw new Error("manga error");
+      return { illusts: [createIllust(1, "2026-07-01T09:00:00+09:00", "illust")], next_url: null };
     });
-    vi.mocked(loadMangaRecommended).mockRejectedValue(new Error("manga error"));
 
     const { setRecommendSubTab, illusts, error, fetchMixed } = await import("../feedStore");
     setRecommendSubTab("mixed");
@@ -143,7 +152,6 @@ describe("fetchMoreMixed", () => {
     vi.resetModules();
     mockCurrentTab = "recommended";
     vi.mocked(loadRecommended).mockReset();
-    vi.mocked(loadMangaRecommended).mockReset();
     vi.mocked(loadNext).mockReset();
   });
 
@@ -154,14 +162,16 @@ describe("fetchMoreMixed", () => {
 
   it("loads more from the source with older tail first", async () => {
     (globalThis as any).window = { scrollY: 0 };
-    vi.mocked(loadRecommended).mockResolvedValue({
-      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
-      next_url: "next-illust",
-    });
-    vi.mocked(loadMangaRecommended).mockResolvedValue({
-      illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
-      next_url: "next-manga",
-    });
+    mockRecommendedResponses(
+      {
+        illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+        next_url: "next-illust",
+      },
+      {
+        illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+        next_url: "next-manga",
+      },
+    );
     vi.mocked(loadNext).mockImplementation(async (url: string) => {
       if (url === "next-manga") {
         return {
@@ -185,14 +195,16 @@ describe("fetchMoreMixed", () => {
 
   it("falls back to the other source when the preferred source has no next_url", async () => {
     (globalThis as any).window = { scrollY: 0 };
-    vi.mocked(loadRecommended).mockResolvedValue({
-      illusts: [createIllust(1, "2026-07-01T10:00:00+09:00", "illust")],
-      next_url: null,
-    });
-    vi.mocked(loadMangaRecommended).mockResolvedValue({
-      illusts: [createIllust(2, "2026-07-01T12:00:00+09:00", "manga")],
-      next_url: "next-manga",
-    });
+    mockRecommendedResponses(
+      {
+        illusts: [createIllust(1, "2026-07-01T10:00:00+09:00", "illust")],
+        next_url: null,
+      },
+      {
+        illusts: [createIllust(2, "2026-07-01T12:00:00+09:00", "manga")],
+        next_url: "next-manga",
+      },
+    );
     vi.mocked(loadNext).mockResolvedValue({
       illusts: [createIllust(3, "2026-07-01T09:00:00+09:00", "manga")],
       next_url: null,
@@ -210,14 +222,16 @@ describe("fetchMoreMixed", () => {
 
   it("clears error on successful load", async () => {
     (globalThis as any).window = { scrollY: 0 };
-    vi.mocked(loadRecommended).mockResolvedValue({
-      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
-      next_url: "next-illust",
-    });
-    vi.mocked(loadMangaRecommended).mockResolvedValue({
-      illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
-      next_url: "next-manga",
-    });
+    mockRecommendedResponses(
+      {
+        illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+        next_url: "next-illust",
+      },
+      {
+        illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+        next_url: "next-manga",
+      },
+    );
     vi.mocked(loadNext).mockResolvedValue({
       illusts: [createIllust(3, "2026-07-01T09:00:00+09:00", "manga")],
       next_url: null,
@@ -234,14 +248,16 @@ describe("fetchMoreMixed", () => {
 
   it("does not surface error when fallback succeeds", async () => {
     (globalThis as any).window = { scrollY: 0 };
-    vi.mocked(loadRecommended).mockResolvedValue({
-      illusts: [createIllust(1, "2026-07-01T10:00:00+09:00", "illust")],
-      next_url: "next-illust",
-    });
-    vi.mocked(loadMangaRecommended).mockResolvedValue({
-      illusts: [createIllust(2, "2026-07-01T12:00:00+09:00", "manga")],
-      next_url: "next-manga",
-    });
+    mockRecommendedResponses(
+      {
+        illusts: [createIllust(1, "2026-07-01T10:00:00+09:00", "illust")],
+        next_url: "next-illust",
+      },
+      {
+        illusts: [createIllust(2, "2026-07-01T12:00:00+09:00", "manga")],
+        next_url: "next-manga",
+      },
+    );
     vi.mocked(loadNext).mockImplementation(async (url: string) => {
       if (url === "next-illust") {
         throw new Error("illust load failed");
@@ -265,14 +281,16 @@ describe("fetchMoreMixed", () => {
 
   it("aggregates errors when both sources fail", async () => {
     (globalThis as any).window = { scrollY: 0 };
-    vi.mocked(loadRecommended).mockResolvedValue({
-      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
-      next_url: "next-illust",
-    });
-    vi.mocked(loadMangaRecommended).mockResolvedValue({
-      illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
-      next_url: "next-manga",
-    });
+    mockRecommendedResponses(
+      {
+        illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+        next_url: "next-illust",
+      },
+      {
+        illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+        next_url: "next-manga",
+      },
+    );
     vi.mocked(loadNext).mockImplementation(async (url: string) => {
       if (url === "next-manga") {
         throw new Error("manga load failed");
@@ -280,13 +298,171 @@ describe("fetchMoreMixed", () => {
       throw new Error("illust load failed");
     });
 
-    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, error } =
-      await import("../feedStore");
+    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, error } = await import("../feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
 
     await fetchMoreMixed();
     expect(error()).toContain("illust load failed");
     expect(error()).toContain("manga load failed");
+  });
+});
+
+describe("recommended sub-tab routing", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    mockCurrentTab = "recommended";
+    vi.mocked(loadRecommended).mockReset();
+    vi.mocked(loadNext).mockReset();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    (globalThis as any).window = undefined;
+  });
+
+  it("ensureLoaded loads illust recommended when sub-tab is illust", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+      next_url: "next-illust",
+    });
+
+    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../feedStore");
+    setRecommendSubTab("illust");
+    await ensureLoaded();
+    await vi.waitFor(() => illusts().length > 0);
+
+    expect(loadRecommended).toHaveBeenCalledWith("illust");
+    expect(illusts().map((i) => i.id)).toEqual([1]);
+  });
+
+  it("ensureLoaded loads manga recommended when sub-tab is manga", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(2, "2026-07-01T12:00:00+09:00", "manga")],
+      next_url: "next-manga",
+    });
+
+    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../feedStore");
+    setRecommendSubTab("manga");
+    await ensureLoaded();
+    await vi.waitFor(() => illusts().length > 0);
+
+    expect(loadRecommended).toHaveBeenCalledWith("manga");
+    expect(illusts().map((i) => i.id)).toEqual([2]);
+  });
+
+  it("ensureLoaded loads both sources when sub-tab is mixed", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    mockRecommendedResponses(
+      {
+        illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+        next_url: "next-illust",
+      },
+      {
+        illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+        next_url: "next-manga",
+      },
+    );
+
+    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../feedStore");
+    setRecommendSubTab("mixed");
+    await ensureLoaded();
+    await vi.waitFor(() => illusts().length > 0);
+
+    expect(loadRecommended).toHaveBeenCalledWith("illust");
+    expect(loadRecommended).toHaveBeenCalledWith("manga");
+    expect(illusts().map((i) => i.id)).toEqual([1, 2]);
+  });
+
+  it("refresh loads the active sub-tab", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(3, "2026-07-01T12:00:00+09:00", "illust")],
+      next_url: "next-illust",
+    });
+
+    const { setRecommendSubTab, refresh } = await import("../feedStore");
+    setRecommendSubTab("illust");
+    await refresh();
+
+    expect(loadRecommended).toHaveBeenCalledWith("illust");
+  });
+
+  it("refresh loads both sources for mixed sub-tab", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    mockRecommendedResponses(
+      {
+        illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+        next_url: "next-illust",
+      },
+      {
+        illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+        next_url: "next-manga",
+      },
+    );
+
+    const { setRecommendSubTab, refresh } = await import("../feedStore");
+    setRecommendSubTab("mixed");
+    await refresh();
+
+    expect(loadRecommended).toHaveBeenCalledWith("illust");
+    expect(loadRecommended).toHaveBeenCalledWith("manga");
+  });
+
+  it("fetchMore loads next page for illust sub-tab", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+      next_url: "next-illust",
+    });
+    vi.mocked(loadNext).mockResolvedValue({
+      illusts: [createIllust(3, "2026-07-01T11:00:00+09:00", "illust")],
+      next_url: null,
+    });
+
+    const { setRecommendSubTab, ensureLoaded, fetchMore, illusts } = await import("../feedStore");
+    setRecommendSubTab("illust");
+    await ensureLoaded();
+    await fetchMore();
+
+    expect(loadNext).toHaveBeenCalledWith("next-illust");
+    expect(illusts().map((i) => i.id)).toEqual([1, 3]);
+  });
+
+  it("fetchMore loads next page for manga sub-tab", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(2, "2026-07-01T12:00:00+09:00", "manga")],
+      next_url: "next-manga",
+    });
+    vi.mocked(loadNext).mockResolvedValue({
+      illusts: [createIllust(4, "2026-07-01T11:00:00+09:00", "manga")],
+      next_url: null,
+    });
+
+    const { setRecommendSubTab, ensureLoaded, fetchMore, illusts } = await import("../feedStore");
+    setRecommendSubTab("manga");
+    await ensureLoaded();
+    await fetchMore();
+
+    expect(loadNext).toHaveBeenCalledWith("next-manga");
+    expect(illusts().map((i) => i.id)).toEqual([2, 4]);
+  });
+
+  it("fetchManga delegates to fetchRecommended('manga')", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(5, "2026-07-01T12:00:00+09:00", "manga")],
+      next_url: "next-manga",
+    });
+
+    const { setRecommendSubTab, fetchManga, illusts } = await import("../feedStore");
+    setRecommendSubTab("manga");
+    await fetchManga();
+
+    expect(loadRecommended).toHaveBeenCalledWith("manga");
+    expect(illusts().map((i) => i.id)).toEqual([5]);
   });
 });

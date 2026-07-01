@@ -14,6 +14,9 @@ import {
   getFeedScrollY,
   followTab,
   setFollowTab,
+  recommendSubTab,
+  setRecommendSubTab,
+  type RecommendSubTab,
 } from "../stores/feedStore";
 import { setCurrentTab, setShowSettingsSheet, layoutMode } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
@@ -88,10 +91,7 @@ const TabFeedPage: Component<Props> = (props) => {
                 <span class="truncate max-w-[120px]">{user()!.name}</span>
               </Show>
             </h1>
-            <div
-              onClick={() => setShowSettingsSheet(true)}
-              style="display:inline-flex"
-            >
+            <div onClick={() => setShowSettingsSheet(true)} style="display:inline-flex">
               <fluent-button
                 appearance="subtle"
                 aria-label="设置"
@@ -127,6 +127,37 @@ const TabFeedPage: Component<Props> = (props) => {
                     onClick={() => {
                       if (followTab() !== opt.key) {
                         setFollowTab(opt.key);
+                      }
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Show>
+
+          {/* ── 推荐页子标签 ── */}
+          <Show when={props.tab === "recommended"}>
+            <div class="sticky top-12 z-10 surface-appbar px-4 pb-2" onDblClick={scrollToTop}>
+              <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
+                {[
+                  { key: "mixed" as RecommendSubTab, label: "综合" },
+                  { key: "illust" as RecommendSubTab, label: "插画" },
+                  { key: "manga" as RecommendSubTab, label: "漫画" },
+                ].map((opt) => (
+                  <button
+                    class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
+                    classList={{
+                      "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
+                        recommendSubTab() === opt.key,
+                      "bg-transparent text-[var(--colorNeutralForeground2)]":
+                        recommendSubTab() !== opt.key,
+                    }}
+                    onClick={() => {
+                      if (recommendSubTab() !== opt.key) {
+                        setRecommendSubTab(opt.key);
+                        ensureLoaded();
                       }
                     }}
                   >

@@ -1,6 +1,6 @@
 import { createStore, produce } from "solid-js/store";
 import { batch, createEffect } from "solid-js";
-import { loadRecommended, loadMangaRecommended, loadFollow, loadNext } from "../api/illust";
+import { loadRecommended, loadFollow, loadNext } from "../api/illust";
 import type { PixivIllust, ContentType } from "../api/types";
 import { currentTab } from "./uiStore";
 import { filterFeedIllusts } from "../utils/r18Filter";
@@ -23,7 +23,8 @@ const [state, setState] = createStore({
 // Follow-specific keys used:
 //   tabIllusts["follow_public"], tabNextUrl["follow_public"]
 //   tabIllusts["follow_private"], tabNextUrl["follow_private"]
-// Non-follow tabs keep using tabIllusts["recommended"] etc.
+// Recommended sub-tab keys:
+//   tabIllusts["recommended_mixed"], tabIllusts["recommended_illust"], tabIllusts["recommended_manga"]
 const tabScrollY: Record<string, number> = {};
 const tabIllusts: Record<string, PixivIllust[]> = {};
 const tabNextUrl: Record<string, string | null> = {};
@@ -103,6 +104,28 @@ createEffect(() => {
   if (tab === "follow") {
     batch(() => {
       setState("illusts", computeFollowIllusts());
+    });
+  }
+});
+
+// Recompute illusts when recommended sub-tab changes
+// (caller must have loaded the underlying source data first)
+createEffect(() => {
+  const tab = currentTab();
+  const subTab = recommendSubTab();
+  if (tab === "recommended") {
+    batch(() => {
+      if (subTab === "mixed") {
+        setState("illusts", computeMixedIllusts());
+        setState(
+          "nextUrl",
+          tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
+        );
+      } else {
+        const sourceKey = subTab === "illust" ? "recommended_illust" : "recommended_manga";
+        setState("illusts", filterFeedIllusts(tabIllusts[sourceKey] ?? []));
+        setState("nextUrl", tabNextUrl[sourceKey] || null);
+      }
     });
   }
 });
@@ -209,9 +232,6 @@ export function ensureLoaded() {
     return;
   }
   setState("illusts", []);
-  if (tab === "recommended") {
-    fetchRecommended();
-  }
   tabLoaded[tab] = true;
 }
 
@@ -260,7 +280,15 @@ export function markFeedMounted() {
 export function isFeedCached(tab?: string) {
   const t = tab ?? currentTab();
   if (t === "recommended") {
-    const key = `recommended_${recommendSubTab()}`;
+    const subTab = recommendSubTab();
+    if (subTab === "mixed") {
+      return (
+        tabLoaded["recommended_mixed"] ||
+        tabIllusts["recommended_illust"] !== undefined ||
+        tabIllusts["recommended_manga"] !== undefined
+      );
+    }
+    const key = `recommended_${subTab}`;
     return tabLoaded[key] || tabIllusts[key] !== undefined;
   }
   return tabLoaded[t] || tabIllusts[t] !== undefined;
@@ -285,7 +313,10 @@ export async function fetchRecommended(contentType: ContentType = "illust") {
     // Cache raw data; illusts uses filtered version
     tabIllusts[sourceKey] = data.illusts;
     tabNextUrl[sourceKey] = data.next_url;
-    if (currentTab() === "recommended" && recommendSubTab() === (contentType === "manga" ? "manga" : "illust")) {
+    if (
+      currentTab() === "recommended" &&
+      recommendSubTab() === (contentType === "manga" ? "manga" : "illust")
+    ) {
       batch(() => {
         setState("illusts", filterFeedIllusts(data.illusts));
         setState("nextUrl", data.next_url);
@@ -299,23 +330,7 @@ export async function fetchRecommended(contentType: ContentType = "illust") {
 }
 
 export async function fetchManga() {
-  setState("loading", true);
-  setState("error", null);
-  try {
-    const data = await loadMangaRecommended();
-    tabIllusts["recommended_manga"] = data.illusts;
-    tabNextUrl["recommended_manga"] = data.next_url;
-    if (currentTab() === "recommended" && recommendSubTab() === "manga") {
-      batch(() => {
-        setState("illusts", filterFeedIllusts(data.illusts));
-        setState("nextUrl", data.next_url);
-      });
-    }
-  } catch (e) {
-    setState("error", (e as { message?: string }).message ?? "加载失败");
-  } finally {
-    setState("loading", false);
-  }
+  return fetchRecommended("manga");
 }
 
 export async function fetchMixed() {
@@ -326,7 +341,7 @@ export async function fetchMixed() {
   try {
     const [illustResult, mangaResult] = await Promise.allSettled([
       loadRecommended("illust"),
-      loadMangaRecommended(),
+      loadRecommended("manga"),
     ]);
 
     if (illustResult.status === "fulfilled") {
@@ -473,7 +488,6 @@ export async function fetchMore() {
   if (tab === "recommended" && recommendSubTab() === "mixed") {
     return fetchMoreMixed();
   }
-  // 原有 follow 逻辑保持不变...
   if (tab !== "follow") {
     const sourceKey =
       tab === "recommended"
@@ -486,6 +500,7 @@ export async function fetchMore() {
     try {
       const data = await loadNext(state.nextUrl);
       tabIllusts[sourceKey] = [...(tabIllusts[sourceKey] || []), ...data.illusts];
+      tabNextUrl[sourceKey] = data.next_url;
       batch(() => {
         setState(
           produce((s) => {
