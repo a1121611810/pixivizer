@@ -162,7 +162,7 @@ const ImageHostSettings: Component = () => {
             </div>
             <fluent-switch
               checked={imageHostState().masterEnabled}
-              on:change={(e: CustomEvent) => handleToggle(e.detail.checked)}
+              on:change={() => handleToggle(!imageHostState().masterEnabled)}
               aria-label="启用图床代理"
             />
           </div>
@@ -243,9 +243,7 @@ const ImageHostSettings: Component = () => {
                 <div class="flex items-center gap-3 p-3 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)]">
                   <fluent-checkbox
                     checked={host.enabled}
-                    on:change={(e: CustomEvent) =>
-                      updateHost(host.id, { enabled: e.detail.checked })
-                    }
+                    on:change={() => updateHost(host.id, { enabled: !host.enabled })}
                     disabled={!masterEnabled()}
                     aria-label={`启用 ${host.name}`}
                   />
@@ -403,7 +401,7 @@ const ImageHostSettings: Component = () => {
           <div class="flex items-center gap-2">
             <fluent-checkbox
               checked={editEnabled()}
-              on:change={(e: CustomEvent) => setEditEnabled(e.detail.checked)}
+              on:change={() => setEditEnabled(!editEnabled())}
             />
             <span class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground1)]">
               启用

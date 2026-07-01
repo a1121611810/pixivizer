@@ -654,8 +654,8 @@ const SettingsSheet: Component = () => {
               <div class="flex items-center gap-2 flex-shrink-0 ml-3">
                 <fluent-switch
                   checked={imageHostState().masterEnabled}
-                  on:change={(e: CustomEvent) => {
-                    const enabled = e.detail.checked;
+                  on:change={() => {
+                    const enabled = !imageHostState().masterEnabled;
                     if (enabled) {
                       closeSettingsSheet();
                       navigate("/image-host");
