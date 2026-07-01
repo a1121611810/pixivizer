@@ -32,8 +32,12 @@ const ImageHostSettings: Component = () => {
 
   createEffect(() => {
     const group = radioGroupRef as unknown as { value?: string } | undefined;
+    const mode = imageHostState().mode;
     if (group) {
-      group.value = imageHostState().mode;
+      // requestAnimationFrame 确保所有子 fluent-radio 已在 DOM 中并升级完成
+      requestAnimationFrame(() => {
+        group.value = mode;
+      });
     }
   });
 
@@ -255,6 +259,7 @@ const ImageHostSettings: Component = () => {
                   <fluent-radio
                     id={inputId}
                     value={option.value}
+                    checked={imageHostState().mode === option.value}
                     disabled={!imageHostState().masterEnabled}
                   />
                   <label
