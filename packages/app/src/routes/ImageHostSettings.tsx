@@ -233,11 +233,6 @@ const ImageHostSettings: Component = () => {
             ref={radioGroupRef}
             value={imageHostState().mode}
             on:change={(e) => {
-              console.log("[ImageHostSettings] radio change", {
-                detail: e.detail,
-                detailType: typeof e.detail,
-                value: e.detail?.value,
-              });
               if (e.detail?.value != null) setMode(e.detail.value);
             }}
             disabled={!imageHostState().masterEnabled}
@@ -274,6 +269,7 @@ const ImageHostSettings: Component = () => {
                     value={option.value}
                     checked={imageHostState().mode === option.value}
                     disabled={!imageHostState().masterEnabled}
+                    on:click={() => setMode(option.value)}
                   />
                   <label
                     for={inputId}
