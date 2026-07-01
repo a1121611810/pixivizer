@@ -30,8 +30,10 @@ export default defineConfig({
     UnoCSS(),
     VitePWA({
       registerType: "autoUpdate",
+      srcDir: "src",
+      filename: "sw.ts",
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,ico}"],
+        globPatterns: [],
         runtimeCaching: [
           {
             // Pixiv images through dev proxy
