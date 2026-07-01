@@ -170,6 +170,17 @@ const SettingsDrawer: Component = () => {
     }
   });
 
+  // Drawer 控制器 — fluent-drawer 使用 show()/hide() 方法，不支持 open 属性
+  createEffect(() => {
+    const drawerEl = document.querySelector("fluent-drawer");
+    if (!drawerEl) return;
+    if (showSettingsDrawer()) {
+      drawerEl.show();
+    } else {
+      drawerEl.hide();
+    }
+  });
+
   return (
     <>
       {/* Age gate hint toast */}
@@ -195,9 +206,10 @@ const SettingsDrawer: Component = () => {
       <fluent-drawer
         type="modal"
         position="start"
-        open={showSettingsDrawer()}
         on:toggle={(e: CustomEvent) => {
-          if (!e.detail.open) closeSettingsDrawer();
+          if (e.detail?.newState === "closed") {
+            closeSettingsDrawer();
+          }
         }}
       >
         {/* ════════════════════════════════════════════ */}

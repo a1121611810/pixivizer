@@ -78,21 +78,23 @@ const TabFeedPage: Component<Props> = (props) => {
           <header
             class="sticky top-0 z-20 surface-appbar h-12 flex items-center justify-between px-4"
             onDblClick={scrollToTop}
-            onTouchStart={(e) => {
+            on:touchstart={(e: TouchEvent) => {
               if (e.touches[0].clientX < 30) {
+                e.preventDefault();
                 (e.currentTarget as HTMLElement).dataset.swipeStart = String(e.touches[0].clientX);
               }
             }}
-            onTouchMove={(e) => {
+            on:touchmove={(e: TouchEvent) => {
               const startX = (e.currentTarget as HTMLElement).dataset.swipeStart;
               if (!startX) return;
+              e.preventDefault();
               const deltaX = e.touches[0].clientX - Number(startX);
               if (deltaX > 50) {
                 delete (e.currentTarget as HTMLElement).dataset.swipeStart;
                 openSettingsDrawer();
               }
             }}
-            onTouchEnd={(e) => {
+            on:touchend={(e: TouchEvent) => {
               delete (e.currentTarget as HTMLElement).dataset.swipeStart;
             }}
           >
