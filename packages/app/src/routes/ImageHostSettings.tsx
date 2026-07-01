@@ -30,18 +30,24 @@ const ImageHostSettings: Component = () => {
   let editDialogRef: HTMLElement | undefined;
 
   createEffect(() => {
+    const dialog = confirmDialogRef as unknown as
+      | { show?: () => void; hide?: () => void; open?: boolean }
+      | undefined;
     if (showConfirmDialog()) {
-      (confirmDialogRef as unknown as { show?: () => void })?.show?.();
-    } else {
-      (confirmDialogRef as unknown as { hide?: () => void })?.hide?.();
+      if (!dialog?.open) dialog?.show?.();
+    } else if (dialog?.open) {
+      dialog?.hide?.();
     }
   });
 
   createEffect(() => {
+    const dialog = editDialogRef as unknown as
+      | { show?: () => void; hide?: () => void; open?: boolean }
+      | undefined;
     if (editingHost() !== null) {
-      (editDialogRef as unknown as { show?: () => void })?.show?.();
-    } else {
-      (editDialogRef as unknown as { hide?: () => void })?.hide?.();
+      if (!dialog?.open) dialog?.show?.();
+    } else if (dialog?.open) {
+      dialog?.hide?.();
     }
   });
 
@@ -389,12 +395,14 @@ const ImageHostSettings: Component = () => {
           <p>这些服务器不受 Pictelio 控制，可用性、速度或隐私风险由对应服务承担。</p>
           <p>部分图床在部分地区可能无法访问，失败时会自动回退到默认代理。</p>
         </div>
-        <fluent-button slot="actions" appearance="secondary" on:click={cancelEnable}>
-          取消
-        </fluent-button>
-        <fluent-button slot="actions" appearance="primary" on:click={confirmEnable}>
-          确认开启
-        </fluent-button>
+        <div class="flex justify-end gap-2 mt-4">
+          <fluent-button appearance="secondary" on:click={cancelEnable}>
+            取消
+          </fluent-button>
+          <fluent-button appearance="primary" on:click={confirmEnable}>
+            确认开启
+          </fluent-button>
+        </div>
       </fluent-dialog>
 
       {/* Edit dialog */}
@@ -454,12 +462,14 @@ const ImageHostSettings: Component = () => {
             </div>
           </Show>
         </div>
-        <fluent-button slot="actions" appearance="secondary" on:click={closeEdit}>
-          取消
-        </fluent-button>
-        <fluent-button slot="actions" appearance="primary" on:click={saveEdit}>
-          保存
-        </fluent-button>
+        <div class="flex justify-end gap-2 mt-4">
+          <fluent-button appearance="secondary" on:click={closeEdit}>
+            取消
+          </fluent-button>
+          <fluent-button appearance="primary" on:click={saveEdit}>
+            保存
+          </fluent-button>
+        </div>
       </fluent-dialog>
     </div>
   );
