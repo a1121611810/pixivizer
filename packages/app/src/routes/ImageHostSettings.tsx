@@ -28,6 +28,14 @@ const ImageHostSettings: Component = () => {
 
   let confirmDialogRef: HTMLElement | undefined;
   let editDialogRef: HTMLElement | undefined;
+  let radioGroupRef: HTMLElement | undefined;
+
+  createEffect(() => {
+    const group = radioGroupRef as unknown as { value?: string } | undefined;
+    if (group) {
+      group.value = imageHostState().mode;
+    }
+  });
 
   createEffect(() => {
     const dialog = confirmDialogRef as unknown as
@@ -217,6 +225,7 @@ const ImageHostSettings: Component = () => {
             运行模式
           </p>
           <fluent-radio-group
+            ref={radioGroupRef}
             value={imageHostState().mode}
             on:change={(e) => setMode(e.detail.value)}
             disabled={!imageHostState().masterEnabled}
@@ -246,7 +255,6 @@ const ImageHostSettings: Component = () => {
                   <fluent-radio
                     id={inputId}
                     value={option.value}
-                    checked={imageHostState().mode === option.value}
                     disabled={!imageHostState().masterEnabled}
                   />
                   <label
