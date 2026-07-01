@@ -19,9 +19,6 @@ import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsSheet from "../components/SettingsSheet";
-
-const layoutHandler = () => refresh();
-
 const Feed: Component = () => {
   const navigate = useNavigate();
   const cached = isFeedCached();
@@ -38,11 +35,7 @@ const Feed: Component = () => {
     markFeedMounted();
   });
 
-  // 布局模式切换时刷新列表
-  onMount(() => {
-    window.addEventListener("layoutModeChanged", layoutHandler);
-    onCleanup(() => window.removeEventListener("layoutModeChanged", layoutHandler));
-  });
+  onMount(() => {});
 
   // Tab change: save old tab's scroll, restore new tab's scroll, load data
   createEffect(() => {

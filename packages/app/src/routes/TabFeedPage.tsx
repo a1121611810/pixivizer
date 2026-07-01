@@ -33,7 +33,6 @@ interface Props {
 }
 
 const r18Handler = () => refresh();
-const layoutHandler = () => refresh();
 
 function scrollToTop() {
   window.scroll(0, 0);
@@ -67,11 +66,9 @@ const TabFeedPage: Component<Props> = (props) => {
   onMount(() => {
     window.addEventListener("r18Changed", r18Handler);
     window.addEventListener("r18gChanged", r18Handler);
-    window.addEventListener("layoutModeChanged", layoutHandler);
     onCleanup(() => {
       window.removeEventListener("r18Changed", r18Handler);
       window.removeEventListener("r18gChanged", r18Handler);
-      window.removeEventListener("layoutModeChanged", layoutHandler);
     });
   });
   return (

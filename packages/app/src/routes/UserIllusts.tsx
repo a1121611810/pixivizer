@@ -41,16 +41,6 @@ const UserIllusts: Component = () => {
     onCleanup(() => window.removeEventListener("r18Changed", handler));
   });
 
-  // 布局模式切换时刷新
-  onMount(() => {
-    const layoutHandler = () => {
-      const uid = userId();
-      if (uid) load(uid, contentType());
-    };
-    window.addEventListener("layoutModeChanged", layoutHandler);
-    onCleanup(() => window.removeEventListener("layoutModeChanged", layoutHandler));
-  });
-
   return (
     <>
       <PageTransition>

@@ -22,7 +22,6 @@ import PageTransition from "../components/PageTransition";
 import SettingsSheet from "../components/SettingsSheet";
 
 const r18Handler = () => refresh();
-const layoutHandler = () => refresh();
 
 const Bookmarks: Component = () => {
   const navigate = useNavigate();
@@ -37,10 +36,8 @@ const Bookmarks: Component = () => {
 
     // R18 开关切换时自动刷新
     window.addEventListener("r18Changed", r18Handler);
-    window.addEventListener("layoutModeChanged", layoutHandler);
     onCleanup(() => {
       window.removeEventListener("r18Changed", r18Handler);
-      window.removeEventListener("layoutModeChanged", layoutHandler);
     });
   });
 
