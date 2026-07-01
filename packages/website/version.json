@@ -1,5 +1,5 @@
 {
-  "version": "2.2.2",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.2.2",
-  "changelog": "✨ 新功能\n  feat(viewer): 打开查看器时立即注入全屏加载遮罩消除白屏延迟\n  feat(viewer): 移除图片查看器底部页码圆点指示器\n  feat(viewer): 图片查看器支持加载进度与模糊预览占位\n🐛 修复\n  fix(viewer): 修复查看器关闭后滚动位置丢失的问题"
+  "version": "2.2.3",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.2.3",
+  "changelog": "🔧 其他\n  **feat(pwa): 采用自定义服务工作线程并移除静态资源预缓存策略**"
 }
