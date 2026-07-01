@@ -60,15 +60,25 @@ const ImageHostSettings: Component = () => {
     }
   }
 
+  function hideConfirmDialog() {
+    (confirmDialogRef as unknown as { hide?: () => void })?.hide?.();
+  }
+
+  function hideEditDialog() {
+    (editDialogRef as unknown as { hide?: () => void })?.hide?.();
+  }
+
   function confirmEnable() {
     setMasterEnabled(true);
     setPendingEnable(false);
     setShowConfirmDialog(false);
+    hideConfirmDialog();
   }
 
   function cancelEnable() {
     setPendingEnable(false);
     setShowConfirmDialog(false);
+    hideConfirmDialog();
   }
 
   function openEdit(host: ImageHost) {
@@ -83,6 +93,7 @@ const ImageHostSettings: Component = () => {
   function closeEdit() {
     setEditingHost(null);
     setEditError(null);
+    hideEditDialog();
   }
 
   function saveEdit() {
@@ -109,6 +120,7 @@ const ImageHostSettings: Component = () => {
       enabled: editEnabled(),
       weight: editWeight(),
     });
+    hideEditDialog();
     closeEdit();
   }
 
@@ -389,26 +401,38 @@ const ImageHostSettings: Component = () => {
 
       {/* Confirmation dialog */}
       <fluent-dialog ref={confirmDialogRef} on:close={cancelEnable} aria-label="开启图床代理？">
-        <h3 slot="title">开启图床代理？</h3>
-        <div class="flex flex-col gap-2">
-          <p>图片将通过你配置的第三方服务器加载。</p>
-          <p>这些服务器不受 Pictelio 控制，可用性、速度或隐私风险由对应服务承担。</p>
-          <p>部分图床在部分地区可能无法访问，失败时会自动回退到默认代理。</p>
-        </div>
-        <div class="flex justify-end gap-2 mt-4">
-          <fluent-button appearance="secondary" on:click={cancelEnable}>
-            取消
-          </fluent-button>
-          <fluent-button appearance="primary" on:click={confirmEnable}>
-            确认开启
-          </fluent-button>
+        <div class="p-5 flex flex-col gap-4">
+          <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+            开启图床代理？
+          </p>
+          <div class="flex flex-col gap-2">
+            <p class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground1)] leading-snug">
+              图片将通过你配置的第三方服务器加载。
+            </p>
+            <p class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground1)] leading-snug">
+              这些服务器不受 Pictelio 控制，可用性、速度或隐私风险由对应服务承担。
+            </p>
+            <p class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground1)] leading-snug">
+              部分图床在部分地区可能无法访问，失败时会自动回退到默认代理。
+            </p>
+          </div>
+          <div class="flex justify-end gap-2 mt-2">
+            <fluent-button appearance="secondary" on:click={cancelEnable}>
+              取消
+            </fluent-button>
+            <fluent-button appearance="primary" on:click={confirmEnable}>
+              确认开启
+            </fluent-button>
+          </div>
         </div>
       </fluent-dialog>
 
       {/* Edit dialog */}
       <fluent-dialog ref={editDialogRef} on:close={closeEdit} aria-label="编辑图床">
-        <h3 slot="title">编辑图床</h3>
-        <div class="flex flex-col gap-4 min-w-[280px]">
+        <div class="p-5 flex flex-col gap-4 min-w-[280px]">
+          <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+            编辑图床
+          </p>
           <Show when={editError()}>
             <fluent-message-bar intent="error">{editError()}</fluent-message-bar>
           </Show>
@@ -461,14 +485,14 @@ const ImageHostSettings: Component = () => {
               />
             </div>
           </Show>
-        </div>
-        <div class="flex justify-end gap-2 mt-4">
-          <fluent-button appearance="secondary" on:click={closeEdit}>
-            取消
-          </fluent-button>
-          <fluent-button appearance="primary" on:click={saveEdit}>
-            保存
-          </fluent-button>
+          <div class="flex justify-end gap-2 mt-2">
+            <fluent-button appearance="secondary" on:click={closeEdit}>
+              取消
+            </fluent-button>
+            <fluent-button appearance="primary" on:click={saveEdit}>
+              保存
+            </fluent-button>
+          </div>
         </div>
       </fluent-dialog>
     </div>
