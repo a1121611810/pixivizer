@@ -1,5 +1,5 @@
 {
-  "version": "2.2.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.2.0",
-  "changelog": "、## Recommended Feed\n\n- Sub-tabs for Mixed, Illust, and Manga.\n- Scroll position preserved across tab switches.\n- Guards against rapid-switching race conditions.\n\n## Image Host Proxy\n\n- Configurable u"
+  "version": "2.2.1",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.2.1",
+  "changelog": "🔧 其他\n  ✨ feat: 添加关注/粉丝列表页及设置面板个人概要区\n✨ 新功能\n  feat: TabFeedPage header opens SettingsDrawer instead of navigating to /me"
 }
