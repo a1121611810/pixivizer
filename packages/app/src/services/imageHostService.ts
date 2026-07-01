@@ -151,18 +151,19 @@ export async function getEffectiveImageUrlAsync(originalUrl: string): Promise<st
   return transformUrl(originalUrl, enabled[0].baseUrl);
 }
 
-/** 返回 race 模式下所有启用的候选 URL，single 模式下只返回选中图床的 URL。 */
+/** 返回当前模式下应请求的图片候选 URL。
+ * race 模式返回所有启用图床的 URL（并发竞速）；
+ * 其他模式只返回 fetchWeb 传入的 targetUrl 原值（已是 getEffectiveImageUrl 选定的主机）。 */
 export function getRaceCandidateUrls(originalUrl: string): string[] {
   if (!isImageHostActive()) return [originalUrl];
   const enabled = getEnabledHosts();
   if (enabled.length === 0) return [originalUrl];
-  // single 模式：只返回选中图床的 URL
-  if (imageHostState().mode === "single") {
-    const host = enabled.find((h) => h.id === imageHostState().selectedHostId);
-    if (host) return [transformUrl(originalUrl, host.baseUrl)];
-    return [transformUrl(originalUrl, enabled[0].baseUrl)];
+  // race 模式：返回所有启用主机的候选 URL
+  if (imageHostState().mode === "race") {
+    return enabled.map((host) => transformUrl(originalUrl, host.baseUrl));
   }
-  return enabled.map((host) => transformUrl(originalUrl, host.baseUrl));
+  // weighted / fastest-ip / single：URL 已由 getEffectiveImageUrl 决定，不再变更
+  return [originalUrl];
 }
 
 function isImageHostActive(): boolean {

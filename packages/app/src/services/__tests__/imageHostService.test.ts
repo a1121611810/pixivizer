@@ -114,16 +114,30 @@ describe("selection strategies", () => {
     expect(url.startsWith("https://i.pixiv")).toBe(true);
   });
 
-  it("getRaceCandidateUrls returns all enabled URLs", async () => {
+  it("getRaceCandidateUrls returns all enabled URLs in race mode", async () => {
     vi.resetModules();
     const store = await import("../../stores/imageHostStore");
     const service = await import("../imageHostService");
     await store.loadImageHostPreference();
     store.setMasterEnabled(true);
+    store.setMode("race");
 
     const original = "https://i.pximg.net/c/600x600/a.jpg";
     const urls = service.getRaceCandidateUrls(original);
     expect(urls.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("getRaceCandidateUrls returns single URL in weighted mode", async () => {
+    vi.resetModules();
+    const store = await import("../../stores/imageHostStore");
+    const service = await import("../imageHostService");
+    await store.loadImageHostPreference();
+    store.setMasterEnabled(true);
+    store.setMode("weighted");
+
+    const original = "https://i.pximg.net/c/600x600/a.jpg";
+    const urls = service.getRaceCandidateUrls(original);
+    expect(urls.length).toBe(1);
   });
 });
 
