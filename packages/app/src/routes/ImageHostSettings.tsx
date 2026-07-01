@@ -11,6 +11,10 @@ import {
 } from "../stores/imageHostStore";
 import { validateHostInput, hasDuplicateBaseUrl, probeHosts } from "../services/imageHostService";
 
+function masterEnabled(): boolean {
+  return imageHostState().masterEnabled;
+}
+
 const ImageHostSettings: Component = () => {
   const navigate = useNavigate();
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
@@ -180,6 +184,7 @@ const ImageHostSettings: Component = () => {
           <fluent-radio-group
             value={imageHostState().mode}
             on:change={(e) => setMode(e.detail.value)}
+            disabled={!masterEnabled()}
           >
             {[
               {
@@ -219,7 +224,10 @@ const ImageHostSettings: Component = () => {
         </div>
 
         {/* Host list */}
-        <div class="rounded-[var(--borderRadius2XLarge)] bg-[var(--colorNeutralBackground1)] p-4 shadow-[var(--elevation2)]">
+        <div
+          class="rounded-[var(--borderRadius2XLarge)] bg-[var(--colorNeutralBackground1)] p-4 shadow-[var(--elevation2)]"
+          classList={{ "opacity-60": !masterEnabled() }}
+        >
           <div class="flex items-center justify-between mb-3">
             <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)]">
               图床列表
@@ -238,6 +246,7 @@ const ImageHostSettings: Component = () => {
                     on:change={(e: CustomEvent) =>
                       updateHost(host.id, { enabled: e.detail.checked })
                     }
+                    disabled={!masterEnabled()}
                     aria-label={`启用 ${host.name}`}
                   />
                   <div class="flex-1 min-w-0">
@@ -260,6 +269,7 @@ const ImageHostSettings: Component = () => {
                           onInput={(e) =>
                             updateHost(host.id, { weight: Number(e.currentTarget.value) })
                           }
+                          disabled={!masterEnabled()}
                           class="flex-1 h-1 rounded-[var(--borderRadiusCircular)] cursor-pointer"
                           style={{ "accent-color": "var(--colorCompoundBrandBackground)" }}
                         />
@@ -274,6 +284,7 @@ const ImageHostSettings: Component = () => {
                       appearance="subtle"
                       aria-label="编辑"
                       on:click={() => openEdit(host)}
+                      disabled={!masterEnabled()}
                       style="min-width:32px;width:32px;height:32px;padding:0"
                     >
                       <svg
@@ -294,6 +305,7 @@ const ImageHostSettings: Component = () => {
                         appearance="subtle"
                         aria-label="重置"
                         on:click={() => resetBuiltInHost(host.id)}
+                        disabled={!masterEnabled()}
                         style="min-width:32px;width:32px;height:32px;padding:0"
                       >
                         <svg
@@ -322,7 +334,7 @@ const ImageHostSettings: Component = () => {
           <fluent-button
             appearance="primary"
             on:click={handleProbe}
-            disabled={isProbing()}
+            disabled={isProbing() || !masterEnabled()}
             class="flex-1"
           >
             <Show when={isProbing()}>
@@ -330,7 +342,12 @@ const ImageHostSettings: Component = () => {
             </Show>
             立即测速
           </fluent-button>
-          <fluent-button appearance="secondary" on:click={handleResetAll} class="flex-1">
+          <fluent-button
+            appearance="secondary"
+            on:click={handleResetAll}
+            disabled={!masterEnabled()}
+            class="flex-1"
+          >
             全部重置
           </fluent-button>
         </div>
