@@ -5,6 +5,8 @@ import type { PixivIllust, ContentType } from "../api/types";
 import { currentTab } from "./uiStore";
 import { filterFeedIllusts } from "../utils/r18Filter";
 
+export type RecommendSubTab = "mixed" | "illust" | "manga";
+
 // ── Store: reactive UI-facing state ──
 const [state, setState] = createStore({
   illusts: [] as PixivIllust[],
@@ -13,6 +15,7 @@ const [state, setState] = createStore({
   refreshing: false,
   error: null as string | null,
   followTab: "all" as "all" | "public" | "private",
+  recommendSubTab: "mixed" as RecommendSubTab,
 });
 
 // ── Tab cache (non-reactive data store) ──
@@ -35,6 +38,8 @@ export const refreshing = () => state.refreshing;
 export const error = () => state.error;
 export const followTab = () => state.followTab;
 export const setFollowTab = (t: "all" | "public" | "private") => setState("followTab", t);
+export const recommendSubTab = () => state.recommendSubTab;
+export const setRecommendSubTab = (t: RecommendSubTab) => setState("recommendSubTab", t);
 
 /**
  * 合并两个已按 create_date 降序排列的数组，保持全局时间降序。
