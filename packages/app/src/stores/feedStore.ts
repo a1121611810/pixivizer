@@ -80,6 +80,17 @@ export function computeFollowIllusts(): PixivIllust[] {
   return filterFeedIllusts(mergeAndSort(pub, priv));
 }
 
+/**
+ * 计算综合推荐：合并插画源和漫画源，按 create_date 降序排序后过滤。
+ */
+export function computeMixedIllusts(): PixivIllust[] {
+  const illust = tabIllusts["recommended_illust"] ?? [];
+  const manga = tabIllusts["recommended_manga"] ?? [];
+  if (illust.length === 0) return filterFeedIllusts(manga);
+  if (manga.length === 0) return filterFeedIllusts(illust);
+  return filterFeedIllusts(mergeAndSort(illust, manga));
+}
+
 // Recompute illusts when follow tab changes (filter tabs have no effect otherwise)
 createEffect(() => {
   const tab = currentTab();
