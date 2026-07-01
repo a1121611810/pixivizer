@@ -133,12 +133,12 @@ public class PictelioHttpPlugin extends Plugin {
                 String responseBody = response.body() != null ? response.body().string() : "";
                 ret.put("data", responseBody);
                 ret.put("headers", new JSObject());
-                getBridge().resolvePromise(call.getCallbackId(), ret);
+                call.resolve(ret);
             }
 
             @Override
             public void onFailure(Call c, IOException e) {
-                getBridge().rejectPromise(call.getCallbackId(), e.getMessage());
+                call.reject(e.getMessage());
             }
         });
     }

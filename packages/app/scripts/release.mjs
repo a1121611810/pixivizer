@@ -520,13 +520,14 @@ async function main() {
     // cap:sync 会重新生成 capacitor.build.gradle（VERSION_21），需要重新修补
     const patchedAfterSync = await patchJavaCompat();
     if (patchedAfterSync > 0) ok(`cap:sync 后重新修补 ${patchedAfterSync} 个 Gradle 文件`);
-    // 使用 /tmp/gr 作为 Gradle 缓存避免系统 .gradle 锁问题
+    // 使用临时目录避免 ~/.gradle / ~/.android 因 com.apple.provenance 不可写
     await run("./gradlew", ["assembleRelease"], {
       cwd: resolvePath(rootDir, "android"),
       stdio: "inherit",
       env: {
         ...process.env,
         GRADLE_USER_HOME: "/tmp/gr",
+        ANDROID_USER_HOME: "/tmp/android-home",
       },
     });
     ok("APK 构建成功");
