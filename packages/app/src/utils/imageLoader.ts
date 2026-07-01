@@ -197,6 +197,144 @@ export async function loadImage(originalUrl: string): Promise<LoadedImage> {
   }
 }
 
+// ─── 带进度回调的图片加载 ───
+
+export interface LoadProgress {
+  /** 已下载字节数 */
+  loaded: number;
+  /** 总字节数（Content-Length），为 null 表示未知 */
+  total: number | null;
+  /** 进度百分比 0-100；total 不可用时为 -1 */
+  percent: number;
+}
+
+export interface LoadImageResultWithProgress {
+  url: string;
+  cleanup: () => void;
+  /** 下载耗时（毫秒） */
+  durationMs: number;
+}
+
+/**
+ * 带下载进度的图片加载。
+ *
+ * - 缓存命中：立即回调 percent=100 并返回缓存 Blob URL
+ * - 未命中：通过 Web ReadableStream 或 Native XHR 实时报告进度
+ * - 下载完成后存入 LRU 缓存
+ * - 失败时降级返回代理 URL（无缓存）
+ *
+ * Web 模式使用 fetch + ReadableStream（不阻塞内存，逐 chunk 拼接）
+ * Native 模式使用 XMLHttpRequest（CapacitorHttp 不支持 streaming）
+ */
+export async function loadImageWithProgress(
+  originalUrl: string,
+  onProgress: (p: LoadProgress) => void,
+): Promise<LoadImageResultWithProgress> {
+  if (!originalUrl) {
+    return { url: "", cleanup: () => {}, durationMs: 0 };
+  }
+
+  // 1. 缓存命中 — 直接返回
+  const cachedUrl = cacheGet(originalUrl);
+  if (cachedUrl) {
+    onProgress({ loaded: 0, total: 0, percent: 100 });
+    return { url: cachedUrl, cleanup: () => {}, durationMs: 0 };
+  }
+
+  const startTime = performance.now();
+
+  try {
+    // 2. 解析目标 URL（图床代理 / 原生 URL）
+    const targetUrl = isImageHostEnabled() ? getEffectiveImageUrl(originalUrl) : originalUrl;
+
+    // 3. 带进度下载
+    let blob: Blob;
+    if (isNative) {
+      blob = await loadWithProgressNative(targetUrl, onProgress);
+    } else {
+      const proxyUrl = toWebProxyUrl(targetUrl);
+      blob = await loadWithProgressWeb(proxyUrl, onProgress);
+    }
+
+    // 4. 存入缓存
+    cacheSet(originalUrl, blob);
+
+    const url = cacheGet(originalUrl);
+    const durationMs = Math.round(performance.now() - startTime);
+
+    // 5. 最终 100% 回调
+    onProgress({ loaded: blob.size, total: blob.size, percent: 100 });
+
+    return { url: url ?? "", cleanup: () => {}, durationMs };
+  } catch (e) {
+    console.warn(`[ImageCache] LoadWithProgress failed: ${originalUrl}`, e);
+    onProgress({ loaded: 0, total: 0, percent: -1 });
+    return { url: resolveImageUrl(originalUrl), cleanup: () => {}, durationMs: 0 };
+  }
+}
+
+/** Web 模式：fetch + ReadableStream 逐 chunk 读取并报告进度 */
+async function loadWithProgressWeb(
+  proxyUrl: string,
+  onProgress: (p: LoadProgress) => void,
+): Promise<Blob> {
+  const response = await fetch(proxyUrl);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+  const contentLength = response.headers.get("Content-Length");
+  const total = contentLength ? parseInt(contentLength, 10) : null;
+  const reader = response.body!.getReader();
+  const chunks: Uint8Array[] = [];
+  let loaded = 0;
+
+  while (true) {
+    // eslint-disable-next-line no-await-in-loop — ReadableStream chunks must be read sequentially
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      chunks.push(value);
+      loaded += value.length;
+      const percent = total ? Math.round((loaded / total) * 100) : -1;
+      onProgress({ loaded, total, percent });
+    }
+  }
+
+  const contentType = response.headers.get("Content-Type") || "image/jpeg";
+  return new Blob(chunks, { type: contentType });
+}
+
+/** Native 模式：XMLHttpRequest + onprogress 事件报告进度 */
+function loadWithProgressNative(url: string, onProgress: (p: LoadProgress) => void): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.responseType = "blob";
+    xhr.setRequestHeader("Referer", "https://app-api.pixiv.net/");
+    xhr.setRequestHeader("User-Agent", "PixivIOSApp/7.16.9 (iOS 16.4.1; iPad13,4)");
+
+    xhr.addEventListener("progress", (e) => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        onProgress({ loaded: e.loaded, total: e.total, percent });
+      } else {
+        onProgress({ loaded: e.loaded, total: null, percent: -1 });
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status === 200) {
+        resolve(xhr.response as Blob);
+      } else {
+        reject(new Error(`HTTP ${xhr.status}`));
+      }
+    });
+
+    xhr.addEventListener("error", () => reject(new Error("Network error")));
+    xhr.addEventListener("timeout", () => reject(new Error("Timeout")));
+    xhr.send();
+  });
+}
+
 /** Web 模式：通过 Vite 代理或图床代理获取图片 */
 async function fetchWeb(targetUrl: string, originalUrl: string): Promise<Blob> {
   const urls = getRaceCandidateUrls(targetUrl);

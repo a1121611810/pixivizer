@@ -673,6 +673,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
         {viewerOpen() && illust()!.type !== "ugoira" && (
           <ImageViewer
             imageUrls={originalImageUrls()}
+            previewUrls={imageUrls()}
             initialPage={viewerStartPage()}
             onClose={closeViewer}
           />
