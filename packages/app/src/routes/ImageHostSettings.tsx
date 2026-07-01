@@ -87,6 +87,10 @@ const ImageHostSettings: Component = () => {
     setPendingEnable(false);
     setShowConfirmDialog(false);
     hideConfirmDialog();
+    const sw = masterSwitchRef as unknown as { checked?: boolean } | undefined;
+    if (sw) {
+      sw.checked = false;
+    }
   }
 
   function openEdit(host: ImageHost) {
