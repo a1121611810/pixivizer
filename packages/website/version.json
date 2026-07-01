@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.1.0",
-  "changelog": "虚拟化瀑布流引擎 — 替换 CSS columns 全量渲染，改用最短列算法 + 绝对定位，DOM 节点从数百降至 ~30。布局计算用 Comlink 放到 Web Worker。\n\n支持 waterfall / single / grid 三种布局\n增量追加（fetchMore 只算新增条目）\n滚动预判提前预热缓存\n视觉修复：\n\n卡片信息区高度对齐 80px，SkeletonCard 同步 78"
+  "version": "2.2.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.2.0",
+  "changelog": "、## Recommended Feed\n\n- Sub-tabs for Mixed, Illust, and Manga.\n- Scroll position preserved across tab switches.\n- Guards against rapid-switching race conditions.\n\n## Image Host Proxy\n\n- Configurable u"
 }
