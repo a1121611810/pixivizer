@@ -164,10 +164,38 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
   let ignorePageObserver = false;
   // 打开查看器前保存滚动位置，关闭后恢复
   let savedScrollBeforeViewer = 0;
+  let viewerMaskRemover: (() => void) | null = null;
 
   // Open/close viewer with global flag for Capacitor back-button handling
   function openViewer(startPage = 0) {
     savedScrollBeforeViewer = window.scrollY;
+
+    // 立即注入全屏黑底 + 旋转动画 + 0%，不等 Solid 调度
+    const mask = document.createElement("div");
+    mask.id = "viewer-transition-mask";
+    Object.assign(mask.style, {
+      position: "fixed",
+      inset: "0",
+      zIndex: "49",
+      display: "flex",
+      "flex-direction": "column",
+      "align-items": "center",
+      "justify-content": "center",
+      gap: "16px",
+    });
+    // 用 CSS 变量继承主题背景色
+    mask.style.setProperty("background-color", "var(--colorOverlayBackground)");
+    mask.innerHTML = `
+      <div style="width:48px;height:48px;border-radius:50%;
+                  border:2px solid transparent;border-top-color:var(--colorOverlayForeground);
+                  animation:spin 1s linear infinite"></div>
+      <span style="color:var(--colorOverlayForeground);
+                   font-size:var(--fontSizeHero800);
+                   font-weight:600">0%</span>
+    `;
+    document.body.appendChild(mask);
+    viewerMaskRemover = () => mask.remove();
+
     (window as any).__viewerOpen = true;
     setViewerStartPage(startPage);
     setViewerOpen(true);
@@ -178,10 +206,14 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     setViewerOpen(false);
   }
 
-  // 查看器关闭后：恢复滚动位置 + 重新观察多图 DOM
+  // 查看器关闭后：移除即时遮罩 + 恢复滚动位置 + 重新观察多图 DOM
   createEffect(() => {
     if (!viewerOpen() && !loading() && illust()) {
       requestAnimationFrame(() => {
+        // 移除即时注入的过渡遮罩
+        viewerMaskRemover?.();
+        viewerMaskRemover = null;
+
         // 恢复之前保存的滚动位置
         window.scrollTo(0, savedScrollBeforeViewer);
 
@@ -200,7 +232,12 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
       setViewerOpen(false);
     };
     window.addEventListener("closeViewer", onCloseViewer);
-    onCleanup(() => window.removeEventListener("closeViewer", onCloseViewer));
+    onCleanup(() => {
+      window.removeEventListener("closeViewer", onCloseViewer);
+      // 组件卸载时确保过渡遮罩被移除
+      viewerMaskRemover?.();
+      viewerMaskRemover = null;
+    });
   });
 
   onMount(async () => {

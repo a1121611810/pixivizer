@@ -1,4 +1,4 @@
-import { createSignal, createEffect, Show, onCleanup } from "solid-js";
+import { createSignal, createEffect, onMount, Show, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 import { checkImageCache, loadImageWithProgress } from "../utils/imageLoader";
@@ -14,15 +14,18 @@ interface Props {
 const ImageViewer: Component<Props> = (props) => {
   const [scale, setScale] = createSignal(1);
   const [position, setPosition] = createSignal({ x: 0, y: 0 });
-  const [currentPage, setCurrentPage] = createSignal(props.initialPage ?? 0);
+  const initialPage = props.initialPage ?? 0;
+  const [currentPage, setCurrentPage] = createSignal(initialPage);
   const [animating, setAnimating] = createSignal(false);
   const pbStyle = usePredictiveBackOverlayStyle();
 
-  // ── 新增：加载状态管理 ──
-  // 每页进度：-1=失败/未知, 0-99=加载中, 100=完成
-  const [progressMap, setProgressMap] = createSignal<Record<number, number>>({});
+  // ── 加载状态管理 ──
+  // 初始页立即设为 0%，不等 createEffect，消除感知延迟
+  const [progressMap, setProgressMap] = createSignal<Record<number, number>>({ [initialPage]: 0 });
   // 每页完成后的 Blob URL
   const [loadedUrls, setLoadedUrls] = createSignal<Record<number, string>>({});
+  // 跟踪已发起加载的页面，避免重复请求
+  const loadingStarted = new Set<number>();
 
   // 预览图 Blob URL：从 LRU 缓存同步读取
   const previewBlobUrl = (i: number): string | undefined => {
@@ -30,11 +33,25 @@ const ImageViewer: Component<Props> = (props) => {
     return url ? checkImageCache(url) : undefined;
   };
 
-  // 当前页变化时，若未加载则触发下载
+  // 页面变化时，若未加载则触发下载
   createEffect(() => {
     const page = currentPage();
     if (loadedUrls()[page] !== undefined) return; // 已加载
-    if (progressMap()[page] !== undefined) return; // 加载中
+    if (loadingStarted.has(page)) return; // 已发起
+    loadingStarted.add(page);
+    startLoad(page);
+  });
+
+  // 初始页在挂载时立即发起加载（进度已在初始化时设为 0，不等 createEffect）
+  onMount(() => {
+    // 移除过渡遮罩，此时 ImageViewer 自身的 spinner + 0% 已在 DOM 中可见
+    const mask = document.getElementById("viewer-transition-mask");
+    mask?.remove();
+
+    const page = currentPage();
+    if (loadedUrls()[page] !== undefined) return;
+    if (loadingStarted.has(page)) return;
+    loadingStarted.add(page);
     startLoad(page);
   });
 
