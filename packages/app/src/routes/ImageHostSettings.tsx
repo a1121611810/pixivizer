@@ -11,10 +11,6 @@ import {
 } from "../stores/imageHostStore";
 import { validateHostInput, hasDuplicateBaseUrl, probeHosts } from "../services/imageHostService";
 
-function masterEnabled(): boolean {
-  return imageHostState().masterEnabled;
-}
-
 const ImageHostSettings: Component = () => {
   const navigate = useNavigate();
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
@@ -184,7 +180,8 @@ const ImageHostSettings: Component = () => {
           <fluent-radio-group
             value={imageHostState().mode}
             on:change={(e) => setMode(e.detail.value)}
-            disabled={!masterEnabled()}
+            disabled={!imageHostState().masterEnabled}
+            class="flex flex-col gap-3"
           >
             {[
               {
@@ -203,30 +200,44 @@ const ImageHostSettings: Component = () => {
                 label: "最快 IP 地址",
                 desc: "探测后固定使用延迟最低的图床，30 秒刷新",
               },
-            ].map((option) => (
-              <fluent-radio value={option.value}>
-                <div class="ml-2">
-                  <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)]">
-                    {option.label}
-                    {option.recommended && (
-                      <span class="ml-2 px-[var(--spacingHorizontalXS)] py-[var(--spacingVerticalXXS)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase100)] font-semibold text-[var(--colorPaletteGreenForeground2)] bg-[var(--colorPaletteGreenBackground2)]">
-                        推荐
-                      </span>
-                    )}
-                  </p>
-                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
-                    {option.desc}
-                  </p>
+            ].map((option) => {
+              const inputId = `mode-${option.value}`;
+              return (
+                <div class="flex items-start gap-3">
+                  <fluent-radio
+                    id={inputId}
+                    value={option.value}
+                    disabled={!imageHostState().masterEnabled}
+                  />
+                  <label
+                    for={inputId}
+                    class="flex-1 cursor-pointer [font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground1)]"
+                    classList={{
+                      "opacity-60": !imageHostState().masterEnabled,
+                    }}
+                  >
+                    <span class="font-semibold">
+                      {option.label}
+                      {option.recommended && (
+                        <span class="ml-2 px-[var(--spacingHorizontalXS)] py-[var(--spacingVerticalXXS)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase100)] font-semibold text-[var(--colorPaletteGreenForeground2)] bg-[var(--colorPaletteGreenBackground2)]">
+                          推荐
+                        </span>
+                      )}
+                    </span>
+                    <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                      {option.desc}
+                    </p>
+                  </label>
                 </div>
-              </fluent-radio>
-            ))}
+              );
+            })}
           </fluent-radio-group>
         </div>
 
         {/* Host list */}
         <div
           class="rounded-[var(--borderRadius2XLarge)] bg-[var(--colorNeutralBackground1)] p-4 shadow-[var(--elevation2)]"
-          classList={{ "opacity-60": !masterEnabled() }}
+          classList={{ "opacity-60": !imageHostState().masterEnabled }}
         >
           <div class="flex items-center justify-between mb-3">
             <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)]">
@@ -244,7 +255,7 @@ const ImageHostSettings: Component = () => {
                   <fluent-checkbox
                     checked={host.enabled}
                     on:change={() => updateHost(host.id, { enabled: !host.enabled })}
-                    disabled={!masterEnabled()}
+                    disabled={!imageHostState().masterEnabled}
                     aria-label={`启用 ${host.name}`}
                   />
                   <div class="flex-1 min-w-0">
@@ -267,7 +278,7 @@ const ImageHostSettings: Component = () => {
                           onInput={(e) =>
                             updateHost(host.id, { weight: Number(e.currentTarget.value) })
                           }
-                          disabled={!masterEnabled()}
+                          disabled={!imageHostState().masterEnabled}
                           class="flex-1 h-1 rounded-[var(--borderRadiusCircular)] cursor-pointer"
                           style={{ "accent-color": "var(--colorCompoundBrandBackground)" }}
                         />
@@ -282,7 +293,7 @@ const ImageHostSettings: Component = () => {
                       appearance="subtle"
                       aria-label="编辑"
                       on:click={() => openEdit(host)}
-                      disabled={!masterEnabled()}
+                      disabled={!imageHostState().masterEnabled}
                       style="min-width:32px;width:32px;height:32px;padding:0"
                     >
                       <svg
@@ -303,7 +314,7 @@ const ImageHostSettings: Component = () => {
                         appearance="subtle"
                         aria-label="重置"
                         on:click={() => resetBuiltInHost(host.id)}
-                        disabled={!masterEnabled()}
+                        disabled={!imageHostState().masterEnabled}
                         style="min-width:32px;width:32px;height:32px;padding:0"
                       >
                         <svg
@@ -332,7 +343,7 @@ const ImageHostSettings: Component = () => {
           <fluent-button
             appearance="primary"
             on:click={handleProbe}
-            disabled={isProbing() || !masterEnabled()}
+            disabled={isProbing() || !imageHostState().masterEnabled}
             class="flex-1"
           >
             <Show when={isProbing()}>
@@ -343,7 +354,7 @@ const ImageHostSettings: Component = () => {
           <fluent-button
             appearance="secondary"
             on:click={handleResetAll}
-            disabled={!masterEnabled()}
+            disabled={!imageHostState().masterEnabled}
             class="flex-1"
           >
             全部重置
