@@ -138,6 +138,58 @@ export function ensureLoaded() {
     return;
   }
 
+  // Recommended tab with sub-tabs
+  if (tab === "recommended") {
+    const subTab = recommendSubTab();
+
+    if (subTab === "mixed") {
+      const illustCached = tabIllusts["recommended_illust"] !== undefined;
+      const mangaCached = tabIllusts["recommended_manga"] !== undefined;
+      if (illustCached || mangaCached) {
+        setState("illusts", computeMixedIllusts());
+        setState(
+          "nextUrl",
+          tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
+        );
+      }
+      if (!tabLoaded["recommended_mixed"]) {
+        if (!illustCached && !mangaCached) {
+          setState("illusts", []);
+        }
+        fetchMixed();
+        tabLoaded["recommended_mixed"] = true;
+      }
+      return;
+    }
+
+    const sourceKey = subTab === "illust" ? "recommended_illust" : "recommended_manga";
+    if (tabLoaded[sourceKey]) {
+      if (tabIllusts[sourceKey]) {
+        batch(() => {
+          setState("illusts", filterFeedIllusts(tabIllusts[sourceKey]));
+          setState("nextUrl", tabNextUrl[sourceKey] || null);
+        });
+      }
+      return;
+    }
+    if (tabIllusts[sourceKey]) {
+      batch(() => {
+        setState("illusts", filterFeedIllusts(tabIllusts[sourceKey]));
+        setState("nextUrl", tabNextUrl[sourceKey] || null);
+      });
+      tabLoaded[sourceKey] = true;
+      return;
+    }
+    setState("illusts", []);
+    if (subTab === "illust") {
+      fetchRecommended("illust");
+    } else {
+      fetchManga();
+    }
+    tabLoaded[sourceKey] = true;
+    return;
+  }
+
   // Non-follow tabs (recommended etc.)
   if (tabLoaded[tab]) {
     if (tabIllusts[tab]) {
@@ -168,7 +220,14 @@ export async function refresh() {
   setState("refreshing", true);
   try {
     if (tab === "recommended") {
-      await fetchRecommended();
+      const subTab = recommendSubTab();
+      if (subTab === "mixed") {
+        await fetchMixed();
+      } else if (subTab === "illust") {
+        await fetchRecommended("illust");
+      } else {
+        await fetchManga();
+      }
     } else if (tab === "follow") {
       await fetchFollow();
     }
@@ -184,6 +243,12 @@ export function saveTabScroll(tab: string) {
     tabScrollY[tab] = window.scrollY;
     return;
   }
+  if (tab === "recommended") {
+    const key = `recommended_${recommendSubTab()}`;
+    tabNextUrl[key] = state.nextUrl;
+    tabScrollY[key] = window.scrollY;
+    return;
+  }
   tabNextUrl[tab] = state.nextUrl;
   tabScrollY[tab] = window.scrollY;
 }
@@ -194,11 +259,18 @@ export function markFeedMounted() {
 
 export function isFeedCached(tab?: string) {
   const t = tab ?? currentTab();
+  if (t === "recommended") {
+    const key = `recommended_${recommendSubTab()}`;
+    return tabLoaded[key] || tabIllusts[key] !== undefined;
+  }
   return tabLoaded[t] || tabIllusts[t] !== undefined;
 }
 
 export function getFeedScrollY(tab?: string) {
   const t = tab ?? currentTab();
+  if (t === "recommended") {
+    return tabScrollY[`recommended_${recommendSubTab()}`] || 0;
+  }
   return tabScrollY[t] || 0;
 }
 
@@ -213,6 +285,26 @@ export async function fetchRecommended(contentType: ContentType = "illust") {
     tabIllusts["recommended"] = data.illusts;
     tabNextUrl["recommended"] = data.next_url;
     if (currentTab() === "recommended") {
+      batch(() => {
+        setState("illusts", filterFeedIllusts(data.illusts));
+        setState("nextUrl", data.next_url);
+      });
+    }
+  } catch (e) {
+    setState("error", (e as { message?: string }).message ?? "加载失败");
+  } finally {
+    setState("loading", false);
+  }
+}
+
+export async function fetchManga() {
+  setState("loading", true);
+  setState("error", null);
+  try {
+    const data = await loadMangaRecommended();
+    tabIllusts["recommended_manga"] = data.illusts;
+    tabNextUrl["recommended_manga"] = data.next_url;
+    if (currentTab() === "recommended" && recommendSubTab() === "manga") {
       batch(() => {
         setState("illusts", filterFeedIllusts(data.illusts));
         setState("nextUrl", data.next_url);
@@ -377,13 +469,22 @@ export async function fetchFollow() {
 export async function fetchMore() {
   if (state.loading) return;
   const tab = currentTab();
+  if (tab === "recommended" && recommendSubTab() === "mixed") {
+    return fetchMoreMixed();
+  }
+  // 原有 follow 逻辑保持不变...
   if (tab !== "follow") {
-    // Non-follow tabs — existing behavior
+    const sourceKey =
+      tab === "recommended"
+        ? recommendSubTab() === "illust"
+          ? "recommended_illust"
+          : "recommended_manga"
+        : tab;
     if (!state.nextUrl) return;
     setState("loading", true);
     try {
       const data = await loadNext(state.nextUrl);
-      tabIllusts[tab] = [...(tabIllusts[tab] || []), ...data.illusts];
+      tabIllusts[sourceKey] = [...(tabIllusts[sourceKey] || []), ...data.illusts];
       batch(() => {
         setState(
           produce((s) => {
