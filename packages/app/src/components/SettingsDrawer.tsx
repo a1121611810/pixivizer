@@ -49,10 +49,11 @@ import {
   useDnsOverride,
   setUseDnsOverride,
 } from "../stores/uiStore";
-import { isLoggedIn, logout } from "../stores/authStore";
-import { clearImageCache } from "../utils/imageLoader";
+import { isLoggedIn, logout, user } from "../stores/authStore";
+import { clearImageCache, resolveImageUrl } from "../utils/imageLoader";
 import { resetBlockedIds } from "../stores/blockStore";
 import { resetReportedIds } from "../stores/reportStore";
+import { profile, loadProfile } from "../stores/userStore";
 import BlocklistSheet from "./BlocklistSheet";
 import { checkForUpdate } from "../services/updateService";
 import { imageHostState, setMasterEnabled, modeLabel } from "../stores/imageHostStore";
@@ -80,11 +81,37 @@ function openDeleteAccountPage() {
   window.open("https://www.pixiv.net/leave.php", "_blank", "noopener,noreferrer");
 }
 
+function fmtNum(n: number | undefined): string {
+  if (n == null) return "—";
+  if (n >= 10000) return `${(n / 10000).toFixed(1)}万`;
+  return String(n);
+}
+
+function AvatarFallback(props: { class?: string }) {
+  return (
+    <div
+      class={`flex items-center justify-center bg-[var(--colorNeutralBackground2)] ${props.class || ""}`}
+    >
+      <svg
+        width="60%"
+        height="60%"
+        viewBox="0 0 24 24"
+        fill="none"
+        class="text-[var(--colorNeutralForegroundDisabled)]"
+      >
+        <circle cx="12" cy="8" r="4" fill="currentColor" />
+        <path d="M5 21c0-4 3.1-7 7-7s7 3 7 7" fill="currentColor" />
+      </svg>
+    </div>
+  );
+}
+
 const SettingsDrawer: Component = () => {
   const navigate = useNavigate();
   const [ageGateMessage, setAgeGateMessage] = createSignal<string | null>(null);
   const [showBlocklist, setShowBlocklist] = createSignal(false);
   const [actionToast, setActionToast] = createSignal<string | null>(null);
+  const [profileError, setProfileError] = createSignal(false);
   const [dialogState, setDialogState] = createSignal<
     { type: "clear" } | { type: "deleteAccount" } | null
   >(null);
@@ -150,6 +177,8 @@ const SettingsDrawer: Component = () => {
   // Reset animation state and register back-button listener each time opened
   createEffect(() => {
     if (showSettingsDrawer()) {
+      setProfileError(false);
+      loadProfile().catch(() => setProfileError(true)); // 利用缓存，几乎零成本
       (window as any).__settingsOpen = true;
 
       window.addEventListener("closeSettings", closeSettingsDrawer);
@@ -234,10 +263,145 @@ const SettingsDrawer: Component = () => {
           </fluent-button>
         </div>
 
-        {/* Drag handle (visual affordance) */}
-        <div class="flex justify-center pt-1 pb-2">
-          <div class="w-10 h-1 rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralStroke1)]" />
-        </div>
+        {/* ════════════════════════════════════════════ */}
+        {/* 个人概要区 */}
+        {/* ════════════════════════════════════════════ */}
+        <Show when={user()}>
+          <div class="flex flex-col items-center px-5 pt-4 pb-3">
+            {/* Avatar */}
+            <div class="relative w-20 h-20">
+              <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
+              <img
+                src={resolveImageUrl(
+                  user()!.profile_image_urls.medium ||
+                    user()!.profile_image_urls.px_170x170 ||
+                    user()!.profile_image_urls.px_50x50 ||
+                    "",
+                )}
+                alt={user()!.name}
+                class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
+                onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+              />
+            </div>
+            {/* Name */}
+            <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+              {user()!.name}
+            </h2>
+            {/* Account */}
+            <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
+              @{user()!.account}
+            </p>
+            {/* Stats card — 仅 profile 加载成功后显示 */}
+            <Show when={profile()}>
+              <div class="w-full mt-3 surface-card rounded-[var(--borderRadiusMedium)] px-4 py-3 flex">
+                {/* 作品 */}
+                <div
+                  class="flex-1 text-center cursor-pointer rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
+                  onClick={() => {
+                    closeSettingsDrawer();
+                    navigate(`/user/${user()!.id}/illusts`);
+                  }}
+                  role="button"
+                  tabindex="0"
+                  aria-label="查看作品"
+                >
+                  <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+                    {fmtNum(
+                      (profile()?.total_illusts ?? 0) +
+                        (profile()?.total_manga ?? 0) +
+                        (profile()?.total_novels ?? 0),
+                    )}
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-0.5">
+                    作品
+                  </p>
+                </div>
+                {/* 关注 */}
+                <div
+                  class="flex-1 text-center cursor-pointer rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
+                  onClick={() => {
+                    closeSettingsDrawer();
+                    navigate(`/user/${user()!.id}/following`);
+                  }}
+                  role="button"
+                  tabindex="0"
+                  aria-label="查看关注"
+                >
+                  <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+                    {fmtNum(profile()?.total_follow_users)}
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-0.5">
+                    关注
+                  </p>
+                </div>
+                {/* 粉丝 */}
+                <div
+                  class="flex-1 text-center cursor-pointer rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
+                  onClick={() => {
+                    closeSettingsDrawer();
+                    navigate(`/user/${user()!.id}/followers`);
+                  }}
+                  role="button"
+                  tabindex="0"
+                  aria-label="查看粉丝"
+                >
+                  <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+                    {fmtNum(profile()?.total_mypixiv_users)}
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-0.5">
+                    粉丝
+                  </p>
+                </div>
+              </div>
+            </Show>
+            {/* 数据未加载时显示占位骨架 */}
+            <Show when={!profile() && !profileError() && user()}>
+              <div class="w-full mt-3 surface-card rounded-[var(--borderRadiusMedium)] px-4 py-3 flex">
+                <div class="flex-1 text-center">
+                  <div class="h-5 w-10 bg-[var(--colorNeutralBackground2)] rounded mx-auto" />
+                  <div class="h-3 w-6 bg-[var(--colorNeutralBackground2)] rounded mx-auto mt-1" />
+                </div>
+                <div class="flex-1 text-center">
+                  <div class="h-5 w-10 bg-[var(--colorNeutralBackground2)] rounded mx-auto" />
+                  <div class="h-3 w-6 bg-[var(--colorNeutralBackground2)] rounded mx-auto mt-1" />
+                </div>
+                <div class="flex-1 text-center">
+                  <div class="h-5 w-10 bg-[var(--colorNeutralBackground2)] rounded mx-auto" />
+                  <div class="h-3 w-6 bg-[var(--colorNeutralBackground2)] rounded mx-auto mt-1" />
+                </div>
+              </div>
+            </Show>
+            {/* 数据加载失败时显示占位 */}
+            <Show when={profileError() && user()}>
+              <div class="w-full mt-3 surface-card rounded-[var(--borderRadiusMedium)] px-4 py-3 flex">
+                <div class="flex-1 text-center">
+                  <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+                    —
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-0.5">
+                    作品
+                  </p>
+                </div>
+                <div class="flex-1 text-center">
+                  <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+                    —
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-0.5">
+                    关注
+                  </p>
+                </div>
+                <div class="flex-1 text-center">
+                  <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+                    —
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-0.5">
+                    粉丝
+                  </p>
+                </div>
+              </div>
+            </Show>
+          </div>
+        </Show>
 
         <fluent-divider></fluent-divider>
 

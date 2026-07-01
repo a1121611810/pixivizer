@@ -45,8 +45,6 @@ const LazyDetailImage: Component<Props> = (props) => {
           <PixivImage
             src={props.src}
             alt={`page ${props.pageIndex + 1}`}
-            width={props.width}
-            height={props.height}
             class="w-full object-contain"
           />
           <span

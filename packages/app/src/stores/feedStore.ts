@@ -1,5 +1,5 @@
 import { createStore, produce } from "solid-js/store";
-import { batch, createEffect } from "solid-js";
+import { batch, createEffect, createRoot } from "solid-js";
 import { loadRecommended, loadFollow, loadNext } from "../api/illust";
 import type { PixivIllust, ContentType } from "../api/types";
 import { currentTab } from "./uiStore";
@@ -104,35 +104,39 @@ export function computeMixedIllusts(): PixivIllust[] {
 }
 
 // Recompute illusts when follow tab changes (filter tabs have no effect otherwise)
-createEffect(() => {
-  const tab = currentTab();
-  if (tab === "follow") {
-    batch(() => {
-      setState("illusts", computeFollowIllusts());
-    });
-  }
+createRoot(() => {
+  createEffect(() => {
+    const tab = currentTab();
+    if (tab === "follow") {
+      batch(() => {
+        setState("illusts", computeFollowIllusts());
+      });
+    }
+  });
 });
 
 // Recompute illusts when recommended sub-tab changes
 // (caller must have loaded the underlying source data first)
-createEffect(() => {
-  const tab = currentTab();
-  const subTab = recommendSubTab();
-  if (tab === "recommended") {
-    batch(() => {
-      if (subTab === "mixed") {
-        setState("illusts", computeMixedIllusts());
-        setState(
-          "nextUrl",
-          tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
-        );
-      } else {
-        const sourceKey = subTab === "illust" ? "recommended_illust" : "recommended_manga";
-        setState("illusts", filterFeedIllusts(tabIllusts[sourceKey] ?? []));
-        setState("nextUrl", tabNextUrl[sourceKey] || null);
-      }
-    });
-  }
+createRoot(() => {
+  createEffect(() => {
+    const tab = currentTab();
+    const subTab = recommendSubTab();
+    if (tab === "recommended") {
+      batch(() => {
+        if (subTab === "mixed") {
+          setState("illusts", computeMixedIllusts());
+          setState(
+            "nextUrl",
+            tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
+          );
+        } else {
+          const sourceKey = subTab === "illust" ? "recommended_illust" : "recommended_manga";
+          setState("illusts", filterFeedIllusts(tabIllusts[sourceKey] ?? []));
+          setState("nextUrl", tabNextUrl[sourceKey] || null);
+        }
+      });
+    }
+  });
 });
 
 // ── Actions ──

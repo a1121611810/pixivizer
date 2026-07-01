@@ -47,6 +47,7 @@ const PersonalCenter = lazy(() => import("./routes/PersonalCenter"));
 const UserIllusts = lazy(() => import("./routes/UserIllusts"));
 const About = lazy(() => import("./routes/About"));
 const ImageHostSettings = lazy(() => import("./routes/ImageHostSettings"));
+const FollowListPage = lazy(() => import("./routes/FollowListPage"));
 import PredictiveBackContainer from "./components/PredictiveBackContainer";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
@@ -302,6 +303,8 @@ const App: Component = () => {
       <Route path="/bookmarks" component={Bookmarks} />
       <Route path="/me" component={PersonalCenter} />
       <Route path="/user/:id/illusts" component={UserIllusts} />
+      <Route path="/user/:id/following" component={() => <FollowListPage mode="following" />} />
+      <Route path="/user/:id/followers" component={() => <FollowListPage mode="followers" />} />
       <Route path="/user/:id" component={PersonalCenter} />
       <Route path="/about" component={About} />
       <Route path="/image-host" component={ImageHostSettings} />

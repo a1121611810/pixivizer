@@ -175,6 +175,13 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     setViewerOpen(false);
   }
 
+  // 查看器关闭后，重新观察新挂载的多图 LazyDetailImage DOM 元素
+  createEffect(() => {
+    if (!viewerOpen() && !loading() && illust()?.page_count && illust()!.page_count > 1) {
+      requestAnimationFrame(() => connectPageObserver());
+    }
+  });
+
   onMount(() => {
     // Listen for system back when viewer is open
     const onCloseViewer = () => {
@@ -479,7 +486,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
                   width={illust()!.width}
                   height={illust()!.height}
                   loading="eager"
-                  class="max-h-[60vh] object-contain cursor-pointer"
+                  class="w-full object-contain cursor-pointer"
                 />
               </div>
             )}

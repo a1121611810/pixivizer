@@ -15,7 +15,7 @@ import {
 } from "../stores/bookmarkStore";
 import { user, isLoggedIn } from "../stores/authStore";
 import UserAvatar from "../components/UserAvatar";
-import { openSettingsDrawer, setCurrentTab, layoutMode } from "../stores/uiStore";
+import { setCurrentTab, layoutMode } from "../stores/uiStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
@@ -112,7 +112,6 @@ const Bookmarks: Component = () => {
             onIllustClick={(id) => navigate(`/illust/${id}`)}
             onLoadMore={fetchMore}
             onRefresh={refresh}
-            onSettingsOpen={() => openSettingsDrawer()}
             emptyText={restrict() === "public" ? "公开收藏夹为空" : "非公开收藏夹为空"}
             skipAnimation={true}
             layoutMode={layoutMode()}

@@ -175,7 +175,6 @@ const TabFeedPage: Component<Props> = (props) => {
             onIllustClick={(id) => navigate(`/illust/${id}`)}
             onLoadMore={fetchMore}
             onRefresh={refresh}
-            onSettingsOpen={() => openSettingsDrawer()}
             skipAnimation={cached}
             layoutMode={layoutMode()}
             restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}

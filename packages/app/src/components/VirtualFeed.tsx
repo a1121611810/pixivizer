@@ -6,7 +6,6 @@ import SkeletonCard from "./SkeletonCard";
 import GridCard from "./GridCard";
 import LoadingSpinner from "./LoadingSpinner";
 import PullIndicator from "./PullIndicator";
-import type { PullZone } from "./PullIndicator";
 import type { PixivIllust } from "../api/types";
 import type { LayoutMode } from "../primitives/types";
 import type { ComputeMasonryInput } from "../primitives/computeMasonryLayout";
@@ -25,7 +24,6 @@ interface Props {
   onIllustClick: (id: number) => void;
   onLoadMore: () => void;
   onRefresh: () => Promise<void> | void;
-  onSettingsOpen?: () => void;
   emptyText?: string;
   skipAnimation?: boolean;
   layoutMode?: LayoutMode;
@@ -51,10 +49,11 @@ const VirtualFeed: Component<Props> = (props) => {
 
   // ── Pull-to-refresh state ──
   const PULL_THRESHOLD = 60;
-  const SETTINGS_THRESHOLD = 130;
-  const MAX_PULL = 200;
+  const MAX_PULL = 100;
   const [pullDistance, setPullDistance] = createSignal(0);
-  const [pullPhase, setPullPhase] = createSignal<PullZone>("idle");
+  const [pullPhase, setPullPhase] = createSignal<
+    "idle" | "pulling" | "refresh-ready" | "refreshing"
+  >("idle");
   let touchStartY = 0;
   let initialRestored = false;
 
@@ -82,9 +81,7 @@ const VirtualFeed: Component<Props> = (props) => {
     }
     const damped = Math.min(deltaY * 0.5, MAX_PULL);
     setPullDistance(damped);
-    if (damped >= SETTINGS_THRESHOLD) {
-      setPullPhase("settings-ready");
-    } else if (damped >= PULL_THRESHOLD) {
+    if (damped >= PULL_THRESHOLD) {
       setPullPhase("refresh-ready");
     } else {
       setPullPhase("pulling");
@@ -92,11 +89,7 @@ const VirtualFeed: Component<Props> = (props) => {
   }
 
   function handleTouchEnd() {
-    if (pullPhase() === "settings-ready") {
-      setPullDistance(0);
-      setPullPhase("idle");
-      props.onSettingsOpen?.();
-    } else if (pullPhase() === "refresh-ready") {
+    if (pullPhase() === "refresh-ready") {
       setPullPhase("refreshing");
       setPullDistance(PULL_THRESHOLD * 0.6);
       props.onRefresh();
@@ -222,7 +215,6 @@ const VirtualFeed: Component<Props> = (props) => {
         zone={pullPhase()}
         distance={pullDistance()}
         refreshThreshold={PULL_THRESHOLD}
-        settingsThreshold={SETTINGS_THRESHOLD}
       />
 
       {props.error && (

@@ -81,7 +81,6 @@ const Feed: Component = () => {
             onIllustClick={(id) => navigate(`/illust/${id}`)}
             onLoadMore={fetchMore}
             onRefresh={refresh}
-            onSettingsOpen={() => openSettingsDrawer()}
             skipAnimation={cached}
             layoutMode={layoutMode()}
             restoreScrollTop={!scrollRestored && cached ? getFeedScrollY() : undefined}
