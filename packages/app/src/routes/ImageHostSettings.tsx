@@ -232,7 +232,9 @@ const ImageHostSettings: Component = () => {
           <fluent-radio-group
             ref={radioGroupRef}
             value={imageHostState().mode}
-            on:change={(e) => setMode(e.detail.value)}
+            on:change={(e) => {
+              if (e.detail?.value) setMode(e.detail.value);
+            }}
             disabled={!imageHostState().masterEnabled}
             class="flex flex-col gap-3"
           >
