@@ -129,10 +129,11 @@ describe("fetchMixed", () => {
     });
     vi.mocked(loadMangaRecommended).mockRejectedValue(new Error("manga error"));
 
-    const { setRecommendSubTab, illusts, fetchMixed } = await import("../feedStore");
+    const { setRecommendSubTab, illusts, error, fetchMixed } = await import("../feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
 
     expect(illusts().map((i) => i.id)).toEqual([1]);
+    expect(error()).toBeNull();
   });
 });

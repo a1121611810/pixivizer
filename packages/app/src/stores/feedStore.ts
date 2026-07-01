@@ -91,9 +91,10 @@ export function computeMixedIllusts(): PixivIllust[] {
   const manga = tabIllusts["recommended_manga"] ?? [];
   if (illust.length === 0) return filterFeedIllusts(manga);
   if (manga.length === 0) return filterFeedIllusts(illust);
-  return filterFeedIllusts(
-    mergeAndSort(illust.toSorted(byCreateDateDesc), manga.toSorted(byCreateDateDesc)),
-  );
+  // toSorted() is ES2023; use copied arrays + sort() for older runtimes.
+  const sortedIllust = [...illust].sort(byCreateDateDesc); // oxlint-disable-line unicorn/no-array-sort
+  const sortedManga = [...manga].sort(byCreateDateDesc); // oxlint-disable-line unicorn/no-array-sort
+  return filterFeedIllusts(mergeAndSort(sortedIllust, sortedManga));
 }
 
 // Recompute illusts when follow tab changes (filter tabs have no effect otherwise)
@@ -252,7 +253,10 @@ export async function fetchMixed() {
     if (currentTab() === "recommended" && recommendSubTab() === "mixed") {
       batch(() => {
         setState("illusts", computeMixedIllusts());
-        setState("nextUrl", tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"]);
+        setState(
+          "nextUrl",
+          tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
+        );
       });
     }
 
@@ -263,8 +267,6 @@ export async function fetchMixed() {
         console.warn("fetchMixed: partial failure —", errors.join("; "));
       }
     }
-  } catch (e) {
-    setState("error", (e as { message?: string }).message ?? "加载失败");
   } finally {
     setState("loading", false);
   }
