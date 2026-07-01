@@ -57,8 +57,7 @@ export function createLayout(
     }
 
     if (mode === "grid") {
-      const GRID_INFO_HEIGHT = 52;
-      const rowHeight = 200 + GRID_INFO_HEIGHT;
+      const rowHeight = 200 + CARD_INFO_HEIGHT;
       const items = illusts().map((_ill, i) => {
         const col = i % cc;
         const row = Math.floor(i / cc);

@@ -162,20 +162,23 @@ const GridCard: Component<Props> = (props) => {
           </div>
         )}
       </div>
-      {/* Compact info bar */}
-      <div class="px-1.5 py-1 flex flex-col gap-0.5 min-h-[52px] justify-center">
-        <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground1)] truncate leading-tight font-medium">
+      {/* Info bar — matches ImageCard styling */}
+      <div class="p-2.5">
+        <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground1)] truncate font-semibold">
           {props.illust.title}
         </p>
-        <div class="flex items-center gap-1 min-w-0">
-          <span class="[font-size:var(--fontSizeBase75)] text-[var(--colorNeutralForeground3)] truncate flex-1 min-w-0">
-            @{props.illust.user.name}
+        <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground2)] truncate mt-0.5 flex items-baseline gap-1">
+          <span class="truncate">@{props.illust.user.name}</span>
+          <span class="text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0 select-none">
+            ·
           </span>
           <button
-            class="flex-shrink-0 [font-size:var(--fontSizeBase75)] font-semibold cursor-pointer select-none transition-colors active:scale-95 appearance-none border-none bg-transparent p-0 leading-none"
+            class="inline-flex items-center min-h-[40px] font-semibold [font-size:var(--fontSizeBase100)] cursor-pointer select-none transition-colors duration-[var(--durationFast)] ease-[var(--curveEasyEase)] active:scale-[0.95] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)] appearance-none border-none bg-transparent p-0 flex-shrink-0"
             classList={{
-              "text-[var(--colorBrandForeground1)]": !isFollowed(),
-              "text-[var(--colorStatusDangerForeground2)]": isFollowed(),
+              "text-[var(--colorBrandForeground1)] hover:text-[var(--colorBrandForeground1Hover)]":
+                !isFollowed(),
+              "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerForeground2)]":
+                isFollowed(),
             }}
             onClick={toggleFollow}
             disabled={following()}
@@ -183,7 +186,7 @@ const GridCard: Component<Props> = (props) => {
           >
             {following() ? "…" : isFollowed() ? "已关注" : "关注"}
           </button>
-        </div>
+        </p>
       </div>
     </div>
   );
