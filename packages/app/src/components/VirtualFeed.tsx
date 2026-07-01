@@ -11,6 +11,7 @@ import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createVirtualScroll } from "../primitives/createVirtualScroll";
 import { createLayout } from "./LayoutEngine";
 import { loadImage } from "../utils/imageLoader";
+import { isImageHostEnabled } from "../stores/imageHostStore";
 
 interface Props {
   illusts: PixivIllust[];
@@ -145,6 +146,8 @@ const VirtualFeed: Component<Props> = (props) => {
   createEffect(() => {
     const range = vs.visibleRange();
     if (range.endIndex < 0) return;
+    // 代理模式下预加载的请求不会被 SW 缓存，跳过以避免浪费带宽
+    if (isImageHostEnabled()) return;
     const illustsList = props.illusts;
     // Prefetch next 10 items beyond visible window
     const preloadEnd = Math.min(range.endIndex + 10, illustsList.length);

@@ -45,6 +45,30 @@ export default defineConfig({
               },
             },
           },
+          {
+            // Third-party image host: i.pixiv.re
+            urlPattern: /^\/pixiv-re\//,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "pixiv-images-re",
+              expiration: {
+                maxEntries: 500,
+                maxAgeSeconds: 30 * 24 * 60 * 60,
+              },
+            },
+          },
+          {
+            // Third-party image host: i.pixiv.nl
+            urlPattern: /^\/pixiv-nl\//,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "pixiv-images-nl",
+              expiration: {
+                maxEntries: 500,
+                maxAgeSeconds: 30 * 24 * 60 * 60,
+              },
+            },
+          },
         ],
       },
       manifest: {

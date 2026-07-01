@@ -1,6 +1,6 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { isImageHostEnabled } from "../stores/imageHostStore";
-import { getEffectiveImageUrlAsync, getRaceCandidateUrls } from "../services/imageHostService";
+import { getEffectiveImageUrl, getRaceCandidateUrls } from "../services/imageHostService";
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -167,9 +167,7 @@ export async function loadImage(originalUrl: string): Promise<LoadedImage> {
   }
 
   // 2. 解析图床代理 URL
-  const targetUrl = isImageHostEnabled()
-    ? await getEffectiveImageUrlAsync(originalUrl)
-    : originalUrl;
+  const targetUrl = isImageHostEnabled() ? getEffectiveImageUrl(originalUrl) : originalUrl;
 
   // 3. 加载图片
   try {

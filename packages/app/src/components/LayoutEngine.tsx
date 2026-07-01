@@ -1,4 +1,4 @@
-import { createMemo } from "solid-js";
+import { createMemo, createSignal, createEffect } from "solid-js";
 import type { Accessor } from "solid-js";
 import type { MasonryLayout, LayoutMode } from "../primitives/types";
 import type { ComputeMasonryInput } from "../primitives/computeMasonryLayout";
@@ -8,6 +8,7 @@ import {
   CARD_INFO_HEIGHT,
 } from "../primitives/computeMasonryLayout";
 import type { PixivIllust } from "../api/types";
+import { getMasonryWorker } from "../primitives/createMasonryWorker";
 
 /**
  * Pure function: given illusts + layout config, returns a reactive layout signal.
@@ -15,6 +16,9 @@ import type { PixivIllust } from "../api/types";
  * - "waterfall" → shortest-column algorithm (incremental if data grew)
  * - "single"   → single-column stacked
  * - "grid"     → fixed row height grid
+ *
+ * Waterfall layout computation runs on a Web Worker when available,
+ * with synchronous fallback for responsiveness.
  */
 export function createLayout(
   illusts: Accessor<PixivIllust[]>,
@@ -24,7 +28,8 @@ export function createLayout(
   columnGap: Accessor<number>,
   layoutMode: Accessor<LayoutMode>,
 ): Accessor<MasonryLayout> {
-  return createMemo<MasonryLayout>((prev) => {
+  // Synchronous layout computation (primary, always available)
+  const syncLayout = createMemo<MasonryLayout>((prev) => {
     const mode = layoutMode();
     const count = illusts().length;
     const cw = columnWidth();
@@ -97,4 +102,42 @@ export function createLayout(
 
     return computeMasonryLayout(input);
   });
+
+  // Web Worker: background layout computation for waterfall mode
+  const [workerLayout, setWorkerLayout] = createSignal<MasonryLayout | null>(null);
+
+  createEffect(async () => {
+    const mode = layoutMode();
+    if (mode !== "waterfall") return;
+    const count = illusts().length;
+    if (count < 10) return; // small dataset, worker overhead not worth it
+    const cw = columnWidth();
+    const cc = columnCount();
+    const g = gap();
+    const cg = columnGap();
+    if (count === 0 || cw <= 0) return;
+
+    const input: ComputeMasonryInput = {
+      items: illusts().map((ill) => ({
+        width: ill.width,
+        height: ill.type === "ugoira" ? Math.round(ill.height * 0.75) : ill.height,
+      })),
+      columnWidth: cw,
+      columnCount: cc,
+      gap: g,
+      columnGap: cg,
+    };
+
+    try {
+      const worker = await getMasonryWorker();
+      if (!worker) return;
+      const result = await worker.compute(input);
+      setWorkerLayout(result);
+    } catch {
+      // Worker unavailable, keep sync layout
+    }
+  });
+
+  // Return worker result when available, otherwise sync layout
+  return createMemo(() => workerLayout() || syncLayout());
 }
