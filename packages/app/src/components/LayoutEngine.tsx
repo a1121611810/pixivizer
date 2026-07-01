@@ -42,11 +42,14 @@ export function createLayout(
     }
 
     if (mode === "single") {
+      let currentY = 0;
       const items = illusts().map((_ill, i) => {
         const effectiveH = _ill.type === "ugoira" ? Math.round(_ill.height * 0.75) : _ill.height;
         const aspectRatio = effectiveH > 0 ? _ill.width / effectiveH : 1;
         const h = cw / aspectRatio + CARD_INFO_HEIGHT;
-        return { index: i, x: 0, y: i * (h + g), width: cw, height: h, column: 0 };
+        const y = currentY;
+        currentY += h + g;
+        return { index: i, x: 0, y, width: cw, height: h, column: 0 };
       });
       const totalHeight =
         items.length > 0 ? items[items.length - 1].y + items[items.length - 1].height : 0;
