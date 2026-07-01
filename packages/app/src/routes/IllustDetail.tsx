@@ -162,9 +162,12 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
 
   // Guard flag — suppress IntersectionObserver during programmatic scrollToPage
   let ignorePageObserver = false;
+  // 打开查看器前保存滚动位置，关闭后恢复
+  let savedScrollBeforeViewer = 0;
 
   // Open/close viewer with global flag for Capacitor back-button handling
   function openViewer(startPage = 0) {
+    savedScrollBeforeViewer = window.scrollY;
     (window as any).__viewerOpen = true;
     setViewerStartPage(startPage);
     setViewerOpen(true);
@@ -175,10 +178,18 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     setViewerOpen(false);
   }
 
-  // 查看器关闭后，重新观察新挂载的多图 LazyDetailImage DOM 元素
+  // 查看器关闭后：恢复滚动位置 + 重新观察多图 DOM
   createEffect(() => {
-    if (!viewerOpen() && !loading() && illust()?.page_count && illust()!.page_count > 1) {
-      requestAnimationFrame(() => connectPageObserver());
+    if (!viewerOpen() && !loading() && illust()) {
+      requestAnimationFrame(() => {
+        // 恢复之前保存的滚动位置
+        window.scrollTo(0, savedScrollBeforeViewer);
+
+        // 多图：重新观察 LazyDetailImage DOM 元素
+        if (illust()!.page_count > 1) {
+          connectPageObserver();
+        }
+      });
     }
   });
 
