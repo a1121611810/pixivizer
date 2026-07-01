@@ -8,7 +8,6 @@ import {
   resetBuiltInHost,
   resetAllBuiltInHosts,
   type ImageHost,
-  type ProbeResult,
 } from "../stores/imageHostStore";
 import { validateHostInput, hasDuplicateBaseUrl, probeHosts } from "../services/imageHostService";
 
@@ -26,13 +25,17 @@ const ImageHostSettings: Component = () => {
 
   const [isProbing, setIsProbing] = createSignal(false);
   const [probeToast, setProbeToast] = createSignal<string | null>(null);
-  const [showProbeResultDialog, setShowProbeResultDialog] = createSignal(false);
-  const [probeResultSummary, setProbeResultSummary] = createSignal<string>("");
-  const [probeResultRows, setProbeResultRows] = createSignal<ProbeResult[]>([]);
 
   let confirmDialogRef: HTMLElement | undefined;
   let editDialogRef: HTMLElement | undefined;
-  let probeResultDialogRef: HTMLElement | undefined;
+  let masterSwitchRef: HTMLElement | undefined;
+
+  createEffect(() => {
+    const sw = masterSwitchRef as unknown as { checked?: boolean } | undefined;
+    if (sw) {
+      sw.checked = imageHostState().masterEnabled;
+    }
+  });
 
   createEffect(() => {
     const dialog = confirmDialogRef as unknown as
@@ -56,17 +59,6 @@ const ImageHostSettings: Component = () => {
     }
   });
 
-  createEffect(() => {
-    const dialog = probeResultDialogRef as unknown as
-      | { show?: () => void; hide?: () => void; open?: boolean }
-      | undefined;
-    if (showProbeResultDialog()) {
-      if (!dialog?.open) dialog?.show?.();
-    } else if (dialog?.open) {
-      dialog?.hide?.();
-    }
-  });
-
   function handleToggle(enabled: boolean) {
     if (enabled) {
       setPendingEnable(true);
@@ -84,15 +76,7 @@ const ImageHostSettings: Component = () => {
     (editDialogRef as unknown as { hide?: () => void })?.hide?.();
   }
 
-  function hideProbeResultDialog() {
-    (probeResultDialogRef as unknown as { hide?: () => void })?.hide?.();
-  }
-
   function confirmEnable() {
-    const currentMode = imageHostState().mode;
-    if (!currentMode) {
-      setMode("weighted");
-    }
     setMasterEnabled(true);
     setPendingEnable(false);
     setShowConfirmDialog(false);
@@ -103,6 +87,10 @@ const ImageHostSettings: Component = () => {
     setPendingEnable(false);
     setShowConfirmDialog(false);
     hideConfirmDialog();
+    const sw = masterSwitchRef as unknown as { checked?: boolean } | undefined;
+    if (sw) {
+      sw.checked = false;
+    }
   }
 
   function openEdit(host: ImageHost) {
@@ -151,9 +139,7 @@ const ImageHostSettings: Component = () => {
   async function handleProbe() {
     const enabled = imageHostState().hosts.filter((h) => h.enabled);
     if (enabled.length === 0) {
-      setProbeResultSummary("请先启用至少一个图床");
-      setProbeResultRows([]);
-      setShowProbeResultDialog(true);
+      setProbeToast("请先启用至少一个图床");
       return;
     }
 
@@ -161,13 +147,9 @@ const ImageHostSettings: Component = () => {
     try {
       const results = await probeHosts();
       const reachable = results.filter((r) => r.reachable).length;
-      setProbeResultSummary(`测速完成：${reachable}/${results.length} 个可用`);
-      setProbeResultRows(results);
-      setShowProbeResultDialog(true);
+      setProbeToast(`测速完成：${reachable}/${results.length} 个可用`);
     } catch {
-      setProbeResultSummary("测速失败");
-      setProbeResultRows([]);
-      setShowProbeResultDialog(true);
+      setProbeToast("测速失败");
     } finally {
       setIsProbing(false);
     }
@@ -202,6 +184,12 @@ const ImageHostSettings: Component = () => {
 
       {/* Content */}
       <div class="px-4 py-4 flex flex-col gap-4">
+        <Show when={probeToast()}>
+          <fluent-message-bar intent="success" class="mb-0" on:close={() => setProbeToast(null)}>
+            {probeToast()}
+          </fluent-message-bar>
+        </Show>
+
         <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
           配置第三方 Pixiv 图片代理源。
         </p>
@@ -218,9 +206,10 @@ const ImageHostSettings: Component = () => {
               </p>
             </div>
             <fluent-switch
-              checked={imageHostState().masterEnabled}
+              ref={masterSwitchRef}
               on:change={() => {
-                handleToggle(!imageHostState().masterEnabled);
+                const sw = masterSwitchRef as unknown as { checked?: boolean } | undefined;
+                handleToggle(!!sw?.checked);
               }}
               aria-label="启用图床代理"
             />
@@ -270,7 +259,6 @@ const ImageHostSettings: Component = () => {
                   <fluent-radio
                     id={inputId}
                     value={option.value}
-                    checked={imageHostState().mode === option.value}
                     disabled={!imageHostState().masterEnabled}
                   />
                   <label
@@ -402,12 +390,6 @@ const ImageHostSettings: Component = () => {
           </div>
         </div>
 
-        <Show when={probeToast()}>
-          <fluent-message-bar intent="success" on:close={() => setProbeToast(null)}>
-            {probeToast()}
-          </fluent-message-bar>
-        </Show>
-
         {/* Actions */}
         <div class="flex gap-3">
           <fluent-button
@@ -433,12 +415,7 @@ const ImageHostSettings: Component = () => {
       </div>
 
       {/* Confirmation dialog */}
-      <fluent-dialog
-        type="alert"
-        ref={confirmDialogRef}
-        on:close={cancelEnable}
-        aria-label="开启图床代理？"
-      >
+      <fluent-dialog ref={confirmDialogRef} on:close={cancelEnable} aria-label="开启图床代理？">
         <div class="p-5 flex flex-col gap-4">
           <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
             开启图床代理？
@@ -466,7 +443,7 @@ const ImageHostSettings: Component = () => {
       </fluent-dialog>
 
       {/* Edit dialog */}
-      <fluent-dialog type="alert" ref={editDialogRef} on:close={closeEdit} aria-label="编辑图床">
+      <fluent-dialog ref={editDialogRef} on:close={closeEdit} aria-label="编辑图床">
         <div class="p-5 flex flex-col gap-4 min-w-[280px]">
           <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
             编辑图床
@@ -529,68 +506,6 @@ const ImageHostSettings: Component = () => {
             </fluent-button>
             <fluent-button appearance="primary" on:click={saveEdit}>
               保存
-            </fluent-button>
-          </div>
-        </div>
-      </fluent-dialog>
-
-      {/* Probe result dialog */}
-      <fluent-dialog
-        type="alert"
-        ref={probeResultDialogRef}
-        on:close={() => setShowProbeResultDialog(false)}
-        aria-label="测速结果"
-      >
-        <div class="p-5 flex flex-col gap-4 min-w-[280px]">
-          <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
-            测速结果
-          </p>
-          <p class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground1)]">
-            {probeResultSummary()}
-          </p>
-          <Show when={probeResultRows().length > 0}>
-            <div class="flex flex-col gap-2">
-              <For each={probeResultRows()}>
-                {(row) => (
-                  <div class="flex items-center justify-between p-3 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)]">
-                    <div class="flex flex-col gap-0.5 min-w-0 flex-1">
-                      <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
-                        {row.hostName}
-                      </span>
-                      <span class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] truncate">
-                        {row.baseUrl}
-                      </span>
-                    </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                      <span
-                        class="[font-size:var(--fontSizeBase200)] font-semibold"
-                        classList={{
-                          "text-[var(--colorPaletteGreenForeground1)]": row.reachable,
-                          "text-[var(--colorPaletteRedForeground1)]": !row.reachable,
-                        }}
-                      >
-                        {row.reachable ? "可用" : "不可用"}
-                      </span>
-                      <Show when={row.reachable && row.latencyMs !== null}>
-                        <span class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
-                          {row.latencyMs}ms
-                        </span>
-                      </Show>
-                    </div>
-                  </div>
-                )}
-              </For>
-            </div>
-          </Show>
-          <div class="flex justify-end gap-2 mt-2">
-            <fluent-button
-              appearance="primary"
-              on:click={() => {
-                setShowProbeResultDialog(false);
-                hideProbeResultDialog();
-              }}
-            >
-              确定
             </fluent-button>
           </div>
         </div>
