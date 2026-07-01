@@ -28,14 +28,6 @@ const ImageHostSettings: Component = () => {
 
   let confirmDialogRef: HTMLElement | undefined;
   let editDialogRef: HTMLElement | undefined;
-  let masterSwitchRef: HTMLElement | undefined;
-
-  createEffect(() => {
-    const sw = masterSwitchRef as unknown as { checked?: boolean } | undefined;
-    if (sw) {
-      sw.checked = imageHostState().masterEnabled;
-    }
-  });
 
   createEffect(() => {
     const dialog = confirmDialogRef as unknown as
@@ -87,10 +79,6 @@ const ImageHostSettings: Component = () => {
     setPendingEnable(false);
     setShowConfirmDialog(false);
     hideConfirmDialog();
-    const sw = masterSwitchRef as unknown as { checked?: boolean } | undefined;
-    if (sw) {
-      sw.checked = false;
-    }
   }
 
   function openEdit(host: ImageHost) {
@@ -206,10 +194,9 @@ const ImageHostSettings: Component = () => {
               </p>
             </div>
             <fluent-switch
-              ref={masterSwitchRef}
+              checked={imageHostState().masterEnabled}
               on:change={() => {
-                const sw = masterSwitchRef as unknown as { checked?: boolean } | undefined;
-                handleToggle(!!sw?.checked);
+                handleToggle(!imageHostState().masterEnabled);
               }}
               aria-label="启用图床代理"
             />
