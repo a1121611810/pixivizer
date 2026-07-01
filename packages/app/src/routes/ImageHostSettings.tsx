@@ -28,6 +28,14 @@ const ImageHostSettings: Component = () => {
 
   let confirmDialogRef: HTMLElement | undefined;
   let editDialogRef: HTMLElement | undefined;
+  let masterSwitchRef: HTMLElement | undefined;
+
+  createEffect(() => {
+    const sw = masterSwitchRef as unknown as { checked?: boolean } | undefined;
+    if (sw) {
+      sw.checked = imageHostState().masterEnabled;
+    }
+  });
 
   createEffect(() => {
     const dialog = confirmDialogRef as unknown as
@@ -194,8 +202,11 @@ const ImageHostSettings: Component = () => {
               </p>
             </div>
             <fluent-switch
-              checked={imageHostState().masterEnabled}
-              on:change={() => handleToggle(!imageHostState().masterEnabled)}
+              ref={masterSwitchRef}
+              on:change={() => {
+                const sw = masterSwitchRef as unknown as { checked?: boolean } | undefined;
+                handleToggle(!!sw?.checked);
+              }}
               aria-label="启用图床代理"
             />
           </div>
