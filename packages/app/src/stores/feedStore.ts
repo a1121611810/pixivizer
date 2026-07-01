@@ -40,7 +40,12 @@ export const error = () => state.error;
 export const followTab = () => state.followTab;
 export const setFollowTab = (t: "all" | "public" | "private") => setState("followTab", t);
 export const recommendSubTab = () => state.recommendSubTab;
-export const setRecommendSubTab = (t: RecommendSubTab) => setState("recommendSubTab", t);
+export function setRecommendSubTab(t: RecommendSubTab) {
+  batch(() => {
+    setState("recommendSubTab", t);
+    setState("error", null);
+  });
+}
 
 /**
  * 合并两个已按 create_date 降序排列的数组，保持全局时间降序。
@@ -132,7 +137,7 @@ createEffect(() => {
 
 // ── Actions ──
 
-export function ensureLoaded() {
+export async function ensureLoaded(): Promise<void> {
   const tab = currentTab();
   if (tab === "follow") {
     // Follow tab: show cached data if available
@@ -155,7 +160,7 @@ export function ensureLoaded() {
       if (!pubCached && !privCached) {
         setState("illusts", []);
       }
-      fetchFollow();
+      await fetchFollow();
       tabLoaded[tab] = true;
     }
     return;
@@ -179,7 +184,7 @@ export function ensureLoaded() {
         if (!illustCached && !mangaCached) {
           setState("illusts", []);
         }
-        fetchMixed();
+        await fetchMixed();
         tabLoaded["recommended_mixed"] = true;
       }
       return;
@@ -205,15 +210,15 @@ export function ensureLoaded() {
     }
     setState("illusts", []);
     if (subTab === "illust") {
-      fetchRecommended("illust");
+      await fetchRecommended("illust");
     } else {
-      fetchManga();
+      await fetchManga();
     }
     tabLoaded[sourceKey] = true;
     return;
   }
 
-  // Non-follow tabs (recommended etc.)
+  // Non-follow, non-recommended tabs (bookmarks, etc.)
   if (tabLoaded[tab]) {
     if (tabIllusts[tab]) {
       batch(() => {
@@ -265,7 +270,11 @@ export function saveTabScroll(tab: string) {
   }
   if (tab === "recommended") {
     const key = `recommended_${recommendSubTab()}`;
-    tabNextUrl[key] = state.nextUrl;
+    // For mixed sub-tab the source keys (recommended_illust / recommended_manga)
+    // already hold the truth; state.nextUrl is just a derived value.
+    if (recommendSubTab() !== "mixed") {
+      tabNextUrl[key] = state.nextUrl;
+    }
     tabScrollY[key] = window.scrollY;
     return;
   }

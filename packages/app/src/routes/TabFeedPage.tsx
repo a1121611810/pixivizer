@@ -147,6 +147,9 @@ const TabFeedPage: Component<Props> = (props) => {
                   { key: "manga" as RecommendSubTab, label: "漫画" },
                 ].map((opt) => (
                   <button
+                    key={opt.key}
+                    role="tab"
+                    aria-selected={recommendSubTab() === opt.key}
                     class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                     classList={{
                       "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
@@ -154,10 +157,12 @@ const TabFeedPage: Component<Props> = (props) => {
                       "bg-transparent text-[var(--colorNeutralForeground2)]":
                         recommendSubTab() !== opt.key,
                     }}
-                    onClick={() => {
+                    onClick={async () => {
                       if (recommendSubTab() !== opt.key) {
+                        saveTabScroll(props.tab);
                         setRecommendSubTab(opt.key);
-                        ensureLoaded();
+                        await ensureLoaded();
+                        window.scrollTo(0, getFeedScrollY(props.tab));
                       }
                     }}
                   >
