@@ -109,6 +109,8 @@ export function getEffectiveImageUrl(originalUrl: string): string {
     if (fastest) {
       return transformUrl(originalUrl, fastest.baseUrl);
     }
+    // 无缓存时自动后台探测，不阻塞当前加载
+    void probeHosts();
   }
 
   if (state.mode === "weighted" || state.mode === "fastest-ip") {
