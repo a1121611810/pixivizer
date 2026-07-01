@@ -619,7 +619,7 @@ const SettingsSheet: Component = () => {
             </div>
 
             {/* Divider before image host proxy */}
-            <fluent-divider style="margin-block:4px"></fluent-divider>
+            <fluent-divider style="margin-inline:20px"></fluent-divider>
 
             {/* 图床代理入口 */}
             <div
@@ -685,13 +685,15 @@ const SettingsSheet: Component = () => {
             </div>
 
             {/* Divider before cache size */}
-            <fluent-divider style="margin-block:4px"></fluent-divider>
+            <fluent-divider style="margin-inline:20px"></fluent-divider>
 
             {/* Image cache size */}
-            <div class="py-2">
+            <div class="py-3">
               <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <FluentIcon name="server" size={20} />
+                <div class="flex items-center gap-3">
+                  <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                    <FluentIcon name="server" size={24} />
+                  </div>
                   <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
                     图片缓存数
                   </p>
@@ -725,22 +727,31 @@ const SettingsSheet: Component = () => {
               </p>
             </div>
 
+            {/* Divider before DoH */}
+            <fluent-divider style="margin-inline:20px"></fluent-divider>
+
             {/* 自定义 DNS 解析（实验性，仅 Android） */}
-            <div class="py-3 flex items-start justify-between gap-4">
-              <div>
-                <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                  DNS over HTTPS
-                </p>
-                <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorStatusWarningForeground2)] leading-snug">
-                  实验性
-                  {Capacitor.isNativePlatform()
-                    ? " · 仅 Android 生效"
-                    : " · 仅适用于 Android 原生应用"}
-                </p>
-                <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] leading-snug mt-0.5">
-                  绕过 DNS 污染直连 Pixiv
-                  API。开启后可能影响加载速度，部分网络环境可能无法正常使用。
-                </p>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm1.75 5.44l-1.22-1.22a.75.75 0 0 0-1.06 0l-1.22 1.22a.75.75 0 1 0 1.06 1.06l.69-.69v4.19a.75.75 0 0 0 1.5 0V8.81l.69.69a.75.75 0 0 0 1.06-1.06z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                    DNS over HTTPS
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                    实验性
+                    {Capacitor.isNativePlatform()
+                      ? " · 仅 Android 生效"
+                      : " · 仅适用于 Android 原生应用"}
+                  </p>
+                </div>
               </div>
               <fluent-switch
                 checked={useDnsOverride()}
