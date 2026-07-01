@@ -2,11 +2,14 @@ import { createSignal, createEffect, For, createMemo } from "solid-js";
 import type { Component } from "solid-js";
 import ImageCard from "./ImageCard";
 import LazyImageCard from "./LazyImageCard";
+import SkeletonCard from "./SkeletonCard";
 import LoadingSpinner from "./LoadingSpinner";
 import PullIndicator from "./PullIndicator";
 import type { PullZone } from "./PullIndicator";
 import type { PixivIllust } from "../api/types";
 import type { LayoutMode } from "../primitives/types";
+import type { ComputeMasonryInput } from "../primitives/computeMasonryLayout";
+import { computeMasonryLayout } from "../primitives/computeMasonryLayout";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createVirtualScroll } from "../primitives/createVirtualScroll";
 import { createLayout } from "./LayoutEngine";
@@ -142,6 +145,37 @@ const VirtualFeed: Component<Props> = (props) => {
     useWindowScroll: true,
   });
 
+  // ── Skeleton layout for initial loading state ──
+  const SKELETON_ITEM_HEIGHT = 300;
+  const skeletonCount = createMemo(() => {
+    const cc = columnCount();
+    const rows = Math.ceil(window.innerHeight / SKELETON_ITEM_HEIGHT) + 1;
+    return cc * rows;
+  });
+  const skeletonLayout = createMemo(() => {
+    const cc = columnCount();
+    const cw = columnWidth();
+    const count = skeletonCount();
+    if (count === 0 || cw <= 0) {
+      return {
+        items: [],
+        totalHeight: 0,
+        columns: cc,
+        columnWidth: cw,
+        gap: VERTICAL_GAP,
+        columnGap: GAP,
+      };
+    }
+    const input: ComputeMasonryInput = {
+      items: Array.from({ length: count }, () => ({ width: 400, height: SKELETON_ITEM_HEIGHT })),
+      columnWidth: cw,
+      columnCount: cc,
+      gap: VERTICAL_GAP,
+      columnGap: GAP,
+    };
+    return computeMasonryLayout(input);
+  });
+
   // ── Scroll prediction: prefetch images just outside visible window ──
   createEffect(() => {
     const range = vs.visibleRange();
@@ -197,8 +231,30 @@ const VirtualFeed: Component<Props> = (props) => {
       )}
 
       {props.loading && props.illusts.length === 0 && pullPhase() !== "refreshing" && (
-        <div class="px-3 py-4">
-          <div style={{ padding: "var(--spacingVerticalL) 0" }}>加载中...</div>
+        <div class="px-3">
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              height: `${skeletonLayout().totalHeight || 1}px`,
+            }}
+          >
+            <For each={skeletonLayout().items}>
+              {(item) => (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: `${item.y}px`,
+                    left: `${item.x}px`,
+                    width: `${item.width}px`,
+                    height: `${item.height}px`,
+                  }}
+                >
+                  <SkeletonCard width={400} height={SKELETON_ITEM_HEIGHT} />
+                </div>
+              )}
+            </For>
+          </div>
         </div>
       )}
 

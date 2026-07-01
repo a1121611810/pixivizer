@@ -185,6 +185,7 @@ const TabFeedPage: Component<Props> = (props) => {
           </Show>
 
           <VirtualFeed
+            key={layoutMode()}
             illusts={filteredIllusts()}
             loading={loading() || refreshing()}
             error={error()}
