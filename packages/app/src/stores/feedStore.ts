@@ -91,16 +91,35 @@ const byCreateDateDesc = (a: PixivIllust, b: PixivIllust) =>
 
 /**
  * 计算综合推荐：合并插画源和漫画源，按 create_date 降序排序后过滤。
+ * 合并时按 illust.id 去重，避免 Pixiv API 两端返回同一作品导致的重复。
  */
 export function computeMixedIllusts(): PixivIllust[] {
   const illust = tabIllusts["recommended_illust"] ?? [];
   const manga = tabIllusts["recommended_manga"] ?? [];
-  if (illust.length === 0) return filterFeedIllusts(manga);
-  if (manga.length === 0) return filterFeedIllusts(illust);
+  // 同一作品可能在 illust 和 manga 中都出现，需按 id 去重
+  const seen = new Set<number>();
+  const combined: PixivIllust[] = [];
+  const pushIfNotDuplicate = (item: PixivIllust) => {
+    if (!seen.has(item.id)) {
+      seen.add(item.id);
+      combined.push(item);
+    }
+  };
   // toSorted() is ES2023; use copied arrays + sort() for older runtimes.
   const sortedIllust = [...illust].sort(byCreateDateDesc); // oxlint-disable-line unicorn/no-array-sort
   const sortedManga = [...manga].sort(byCreateDateDesc); // oxlint-disable-line unicorn/no-array-sort
-  return filterFeedIllusts(mergeAndSort(sortedIllust, sortedManga));
+  // 按时间降序合并（归并），同时去重
+  let i = 0, j = 0;
+  while (i < sortedIllust.length && j < sortedManga.length) {
+    if (sortedIllust[i].create_date >= sortedManga[j].create_date) {
+      pushIfNotDuplicate(sortedIllust[i++]);
+    } else {
+      pushIfNotDuplicate(sortedManga[j++]);
+    }
+  }
+  while (i < sortedIllust.length) pushIfNotDuplicate(sortedIllust[i++]);
+  while (j < sortedManga.length) pushIfNotDuplicate(sortedManga[j++]);
+  return filterFeedIllusts(combined);
 }
 
 // Recompute illusts when follow tab changes (filter tabs have no effect otherwise)

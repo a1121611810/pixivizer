@@ -143,6 +143,38 @@ describe("fetchMixed", () => {
     expect(illusts().map((i) => i.id)).toEqual([1]);
     expect(error()).toBeNull();
   });
+
+  it("deduplicates when the same illust appears in both illust and manga sources", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    // 同一作品 id=2 同时在 illust 和 manga 两路返回
+    mockRecommendedResponses(
+      {
+        illusts: [
+          createIllust(1, "2026-07-01T09:00:00+09:00", "illust"),
+          createIllust(2, "2026-07-01T11:00:00+09:00", "illust"),
+          createIllust(3, "2026-07-01T08:00:00+09:00", "illust"),
+        ],
+        next_url: "next-illust",
+      },
+      {
+        illusts: [
+          createIllust(2, "2026-07-01T11:00:00+09:00", "manga"),
+          createIllust(4, "2026-07-01T10:00:00+09:00", "manga"),
+        ],
+        next_url: "next-manga",
+      },
+    );
+
+    const { setRecommendSubTab, illusts, fetchMixed } = await import("@/stores/feedStore");
+    setRecommendSubTab("mixed");
+    await fetchMixed();
+
+    const ids = illusts().map((i) => i.id);
+    // 期望: [2(11:00), 4(10:00), 1(09:00), 3(08:00)] — 按时间降序且 id=2 只出现一次
+    expect(ids).toEqual([2, 4, 1, 3]);
+    // 确认无重复
+    expect(new Set(ids).size).toBe(ids.length);
+  });
 });
 
 describe("fetchMoreMixed", () => {
@@ -274,6 +306,57 @@ describe("fetchMoreMixed", () => {
     expect(illusts().map((i) => i.id)).toEqual([2, 1, 3]);
     expect(error()).toBeNull();
     expect(loadNext).toHaveBeenCalledWith("next-manga");
+  });
+
+  it("deduplicates when more-loaded illust overlaps with existing manga source", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    // 初始: illust 有 [1(12:00)], manga 有 [2(10:00)]
+    // 第二次 fetchMoreMixed 时 illust 返回的作品 id=2 已在 manga 中存在
+    mockRecommendedResponses(
+      {
+        illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+        next_url: "next-illust",
+      },
+      {
+        illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")],
+        next_url: "next-manga",
+      },
+    );
+    vi.mocked(loadNext).mockImplementation(async (url: string) => {
+      if (url === "next-manga") {
+        return {
+          illusts: [createIllust(3, "2026-07-01T09:00:00+09:00", "manga")],
+          next_url: null,
+        };
+      }
+      // illust 的新一页返回了一个与 manga 已有作品 id=2 相同 id 的作品
+      return {
+        illusts: [
+          createIllust(2, "2026-07-01T10:00:00+09:00", "illust"),
+          createIllust(4, "2026-07-01T08:00:00+09:00", "illust"),
+        ],
+        next_url: null,
+      };
+    });
+
+    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, illusts } =
+      await import("@/stores/feedStore");
+    setRecommendSubTab("mixed");
+    await fetchMixed();
+    expect(illusts().map((i) => i.id)).toEqual([1, 2]);
+
+    // 第一次 fetchMoreMixed: manga tail 更老 (10:00 < 12:00)，优先加载 manga
+    await fetchMoreMixed();
+    let ids = illusts().map((i) => i.id);
+    expect(ids).toEqual([1, 2, 3]);
+    expect(new Set(ids).size).toBe(ids.length);
+
+    // 第二次 fetchMoreMixed: manga 已无下一页，fallback 到 illust
+    // illust 返回了 id=2 (重复) 和 id=4 (新)
+    await fetchMoreMixed();
+    ids = illusts().map((i) => i.id);
+    expect(ids).toEqual([1, 2, 3, 4]);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it("aggregates errors when both sources fail", async () => {
