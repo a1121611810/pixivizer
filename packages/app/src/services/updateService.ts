@@ -28,7 +28,7 @@ let cachedResult: CheckResult | null = null;
  * Returns true if `remote` is newer than `local`.
  * Handles optional leading "v" prefix on remote.
  */
-function isNewer(local: string, remote: string): boolean {
+export function isNewer(local: string, remote: string): boolean {
   const lParts = local.split(".").map(Number);
   const rParts = remote.replace(/^v/, "").split(".").map(Number);
 

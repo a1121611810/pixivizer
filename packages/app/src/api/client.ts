@@ -30,7 +30,7 @@ export function setOnUnauthorized(handler: () => Promise<void>) {
 }
 
 /** 尝试从 Pixiv 错误响应体中提取人类可读的错误消息 */
-function extractPixivErrorMessage(data: unknown): string | null {
+export function extractPixivErrorMessage(data: unknown): string | null {
   if (!data || typeof data !== "object") return null;
   const d = data as Record<string, unknown>;
   if (d.errors && typeof d.errors === "object") {
@@ -48,7 +48,7 @@ function extractPixivErrorMessage(data: unknown): string | null {
   return null;
 }
 
-function classifyError(status: number, error: unknown, responseBody?: unknown): ApiError {
+export function classifyError(status: number, error: unknown, responseBody?: unknown): ApiError {
   if (!status && error instanceof TypeError) {
     return { type: ApiErrorType.NETWORK, message: "网络不可用，请检查连接" };
   }
@@ -95,7 +95,7 @@ function classifyError(status: number, error: unknown, responseBody?: unknown): 
  * Web 模式下，将 Pixiv 直连 URL 重写为 Vite 代理路径
  * 原生模式下保持原 URL（CapacitorHttp 可直接访问）
  */
-function rewriteUrl(path: string): string {
+export function rewriteUrl(path: string): string {
   // 已经是本地代理路径，直接返回
   if (path.startsWith("/pixiv-")) return path;
   // 已经是 http(s) URL

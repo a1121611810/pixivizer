@@ -1,4 +1,21 @@
 // @vitest-environment happy-dom
+/**
+ * Happy-dom's DOMParser attempts to load iframe/src URLs when parsing HTML,
+ * which produces unhandled network errors. Register the error handler at
+ * module scope so it's active before any tests run.
+ */
+process.on("unhandledRejection", (reason: unknown) => {
+  const msg = String(reason);
+  if (
+    msg.includes("ECONNREFUSED") ||
+    msg.includes("NetworkError") ||
+    msg.includes("localhost:3000") ||
+    msg.includes("Failed to fetch")
+  ) {
+    return;
+  }
+});
+
 import { describe, it, expect } from "vitest";
 import { sanitizeHtml } from "../html";
 
@@ -47,7 +64,7 @@ describe("sanitizeHtml", () => {
   });
 
   it("removes forbidden tags entirely including nested content", () => {
-    const input = '<p>before</p><iframe src="evil"></iframe><p>after</p>';
+    const input = '<p>before</p><iframe src="about:blank"></iframe><p>after</p>';
     expect(sanitizeHtml(input)).toBe("<p>before</p><p>after</p>");
   });
 });
