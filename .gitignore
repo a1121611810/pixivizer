@@ -23,3 +23,4 @@ packages/website/task-*-report.md
 packages/app/android/app/*.keystore
 packages/app/android/app/*.jks
 packages/app/android/app/release/
+packages/app/.env
