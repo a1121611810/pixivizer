@@ -3,12 +3,12 @@ import { describe, it, expect } from "vitest";
 
 describe("useContainerWidth", () => {
   it("exports useContainerWidth function", async () => {
-    const mod = await import("../../src/primitives/useContainerWidth");
+    const mod = await import("@/primitives/useContainerWidth");
     expect(typeof mod.useContainerWidth).toBe("function");
   });
 
   it("returns object with width and ref", async () => {
-    const { useContainerWidth } = await import("../../src/primitives/useContainerWidth");
+    const { useContainerWidth } = await import("@/primitives/useContainerWidth");
     const result = useContainerWidth();
     expect(result).toHaveProperty("width");
     expect(result).toHaveProperty("ref");

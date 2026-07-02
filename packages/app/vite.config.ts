@@ -6,6 +6,7 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import postcssPxToRem from "postcss-pxtorem";
 import pkg from "./package.json";
+import { resolve } from "node:path";
 
 // 系统代理（中国大陆需要代理访问 Pixiv）
 const proxyUrl =
@@ -25,6 +26,11 @@ export default defineConfig({
   // 部署到 GitHub Pages (/pixivizer/) 时需设置 BASE_PATH=/pixivizer/
   // 本地开发 / Android 打包使用默认 "/"
   base: process.env.BASE_PATH || "/",
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "src"),
+    },
+  },
   plugins: [
     solid(),
     UnoCSS(),

@@ -7,7 +7,7 @@ vi.mock("@capacitor/preferences", () => ({
 
 async function loadStore() {
   vi.resetModules();
-  const mod = await import("../../../src/stores/imageHostStore");
+  const mod = await import("@/stores/imageHostStore");
   return mod;
 }
 

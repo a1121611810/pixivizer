@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 async function loadService() {
   vi.resetModules();
-  return import("../../../src/services/updateService");
+  return import("@/services/updateService");
 }
 
 describe("updateService", () => {

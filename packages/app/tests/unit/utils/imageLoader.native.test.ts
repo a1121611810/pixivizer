@@ -30,7 +30,7 @@ describe("loadImage on native platform", () => {
       headers: { "Content-Type": "image/jpeg" },
     });
 
-    const { loadImage } = await import("../../../src/utils/imageLoader");
+    const { loadImage } = await import("@/utils/imageLoader");
     const result = await loadImage("https://i.pximg.net/img.jpg");
 
     expect(mockRequest).toHaveBeenCalledTimes(1);

@@ -5,17 +5,17 @@ const mockGetUserFollowers = vi.fn();
 const mockFollowUser = vi.fn();
 const mockUnfollowUser = vi.fn();
 
-vi.mock("../../../src/api/user", () => ({
+vi.mock("@/api/user", () => ({
   getUserFollowing: (...args: unknown[]) => mockGetUserFollowing(...args),
   getUserFollowers: (...args: unknown[]) => mockGetUserFollowers(...args),
 }));
 
-vi.mock("../../../src/api/illust", () => ({
+vi.mock("@/api/illust", () => ({
   followUser: (...args: unknown[]) => mockFollowUser(...args),
   unfollowUser: (...args: unknown[]) => mockUnfollowUser(...args),
 }));
 
-vi.mock("../../../src/utils/r18Filter", () => ({
+vi.mock("@/utils/r18Filter", () => ({
   filterUserPreviews: (previews: unknown[]) => previews,
 }));
 
@@ -28,7 +28,7 @@ function createPreview(userId: number, followed = false) {
 
 async function loadStore() {
   vi.resetModules();
-  return import("../../../src/stores/followListStore");
+  return import("@/stores/followListStore");
 }
 
 describe("followListStore", () => {

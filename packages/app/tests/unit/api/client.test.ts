@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ApiErrorType } from "../../../src/api/types";
+import { ApiErrorType } from "@/api/types";
 
 vi.mock("@capacitor/core", async (importOriginal) => {
   const actual = await importOriginal();
@@ -14,13 +14,13 @@ vi.mock("@capacitor/core", async (importOriginal) => {
   };
 });
 
-vi.mock("../../../src/native/PictelioHttp", () => ({
+vi.mock("@/native/PictelioHttp", () => ({
   PictelioHttp: { request: vi.fn() },
 }));
 
 async function loadModule() {
   vi.resetModules();
-  return import("../../../src/api/client");
+  return import("@/api/client");
 }
 
 describe("extractPixivErrorMessage", () => {

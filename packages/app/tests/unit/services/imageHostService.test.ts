@@ -7,7 +7,7 @@ vi.mock("@capacitor/preferences", () => ({
 
 async function loadService() {
   vi.resetModules();
-  const mod = await import("../../../src/services/imageHostService");
+  const mod = await import("@/services/imageHostService");
   return mod;
 }
 
@@ -95,8 +95,8 @@ describe("selection strategies", () => {
 
   it("getEffectiveImageUrl returns original URL when disabled", async () => {
     vi.resetModules();
-    const store = await import("../../../src/stores/imageHostStore");
-    const service = await import("../../../src/services/imageHostService");
+    const store = await import("@/stores/imageHostStore");
+    const service = await import("@/services/imageHostService");
     await store.loadImageHostPreference();
     const original = "https://i.pximg.net/a.jpg";
     expect(service.getEffectiveImageUrl(original)).toBe(original);
@@ -104,8 +104,8 @@ describe("selection strategies", () => {
 
   it("getEffectiveImageUrl returns weighted candidate when enabled", async () => {
     vi.resetModules();
-    const store = await import("../../../src/stores/imageHostStore");
-    const service = await import("../../../src/services/imageHostService");
+    const store = await import("@/stores/imageHostStore");
+    const service = await import("@/services/imageHostService");
     await store.loadImageHostPreference();
     store.setMasterEnabled(true);
 
@@ -116,8 +116,8 @@ describe("selection strategies", () => {
 
   it("getRaceCandidateUrls returns all enabled URLs in race mode", async () => {
     vi.resetModules();
-    const store = await import("../../../src/stores/imageHostStore");
-    const service = await import("../../../src/services/imageHostService");
+    const store = await import("@/stores/imageHostStore");
+    const service = await import("@/services/imageHostService");
     await store.loadImageHostPreference();
     store.setMasterEnabled(true);
     store.setMode("race");
@@ -129,8 +129,8 @@ describe("selection strategies", () => {
 
   it("getRaceCandidateUrls returns single URL in weighted mode", async () => {
     vi.resetModules();
-    const store = await import("../../../src/stores/imageHostStore");
-    const service = await import("../../../src/services/imageHostService");
+    const store = await import("@/stores/imageHostStore");
+    const service = await import("@/services/imageHostService");
     await store.loadImageHostPreference();
     store.setMasterEnabled(true);
     store.setMode("weighted");
@@ -149,8 +149,8 @@ describe("hasDuplicateBaseUrl", () => {
 
   it("detects duplicate ignoring trailing slash", async () => {
     vi.resetModules();
-    await import("../../../src/stores/imageHostStore");
-    const service = await import("../../../src/services/imageHostService");
+    await import("@/stores/imageHostStore");
+    const service = await import("@/services/imageHostService");
     expect(service.hasDuplicateBaseUrl("https://i.pixiv.re/", "other")).toBe(true);
     expect(service.hasDuplicateBaseUrl("https://i.pixiv.nl", "pixiv-nl")).toBe(false);
   });

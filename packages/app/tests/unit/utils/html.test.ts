@@ -17,7 +17,7 @@ process.on("unhandledRejection", (reason: unknown) => {
 });
 
 import { describe, it, expect } from "vitest";
-import { sanitizeHtml } from "../../../src/utils/html";
+import { sanitizeHtml } from "@/utils/html";
 
 describe("sanitizeHtml", () => {
   it("preserves plain text", () => {

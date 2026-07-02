@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 // Import dynamically to avoid ESM issues
 async function load() {
-  const mod = await import("../../../src/utils/imageLoader");
+  const mod = await import("@/utils/imageLoader");
   return mod;
 }
 

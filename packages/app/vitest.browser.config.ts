@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
+import { resolve } from "node:path";
 
 export default defineConfig({
   test: {
@@ -14,5 +15,10 @@ export default defineConfig({
     },
     passWithNoTests: true,
     testTimeout: 30000,
+  },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "src"),
+    },
   },
 });

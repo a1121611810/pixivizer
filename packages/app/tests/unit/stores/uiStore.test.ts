@@ -3,13 +3,13 @@ import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { Device } from "@capacitor/device";
 import { App } from "@capacitor/app";
-import { setPredictiveBackEnabled } from "../../../src/services/predictiveBack";
+import { setPredictiveBackEnabled } from "@/services/predictiveBack";
 
 vi.mock("@capacitor/core", () => ({
   Capacitor: { getPlatform: vi.fn(), isNativePlatform: vi.fn(() => false) },
 }));
 
-vi.mock("../../../src/services/predictiveBack", () => ({
+vi.mock("@/services/predictiveBack", () => ({
   setPredictiveBackEnabled: vi.fn(),
 }));
 
@@ -68,7 +68,7 @@ afterAll(() => {
 
 async function loadStore() {
   vi.resetModules();
-  const mod = await import("../../../src/stores/uiStore");
+  const mod = await import("@/stores/uiStore");
   return mod;
 }
 

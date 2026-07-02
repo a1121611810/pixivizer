@@ -5,14 +5,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const mockSetAccessToken = vi.fn();
 const mockSetOnUnauthorized = vi.fn();
 
-vi.mock("../../../src/api/client", () => ({
+vi.mock("@/api/client", () => ({
   setAccessToken: (...args: unknown[]) => mockSetAccessToken(...args),
   setOnUnauthorized: (...args: unknown[]) => mockSetOnUnauthorized(...args),
 }));
 
 const mockRefreshToken = vi.fn();
 
-vi.mock("../../../src/api/auth", () => ({
+vi.mock("@/api/auth", () => ({
   refreshToken: (...args: unknown[]) => mockRefreshToken(...args),
 }));
 
@@ -21,7 +21,7 @@ const mockSecureSet = vi.fn();
 const mockSecureRemove = vi.fn();
 let mockPrefToken: string | null = null;
 
-vi.mock("../../../src/utils/secureStorage", () => ({
+vi.mock("@/utils/secureStorage", () => ({
   getRefreshToken: vi.fn(() => Promise.resolve(mockSecureGetResult)),
   setRefreshToken: (...args: unknown[]) => mockSecureSet(...args),
   removeRefreshToken: (...args: unknown[]) => mockSecureRemove(...args),
@@ -30,7 +30,7 @@ vi.mock("../../../src/utils/secureStorage", () => ({
 
 async function loadStore() {
   vi.resetModules();
-  return import("../../../src/stores/authStore");
+  return import("@/stores/authStore");
 }
 
 describe("authStore", () => {

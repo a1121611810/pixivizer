@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { PixivIllust } from "../../../src/api/types";
+import type { PixivIllust } from "@/api/types";
 
 // Mock solid-js createResource - return controllable mock values
 let mockResourceValue: { illusts: PixivIllust[]; nextUrl: string | null } = {
@@ -43,12 +43,12 @@ vi.mock("solid-js", async (importOriginal) => {
 const mockLoadUserIllusts = vi.fn();
 const mockLoadNext = vi.fn();
 
-vi.mock("../../../src/api/illust", () => ({
+vi.mock("@/api/illust", () => ({
   loadUserIllusts: (...args: unknown[]) => mockLoadUserIllusts(...args),
   loadNext: (...args: unknown[]) => mockLoadNext(...args),
 }));
 
-vi.mock("../../../src/utils/r18Filter", () => ({
+vi.mock("@/utils/r18Filter", () => ({
   filterFeedIllusts: (illusts: PixivIllust[]) => illusts,
 }));
 
@@ -74,7 +74,7 @@ function makeIllust(id: number): PixivIllust {
 
 async function loadStore() {
   vi.resetModules();
-  return import("../../../src/stores/userIllustsStore");
+  return import("@/stores/userIllustsStore");
 }
 
 describe("userIllustsStore", () => {

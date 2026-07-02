@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import { resolve } from "node:path";
 
 export default defineConfig({
   test: {
@@ -8,5 +9,10 @@ export default defineConfig({
     globalTeardown: "./tests/e2e/globalTeardown.ts",
     testTimeout: 30000,
     hookTimeout: 30000,
+  },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "src"),
+    },
   },
 });

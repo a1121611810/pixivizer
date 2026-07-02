@@ -39,10 +39,10 @@ describe("api/auth.ts", () => {
       });
       vi.stubGlobal("fetch", mockFetch);
 
-      const { refreshToken } = await import("../../../src/api/auth");
+      const { refreshToken } = await import("@/api/auth");
 
       // Must call setAccessToken first to avoid reference error
-      const client = await import("../../../src/api/client");
+      const client = await import("@/api/client");
       client.setAccessToken("");
 
       const result = await refreshToken("my-refresh-token");
@@ -68,8 +68,8 @@ describe("api/auth.ts", () => {
       });
       vi.stubGlobal("fetch", mockFetch);
 
-      const { refreshToken } = await import("../../../src/api/auth");
-      const client = await import("../../../src/api/client");
+      const { refreshToken } = await import("@/api/auth");
+      const client = await import("@/api/client");
       client.setAccessToken("");
 
       await expect(refreshToken("bad-token")).rejects.toThrow("OAuth 失败");

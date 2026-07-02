@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockGet = vi.fn();
 const mockPost = vi.fn();
 
-vi.mock("../../../src/api/client", () => ({
+vi.mock("@/api/client", () => ({
   apiClient: {
     get: (...args: unknown[]) => mockGet(...args),
     post: (...args: unknown[]) => mockPost(...args),
@@ -12,7 +12,7 @@ vi.mock("../../../src/api/client", () => ({
 
 async function loadApi() {
   vi.resetModules();
-  return import("../../../src/api/user");
+  return import("@/api/user");
 }
 
 describe("api/user.ts", () => {
