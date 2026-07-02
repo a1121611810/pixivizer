@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { loadRecommended, loadNext } from "../../api/illust";
-import { type PixivIllust } from "../../api/types";
+import { loadRecommended, loadNext } from "../../../src/api/illust";
+import { type PixivIllust } from "../../../src/api/types";
 
 vi.mock("@capacitor/core", async () => {
   const actual = await vi.importActual<typeof import("@capacitor/core")>("@capacitor/core");
@@ -10,7 +10,7 @@ vi.mock("@capacitor/core", async () => {
   };
 });
 
-vi.mock("../../api/illust", () => ({
+vi.mock("../../../src/api/illust", () => ({
   loadRecommended: vi.fn(),
   loadFollow: vi.fn(),
   loadNext: vi.fn(),
@@ -18,7 +18,7 @@ vi.mock("../../api/illust", () => ({
 
 let mockCurrentTab = "recommended";
 
-vi.mock("../uiStore", () => ({
+vi.mock("../../../src/stores/uiStore", () => ({
   get currentTab() {
     return () => mockCurrentTab;
   },
@@ -77,7 +77,7 @@ describe("saveTabScroll", () => {
 
   it("saves window.scrollY as the tab scroll position", async () => {
     (globalThis as any).window = { scrollY: 1234 };
-    const { saveTabScroll, getFeedScrollY } = await import("../feedStore");
+    const { saveTabScroll, getFeedScrollY } = await import("../../../src/stores/feedStore");
 
     saveTabScroll("recommended");
 
@@ -87,7 +87,7 @@ describe("saveTabScroll", () => {
   it("saves different scroll positions per tab", async () => {
     (globalThis as any).window = { scrollY: 567 };
     mockCurrentTab = "follow";
-    const { saveTabScroll, getFeedScrollY } = await import("../feedStore");
+    const { saveTabScroll, getFeedScrollY } = await import("../../../src/stores/feedStore");
 
     saveTabScroll("follow");
 
@@ -123,7 +123,7 @@ describe("fetchMixed", () => {
       },
     );
 
-    const { setRecommendSubTab, illusts, fetchMixed } = await import("../feedStore");
+    const { setRecommendSubTab, illusts, fetchMixed } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
 
@@ -138,7 +138,7 @@ describe("fetchMixed", () => {
       return { illusts: [createIllust(1, "2026-07-01T09:00:00+09:00", "illust")], next_url: null };
     });
 
-    const { setRecommendSubTab, illusts, error, fetchMixed } = await import("../feedStore");
+    const { setRecommendSubTab, illusts, error, fetchMixed } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
 
@@ -183,7 +183,7 @@ describe("fetchMoreMixed", () => {
     });
 
     const { setRecommendSubTab, fetchMixed, fetchMoreMixed, illusts } =
-      await import("../feedStore");
+      await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
     expect(illusts().map((i) => i.id)).toEqual([1, 2]);
@@ -211,7 +211,7 @@ describe("fetchMoreMixed", () => {
     });
 
     const { setRecommendSubTab, fetchMixed, fetchMoreMixed, illusts } =
-      await import("../feedStore");
+      await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
 
@@ -238,7 +238,7 @@ describe("fetchMoreMixed", () => {
     });
 
     const { setRecommendSubTab, fetchMixed, fetchMoreMixed, illusts, error } =
-      await import("../feedStore");
+      await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
     await fetchMoreMixed();
@@ -269,7 +269,7 @@ describe("fetchMoreMixed", () => {
     });
 
     const { setRecommendSubTab, fetchMixed, fetchMoreMixed, illusts, error } =
-      await import("../feedStore");
+      await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
 
@@ -298,7 +298,7 @@ describe("fetchMoreMixed", () => {
       throw new Error("illust load failed");
     });
 
-    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, error } = await import("../feedStore");
+    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, error } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
 
@@ -328,7 +328,7 @@ describe("recommended sub-tab routing", () => {
       next_url: "next-illust",
     });
 
-    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../feedStore");
+    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("illust");
     await ensureLoaded();
     await vi.waitFor(() => illusts().length > 0);
@@ -344,7 +344,7 @@ describe("recommended sub-tab routing", () => {
       next_url: "next-manga",
     });
 
-    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../feedStore");
+    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("manga");
     await ensureLoaded();
     await vi.waitFor(() => illusts().length > 0);
@@ -366,7 +366,7 @@ describe("recommended sub-tab routing", () => {
       },
     );
 
-    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../feedStore");
+    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await ensureLoaded();
     await vi.waitFor(() => illusts().length > 0);
@@ -383,7 +383,7 @@ describe("recommended sub-tab routing", () => {
       next_url: "next-illust",
     });
 
-    const { setRecommendSubTab, refresh } = await import("../feedStore");
+    const { setRecommendSubTab, refresh } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("illust");
     await refresh();
 
@@ -403,7 +403,7 @@ describe("recommended sub-tab routing", () => {
       },
     );
 
-    const { setRecommendSubTab, refresh } = await import("../feedStore");
+    const { setRecommendSubTab, refresh } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await refresh();
 
@@ -422,7 +422,7 @@ describe("recommended sub-tab routing", () => {
       next_url: null,
     });
 
-    const { setRecommendSubTab, ensureLoaded, fetchMore, illusts } = await import("../feedStore");
+    const { setRecommendSubTab, ensureLoaded, fetchMore, illusts } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("illust");
     await ensureLoaded();
     await fetchMore();
@@ -442,7 +442,7 @@ describe("recommended sub-tab routing", () => {
       next_url: null,
     });
 
-    const { setRecommendSubTab, ensureLoaded, fetchMore, illusts } = await import("../feedStore");
+    const { setRecommendSubTab, ensureLoaded, fetchMore, illusts } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("manga");
     await ensureLoaded();
     await fetchMore();
@@ -458,7 +458,7 @@ describe("recommended sub-tab routing", () => {
       next_url: "next-manga",
     });
 
-    const { setRecommendSubTab, fetchManga, illusts } = await import("../feedStore");
+    const { setRecommendSubTab, fetchManga, illusts } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("manga");
     await fetchManga();
 
@@ -484,7 +484,7 @@ describe("recommended sub-tab regression fixes", () => {
     (globalThis as any).window = { scrollY: 0 };
     vi.mocked(loadRecommended).mockRejectedValue(new Error("load fail"));
 
-    const { setRecommendSubTab, fetchMixed, error } = await import("../feedStore");
+    const { setRecommendSubTab, fetchMixed, error } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
     expect(error()).not.toBeNull();
@@ -494,7 +494,7 @@ describe("recommended sub-tab regression fixes", () => {
   });
 
   it("saves and restores scroll per recommended sub-tab", async () => {
-    const { setRecommendSubTab, saveTabScroll, getFeedScrollY } = await import("../feedStore");
+    const { setRecommendSubTab, saveTabScroll, getFeedScrollY } = await import("../../../src/stores/feedStore");
 
     (globalThis as any).window = { scrollY: 100 };
     setRecommendSubTab("illust");
@@ -523,7 +523,7 @@ describe("recommended sub-tab regression fixes", () => {
     );
 
     const { setRecommendSubTab, ensureLoaded, nextUrl, saveTabScroll } =
-      await import("../feedStore");
+      await import("../../../src/stores/feedStore");
     setRecommendSubTab("mixed");
     await ensureLoaded();
     expect(nextUrl()).toBe("next-illust");
@@ -545,7 +545,7 @@ describe("recommended sub-tab regression fixes", () => {
     });
     vi.mocked(loadRecommended).mockReturnValue(loadPromise);
 
-    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../feedStore");
+    const { setRecommendSubTab, ensureLoaded, illusts } = await import("../../../src/stores/feedStore");
     setRecommendSubTab("illust");
     const ensurePromise = ensureLoaded();
     expect(illusts()).toEqual([]);

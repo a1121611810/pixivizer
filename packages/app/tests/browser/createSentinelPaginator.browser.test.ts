@@ -11,12 +11,12 @@ describe("createSentinelPaginator", () => {
   });
 
   it("exports createSentinelPaginator function", async () => {
-    const mod = await import("../createSentinelPaginator");
+    const mod = await import("../../src/primitives/createSentinelPaginator");
     expect(typeof mod.createSentinelPaginator).toBe("function");
   });
 
   it("returns an object with attach method", async () => {
-    const { createSentinelPaginator } = await import("../createSentinelPaginator");
+    const { createSentinelPaginator } = await import("../../src/primitives/createSentinelPaginator");
     const result = createSentinelPaginator({
       onTrigger: vi.fn(),
     });
@@ -25,7 +25,7 @@ describe("createSentinelPaginator", () => {
   });
 
   it("attach accepts an HTMLDivElement", async () => {
-    const { createSentinelPaginator } = await import("../createSentinelPaginator");
+    const { createSentinelPaginator } = await import("../../src/primitives/createSentinelPaginator");
     const onTrigger = vi.fn();
     const result = createSentinelPaginator({ onTrigger });
     const el = document.createElement("div");
@@ -34,7 +34,7 @@ describe("createSentinelPaginator", () => {
   });
 
   it("accepts enabled option", async () => {
-    const { createSentinelPaginator } = await import("../createSentinelPaginator");
+    const { createSentinelPaginator } = await import("../../src/primitives/createSentinelPaginator");
     const enabled = () => false;
     const onTrigger = vi.fn();
     const result = createSentinelPaginator({ enabled, onTrigger });

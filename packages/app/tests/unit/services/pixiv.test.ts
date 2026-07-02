@@ -12,7 +12,7 @@ vi.mock("@book000/pixivts", () => ({
 
 async function loadService() {
   vi.resetModules();
-  return import("../pixiv");
+  return import("../../../src/services/pixiv");
 }
 
 describe("pixiv service", () => {

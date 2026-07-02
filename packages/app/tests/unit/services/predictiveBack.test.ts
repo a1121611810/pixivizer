@@ -22,10 +22,10 @@ import {
   onProgress,
   onEnd,
   onCancel,
-} from "./predictiveBack";
-import { PredictiveBack } from "../native/PredictiveBack";
+} from "../../../src/services/predictiveBack";
+import { PredictiveBack } from "../../../src/native/PredictiveBack";
 
-vi.mock("../native/PredictiveBack", () => {
+vi.mock("../../../src/native/PredictiveBack", () => {
   const listeners: Record<string, Array<(event: unknown) => void>> = {};
   return {
     PredictiveBack: {

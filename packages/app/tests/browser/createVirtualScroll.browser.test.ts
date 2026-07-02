@@ -3,16 +3,16 @@ import { describe, it, expect, vi } from "vitest";
 import {
   computeMasonryLayout,
   type ComputeMasonryInput,
-} from "../computeMasonryLayout";
+} from "../../src/primitives/computeMasonryLayout";
 
 describe("createVirtualScroll integration", () => {
   it("createVirtualScroll is defined and importable", async () => {
-    const mod = await import("../createVirtualScroll");
+    const mod = await import("../../src/primitives/createVirtualScroll");
     expect(typeof mod.createVirtualScroll).toBe("function");
   });
 
   it("returns expected API shape", async () => {
-    const { createVirtualScroll } = await import("../createVirtualScroll");
+    const { createVirtualScroll } = await import("../../src/primitives/createVirtualScroll");
     const layout = () =>
       computeMasonryLayout({
         items: [{ width: 200, height: 200 }],
@@ -31,14 +31,14 @@ describe("createVirtualScroll integration", () => {
   });
 
   it("visibleRange returns correct range with data", async () => {
-    const { createVirtualScroll } = await import("../createVirtualScroll");
+    const { createVirtualScroll } = await import("../../src/primitives/createVirtualScroll");
     // Can't fully test in browser due to SolidJS reactive wiring,
     // but we verify the module loads and exports correctly
     expect(createVirtualScroll).toBeDefined();
   });
 
   it("getItemStyle returns absolute positioned styles", async () => {
-    const { createVirtualScroll } = await import("../createVirtualScroll");
+    const { createVirtualScroll } = await import("../../src/primitives/createVirtualScroll");
     const layout = () =>
       computeMasonryLayout({
         items: [
@@ -62,7 +62,7 @@ describe("createVirtualScroll integration", () => {
   });
 
   it("getItemStyle returns fallback for out-of-range index", async () => {
-    const { createVirtualScroll } = await import("../createVirtualScroll");
+    const { createVirtualScroll } = await import("../../src/primitives/createVirtualScroll");
     const layout = () =>
       computeMasonryLayout({
         items: [],
@@ -79,7 +79,7 @@ describe("createVirtualScroll integration", () => {
   });
 
   it("totalHeight tracks layout totalHeight", async () => {
-    const { createVirtualScroll } = await import("../createVirtualScroll");
+    const { createVirtualScroll } = await import("../../src/primitives/createVirtualScroll");
     const layout = () =>
       computeMasonryLayout({
         items: [{ width: 200, height: 200 }],

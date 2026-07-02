@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { PixivIllust, RestrictType } from "../../api/types";
+import type { PixivIllust, RestrictType } from "../../../src/api/types";
 
 // Completely mock solid-js createResource for test control
 let mockResourceValue: { illusts: PixivIllust[]; nextUrl: string | null } = {
@@ -48,21 +48,21 @@ vi.mock("solid-js", async (importOriginal) => {
 const mockLoadBookmarks = vi.fn();
 const mockLoadNext = vi.fn();
 
-vi.mock("../../api/illust", () => ({
+vi.mock("../../../src/api/illust", () => ({
   loadBookmarks: (...args: unknown[]) => mockLoadBookmarks(...args),
   loadNext: (...args: unknown[]) => mockLoadNext(...args),
 }));
 
 // Mock authStore
 let mockUserId: string | null = "1";
-vi.mock("../authStore", () => ({
+vi.mock("../../../src/stores/authStore", () => ({
   get user() {
     return () => (mockUserId ? { id: mockUserId, name: "Test", account: "test" } : null);
   },
 }));
 
 // Mock r18Filter
-vi.mock("../../utils/r18Filter", () => ({
+vi.mock("../../../src/utils/r18Filter", () => ({
   filterFeedIllusts: (illusts: PixivIllust[]) => illusts,
   filterUserPreviews: (previews: unknown[]) => previews,
 }));
@@ -89,7 +89,7 @@ function makeIllust(id: number): PixivIllust {
 
 async function loadStore() {
   vi.resetModules();
-  return import("../bookmarkStore");
+  return import("../../../src/stores/bookmarkStore");
 }
 
 describe("bookmarkStore", () => {

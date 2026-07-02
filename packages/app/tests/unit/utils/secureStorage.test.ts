@@ -19,7 +19,7 @@ vi.mock("@capacitor/preferences", () => ({
 
 async function loadModule() {
   vi.resetModules();
-  return import("../secureStorage");
+  return import("../../../src/utils/secureStorage");
 }
 
 describe("secureStorage", () => {

@@ -4,8 +4,8 @@ import {
   appendToLayout,
   computeWindow,
   CARD_INFO_HEIGHT,
-} from "../computeMasonryLayout";
-import type { MasonryLayout, MasonryItemLayout } from "../types";
+} from "../../../src/primitives/computeMasonryLayout";
+import type { MasonryLayout, MasonryItemLayout } from "../../../src/primitives/types";
 
 function makeItem(w: number, h: number) {
   return { width: w, height: h };
