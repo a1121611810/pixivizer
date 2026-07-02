@@ -1,5 +1,5 @@
 {
-  "version": "2.2.3",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.2.3",
-  "changelog": "🔧 其他\n  **feat(pwa): 采用自定义服务工作线程并移除静态资源预缓存策略**"
+  "version": "2.2.4",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.2.4",
+  "changelog": "🔧 其他\n  🐛 fix(feed): add per-source request lock to prevent concurrent refresh\n  ♻️ refactor: 应用 Vitest 官方 Recipes 优化测试代码\n  ✨ feat: 配置 vitest 路径别名 @/ → src/，简化测试导入\n  🐛 fix: 修正测试文件移动后的 import 路径\n  ♻️"
 }
