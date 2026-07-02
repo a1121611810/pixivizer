@@ -16,10 +16,7 @@ async function loadService() {
 }
 
 describe("pixiv service", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
+  
   it("getClient returns null before init", async () => {
     const { getClient } = await loadService();
     expect(getClient()).toBeNull();

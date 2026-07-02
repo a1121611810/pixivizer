@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ApiErrorType } from "@/api/types";
+import { describe, it, expect, expectTypeOf, vi, beforeEach } from "vitest";
+import { ApiErrorType, type ApiError } from "@/api/types";
 
 vi.mock("@capacitor/core", async (importOriginal) => {
   const actual = await importOriginal();
@@ -57,9 +57,13 @@ describe("extractPixivErrorMessage", () => {
 describe("classifyError", () => {
   it("classifies 401 as UNAUTHORIZED", async () => {
     const { classifyError } = await loadModule();
-    const err = classifyError(401, null);
+    const err = classifyError(401, null) as ApiError;
     expect(err.type).toBe(ApiErrorType.UNAUTHORIZED);
     expect(err.message).toContain("401");
+    // Type narrowing: verify the return shape
+    expectTypeOf(err).toHaveProperty("type");
+    expectTypeOf(err.type).toEqualTypeOf<ApiErrorType>();
+    expectTypeOf(err.message).toBeString();
   });
 
   it("classifies 403 as FORBIDDEN", async () => {

@@ -23,10 +23,7 @@ async function loadModule() {
 }
 
 describe("secureStorage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
+  
   describe("getRefreshToken", () => {
     it("returns token from SecureStoragePlugin", async () => {
       mockSecureGet.mockResolvedValue({ value: "my-token" });

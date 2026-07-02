@@ -7,7 +7,6 @@ import { type Page } from "@playwright/test";
 export async function clickNavTab(page: Page, label: string) {
   const btn = page.locator(".bottom-nav-item").filter({ hasText: label });
   await btn.click();
-  await page.waitForTimeout(1000);
 }
 
 /**
@@ -17,7 +16,6 @@ export async function clickNavTab(page: Page, label: string) {
 export async function openSettings(page: Page) {
   const headerTitle = page.locator('[class*="surface-appbar"] h1').first();
   await headerTitle.click();
-  await page.waitForTimeout(1000);
 }
 
 /**
@@ -30,5 +28,4 @@ export async function clientNavigate(page: Page, path: string) {
     window.history.pushState({}, "", p);
     window.dispatchEvent(new PopStateEvent("popstate"));
   }, path);
-  await page.waitForTimeout(1000);
 }

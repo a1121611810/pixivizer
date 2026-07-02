@@ -6,6 +6,8 @@ export default defineConfig({
     include: ["tests/unit/**/*.test.{ts,tsx}"],
     environment: "node",
     passWithNoTests: true,
+    clearMocks: true,
+    restoreMocks: true,
   },
   resolve: {
     alias: {

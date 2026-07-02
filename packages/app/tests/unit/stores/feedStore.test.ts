@@ -71,7 +71,6 @@ describe("saveTabScroll", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
     (globalThis as any).window = undefined;
   });
 
@@ -103,7 +102,6 @@ describe("fetchMixed", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
     (globalThis as any).window = undefined;
   });
 
@@ -156,7 +154,6 @@ describe("fetchMoreMixed", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
     (globalThis as any).window = undefined;
   });
 
@@ -317,7 +314,6 @@ describe("recommended sub-tab routing", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
     (globalThis as any).window = undefined;
   });
 
@@ -476,7 +472,6 @@ describe("recommended sub-tab regression fixes", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
     (globalThis as any).window = undefined;
   });
 

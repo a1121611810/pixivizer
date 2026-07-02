@@ -11,15 +11,12 @@ export type TestFixtures = {
  * Age confirmation uses <fluent-button> with "已满 18 岁" text.
  */
 async function confirmAge(page: Page) {
-  // Navigate to app (may already be on age-confirmation page)
   await page.goto("/", { waitUntil: "networkidle" });
-  await page.waitForTimeout(2000);
 
   const adultBtn = page.getByText("已满 18 岁");
   if (await adultBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
     await adultBtn.click();
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
   }
 }
 
@@ -30,7 +27,6 @@ async function confirmAge(page: Page) {
 async function loginWithRefreshToken(page: Page, token: string) {
   if (!page.url().includes("/login")) {
     await page.goto("/login", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
   }
 
   // Type into fluent-textarea via value setter
@@ -42,10 +38,8 @@ async function loginWithRefreshToken(page: Page, token: string) {
     }
   }, token);
 
-  // Click login button
+  // Click login button and wait for redirect
   await page.getByText("登录").click();
-  await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(5000);
 
   // Should be redirected to recommended page
   await expect(page).toHaveURL(/\/recommended/, { timeout: 15000 });

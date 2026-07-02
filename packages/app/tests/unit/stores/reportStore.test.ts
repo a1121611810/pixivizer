@@ -12,10 +12,7 @@ async function loadStore() {
 }
 
 describe("reportStore", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
+  
   it("loads reported ids from Preferences", async () => {
     vi.mocked(Preferences.get).mockResolvedValue({
       value: JSON.stringify([

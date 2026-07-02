@@ -64,7 +64,6 @@ describe("transformUrl", () => {
 
 describe("selection strategies", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.mocked(Preferences.get).mockResolvedValue({ value: null });
     vi.mocked(Preferences.set).mockResolvedValue(undefined);
   });
@@ -143,7 +142,6 @@ describe("selection strategies", () => {
 
 describe("hasDuplicateBaseUrl", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.mocked(Preferences.get).mockResolvedValue({ value: null });
   });
 

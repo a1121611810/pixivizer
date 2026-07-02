@@ -35,7 +35,6 @@ async function loadStore() {
 
 describe("authStore", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     mockSecureGetResult = null;
     mockPrefToken = null;
   });

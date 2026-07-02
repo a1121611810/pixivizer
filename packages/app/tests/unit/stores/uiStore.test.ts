@@ -73,10 +73,7 @@ async function loadStore() {
 }
 
 describe("usePredictiveBack", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
+  
   it("defaults to false on non-Android platforms", async () => {
     vi.mocked(Capacitor.getPlatform).mockReturnValue("web");
     const { loadPredictiveBackPreference, usePredictiveBack, isPredictiveBackSupported } =
@@ -177,7 +174,6 @@ describe("usePredictiveBack", () => {
 
 describe("age preference", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     (globalThis as any).window = { dispatchEvent: vi.fn() };
     (globalThis as any).CustomEvent = class CustomEvent {
       constructor(public type: string) {}
@@ -282,7 +278,6 @@ describe("age preference", () => {
 
 describe("resetUiStore", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     (globalThis as any).window = { dispatchEvent: vi.fn() };
     (globalThis as any).CustomEvent = class CustomEvent {
       constructor(public type: string) {}

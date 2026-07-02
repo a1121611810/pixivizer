@@ -151,7 +151,6 @@ describe("onEnd target actions", () => {
 
   beforeEach(() => {
     resetStateForTest();
-    vi.clearAllMocks();
     Object.keys(eventListeners).forEach((key) => delete eventListeners[key]);
     vi.stubGlobal("window", {
       location: { pathname: "/recommended" },
@@ -227,7 +226,6 @@ describe("onEnd target actions", () => {
 describe("setPredictiveBackEnabled", () => {
   beforeEach(() => {
     resetStateForTest();
-    vi.clearAllMocks();
   });
 
   afterEach(async () => {

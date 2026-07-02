@@ -12,10 +12,7 @@ async function loadStore() {
 }
 
 describe("imageHostStore defaults", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
+  
   it("defaults to disabled with weighted mode and built-in hosts", async () => {
     vi.mocked(Preferences.get).mockResolvedValue({ value: null });
     const {
@@ -95,7 +92,6 @@ describe("imageHostStore defaults", () => {
 
 describe("imageHostStore mutations", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.mocked(Preferences.get).mockResolvedValue({ value: null });
     vi.mocked(Preferences.set).mockResolvedValue(undefined);
   });
@@ -186,7 +182,6 @@ describe("imageHostStore mutations", () => {
 
 describe("imageHostStore probe results", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vi.mocked(Preferences.get).mockResolvedValue({ value: null });
     vi.mocked(Preferences.set).mockResolvedValue(undefined);
   });
