@@ -16,7 +16,6 @@ async function loadService() {
 }
 
 describe("pixiv service", () => {
-  
   it("getClient returns null before init", async () => {
     const { getClient } = await loadService();
     expect(getClient()).toBeNull();

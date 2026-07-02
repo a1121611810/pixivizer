@@ -69,7 +69,7 @@ test.describe("Image Host Settings", () => {
     const postState = await page.evaluate(async () => {
       const sw = document.querySelector('fluent-switch[aria-label="启用图床代理"]') as any;
       sw?.click();
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise((r) => setTimeout(r, 100));
       const d = document.querySelector('fluent-dialog[aria-label="开启图床代理？"]') as any;
       return { checked: sw?.checked ?? false, dialogOpen: d?._dialog?.open ?? false };
     });
@@ -77,7 +77,9 @@ test.describe("Image Host Settings", () => {
     expect(postState.dialogOpen).toBe(true);
 
     // 3. Click "取消" button inside the dialog
-    const cancelBtn = confirmDialog.locator('fluent-button[appearance="secondary"]').getByText("取消");
+    const cancelBtn = confirmDialog
+      .locator('fluent-button[appearance="secondary"]')
+      .getByText("取消");
     await cancelBtn.click();
 
     // 4. Dialog should close
@@ -123,7 +125,7 @@ test.describe("Image Host Settings", () => {
     let postState = await page.evaluate(async () => {
       const sw = document.querySelector('fluent-switch[aria-label="启用图床代理"]') as any;
       sw?.click();
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise((r) => setTimeout(r, 100));
       const d = document.querySelector('fluent-dialog[aria-label="开启图床代理？"]') as any;
       return { checked: sw?.checked ?? false, dialogOpen: d?._dialog?.open ?? false };
     });

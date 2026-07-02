@@ -5,17 +5,15 @@ import type { PixivIllust } from "@/api/types";
  * Validate that a value is a valid PixivIllust object.
  * Uses vi.defineHelper for proper stack traces (custom-assertions recipe).
  */
-export const expectValidIllust = vi.defineHelper(
-  (value: unknown) => {
-    const illust = value as PixivIllust;
-    expect(illust).toBeDefined();
-    expect(typeof illust.id).toBe("number");
-    expect(typeof illust.title).toBe("string");
-    expect(illust.user).toBeDefined();
-    expect(typeof illust.user.id).toBe("number");
-    expect(typeof illust.user.name).toBe("string");
-  },
-);
+export const expectValidIllust = vi.defineHelper((value: unknown) => {
+  const illust = value as PixivIllust;
+  expect(illust).toBeDefined();
+  expect(typeof illust.id).toBe("number");
+  expect(typeof illust.title).toBe("string");
+  expect(illust.user).toBeDefined();
+  expect(typeof illust.user.id).toBe("number");
+  expect(typeof illust.user.name).toBe("string");
+});
 
 /**
  * Create a minimal PixivIllust for testing.

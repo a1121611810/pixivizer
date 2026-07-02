@@ -26,7 +26,9 @@ test.describe("Bookmarks", () => {
     await clickNavTab(page, "收藏");
     await expect(page).toHaveURL(/\/bookmarks/, { timeout: 10000 });
 
-    const content = page.locator(".image-card, [class*='bookmark'], [class*='content'], div[class]").first();
+    const content = page
+      .locator(".image-card, [class*='bookmark'], [class*='content'], div[class]")
+      .first();
     await expect(content).toBeVisible({ timeout: 5000 });
   });
 

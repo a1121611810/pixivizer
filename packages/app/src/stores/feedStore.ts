@@ -7,6 +7,34 @@ import { filterFeedIllusts } from "../utils/r18Filter";
 
 export type RecommendSubTab = "mixed" | "illust" | "manga";
 
+// ── 按数据源级别的请求锁 ──
+// 用于防止切换子标签后同一数据源被重复刷新。
+// 例如 "全部" 下拉刷新包含 follow_public + follow_private，
+// 若请求中切换到 "非公开" 再下拉刷新，会与正在进行的请求冲突。
+// 此 Set 跟踪当前正在刷新的数据源键名，refresh() 启动前检查。
+const pendingRefreshKeys = new Set<string>();
+
+/**
+ * 根据当前标签和子标签，返回此 refresh 会覆盖的数据源键名列表。
+ * 用于检查请求锁：若任一键已在 pendingRefreshKeys 中，则跳过此次刷新。
+ */
+function getRefreshSourceKeys(tab: string): string[] {
+  if (tab === "follow") {
+    // fetchFollow 始终同时加载 public + private
+    return ["follow_public", "follow_private"];
+  }
+  if (tab === "recommended") {
+    const subTab = state.recommendSubTab;
+    if (subTab === "mixed") {
+      // fetchMixed 同时加载 illust + manga
+      return ["recommended_illust", "recommended_manga"];
+    }
+    // 单一子标签只加载对应数据源
+    return [`recommended_${subTab === "illust" ? "illust" : "manga"}`];
+  }
+  return [];
+}
+
 // ── Store: reactive UI-facing state ──
 const [state, setState] = createStore({
   illusts: [] as PixivIllust[],
@@ -109,7 +137,8 @@ export function computeMixedIllusts(): PixivIllust[] {
   const sortedIllust = [...illust].sort(byCreateDateDesc); // oxlint-disable-line unicorn/no-array-sort
   const sortedManga = [...manga].sort(byCreateDateDesc); // oxlint-disable-line unicorn/no-array-sort
   // 按时间降序合并（归并），同时去重
-  let i = 0, j = 0;
+  let i = 0,
+    j = 0;
   while (i < sortedIllust.length && j < sortedManga.length) {
     if (sortedIllust[i].create_date >= sortedManga[j].create_date) {
       pushIfNotDuplicate(sortedIllust[i++]);
@@ -265,6 +294,18 @@ export async function ensureLoaded(): Promise<void> {
 
 export async function refresh() {
   const tab = currentTab();
+  const sourceKeys = getRefreshSourceKeys(tab);
+
+  // 检查是否有需要的数据源正在刷新中
+  for (const key of sourceKeys) {
+    if (pendingRefreshKeys.has(key)) return;
+  }
+
+  // 锁定数据源
+  for (const key of sourceKeys) {
+    pendingRefreshKeys.add(key);
+  }
+
   setState("refreshing", true);
   try {
     if (tab === "recommended") {
@@ -280,6 +321,10 @@ export async function refresh() {
       await fetchFollow();
     }
   } finally {
+    // 释放锁定
+    for (const key of sourceKeys) {
+      pendingRefreshKeys.delete(key);
+    }
     setState("refreshing", false);
   }
 }

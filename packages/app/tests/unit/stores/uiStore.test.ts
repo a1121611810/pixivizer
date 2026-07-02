@@ -73,7 +73,6 @@ async function loadStore() {
 }
 
 describe("usePredictiveBack", () => {
-  
   it("defaults to false on non-Android platforms", async () => {
     vi.mocked(Capacitor.getPlatform).mockReturnValue("web");
     const { loadPredictiveBackPreference, usePredictiveBack, isPredictiveBackSupported } =

@@ -22,11 +22,7 @@ vi.mock("@/stores/blockStore", () => ({
   },
 }));
 
-function createIllust(
-  id: number,
-  x_restrict: 0 | 1 | 2 = 0,
-  userId: number = 1,
-) {
+function createIllust(id: number, x_restrict: 0 | 1 | 2 = 0, userId: number = 1) {
   return {
     id,
     title: `work-${id}`,
@@ -56,11 +52,7 @@ describe("r18Filter", () => {
   describe("filterFeedIllusts", () => {
     it("keeps all-age illusts when R18 and R18G are enabled", async () => {
       const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      const input = [
-        createIllust(1, 0),
-        createIllust(2, 1),
-        createIllust(3, 2),
-      ];
+      const input = [createIllust(1, 0), createIllust(2, 1), createIllust(3, 2)];
       const result = filterFeedIllusts(input);
       expect(result).toHaveLength(3);
     });
@@ -68,11 +60,7 @@ describe("r18Filter", () => {
     it("filters out R-18 illusts when showR18 is false", async () => {
       mockShowR18 = false;
       const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      const input = [
-        createIllust(1, 0),
-        createIllust(2, 1),
-        createIllust(3, 2),
-      ];
+      const input = [createIllust(1, 0), createIllust(2, 1), createIllust(3, 2)];
       const result = filterFeedIllusts(input);
       expect(result.map((i) => i.id)).toEqual([1, 3]);
     });
@@ -80,11 +68,7 @@ describe("r18Filter", () => {
     it("filters out R-18G illusts when showR18G is false", async () => {
       mockShowR18G = false;
       const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      const input = [
-        createIllust(1, 0),
-        createIllust(2, 1),
-        createIllust(3, 2),
-      ];
+      const input = [createIllust(1, 0), createIllust(2, 1), createIllust(3, 2)];
       const result = filterFeedIllusts(input);
       expect(result.map((i) => i.id)).toEqual([1, 2]);
     });
@@ -93,11 +77,7 @@ describe("r18Filter", () => {
       mockShowR18 = false;
       mockShowR18G = false;
       const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      const input = [
-        createIllust(1, 0),
-        createIllust(2, 1),
-        createIllust(3, 2),
-      ];
+      const input = [createIllust(1, 0), createIllust(2, 1), createIllust(3, 2)];
       const result = filterFeedIllusts(input);
       expect(result.map((i) => i.id)).toEqual([1]);
     });
@@ -155,11 +135,7 @@ describe("r18Filter", () => {
       const { filterUserPreviews } = await import("@/utils/r18Filter");
       const preview = {
         user: { id: 1, name: "u1", account: "u1", is_followed: false },
-        illusts: [
-          createIllust(1, 0),
-          createIllust(2, 1),
-          createIllust(3, 2),
-        ],
+        illusts: [createIllust(1, 0), createIllust(2, 1), createIllust(3, 2)],
       };
       const result = filterUserPreviews([preview]);
       expect(result[0].illusts.map((i) => i.id)).toEqual([1, 3]);

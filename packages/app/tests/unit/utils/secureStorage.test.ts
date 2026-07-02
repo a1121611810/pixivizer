@@ -23,7 +23,6 @@ async function loadModule() {
 }
 
 describe("secureStorage", () => {
-  
   describe("getRefreshToken", () => {
     it("returns token from SecureStoragePlugin", async () => {
       mockSecureGet.mockResolvedValue({ value: "my-token" });

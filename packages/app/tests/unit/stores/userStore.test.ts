@@ -126,10 +126,7 @@ describe("userStore", () => {
       await store.loadFollowing(5);
 
       // Optimistic toggle
-      await store.toggleUserFollow(
-        store.followingList()[0],
-        "following",
-      );
+      await store.toggleUserFollow(store.followingList()[0], "following");
 
       expect(store.followingList()[0].user.is_followed).toBe(true);
       expect(mockFollowUser).toHaveBeenCalledWith(10);
@@ -145,10 +142,7 @@ describe("userStore", () => {
       const store = await loadStore();
       await store.loadFollowing(5);
 
-      await store.toggleUserFollow(
-        store.followingList()[0],
-        "following",
-      );
+      await store.toggleUserFollow(store.followingList()[0], "following");
 
       // Should be rolled back to false
       expect(store.followingList()[0].user.is_followed).toBe(false);

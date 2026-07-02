@@ -113,9 +113,7 @@ describe("createLayout", () => {
     });
 
     it("handles ugoira items with height correction", () => {
-      const illusts = [
-        makeIllust(1, { width: 200, height: 200, type: "ugoira" as const }),
-      ];
+      const illusts = [makeIllust(1, { width: 200, height: 200, type: "ugoira" as const })];
       const { layout, done } = mountLayout(illusts);
       try {
         assertLayoutMatchesDirect(layout, illusts);

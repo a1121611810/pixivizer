@@ -12,7 +12,6 @@ async function loadStore() {
 }
 
 describe("imageHostStore defaults", () => {
-  
   it("defaults to disabled with weighted mode and built-in hosts", async () => {
     vi.mocked(Preferences.get).mockResolvedValue({ value: null });
     const {

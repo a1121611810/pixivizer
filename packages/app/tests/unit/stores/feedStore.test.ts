@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { loadRecommended, loadNext } from "@/api/illust";
+import { loadRecommended, loadFollow, loadNext } from "@/api/illust";
 import { type PixivIllust } from "@/api/types";
 
 vi.mock("@capacitor/core", async () => {
@@ -378,7 +378,8 @@ describe("fetchMoreMixed", () => {
       throw new Error("illust load failed");
     });
 
-    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, error } = await import("@/stores/feedStore");
+    const { setRecommendSubTab, fetchMixed, fetchMoreMixed, error } =
+      await import("@/stores/feedStore");
     setRecommendSubTab("mixed");
     await fetchMixed();
 
@@ -501,7 +502,8 @@ describe("recommended sub-tab routing", () => {
       next_url: null,
     });
 
-    const { setRecommendSubTab, ensureLoaded, fetchMore, illusts } = await import("@/stores/feedStore");
+    const { setRecommendSubTab, ensureLoaded, fetchMore, illusts } =
+      await import("@/stores/feedStore");
     setRecommendSubTab("illust");
     await ensureLoaded();
     await fetchMore();
@@ -521,7 +523,8 @@ describe("recommended sub-tab routing", () => {
       next_url: null,
     });
 
-    const { setRecommendSubTab, ensureLoaded, fetchMore, illusts } = await import("@/stores/feedStore");
+    const { setRecommendSubTab, ensureLoaded, fetchMore, illusts } =
+      await import("@/stores/feedStore");
     setRecommendSubTab("manga");
     await ensureLoaded();
     await fetchMore();
@@ -572,7 +575,8 @@ describe("recommended sub-tab regression fixes", () => {
   });
 
   it("saves and restores scroll per recommended sub-tab", async () => {
-    const { setRecommendSubTab, saveTabScroll, getFeedScrollY } = await import("@/stores/feedStore");
+    const { setRecommendSubTab, saveTabScroll, getFeedScrollY } =
+      await import("@/stores/feedStore");
 
     (globalThis as any).window = { scrollY: 100 };
     setRecommendSubTab("illust");
@@ -634,5 +638,165 @@ describe("recommended sub-tab regression fixes", () => {
     });
     await ensurePromise;
     expect(illusts().map((i) => i.id)).toEqual([1]);
+  });
+});
+
+// ── 并发刷新锁：子标签切换时防止重复请求 ──
+// 之前的 bug：在"全部"下拉刷新请求中切换到"非公开"，
+// 可以再触发一次下拉刷新，导致两个 fetchFollow 并行写入缓存。
+describe("refresh concurrent lock", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.mocked(loadRecommended).mockReset();
+    vi.mocked(loadFollow).mockReset();
+    vi.mocked(loadNext).mockReset();
+  });
+
+  afterEach(() => {
+    (globalThis as any).window = undefined;
+  });
+
+  it("blocks follow refresh when switching sub-tab during in-flight refresh", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    mockCurrentTab = "follow";
+
+    // 用共享 promise 让 fetchFollow 挂起（两个 loadFollow 返回同一个 promise）
+    let resolveFollow!: (v: { illusts: PixivIllust[]; next_url: string | null }) => void;
+    const deferred = new Promise<{ illusts: PixivIllust[]; next_url: string | null }>((r) => {
+      resolveFollow = r;
+    });
+    vi.mocked(loadFollow).mockReturnValue(deferred);
+
+    const { setFollowTab, refresh } = await import("@/stores/feedStore");
+
+    // 首次刷新 — 挂起
+    const firstRefresh = refresh();
+
+    // 切换到非公开子标签
+    setFollowTab("private");
+
+    // 第二次刷新应被 pendingRefreshKeys 阻止，立即返回
+    await refresh();
+
+    // loadFollow 应只被首次刷新调用（public + private = 2 次）
+    expect(loadFollow).toHaveBeenCalledTimes(2);
+
+    // 让首次刷新完成，避免悬空 promise
+    resolveFollow!({ illusts: [createIllust(1, "2026-07-01T12:00:00+09:00")], next_url: null });
+    await firstRefresh;
+  });
+
+  it("blocks recommended mixed refresh when single sub-tab refresh is in-flight", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    mockCurrentTab = "recommended";
+
+    let resolveRec!: (v: { illusts: PixivIllust[]; next_url: string | null }) => void;
+    const deferred = new Promise<{ illusts: PixivIllust[]; next_url: string | null }>((r) => {
+      resolveRec = r;
+    });
+    vi.mocked(loadRecommended).mockReturnValue(deferred);
+
+    const { setRecommendSubTab, refresh } = await import("@/stores/feedStore");
+
+    // 在 illust 子标签下发起刷新 — 挂起
+    setRecommendSubTab("illust");
+    const firstRefresh = refresh();
+
+    // 切换到 mixed 子标签并尝试刷新
+    // mixed 锁 recommended_illust + recommended_manga，而 recommended_illust 已被锁
+    setRecommendSubTab("mixed");
+    await refresh();
+
+    // loadRecommended 应只被首次刷新调用（1 次）
+    expect(loadRecommended).toHaveBeenCalledTimes(1);
+
+    resolveRec!({ illusts: [createIllust(1, "2026-07-01T12:00:00+09:00")], next_url: null });
+    await firstRefresh;
+  });
+
+  it("allows recommended manga refresh when illust refresh is in-flight (non-overlapping keys)", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    mockCurrentTab = "recommended";
+
+    let resolveIllust!: (v: { illusts: PixivIllust[]; next_url: string | null }) => void;
+    const deferred = new Promise<{ illusts: PixivIllust[]; next_url: string | null }>((r) => {
+      resolveIllust = r;
+    });
+    vi.mocked(loadRecommended).mockImplementation(async (type) => {
+      if (type === "illust") return deferred;
+      return { illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")], next_url: null };
+    });
+
+    const { setRecommendSubTab, refresh } = await import("@/stores/feedStore");
+
+    // illust 子标签刷新 — 挂起
+    setRecommendSubTab("illust");
+    const firstRefresh = refresh();
+
+    // 切换到 manga 子标签并刷新 — 应通过（recommended_manga 未锁）
+    setRecommendSubTab("manga");
+    await refresh();
+
+    // loadRecommended 应被调用 2 次：第一次 illust，第二次 manga
+    expect(loadRecommended).toHaveBeenCalledTimes(2);
+    expect(loadRecommended).toHaveBeenCalledWith("illust");
+    expect(loadRecommended).toHaveBeenCalledWith("manga");
+
+    resolveIllust!({ illusts: [createIllust(1, "2026-07-01T12:00:00+09:00")], next_url: null });
+    await firstRefresh;
+  });
+
+  it("allows cross-tab refresh (follow → recommended) when scopes don't overlap", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    mockCurrentTab = "follow";
+
+    let resolveFollow!: (v: { illusts: PixivIllust[]; next_url: string | null }) => void;
+    const deferred = new Promise<{ illusts: PixivIllust[]; next_url: string | null }>((r) => {
+      resolveFollow = r;
+    });
+    vi.mocked(loadFollow).mockReturnValue(deferred);
+
+    const { refresh } = await import("@/stores/feedStore");
+
+    // follow 刷新 — 挂起（锁 follow_public + follow_private）
+    const firstRefresh = refresh();
+
+    // 切换到 recommended 标签并刷新 — 应通过（不同数据源）
+    mockCurrentTab = "recommended";
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(3, "2026-07-01T12:00:00+09:00")],
+      next_url: null,
+    });
+
+    const { setRecommendSubTab } = await import("@/stores/feedStore");
+    setRecommendSubTab("mixed");
+    await refresh();
+
+    // 两个请求都应发生
+    expect(loadFollow).toHaveBeenCalledTimes(2);
+    expect(loadRecommended).toHaveBeenCalledTimes(2);
+
+    resolveFollow!({ illusts: [createIllust(1, "2026-07-01T12:00:00+09:00")], next_url: null });
+    await firstRefresh;
+  });
+
+  it("releases locks after refresh completes so subsequent refresh works", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    mockCurrentTab = "follow";
+
+    vi.mocked(loadFollow).mockResolvedValue({
+      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00")],
+      next_url: "next",
+    });
+
+    const { refresh } = await import("@/stores/feedStore");
+
+    // 第一次刷新正常完成
+    await refresh();
+    expect(loadFollow).toHaveBeenCalledTimes(2);
+
+    // 第二次刷新应正常触发（锁已释放）
+    await refresh();
+    expect(loadFollow).toHaveBeenCalledTimes(4);
   });
 });

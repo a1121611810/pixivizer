@@ -17,7 +17,6 @@ async function loadApi() {
 }
 
 describe("api/illust.ts", () => {
-  
   it("loadRecommended calls apiClient.get with correct params", async () => {
     mockGet.mockResolvedValue({ illusts: [] });
     const { loadRecommended } = await loadApi();

@@ -17,7 +17,6 @@ describe("loadImage on native platform", () => {
     mockRequest.mockReset();
   });
 
-
   it("requests image with responseType arraybuffer and decodes base64", async () => {
     // Capacitor 将 arraybuffer 响应编码为 base64 字符串返回（无 data: 前缀）
     const testBase64 = btoa("test-image-bytes");

@@ -41,7 +41,10 @@ function isPortInUse(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const s = createServer();
     s.once("error", () => resolve(true));
-    s.once("listening", () => { s.close(); resolve(false); });
+    s.once("listening", () => {
+      s.close();
+      resolve(false);
+    });
     s.listen(port);
   });
 }
@@ -71,7 +74,9 @@ async function waitForServer(url: string, timeoutMs = 30000): Promise<void> {
     try {
       const res = await fetch(url);
       if (res.ok || res.status === 404) return;
-    } catch { /* retry */ }
+    } catch {
+      /* retry */
+    }
     await new Promise((r) => setTimeout(r, 500));
   }
   throw new Error(`Dev server did not start within ${timeoutMs}ms`);

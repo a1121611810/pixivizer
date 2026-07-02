@@ -12,7 +12,6 @@ async function loadStore() {
 }
 
 describe("blockStore", () => {
-  
   it("loads blocked ids from Preferences", async () => {
     vi.mocked(Preferences.get).mockResolvedValue({
       value: JSON.stringify([111, 222]),

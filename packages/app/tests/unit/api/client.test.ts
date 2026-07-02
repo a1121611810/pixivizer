@@ -113,9 +113,7 @@ describe("rewriteUrl", () => {
 
   it("rewrites OAuth URL to proxy in web mode", async () => {
     const { rewriteUrl } = await loadModule();
-    expect(rewriteUrl("https://oauth.secure.pixiv.net/auth/token")).toBe(
-      "/pixiv-oauth/auth/token",
-    );
+    expect(rewriteUrl("https://oauth.secure.pixiv.net/auth/token")).toBe("/pixiv-oauth/auth/token");
   });
 
   it("prepends /pixiv-api to relative paths in web mode", async () => {

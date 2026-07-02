@@ -12,7 +12,6 @@ async function loadStore() {
 }
 
 describe("reportStore", () => {
-  
   it("loads reported ids from Preferences", async () => {
     vi.mocked(Preferences.get).mockResolvedValue({
       value: JSON.stringify([

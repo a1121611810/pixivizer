@@ -27,9 +27,11 @@ test.describe("Illust Detail", () => {
     await card.click();
     await expect(page).toHaveURL(/\/illust\/\d+/, { timeout: 10000 });
 
-    const bookmarkBtn = page.locator(
-      'button[class*="bookmark"], [class*="fav"], [aria-label*="bookmark"i], [aria-label*="收藏"i]',
-    ).first();
+    const bookmarkBtn = page
+      .locator(
+        'button[class*="bookmark"], [class*="fav"], [aria-label*="bookmark"i], [aria-label*="收藏"i]',
+      )
+      .first();
     if (await bookmarkBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await bookmarkBtn.click();
     }

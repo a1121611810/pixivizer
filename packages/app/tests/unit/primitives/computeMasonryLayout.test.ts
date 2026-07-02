@@ -153,9 +153,7 @@ describe("appendToLayout", () => {
     expect(result.items).toHaveLength(2);
     expect(result.items[1].index).toBe(1);
     // Second item should be below first with gap
-    expect(result.items[1].y).toBe(
-      initial.items[0].y + initial.items[0].height + initial.gap,
-    );
+    expect(result.items[1].y).toBe(initial.items[0].y + initial.items[0].height + initial.gap);
   });
 
   it("preserves existing items", () => {

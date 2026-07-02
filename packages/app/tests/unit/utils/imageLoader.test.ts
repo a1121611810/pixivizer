@@ -33,9 +33,7 @@ function createControlledFetch() {
   });
 
   const resolve = () => {
-    resolveFetch(
-      new Response(new Blob(["fake-image"], { type: "image/jpeg" }), { status: 200 }),
-    );
+    resolveFetch(new Response(new Blob(["fake-image"], { type: "image/jpeg" }), { status: 200 }));
   };
 
   const reject = (err?: Error) => {
@@ -133,15 +131,18 @@ describe("loadImage", () => {
 
       let resolve1!: (r: Response) => void;
       let resolve2!: (r: Response) => void;
-      const fetchMock = vi.fn<typeof fetch>().mockImplementationOnce(() => {
-        return new Promise((resolve) => {
-          resolve1 = resolve;
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockImplementationOnce(() => {
+          return new Promise((resolve) => {
+            resolve1 = resolve;
+          });
+        })
+        .mockImplementationOnce(() => {
+          return new Promise((resolve) => {
+            resolve2 = resolve;
+          });
         });
-      }).mockImplementationOnce(() => {
-        return new Promise((resolve) => {
-          resolve2 = resolve;
-        });
-      });
       vi.stubGlobal("fetch", fetchMock);
 
       // 两个不同 URL 并发
@@ -228,10 +229,7 @@ describe("loadImage", () => {
 
       // loadImageWithProgress 随后 — 应交叉复用同一个 inflight 请求，不再发起新请求
       const progressSpy = vi.fn();
-      const p2 = loadImageWithProgress(
-        "https://i.pximg.net/test/progress.jpg",
-        progressSpy,
-      );
+      const p2 = loadImageWithProgress("https://i.pximg.net/test/progress.jpg", progressSpy);
 
       // 此时不应该有新的 fetch
       expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -244,9 +242,7 @@ describe("loadImage", () => {
       expect(r1.url).toBeTruthy();
       expect(r2.url).toBeTruthy();
       // progress 回调：从缓存中获取后立即 100%
-      expect(progressSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ percent: 100 }),
-      );
+      expect(progressSpy).toHaveBeenCalledWith(expect.objectContaining({ percent: 100 }));
 
       // 仍然只有 1 次 fetch
       expect(fetchMock).toHaveBeenCalledTimes(1);

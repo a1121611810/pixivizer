@@ -26,7 +26,11 @@ vi.mock("solid-js", async (importOriginal) => {
         resourceFn,
         {
           mutate: mockMutate.mockImplementation(
-            (fn: ((prev: typeof mockResourceValue) => typeof mockResourceValue) | typeof mockResourceValue) => {
+            (
+              fn:
+                | ((prev: typeof mockResourceValue) => typeof mockResourceValue)
+                | typeof mockResourceValue,
+            ) => {
               if (typeof fn === "function") {
                 mockResourceValue = fn(mockResourceValue);
               } else {

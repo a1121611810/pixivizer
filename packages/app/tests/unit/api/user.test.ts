@@ -16,7 +16,6 @@ async function loadApi() {
 }
 
 describe("api/user.ts", () => {
-  
   it("getUserDetail calls apiClient.get with user_id and filter", async () => {
     mockGet.mockResolvedValue({ user: {}, profile: {} });
     const { getUserDetail } = await loadApi();

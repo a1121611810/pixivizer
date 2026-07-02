@@ -62,10 +62,13 @@ describe("updateService", () => {
 
   describe("checkForUpdate", () => {
     it("returns noUpdate when fetch fails", async () => {
-      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-        ok: false,
-        status: 404,
-      }));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: false,
+          status: 404,
+        }),
+      );
 
       const { checkForUpdate } = await loadService();
       const result = await checkForUpdate();
@@ -84,15 +87,18 @@ describe("updateService", () => {
     });
 
     it("detects update when remote is newer", async () => {
-      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            version: "2.0.0",
-            url: "https://github.com/a1121611810/pixivizer/releases/v2.0.0",
-            changelog: "Major update",
-          }),
-      }));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              version: "2.0.0",
+              url: "https://github.com/a1121611810/pixivizer/releases/v2.0.0",
+              changelog: "Major update",
+            }),
+        }),
+      );
 
       const { checkForUpdate } = await loadService();
       const result = await checkForUpdate();
@@ -103,15 +109,18 @@ describe("updateService", () => {
     });
 
     it("detects no update when remote is same version", async () => {
-      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            version: "1.2.3",
-            url: "",
-            changelog: "",
-          }),
-      }));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              version: "1.2.3",
+              url: "",
+              changelog: "",
+            }),
+        }),
+      );
 
       const { checkForUpdate } = await loadService();
       const result = await checkForUpdate();
@@ -120,17 +129,20 @@ describe("updateService", () => {
     });
 
     it("returns cached result on subsequent failures", async () => {
-      vi.stubGlobal("fetch", vi.fn()
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              version: "2.0.0",
-              url: "https://example.com",
-              changelog: "changes",
-            }),
-        })
-        .mockRejectedValueOnce(new Error("Network error"))
+      vi.stubGlobal(
+        "fetch",
+        vi
+          .fn()
+          .mockResolvedValueOnce({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                version: "2.0.0",
+                url: "https://example.com",
+                changelog: "changes",
+              }),
+          })
+          .mockRejectedValueOnce(new Error("Network error")),
       );
 
       const { checkForUpdate } = await loadService();
@@ -149,10 +161,13 @@ describe("updateService", () => {
     });
 
     it("resetCache clears cached result", async () => {
-      vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ version: "2.0.0", url: "", changelog: "" }),
-      }));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve({ version: "2.0.0", url: "", changelog: "" }),
+        }),
+      );
 
       const { checkForUpdate, resetCache, getCachedResult } = await loadService();
       await checkForUpdate();
