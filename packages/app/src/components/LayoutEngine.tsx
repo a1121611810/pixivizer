@@ -28,10 +28,16 @@ export function createLayout(
   columnGap: Accessor<number>,
   layoutMode: Accessor<LayoutMode>,
 ): Accessor<MasonryLayout> {
+  // Track the first illust id from the last FULL (non-incremental) computation.
+  // Used to detect when data source has been entirely replaced (e.g., switching
+  // recommended sub-tabs) vs. merely appended to.
+  let fullComputeFirstId: number | undefined;
+
   // Synchronous layout computation (primary, always available)
   const syncLayout = createMemo<MasonryLayout>((prev) => {
     const mode = layoutMode();
-    const count = illusts().length;
+    const currentIllusts = illusts();
+    const count = currentIllusts.length;
     const cw = columnWidth();
     const cc = columnCount();
     const g = gap();
@@ -43,7 +49,7 @@ export function createLayout(
 
     if (mode === "single") {
       let currentY = 0;
-      const items = illusts().map((_ill, i) => {
+      const items = currentIllusts.map((_ill, i) => {
         const effectiveH = _ill.type === "ugoira" ? Math.round(_ill.height * 0.75) : _ill.height;
         const aspectRatio = effectiveH > 0 ? _ill.width / effectiveH : 1;
         const h = cw / aspectRatio + CARD_INFO_HEIGHT;
@@ -58,7 +64,7 @@ export function createLayout(
 
     if (mode === "grid") {
       const rowHeight = 200 + CARD_INFO_HEIGHT;
-      const items = illusts().map((_ill, i) => {
+      const items = currentIllusts.map((_ill, i) => {
         const col = i % cc;
         const row = Math.floor(i / cc);
         return {
@@ -83,7 +89,7 @@ export function createLayout(
 
     // Waterfall
     const input: ComputeMasonryInput = {
-      items: illusts().map((ill) => ({
+      items: currentIllusts.map((ill) => ({
         width: ill.width,
         height: ill.type === "ugoira" ? Math.round(ill.height * 0.75) : ill.height,
       })),
@@ -93,9 +99,20 @@ export function createLayout(
       columnGap: cg,
     };
 
-    // Incremental append if data grew
-    if (prev && prev.items.length > 0 && count > prev.items.length) {
-      const newRaw = illusts().slice(prev.items.length);
+    // Incremental append if data grew AND data source hasn't been replaced.
+    // The `prev.items.length > 0 && count > prev.items.length` check alone is
+    // not sufficient: when switching recommended sub-tabs (mixed↔illust↔manga),
+    // the entire dataset is replaced with a different array that may happen to
+    // be longer, causing corrupt layout (cards missing / gaps). We guard by
+    // comparing the first item's id against the last full-compute baseline.
+    if (
+      prev &&
+      prev.items.length > 0 &&
+      count > prev.items.length &&
+      fullComputeFirstId !== undefined &&
+      currentIllusts[0]?.id === fullComputeFirstId
+    ) {
+      const newRaw = currentIllusts.slice(prev.items.length);
       const newItems = newRaw.map((ill) => ({
         width: ill.width,
         height: ill.type === "ugoira" ? Math.round(ill.height * 0.75) : ill.height,
@@ -103,6 +120,7 @@ export function createLayout(
       return appendToLayout(prev, newItems);
     }
 
+    fullComputeFirstId = currentIllusts[0]?.id;
     return computeMasonryLayout(input);
   });
 
