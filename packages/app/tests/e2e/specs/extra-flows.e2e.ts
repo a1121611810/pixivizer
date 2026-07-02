@@ -41,6 +41,123 @@ test.describe("Image Host Settings", () => {
 
     expect(page.url()).toContain("/image-host");
   });
+
+  test("toggle switch → cancel confirmation → switch stays off", async ({ loggedInPage: page }) => {
+    await clientNavigate(page, "/image-host");
+    await page.waitForLoadState("networkidle");
+
+    // Wait for Fluent Web Components to finish upgrading
+    await page.evaluate(async () => {
+      await customElements.whenDefined("fluent-switch");
+      await customElements.whenDefined("fluent-dialog");
+    });
+
+    const masterSwitch = page.locator('fluent-switch[aria-label="启用图床代理"]');
+    const confirmDialog = page.locator('fluent-dialog[aria-label="开启图床代理？"]');
+
+    // 1. Initial state: OFF & dialog closed
+    let preState = await page.evaluate(() => {
+      const sw = document.querySelector('fluent-switch[aria-label="启用图床代理"]') as any;
+      const d = document.querySelector('fluent-dialog[aria-label="开启图床代理？"]') as any;
+      return { checked: sw?.checked ?? false, dialogOpen: d?._dialog?.open ?? false };
+    });
+    expect(preState.checked).toBe(false);
+    expect(preState.dialogOpen).toBe(false);
+
+    // 2. Click + verify dialog in one evaluate call to avoid timing issues
+    //    with SolidJS createEffect and Fluent Web Component lifecycles.
+    const postState = await page.evaluate(async () => {
+      const sw = document.querySelector('fluent-switch[aria-label="启用图床代理"]') as any;
+      sw?.click();
+      await new Promise(r => setTimeout(r, 100));
+      const d = document.querySelector('fluent-dialog[aria-label="开启图床代理？"]') as any;
+      return { checked: sw?.checked ?? false, dialogOpen: d?._dialog?.open ?? false };
+    });
+    expect(postState.checked).toBe(true);
+    expect(postState.dialogOpen).toBe(true);
+
+    // 3. Click "取消" button inside the dialog
+    const cancelBtn = confirmDialog.locator('fluent-button[appearance="secondary"]').getByText("取消");
+    await cancelBtn.click();
+
+    // 4. Dialog should close
+    await page.waitForTimeout(300);
+    expect(
+      await confirmDialog.evaluate(
+        (el: HTMLElement) =>
+          (el as unknown as { _dialog?: HTMLDialogElement })._dialog?.open ?? false,
+      ),
+    ).toBe(false);
+
+    // 5. Switch should be OFF — our cancelEnable fix resets it
+    expect(
+      await masterSwitch.evaluate(
+        (el: HTMLElement) => (el as unknown as { checked: boolean }).checked,
+      ),
+    ).toBe(false);
+  });
+
+  test("toggle switch → confirm → switch stays on", async ({ loggedInPage: page }) => {
+    await clientNavigate(page, "/image-host");
+    await page.waitForLoadState("networkidle");
+
+    // Wait for Fluent Web Components to finish upgrading
+    await page.evaluate(async () => {
+      await customElements.whenDefined("fluent-switch");
+      await customElements.whenDefined("fluent-dialog");
+    });
+
+    const masterSwitch = page.locator('fluent-switch[aria-label="启用图床代理"]');
+    const confirmDialog = page.locator('fluent-dialog[aria-label="开启图床代理？"]');
+
+    // 1. Initial state: OFF & dialog closed
+    let preState = await page.evaluate(() => {
+      const sw = document.querySelector('fluent-switch[aria-label="启用图床代理"]') as any;
+      const d = document.querySelector('fluent-dialog[aria-label="开启图床代理？"]') as any;
+      return { checked: sw?.checked ?? false, dialogOpen: d?._dialog?.open ?? false };
+    });
+    expect(preState.checked).toBe(false);
+    expect(preState.dialogOpen).toBe(false);
+
+    // 2. Click + verify dialog in one evaluate call
+    let postState = await page.evaluate(async () => {
+      const sw = document.querySelector('fluent-switch[aria-label="启用图床代理"]') as any;
+      sw?.click();
+      await new Promise(r => setTimeout(r, 100));
+      const d = document.querySelector('fluent-dialog[aria-label="开启图床代理？"]') as any;
+      return { checked: sw?.checked ?? false, dialogOpen: d?._dialog?.open ?? false };
+    });
+    expect(postState.checked).toBe(true);
+    expect(postState.dialogOpen).toBe(true);
+
+    // 3. Click "确认开启"
+    const confirmBtn = confirmDialog.getByText("确认开启");
+    await confirmBtn.click();
+
+    // 4. Dialog should close
+    await page.waitForTimeout(300);
+    expect(
+      await confirmDialog.evaluate(
+        (el: HTMLElement) =>
+          (el as unknown as { _dialog?: HTMLDialogElement })._dialog?.open ?? false,
+      ),
+    ).toBe(false);
+
+    // 5. Switch should be ON (masterEnabled was set to true)
+    expect(
+      await masterSwitch.evaluate(
+        (el: HTMLElement) => (el as unknown as { checked: boolean }).checked,
+      ),
+    ).toBe(true);
+
+    // 6. Cleanup: click switch again to turn off (no dialog when turning off)
+    await masterSwitch.evaluate((el: HTMLElement) => el.click());
+    expect(
+      await masterSwitch.evaluate(
+        (el: HTMLElement) => (el as unknown as { checked: boolean }).checked,
+      ),
+    ).toBe(false);
+  });
 });
 
 test.describe("About Page Sections", () => {

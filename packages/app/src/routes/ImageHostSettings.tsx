@@ -28,6 +28,7 @@ const ImageHostSettings: Component = () => {
   const [probeToast, setProbeToast] = createSignal<string | null>(null);
 
   let confirmDialogRef: HTMLElement | undefined;
+  let masterSwitchRef: HTMLElement | undefined;
   let editDialogRef: HTMLElement | undefined;
   let radioGroupRef: HTMLElement | undefined;
 
@@ -92,6 +93,10 @@ const ImageHostSettings: Component = () => {
     setPendingEnable(false);
     setShowConfirmDialog(false);
     hideConfirmDialog();
+    // 同步 Fluent Switch 的视觉状态：用户点取消后，switch 不应保持开启的视觉状态
+    if (masterSwitchRef) {
+      (masterSwitchRef as unknown as { checked: boolean }).checked = false;
+    }
   }
 
   function openEdit(host: ImageHost) {
@@ -207,6 +212,7 @@ const ImageHostSettings: Component = () => {
               </p>
             </div>
             <fluent-switch
+              ref={masterSwitchRef}
               checked={imageHostState().masterEnabled}
               on:change={() => {
                 handleToggle(!imageHostState().masterEnabled);
