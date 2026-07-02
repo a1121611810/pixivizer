@@ -138,6 +138,11 @@ export function toWebProxyUrl(url: string): string {
   return resolveImageUrl(url);
 }
 
+// ─── 飞行中请求去重 ───
+
+/** 正在加载中的请求，用于并发去重 — 同一 URL 只发一个真实 HTTP 请求 */
+const inflightRequests = new Map<string, Promise<LoadedImage>>();
+
 // ─── 带缓存的图片加载 ───
 
 export interface LoadedImage {
@@ -146,10 +151,11 @@ export interface LoadedImage {
 }
 
 /**
- * 加载 Pixiv 图片（带 LRU 缓存 + 持久 Blob URL）。
+ * 加载 Pixiv 图片（带 LRU 缓存 + 持久 Blob URL + 飞行中请求去重）。
  *
  * - 命中缓存：直接返回持久 Blob URL（浏览器瞬间识别，零解码延迟）
- * - 未命中：请求图片 → 存入缓存（创建持久 Blob URL）→ 返回
+ * - 未命中但已有同一 URL 正请求中：复用该 Promise，不发重复请求
+ * - 未命中且无飞行中请求：发起 HTTP 请求 → 存入缓存 → 返回
  *
  * 返回 { url, cleanup }。
  * Blob URL 由缓存持有，只在淘汰/清空时 revoke。
@@ -166,10 +172,28 @@ export async function loadImage(originalUrl: string): Promise<LoadedImage> {
     return { url: cachedUrl, cleanup: () => {} };
   }
 
-  // 2. 解析图床代理 URL
+  // 2. 检查是否已有相同 URL 正在加载中 — 复用 Promise，避免重复请求
+  const inflight = inflightRequests.get(originalUrl);
+  if (inflight) {
+    return inflight;
+  }
+
+  // 3. 创建加载 Promise 并注册到飞行中 Map
+  const promise = loadImageInner(originalUrl);
+  inflightRequests.set(originalUrl, promise);
+
+  // 4. 无论成功/失败，加载完成后从飞行中 Map 移除
+  promise.finally(() => {
+    inflightRequests.delete(originalUrl);
+  });
+
+  return promise;
+}
+
+/** loadImage 的内部实现 — 不含去重逻辑，由外层 loadImage 统一调度并发 */
+async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
   const targetUrl = isImageHostEnabled() ? getEffectiveImageUrl(originalUrl) : originalUrl;
 
-  // 3. 加载图片
   try {
     let blob: Blob;
 
@@ -179,10 +203,10 @@ export async function loadImage(originalUrl: string): Promise<LoadedImage> {
       blob = await fetchWeb(targetUrl, originalUrl);
     }
 
-    // 3. 存入缓存（cacheSet 创建持久 Blob URL）
+    // 存入缓存（cacheSet 创建持久 Blob URL）
     cacheSet(originalUrl, blob);
 
-    // 4. 从缓存读取持久 URL
+    // 从缓存读取持久 URL
     const url = cacheGet(originalUrl);
     return {
       url: url ?? "",
@@ -219,7 +243,8 @@ export interface LoadImageResultWithProgress {
  * 带下载进度的图片加载。
  *
  * - 缓存命中：立即回调 percent=100 并返回缓存 Blob URL
- * - 未命中：通过 Web ReadableStream 或 Native XHR 实时报告进度
+ * - 未命中但已有 loadImage（无进度版）正在请求中：等待后从缓存返回，跳过重复请求
+ * - 未命中且无飞行中请求：通过 Web ReadableStream 或 Native XHR 实时报告进度
  * - 下载完成后存入 LRU 缓存
  * - 失败时降级返回代理 URL（无缓存）
  *
@@ -239,6 +264,16 @@ export async function loadImageWithProgress(
   if (cachedUrl) {
     onProgress({ loaded: 0, total: 0, percent: 100 });
     return { url: cachedUrl, cleanup: () => {}, durationMs: 0 };
+  }
+
+  // 1b. 检查是否有 loadImage（无进度版）正在请求同一 URL
+  //     有则等待它完成，缓存中就绪后直接返回，跳过重复 HTTP 请求
+  const mainInflight = inflightRequests.get(originalUrl);
+  if (mainInflight) {
+    await mainInflight;
+    const url = cacheGet(originalUrl);
+    onProgress({ loaded: 0, total: 0, percent: 100 });
+    return { url: url ?? "", cleanup: () => {}, durationMs: 0 };
   }
 
   const startTime = performance.now();
