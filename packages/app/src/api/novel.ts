@@ -160,6 +160,10 @@ export function loadSeries(
   return apiClient.get<NovelSeriesDetailResponse>("/v2/novel/series", params);
 }
 
+export function loadSeriesNext(url: string): Promise<NovelSeriesDetailResponse> {
+  return apiClient.get<NovelSeriesDetailResponse>(url);
+}
+
 export function loadNext(url: string): Promise<PixivNovelListResponse> {
   return apiClient.get<PixivNovelListResponse>(url);
 }

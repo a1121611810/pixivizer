@@ -8,6 +8,12 @@ export interface SentinelPaginatorOptions {
    */
   rootMargin?: string;
   /**
+   * 指定局部滚动容器作为 IntersectionObserver 的 root。
+   * 未传时默认以浏览器视口为 root（兼容历史行为）。
+   * 返回元素或 null，便于与 SolidJS 信号联动。
+   */
+  root?: () => HTMLElement | null;
+  /**
    * 哨兵进入视口时调用。调用方在此执行分页请求逻辑。
    * 无返回值的同步函数，或返回 Promise。
    */
@@ -49,7 +55,7 @@ export interface SentinelPaginatorResult {
 export function createSentinelPaginator(
   options: SentinelPaginatorOptions,
 ): SentinelPaginatorResult {
-  const { rootMargin = "200px", enabled, onTrigger } = options;
+  const { rootMargin = "200px", root, enabled, onTrigger } = options;
 
   let el: HTMLDivElement | undefined;
 
@@ -63,7 +69,7 @@ export function createSentinelPaginator(
         if (enabled && !enabled()) return;
         onTrigger();
       },
-      { rootMargin },
+      { rootMargin, root: root ? root() : undefined },
     );
 
     observer.observe(el);

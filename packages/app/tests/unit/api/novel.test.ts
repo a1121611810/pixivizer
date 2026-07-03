@@ -38,6 +38,41 @@ describe("api/novel.ts", () => {
     });
   });
 
+  it("loadSeriesNext calls apiClient.get with next_url", async () => {
+    const expected: import("@/api/novel").NovelSeriesDetailResponse = {
+      novel_series_detail: {
+        id: 1,
+        title: "Series Title",
+        user: {
+          id: 456,
+          name: "Author",
+          account: "author",
+          profile_image_urls: {
+            px_16x16: "https://example.com/16.jpg",
+            px_50x50: "https://example.com/50.jpg",
+            px_170x170: "https://example.com/170.jpg",
+          },
+          is_followed: false,
+        },
+        create_date: "2025-01-01T00:00:00+00:00",
+        total_character_count: 10000,
+        display_text_count: 5000,
+      },
+      novels: [],
+      next_url: null,
+    };
+    mockGet.mockResolvedValue(expected);
+    const { loadSeriesNext } = await loadApi();
+    const result = await loadSeriesNext(
+      "https://app-api.pixiv.net/v2/novel/series?series_id=123&last_order=30",
+    );
+
+    expect(mockGet).toHaveBeenCalledWith(
+      "https://app-api.pixiv.net/v2/novel/series?series_id=123&last_order=30",
+    );
+    expect(result).toEqual(expected);
+  });
+
   it("loadSeries returns a NovelSeriesDetailResponse", async () => {
     const expected: import("@/api/novel").NovelSeriesDetailResponse = {
       novel_series_detail: {

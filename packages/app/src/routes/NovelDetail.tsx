@@ -12,6 +12,7 @@ import { readerStyle } from "../stores/readerSettingsStore";
 import { novelCacheEnabled } from "../stores/uiStore";
 import { getDetail, setDetail, getText, setText, getNav, setNav } from "../stores/novelCache";
 import ReaderSettingsSheet from "../components/ReaderSettingsSheet";
+import SeriesSheet from "../components/SeriesSheet";
 
 const NovelDetail: Component = () => {
   const params = useParams<{ id: string }>();
@@ -86,6 +87,7 @@ const NovelDetail: Component = () => {
   });
 
   const [settingsOpen, setSettingsOpen] = createSignal(false);
+  const [seriesOpen, setSeriesOpen] = createSignal(false);
   const [searchOpen, setSearchOpen] = createSignal(false);
   const [textContainerEl, setTextContainerEl] = createSignal<HTMLElement | undefined>();
   const search = createNovelSearch(novelHtml, textContainerEl, { debounceMs: 150 });
@@ -219,9 +221,13 @@ const NovelDetail: Component = () => {
 
                 <Show when={novel().series}>
                   {(series) => (
-                    <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-1">
+                    <button
+                      class="[font-size:var(--fontSizeBase100)] text-[var(--colorBrandForeground1)] mt-1 bg-transparent border-none p-0 cursor-pointer hover:underline focus-visible:outline focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-2 focus-visible:-outline-offset-2"
+                      onClick={() => setSeriesOpen(true)}
+                      aria-label={`打开系列目录：${series().title}`}
+                    >
                       系列：{series().title}
-                    </p>
+                    </button>
                   )}
                 </Show>
 
@@ -287,6 +293,16 @@ const NovelDetail: Component = () => {
                     </button>
                   )}
                 </Show>
+                <Show when={novel().series}>
+                  <button
+                    class="px-4 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-2"
+                    onClick={() => setSeriesOpen(true)}
+                    aria-label="打开系列目录"
+                  >
+                    <FluentIcon name="list" size={20} />
+                    目录
+                  </button>
+                </Show>
                 <button
                   class="px-4 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-2"
                   onClick={() => setSettingsOpen(true)}
@@ -310,6 +326,20 @@ const NovelDetail: Component = () => {
             </div>
 
             <ReaderSettingsSheet isOpen={settingsOpen()} onClose={() => setSettingsOpen(false)} />
+
+            <Show when={novel().series}>
+              {(series) => (
+                <SeriesSheet
+                  seriesId={series().id}
+                  seriesTitle={series().title}
+                  authorName={novel().user.name}
+                  authorId={novel().user.id}
+                  isOpen={seriesOpen()}
+                  onClose={() => setSeriesOpen(false)}
+                  activeNovelId={novelId()}
+                />
+              )}
+            </Show>
 
             {/* ── Close the Show fragment ── */}
           </>

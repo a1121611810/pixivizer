@@ -1,4 +1,5 @@
 import type { PixivNovel, SeriesNavigation } from "../api/types";
+import type { NovelSeriesDetailResponse } from "../api/novel";
 
 // ─── Entry ───
 
@@ -21,6 +22,11 @@ let textMax = 10;
 
 const navCache = new Map<number, CacheEntry<SeriesNavigation>>();
 let navMax = 50;
+
+// ─── Series cache ───
+
+const seriesCache = new Map<number, CacheEntry<NovelSeriesDetailResponse>>();
+let seriesMax = 20;
 
 // ─── LRU helpers ───
 
@@ -78,6 +84,14 @@ export function setNav(id: number, data: SeriesNavigation): void {
   lruSet(navCache, id, data, navMax);
 }
 
+export function getSeries(id: number): NovelSeriesDetailResponse | undefined {
+  return lruGet(seriesCache, id);
+}
+
+export function setSeries(id: number, data: NovelSeriesDetailResponse): void {
+  lruSet(seriesCache, id, data, seriesMax);
+}
+
 /**
  * 更新缓存上限。滑块控制 textMax，detailMax = textMax * 10。
  * 若新上限低于当前容量，立刻淘汰最旧条目。
@@ -130,4 +144,5 @@ export function clearNovelCache(): void {
   detailCache.clear();
   textCache.clear();
   navCache.clear();
+  seriesCache.clear();
 }

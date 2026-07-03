@@ -1,8 +1,19 @@
-import { type Component, Show, createSignal, createEffect, For, onCleanup } from "solid-js";
+import {
+  type Component,
+  Show,
+  createSignal,
+  createEffect,
+  For,
+  onCleanup,
+  createMemo,
+} from "solid-js";
 import { useNavigate } from "@solidjs/router";
-import { loadSeries, type NovelSeriesDetailResponse } from "../api/novel";
+import { loadSeries, loadSeriesNext, type NovelSeriesDetailResponse } from "../api/novel";
+import type { PixivNovel } from "../api/types";
 import SeriesSheetItem from "./SeriesSheetItem";
 import LoadingSpinner from "./LoadingSpinner";
+import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
+import { getSeries, setSeries } from "../stores/novelCache";
 
 interface Props {
   seriesId: number;
@@ -11,49 +22,145 @@ interface Props {
   authorId: number;
   isOpen: boolean;
   onClose: () => void;
+  activeNovelId?: number;
 }
 
 const SeriesSheet: Component<Props> = (props) => {
   const navigate = useNavigate();
 
-  // 手动 fetch，避免 createResource 触发外层 Suspense 导致全页白屏
-  const [seriesData, setSeriesData] = createSignal<NovelSeriesDetailResponse | null>(null);
-  const [fetchLoading, setFetchLoading] = createSignal(false);
-  const [fetchError, setFetchError] = createSignal<string | null>(null);
+  const [novels, setNovels] = createSignal<PixivNovel[]>([]);
+  const [seriesDetail, setSeriesDetail] = createSignal<
+    NovelSeriesDetailResponse["novel_series_detail"] | null
+  >(null);
+  const [loading, setLoading] = createSignal(false);
+  const [loadingMore, setLoadingMore] = createSignal(false);
+  const [error, setError] = createSignal<string | null>(null);
+  const [hasMore, setHasMore] = createSignal(false);
+  const [nextUrl, setNextUrl] = createSignal<string | null>(null);
+  const [scrollContainer, setScrollContainer] = createSignal<HTMLDivElement | null>(null);
+  const [activeItemEl, setActiveItemEl] = createSignal<HTMLElement | null>(null);
+  const [hasScrolledToActive, setHasScrolledToActive] = createSignal(false);
+
   let abortController: AbortController | null = null;
+
+  const { attach: sentinelAttach } = createSentinelPaginator({
+    root: scrollContainer,
+    rootMargin: "200px",
+    enabled: () => hasMore() && !loadingMore() && !loading(),
+    onTrigger: () => loadMore(),
+  });
 
   createEffect(() => {
     if (props.isOpen && props.seriesId) {
-      abortController?.abort();
-      abortController = new AbortController();
-
-      setFetchLoading(true);
-      setFetchError(null);
-      setSeriesData(null);
-
-      loadSeries(props.seriesId)
-        .then((result) => {
-          if (!abortController?.signal.aborted) {
-            setSeriesData(result);
-            setFetchLoading(false);
-          }
-        })
-        .catch((e) => {
-          if (!abortController?.signal.aborted) {
-            setFetchError((e as { message?: string }).message ?? "加载失败");
-            setFetchLoading(false);
-          }
-        });
+      reset();
+      loadInitial();
     } else {
-      setSeriesData(null);
-      setFetchError(null);
-      setFetchLoading(false);
+      reset();
     }
   });
 
   onCleanup(() => {
     abortController?.abort();
   });
+
+  function reset() {
+    abortController?.abort();
+    abortController = null;
+    setNovels([]);
+    setSeriesDetail(null);
+    setLoading(false);
+    setLoadingMore(false);
+    setError(null);
+    setHasMore(false);
+    setNextUrl(null);
+    setActiveItemEl(null);
+    setHasScrolledToActive(false);
+  }
+
+  function applyResult(result: NovelSeriesDetailResponse, append: boolean) {
+    setSeriesDetail(result.novel_series_detail);
+    if (append) {
+      setNovels((prev) => [...prev, ...result.novels]);
+    } else {
+      setNovels(result.novels);
+    }
+    setHasMore(result.next_url != null);
+    setNextUrl(result.next_url);
+  }
+
+  async function loadInitial() {
+    const cached = getSeries(props.seriesId);
+    if (cached) {
+      applyResult(cached, false);
+    }
+
+    abortController?.abort();
+    abortController = new AbortController();
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await loadSeries(props.seriesId);
+      if (!abortController.signal.aborted) {
+        applyResult(result, false);
+        setSeries(props.seriesId, result);
+      }
+    } catch (e) {
+      if (!abortController.signal.aborted) {
+        setError((e as { message?: string }).message ?? "加载失败");
+      }
+    } finally {
+      if (!abortController.signal.aborted) {
+        setLoading(false);
+      }
+    }
+  }
+
+  async function loadMore() {
+    if (!hasMore() || loadingMore() || loading()) return;
+    const url = nextUrl();
+    if (!url) return;
+
+    setLoadingMore(true);
+
+    try {
+      const result = await loadSeriesNext(url);
+      applyResult(result, true);
+    } catch (e) {
+      setError((e as { message?: string }).message ?? "加载失败");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  function refetch() {
+    abortController?.abort();
+    abortController = new AbortController();
+    setNovels([]);
+    setSeriesDetail(null);
+    setHasMore(false);
+    setNextUrl(null);
+    setError(null);
+    setLoading(true);
+    loadSeries(props.seriesId)
+      .then((result) => {
+        if (!abortController?.signal.aborted) {
+          applyResult(result, false);
+          setSeries(props.seriesId, result);
+        }
+      })
+      .catch((e) => {
+        if (!abortController?.signal.aborted) {
+          setError((e as { message?: string }).message ?? "加载失败");
+        }
+      })
+      .finally(() => {
+        if (!abortController?.signal.aborted) {
+          setLoading(false);
+        }
+      });
+  }
 
   // 打开 Sheet 时锁定背景滚动
   createEffect(() => {
@@ -66,36 +173,61 @@ const SeriesSheet: Component<Props> = (props) => {
     }
   });
 
-  function refetch() {
-    setFetchLoading(true);
-    setFetchError(null);
-    loadSeries(props.seriesId)
-      .then((result) => {
-        if (!abortController?.signal.aborted) {
-          setSeriesData(result);
-          setFetchLoading(false);
-        }
-      })
-      .catch((e) => {
-        if (!abortController?.signal.aborted) {
-          setFetchError((e as { message?: string }).message ?? "加载失败");
-          setFetchLoading(false);
+  // 自动加载直到找到 activeNovelId，并滚动到可视区域
+  createEffect(() => {
+    const activeId = props.activeNovelId;
+    if (activeId == null || hasScrolledToActive()) return;
+
+    const currentNovels = novels();
+    const found = currentNovels.some((n) => n.id === activeId);
+
+    if (found) {
+      // 等待 DOM 渲染后滚动
+      requestAnimationFrame(() => {
+        const el = activeItemEl();
+        if (el) {
+          el.scrollIntoView({ block: "center", behavior: "smooth" });
+          setHasScrolledToActive(true);
         }
       });
-  }
+    } else if (hasMore() && !loadingMore() && !loading()) {
+      loadMore();
+    }
+  });
 
   function close() {
     props.onClose();
   }
 
+  function handleItemClick(id: number) {
+    close();
+    navigate(`/novel/${id}`, { replace: true });
+  }
+
+  const isActive = (id: number) => props.activeNovelId != null && id === props.activeNovelId;
+
+  const totalCount = createMemo(() => {
+    const detail = seriesDetail();
+    return detail?.total_character_count ?? 0;
+  });
+
   return (
     <Show when={props.isOpen}>
       <div class="fixed inset-0 z-50">
         {/* Scrim */}
-        <div class="absolute inset-0" style="background-color:var(--colorScrim)" onClick={close} />
+        <div
+          class="absolute inset-0"
+          style="background-color:var(--colorScrim)"
+          onClick={close}
+          role="button"
+          aria-label="关闭"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && close()}
+        />
 
         {/* Sheet panel */}
         <div
+          ref={setScrollContainer}
           class="absolute bottom-0 left-0 right-0 surface-appbar rounded-t-[var(--borderRadius4XLarge)] shadow-[var(--elevation28)]"
           style="max-height:80vh;overflow-y:auto;animation:fluent-slide-down var(--durationGentle) var(--curveDecelerateMid) both"
         >
@@ -110,7 +242,7 @@ const SeriesSheet: Component<Props> = (props) => {
               系列作品
             </h2>
             <button
-              class="w-8 h-8 flex items-center justify-center rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer"
+              class="w-10 h-10 flex items-center justify-center rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer"
               onClick={close}
               aria-label="关闭"
             >
@@ -123,7 +255,7 @@ const SeriesSheet: Component<Props> = (props) => {
             </button>
           </div>
 
-          <fluent-divider style="margin-inline:20px"></fluent-divider>
+          <fluent-divider style="margin-inline:20px" />
 
           {/* ── Series metadata ── */}
           <div class="px-5 py-3">
@@ -140,33 +272,30 @@ const SeriesSheet: Component<Props> = (props) => {
               @{props.authorName}
             </button>
 
-            {/* Stats from API */}
-            <Show when={seriesData()}>
-              {(d) => (
-                <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-1">
-                  总字数: {d().novel_series_detail.total_character_count.toLocaleString()}字 ·{" "}
-                  {d().novels.length}部作品
-                </p>
-              )}
+            <Show when={seriesDetail()}>
+              <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-1">
+                总字数: {totalCount().toLocaleString()}字 · {novels().length}部作品
+                {hasMore() ? "+" : ""}
+              </p>
             </Show>
           </div>
 
-          <fluent-divider style="margin-inline:20px"></fluent-divider>
+          <fluent-divider style="margin-inline:20px" />
 
           {/* ── Content area ── */}
           <div class="min-h-[160px]">
             {/* Loading state */}
-            <Show when={fetchLoading() && !seriesData()}>
+            <Show when={loading() && novels().length === 0}>
               <div class="flex justify-center py-8">
                 <LoadingSpinner text="加载中..." />
               </div>
             </Show>
 
             {/* Error state */}
-            <Show when={fetchError()}>
+            <Show when={error()}>
               <div class="flex flex-col items-center justify-center py-8 gap-3 px-5">
                 <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorStatusDangerForeground1)] text-center">
-                  加载失败：{fetchError()}
+                  加载失败：{error()}
                 </p>
                 <button
                   class="px-4 py-1.5 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase200)] font-medium border-none cursor-pointer active:scale-95 transition-all"
@@ -178,31 +307,38 @@ const SeriesSheet: Component<Props> = (props) => {
             </Show>
 
             {/* Novel list */}
-            <Show when={seriesData()}>
-              {(d) => (
-                <Show
-                  when={d().novels.length > 0}
-                  fallback={
-                    <p class="text-center py-8 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
-                      暂无作品
-                    </p>
-                  }
-                >
-                  <div class="py-1">
-                    <For each={d().novels}>
-                      {(novel) => (
-                        <SeriesSheetItem
-                          novel={novel}
-                          onClick={(id) => {
-                            close();
-                            navigate(`/novel/${id}`);
-                          }}
-                        />
-                      )}
-                    </For>
-                  </div>
-                </Show>
-              )}
+            <Show when={novels().length > 0}>
+              <div class="py-1">
+                <For each={novels()}>
+                  {(novel) => (
+                    <SeriesSheetItem
+                      novel={novel}
+                      isActive={isActive(novel.id)}
+                      ref={isActive(novel.id) ? setActiveItemEl : undefined}
+                      onClick={handleItemClick}
+                    />
+                  )}
+                </For>
+              </div>
+            </Show>
+
+            {/* Empty state */}
+            <Show when={!loading() && !error() && novels().length === 0 && seriesDetail()}>
+              <p class="text-center py-8 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
+                暂无作品
+              </p>
+            </Show>
+
+            {/* Load more sentinel */}
+            <Show when={hasMore()}>
+              <div ref={sentinelAttach} class="h-1" />
+            </Show>
+
+            {/* Loading more indicator */}
+            <Show when={loadingMore()}>
+              <div class="flex justify-center py-4">
+                <fluent-spinner size="tiny" />
+              </div>
             </Show>
           </div>
         </div>
