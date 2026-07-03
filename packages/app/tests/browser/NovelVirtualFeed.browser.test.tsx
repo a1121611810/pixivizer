@@ -1,31 +1,35 @@
 // @vitest-environment browser
-import { render, screen, waitFor } from "@solidjs/testing-library";
+import { render, waitFor } from "@solidjs/testing-library";
 import { describe, it, expect, vi } from "vitest";
 import NovelVirtualFeed from "../../src/components/NovelVirtualFeed";
 import type { PixivNovel } from "../../src/api/types";
 
 // ── Helper ──
 function createNovels(count: number): PixivNovel[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: i + 1,
-    title: `小说标题 ${i + 1}`,
-    user: {
-      id: 1,
-      name: `作者${i + 1}`,
-      account: `author${i + 1}`,
-      profile_image_urls: {},
-    },
-    image_urls: { square_medium: "", medium: "", large: "" },
-    tags: [],
-    page_count: 1,
-    text_length: 1000,
-    is_bookmarked: false,
-    total_bookmarks: 10,
-    total_view: 50,
-    x_restrict: 0,
-    novel_ai_type: 0,
-    create_date: `2026-01-${String(i + 1).padStart(2, "0")}T00:00:00Z`,
-  } as PixivNovel));
+  return Array.from(
+    { length: count },
+    (_, i) =>
+      ({
+        id: i + 1,
+        title: `小说标题 ${i + 1}`,
+        user: {
+          id: 1,
+          name: `作者${i + 1}`,
+          account: `author${i + 1}`,
+          profile_image_urls: {},
+        },
+        image_urls: { square_medium: "", medium: "", large: "" },
+        tags: [],
+        page_count: 1,
+        text_length: 1000,
+        is_bookmarked: false,
+        total_bookmarks: 10,
+        total_view: 50,
+        x_restrict: 0,
+        novel_ai_type: 0,
+        create_date: `2026-01-${String(i + 1).padStart(2, "0")}T00:00:00Z`,
+      }) as PixivNovel,
+  );
 }
 
 describe("NovelVirtualFeed", () => {
