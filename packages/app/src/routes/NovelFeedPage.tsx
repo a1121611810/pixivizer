@@ -61,7 +61,7 @@ const NovelFeedPage: Component<Props> = (props) => {
     <>
       {/* ── 关注页三层过滤 ── */}
       <Show when={props.tab === "follow"}>
-        <div class="sticky top-0 z-10 surface-appbar px-4 pb-2">
+        <div class="sticky top-12 z-10 surface-appbar px-4 pb-2">
           <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
             {[
               { key: "all" as const, label: "全部" },
