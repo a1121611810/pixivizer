@@ -1,4 +1,4 @@
-import { type Component, createSignal, createEffect, Show, onMount, onCleanup } from "solid-js";
+import { type Component, createSignal, createEffect, Show, onCleanup } from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
 import { loadDetail, fetchNovelData } from "../api/novel";
 import type { PixivNovel, SeriesNavigation } from "../api/types";
@@ -86,13 +86,14 @@ const NovelDetail: Component = () => {
   const [showHeaderTitle, setShowHeaderTitle] = createSignal(false);
   let titleRef: HTMLHeadingElement | undefined;
 
-  onMount(() => {
-    if (!titleRef) return;
+  createEffect(() => {
+    const el = titleRef;
+    if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => setShowHeaderTitle(!entry.isIntersecting),
       { rootMargin: "-48px 0px 0px 0px" },
     );
-    observer.observe(titleRef);
+    observer.observe(el);
     onCleanup(() => observer.disconnect());
   });
 
