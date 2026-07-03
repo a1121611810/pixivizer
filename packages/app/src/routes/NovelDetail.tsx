@@ -1,4 +1,4 @@
-import { type Component, createSignal, createEffect, Show, onCleanup } from "solid-js";
+import { type Component, createSignal, createEffect, Show, onMount, onCleanup } from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
 import { loadDetail, fetchNovelData } from "../api/novel";
 import type { PixivNovel, SeriesNavigation } from "../api/types";
@@ -84,17 +84,20 @@ const NovelDetail: Component = () => {
 
   const [settingsOpen, setSettingsOpen] = createSignal(false);
   const [showHeaderTitle, setShowHeaderTitle] = createSignal(false);
-  let titleRef: HTMLHeadingElement | undefined;
 
-  createEffect(() => {
-    const el = titleRef;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setShowHeaderTitle(!entry.isIntersecting),
-      { rootMargin: "-48px 0px 0px 0px" },
-    );
-    observer.observe(el);
-    onCleanup(() => observer.disconnect());
+  // 滚动时检测标题位置，决定 header 是否显示小说名
+
+  function onScroll() {
+    requestAnimationFrame(() => {
+      setShowHeaderTitle(window.scrollY > 48);
+    });
+  }
+
+  onMount(() => {
+    window.addEventListener("scroll", onScroll, { passive: true });
+  });
+  onCleanup(() => {
+    window.removeEventListener("scroll", onScroll);
   });
 
   return (
@@ -155,10 +158,7 @@ const NovelDetail: Component = () => {
               </div>
 
               <div class="px-4 pb-4 -mt-8 relative z-1">
-                <h1
-                  ref={titleRef!}
-                  class="[font-size:var(--fontSizeBase500)] font-bold text-[var(--colorNeutralForeground1)] leading-tight mb-1"
-                >
+                <h1 class="[font-size:var(--fontSizeBase500)] font-bold text-[var(--colorNeutralForeground1)] leading-tight mb-1">
                   {novel().title}
                 </h1>
                 <button
