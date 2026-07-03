@@ -24,6 +24,12 @@ interface Props {
   tab: Tab;
 }
 
+function scrollToTop() {
+  window.scroll(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 const NovelFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
   const cached = isNovelCached(props.tab);
@@ -61,7 +67,7 @@ const NovelFeedPage: Component<Props> = (props) => {
     <>
       {/* ── 关注页三层过滤 ── */}
       <Show when={props.tab === "follow"}>
-        <div class="sticky top-12 z-10 surface-appbar px-4 pb-2">
+        <div class="sticky top-12 z-10 surface-appbar px-4 pb-2" onDblClick={scrollToTop}>
           <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
             {[
               { key: "all" as const, label: "全部" },

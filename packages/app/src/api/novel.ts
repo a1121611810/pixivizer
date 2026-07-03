@@ -169,7 +169,7 @@ export function loadNext(url: string): Promise<PixivNovelListResponse> {
  * Pixiv App-API: GET /v1/novel/follow
  * @param restrict "public" | "private"
  */
-export function loadFollow(restrict: string = "public"): Promise<PixivNovelListResponse> {
+export function loadFollow(restrict: RestrictType = "public"): Promise<PixivNovelListResponse> {
   return apiClient.get<PixivNovelListResponse>("/v1/novel/follow", { restrict });
 }
 

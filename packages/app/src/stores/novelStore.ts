@@ -330,7 +330,7 @@ export async function fetchMore(): Promise<void> {
           return;
         }
 
-        const preferPublic = privOldest === null || (pubOldest !== null && pubOldest >= privOldest);
+        const preferPublic = privOldest === null || (pubOldest !== null && pubOldest < privOldest);
 
         const loadSource = async (
           key: "novel_follow_public" | "novel_follow_private",

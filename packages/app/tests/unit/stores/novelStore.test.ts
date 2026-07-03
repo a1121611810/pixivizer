@@ -314,5 +314,45 @@ describe("novelStore", () => {
       await store.ensureLoaded();
       expect(store.isNovelCached("follow")).toBe(true);
     });
+
+    it("fetchMore loads next page for follow public tab", async () => {
+      mockCurrentTab = "follow";
+      vi.mocked(loadFollow).mockImplementation((restrict: string) => {
+        if (restrict === "public")
+          return Promise.resolve({
+            novels: [createNovel(1, "2026-02-01T00:00:00Z")],
+            next_url: "https://app-api.pixiv.net/v1/novel/follow?offset=1",
+          });
+        return Promise.resolve({
+          novels: [createNovel(2, "2026-01-01T00:00:00Z")],
+          next_url: null,
+        });
+      });
+      vi.mocked(loadNext).mockResolvedValue({
+        novels: [createNovel(3, "2026-01-01T00:00:00Z")],
+        next_url: null,
+      });
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+      const { setNovelFollowTab } = await import("@/stores/novelStore");
+      setNovelFollowTab("public");
+      await store.fetchMore();
+
+      expect(store.novels()).toHaveLength(3); // [pub=1, priv=2] + fetchMore adds 3
+      expect(loadNext).toHaveBeenCalledWith("https://app-api.pixiv.net/v1/novel/follow?offset=1");
+      expect(store.novels().map((n) => n.id)).toEqual([1, 2, 3]);
+    });
+
+    it("does not fetchMore when nextUrl is null for follow", async () => {
+      mockCurrentTab = "follow";
+      vi.mocked(loadFollow).mockResolvedValue({ novels: [], next_url: null });
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+      await store.fetchMore();
+
+      expect(loadNext).not.toHaveBeenCalled();
+    });
   });
 });
