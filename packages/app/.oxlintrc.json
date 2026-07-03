@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.test.ts", "tests/**/*.browser.test.ts", "tests/**/*.e2e.ts"],
+      "rules": {
+        "no-unused-vars": [
+          "error",
+          { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_|^vi$|^beforeEach$|^afterEach$" }
+        ],
+        "no-underscore-dangle": "off"
+      }
+    }
+  ]
+}
