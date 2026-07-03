@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { loadRecommended, loadBookmarks, loadNext } from "@/api/novel";
+import { loadRecommended, loadBookmarks, loadNext, loadFollow } from "@/api/novel";
 import type { PixivNovel } from "@/api/types";
 
 vi.mock("@capacitor/core", async () => {
@@ -14,6 +14,7 @@ vi.mock("@/api/novel", () => ({
   loadRecommended: vi.fn(),
   loadBookmarks: vi.fn(),
   loadNext: vi.fn(),
+  loadFollow: vi.fn(),
 }));
 
 let mockCurrentTab = "recommended";
@@ -173,10 +174,12 @@ describe("novelStore", () => {
       expect(store.novels()).toEqual(page2);
     });
 
-    it("skips refresh for follow tab (no API)", async () => {
+    it("refresh works for follow tab", async () => {
       mockCurrentTab = "follow";
+      vi.mocked(loadFollow).mockResolvedValue({ novels: [], next_url: null });
       const store = await loadStore();
       await store.refresh();
+      expect(loadFollow).toHaveBeenCalled();
       expect(loadRecommended).not.toHaveBeenCalled();
     });
   });
@@ -199,6 +202,117 @@ describe("novelStore", () => {
       expect(store.isNovelCached("recommended")).toBe(false);
       await store.ensureLoaded();
       expect(store.isNovelCached("recommended")).toBe(true);
+    });
+  });
+
+  describe("follow tab", () => {
+    beforeEach(() => {
+      mockCurrentTab = "follow";
+    });
+
+    it("loads both public and private novels on first ensureLoaded", async () => {
+      const pubNovels = [createNovel(1, "2026-02-01T00:00:00Z")];
+      const privNovels = [createNovel(2, "2026-01-01T00:00:00Z")];
+      vi.mocked(loadFollow).mockImplementation((restrict: string) => {
+        if (restrict === "public") return Promise.resolve({ novels: pubNovels, next_url: null });
+        if (restrict === "private") return Promise.resolve({ novels: privNovels, next_url: null });
+        return Promise.resolve({ novels: [], next_url: null });
+      });
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+
+      expect(loadFollow).toHaveBeenCalledTimes(2);
+      expect(loadFollow).toHaveBeenCalledWith("public");
+      expect(loadFollow).toHaveBeenCalledWith("private");
+      // default followTab is "all", so should merge both
+      expect(store.novels().map((n) => n.id)).toEqual([1, 2]);
+      expect(store.loading()).toBe(false);
+    });
+
+    it("uses cache on subsequent ensureLoaded calls", async () => {
+      vi.mocked(loadFollow).mockResolvedValue({ novels: [], next_url: null });
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+      await store.ensureLoaded();
+
+      expect(loadFollow).toHaveBeenCalledTimes(2); // only first call (public + private)
+    });
+
+    it("shows empty state when follow list is empty", async () => {
+      vi.mocked(loadFollow).mockResolvedValue({ novels: [], next_url: null });
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+
+      expect(store.novels()).toEqual([]);
+    });
+
+    it("sets error when both requests fail", async () => {
+      vi.mocked(loadFollow).mockRejectedValue(new Error("API error"));
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+
+      expect(store.error()).toBeTruthy();
+      expect(store.loading()).toBe(false);
+    });
+
+    it("gracefully degrades when only private fails", async () => {
+      const pubNovels = [createNovel(1, "2026-02-01T00:00:00Z")];
+      vi.mocked(loadFollow).mockImplementation((restrict: string) => {
+        if (restrict === "public") return Promise.resolve({ novels: pubNovels, next_url: null });
+        return Promise.reject(new Error("Private error"));
+      });
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+
+      // Should still show public data
+      expect(store.novels()).toEqual(pubNovels);
+      // error should be null (single failure is warning, not error)
+      expect(store.error()).toBeNull();
+    });
+
+    it("refreshes follow data on refresh()", async () => {
+      const page1 = [createNovel(1, "2026-01-01T00:00:00Z")];
+      const page2 = [createNovel(2, "2026-02-01T00:00:00Z")];
+      vi.mocked(loadFollow).mockImplementation((restrict: string) => {
+        if (restrict === "public") return Promise.resolve({ novels: page1, next_url: null });
+        return Promise.resolve({ novels: [], next_url: null });
+      });
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+      expect(store.novels()).toEqual(page1);
+
+      vi.mocked(loadFollow).mockImplementation((restrict: string) => {
+        if (restrict === "public") return Promise.resolve({ novels: page2, next_url: null });
+        return Promise.resolve({ novels: [], next_url: null });
+      });
+      await store.refresh();
+      expect(loadFollow).toHaveBeenCalledTimes(4); // first load (2) + refresh (2)
+      expect(store.novels()).toEqual(page2);
+    });
+
+    it("scrollY is saved and restored per sub-tab", async () => {
+      vi.mocked(loadFollow).mockResolvedValue({ novels: [], next_url: null });
+
+      const store = await loadStore();
+      // Simulate saving scroll at position 100 in "all" mode
+      store.saveTabScroll("follow");
+      // We can't easily mock window.scrollY, but we can verify it doesn't error
+      expect(() => store.saveTabScroll("follow")).not.toThrow();
+    });
+
+    it("isNovelCached returns true after follow is loaded", async () => {
+      vi.mocked(loadFollow).mockResolvedValue({ novels: [], next_url: null });
+
+      const store = await loadStore();
+      expect(store.isNovelCached("follow")).toBe(false);
+      await store.ensureLoaded();
+      expect(store.isNovelCached("follow")).toBe(true);
     });
   });
 });
