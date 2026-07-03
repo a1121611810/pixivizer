@@ -97,18 +97,9 @@ const NovelDetail: Component = () => {
             <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor" />
           </svg>
         </button>
-        <h1 class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] flex-1">
+        <h1 class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)]">
           小说
         </h1>
-        <button
-          class="w-8 h-8 flex items-center justify-center rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer"
-          onClick={() => setSettingsOpen(true)}
-          aria-label="阅读设置"
-        >
-          <span class="font-bold tracking-tight" style="font-size:18px">
-            Aa
-          </span>
-        </button>
       </header>
 
       {/* ── Loading state ── */}
