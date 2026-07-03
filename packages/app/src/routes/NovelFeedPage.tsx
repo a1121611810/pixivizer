@@ -12,6 +12,8 @@ import {
   saveTabScroll,
   getFeedScrollY,
   isNovelCached,
+  novelFollowTab,
+  setNovelFollowTab,
 } from "../stores/novelStore";
 import { setCurrentTab } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
@@ -57,34 +59,49 @@ const NovelFeedPage: Component<Props> = (props) => {
 
   return (
     <>
-      {/* Follow tab placeholder — 无 API 可用 */}
+      {/* ── 关注页三层过滤 ── */}
       <Show when={props.tab === "follow"}>
-        <div class="flex flex-col items-center justify-center py-24 gap-4 text-[var(--colorNeutralForeground2)]">
-          <span class="text-4xl">📖</span>
-          <p class="[font-size:var(--fontSizeBase300)] font-medium">关注作者的小说</p>
-          <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
-            功能开发中...
-          </p>
-          <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground4)]">
-            切换回「插画」模式查看关注的作品更新
-          </p>
+        <div class="sticky top-0 z-10 surface-appbar px-4 pb-2">
+          <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
+            {[
+              { key: "all" as const, label: "全部" },
+              { key: "public" as const, label: "公开" },
+              { key: "private" as const, label: "非公开" },
+            ].map((opt) => (
+              <button
+                class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
+                classList={{
+                  "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
+                    novelFollowTab() === opt.key,
+                  "bg-transparent text-[var(--colorNeutralForeground2)]":
+                    novelFollowTab() !== opt.key,
+                }}
+                onClick={() => {
+                  if (novelFollowTab() !== opt.key) {
+                    saveTabScroll(props.tab);
+                    setNovelFollowTab(opt.key);
+                    window.scrollTo(0, getFeedScrollY(props.tab));
+                  }
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
       </Show>
 
-      {/* Feed for recommended / bookmarks */}
-      <Show when={props.tab !== "follow"}>
-        <NovelVirtualFeed
-          novels={novels()}
-          loading={loading() || refreshing()}
-          error={error()}
-          hasMore={nextUrl() !== null}
-          onNovelClick={(id) => navigate(`/novel/${id}`)}
-          onLoadMore={fetchMore}
-          onRefresh={refresh}
-          restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
-          onSeriesClick={openSeriesSheet}
-        />
-      </Show>
+      <NovelVirtualFeed
+        novels={novels()}
+        loading={loading() || refreshing()}
+        error={error()}
+        hasMore={nextUrl() !== null}
+        onNovelClick={(id) => navigate(`/novel/${id}`)}
+        onLoadMore={fetchMore}
+        onRefresh={refresh}
+        restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
+        onSeriesClick={openSeriesSheet}
+      />
       <Show when={sheetSeries()}>
         {(s) => (
           <SeriesSheet
