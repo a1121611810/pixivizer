@@ -83,6 +83,18 @@ const NovelDetail: Component = () => {
   });
 
   const [settingsOpen, setSettingsOpen] = createSignal(false);
+  const [showHeaderTitle, setShowHeaderTitle] = createSignal(false);
+  let titleRef: HTMLHeadingElement | undefined;
+
+  onMount(() => {
+    if (!titleRef) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowHeaderTitle(!entry.isIntersecting),
+      { rootMargin: "-48px 0px 0px 0px" },
+    );
+    observer.observe(titleRef);
+    onCleanup(() => observer.disconnect());
+  });
 
   return (
     <div class="min-h-screen bg-[var(--colorNeutralBackground2)]">
@@ -97,8 +109,15 @@ const NovelDetail: Component = () => {
             <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor" />
           </svg>
         </button>
-        <h1 class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)]">
-          小说
+        <h1 class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] flex items-center gap-1 min-w-0">
+          <span class="whitespace-nowrap flex-shrink-0">小说</span>
+          <span
+            class="truncate text-[var(--colorNeutralForeground2)]"
+            classList={{ "opacity-0": !showHeaderTitle(), "opacity-100": showHeaderTitle() }}
+            style="transition:opacity var(--durationFast) var(--curveEasyEase)"
+          >
+            《{novelData()?.title ?? ""}》
+          </span>
         </h1>
       </header>
 
@@ -135,7 +154,10 @@ const NovelDetail: Component = () => {
               </div>
 
               <div class="px-4 pb-4 -mt-8 relative z-1">
-                <h1 class="[font-size:var(--fontSizeBase500)] font-bold text-[var(--colorNeutralForeground1)] leading-tight mb-1">
+                <h1
+                  ref={titleRef!}
+                  class="[font-size:var(--fontSizeBase500)] font-bold text-[var(--colorNeutralForeground1)] leading-tight mb-1"
+                >
                   {novel().title}
                 </h1>
                 <button
