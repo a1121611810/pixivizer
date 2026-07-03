@@ -191,6 +191,19 @@ describe("novelStore", () => {
     });
   });
 
+  // ⚠️ 测试盲区说明：
+  // 以下场景无法通过 unit test 覆盖，由 E2E 测试 (feed.e2e.ts "novel follow")
+  // 和 browser 测试覆盖：
+  //
+  // 1. 子 tab 切换后旧卡片 DOM 未被清理 → 卡片 Badge 重叠
+  //    原因：Unit test 运行在 Node 环境，无 DOM 渲染。
+  //    修复：For keyed remount (NovelFeedPage feedKey)
+  //    验证：tests/e2e/specs/feed.e2e.ts — 检查 absolute 子元素是否有重复 top 值
+  //
+  // 2. 虚拟滚动中 absolute 定位元素的数据竞争
+  //    原因：SolidJS For 组件 reconciliation 时序
+  //    验证：E2E 测试通过 page.evaluate 直接检查 DOM 结构
+
   describe("isNovelCached", () => {
     it("returns true after loading", async () => {
       vi.mocked(loadRecommended).mockResolvedValue({
