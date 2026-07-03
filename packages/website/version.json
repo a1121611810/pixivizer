@@ -1,5 +1,5 @@
 {
-  "version": "2.2.4",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v2.2.4",
-  "changelog": "🔧 其他\n  🐛 fix(feed): add per-source request lock to prevent concurrent refresh\n  ♻️ refactor: 应用 Vitest 官方 Recipes 优化测试代码\n  ✨ feat: 配置 vitest 路径别名 @/ → src/，简化测试导入\n  🐛 fix: 修正测试文件移动后的 import 路径\n  ♻️"
+  "version": "3.0.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.0",
+  "changelog": "🚀 新版本发布\n本次更新重点完善小说模块体验，并新增浏览器组件测试能力。\n\n✨ 新功能\n小说详情页系列目录支持分页加载与缓存\n小说阅读器新增正文搜索与高亮导航\n小说关注 Feed 支持筛选，接入 /v1/novel/follow\n小说详情页滚动时顶部显示标题\n🐛 修复\n修复小说滚动标题触发检测问题\n修复关注子标签切换时内容重叠问题\n补充 PixivNovel 类型定义\n🧪 测试\n新增小说详情"
 }
