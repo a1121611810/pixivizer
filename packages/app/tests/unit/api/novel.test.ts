@@ -1,0 +1,175 @@
+import { describe, it, expect, vi } from "vitest";
+
+// Mock apiClient
+const mockGet = vi.fn();
+const mockPost = vi.fn();
+
+vi.mock("@/api/client", () => ({
+  apiClient: {
+    get: (...args: unknown[]) => mockGet(...args),
+    post: (...args: unknown[]) => mockPost(...args),
+  },
+}));
+
+async function loadApi() {
+  vi.resetModules();
+  return import("@/api/novel");
+}
+
+describe("api/novel.ts", () => {
+  it("loadSeries calls apiClient.get with series_id", async () => {
+    mockGet.mockResolvedValue({ novel_series_detail: {}, novels: [], next_url: null });
+    const { loadSeries } = await loadApi();
+    await loadSeries(123);
+
+    expect(mockGet).toHaveBeenCalledWith("/v2/novel/series", {
+      series_id: "123",
+    });
+  });
+
+  it("loadSeries passes last_order when provided", async () => {
+    mockGet.mockResolvedValue({ novel_series_detail: {}, novels: [], next_url: null });
+    const { loadSeries } = await loadApi();
+    await loadSeries(123, 5);
+
+    expect(mockGet).toHaveBeenCalledWith("/v2/novel/series", {
+      series_id: "123",
+      last_order: "5",
+    });
+  });
+
+  it("loadSeries returns a NovelSeriesDetailResponse", async () => {
+    const expected: import("@/api/novel").NovelSeriesDetailResponse = {
+      novel_series_detail: {
+        id: 1,
+        title: "Series Title",
+        user: {
+          id: 456,
+          name: "Author",
+          account: "author",
+          profile_image_urls: {
+            px_16x16: "https://example.com/16.jpg",
+            px_50x50: "https://example.com/50.jpg",
+            px_170x170: "https://example.com/170.jpg",
+          },
+          is_followed: false,
+        },
+        create_date: "2025-01-01T00:00:00+00:00",
+        total_character_count: 10000,
+        display_text_count: 5000,
+      },
+      novels: [
+        {
+          id: 10,
+          title: "Chapter 1",
+          user: {
+            id: 456,
+            name: "Author",
+            account: "author",
+            profile_image_urls: { px_16x16: "", px_50x50: "", px_170x170: "" },
+          },
+          image_urls: {
+            square_medium: "",
+            medium: "",
+            large: "",
+          },
+          tags: [{ name: "tag1" }],
+          page_count: 1,
+          text_length: 5000,
+          series: { id: 1, title: "Series Title" },
+          is_original: true,
+          is_bookmarked: false,
+          total_bookmarks: 10,
+          total_view: 100,
+          x_restrict: 0,
+          create_date: "2025-01-01T00:00:00+00:00",
+          caption: "A novel chapter",
+        },
+      ],
+      next_url: null,
+    };
+    mockGet.mockResolvedValue(expected);
+    const { loadSeries } = await loadApi();
+    const result = await loadSeries(123);
+
+    expect(result).toEqual(expected);
+  });
+});
+
+describe("extractNovelTextFromHtml", () => {
+  it("extracts text from window.pixiv.novel.text in HTML", async () => {
+    const { extractNovelTextFromHtml } = await loadApi();
+    const html = `<!DOCTYPE html><html><head><script>
+Object.defineProperty(window, 'pixiv', { value: { novel: { "text": "这是第一段。\\n\\n这是第二段，有标点。\\n\\n这是第三段。" } } });
+</script></head><body></body></html>`;
+
+    expect(extractNovelTextFromHtml(html)).toBe(
+      "这是第一段。\n\n这是第二段，有标点。\n\n这是第三段。",
+    );
+  });
+
+  it("handles escaped characters in text", async () => {
+    const { extractNovelTextFromHtml } = await loadApi();
+    const html = `<script>Object.defineProperty(window, 'pixiv', { value: { novel: { "text": "她说:\\u201c你好\\u201d" } } });</script>`;
+
+    expect(extractNovelTextFromHtml(html)).toBe("她说:“你好”");
+  });
+
+  it("returns empty string when no text found", async () => {
+    const { extractNovelTextFromHtml } = await loadApi();
+    expect(extractNovelTextFromHtml("<html><body>no script</body></html>")).toBe("");
+  });
+
+  it("matches the structure of the real Pixiv API response", async () => {
+    const { extractNovelTextFromHtml } = await loadApi();
+    // 模拟真实 API 返回的结构：pixiv.novel.text 中包含大段文本
+    const realSample = `<!DOCTYPE html><html><head><script>
+Object.defineProperty(window, 'pixiv', { value: { sessionUserId: 123, novel: { "id": "28374148", "title": "测试标题", "text": "我在一片软绵绵的黑暗里浮着。\\n\\n最先回来的不是视觉，是触觉。\\n\\n手腕被什么勒着。", "marker": null } } });
+</script></head><body></body></html>`;
+
+    const result = extractNovelTextFromHtml(realSample);
+    expect(result).toContain("我在一片软绵绵的黑暗里浮着");
+    expect(result).toContain("手腕被什么勒着");
+  });
+});
+
+describe("extractNovelDataFromHtml", () => {
+  it("extracts text and navigation from realistic HTML with Object.defineProperty syntax", async () => {
+    const { extractNovelDataFromHtml } = await loadApi();
+    const html = `<!DOCTYPE html><html><head><script>
+Object.defineProperty(window, 'pixiv', { value: { sessionUserId: 123, novel: { "id": "1", "text": "正文内容\\n\\n第二段", "seriesNavigation": {"nextNovel": {"id": 2, "title": "第二章"}, "prevNovel": null} }, isOwnWork: false } });
+</script></head><body></body></html>`;
+
+    const result = extractNovelDataFromHtml(html);
+    expect(result.text).toBe("正文内容\n\n第二段");
+    expect(result.navigation.nextNovel?.id).toBe(2);
+    expect(result.navigation.nextNovel?.title).toBe("第二章");
+    expect(result.navigation.prevNovel).toBeNull();
+  });
+
+  it("returns empty text and navigation when HTML has no data", async () => {
+    const { extractNovelDataFromHtml } = await loadApi();
+    const result = extractNovelDataFromHtml("<html></html>");
+    expect(result.text).toBe("");
+    expect(result.navigation.nextNovel).toBeUndefined();
+  });
+
+  it("extracts both prev and next navigation", async () => {
+    const { extractNovelDataFromHtml } = await loadApi();
+    const html = `<script>Object.defineProperty(window, 'pixiv', { value: { novel: { "id": "2", "text": "middle", "seriesNavigation": {"nextNovel": {"id": 3, "title": "Next"}, "prevNovel": {"id": 1, "title": "Prev"}} } } });</script>`;
+
+    const result = extractNovelDataFromHtml(html);
+    expect(result.navigation.prevNovel?.id).toBe(1);
+    expect(result.navigation.nextNovel?.id).toBe(3);
+    expect(result.text).toBe("middle");
+  });
+
+  it("handles missing seriesNavigation field", async () => {
+    const { extractNovelDataFromHtml } = await loadApi();
+    const html = `<script>Object.defineProperty(window, 'pixiv', { value: { novel: { "id": "1", "text": "no nav" } } });</script>`;
+
+    const result = extractNovelDataFromHtml(html);
+    expect(result.text).toBe("no nav");
+    expect(result.navigation.nextNovel).toBeUndefined();
+  });
+});

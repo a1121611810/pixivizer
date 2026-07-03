@@ -1,0 +1,15 @@
+/* Novel reader text content */
+.novel-text {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-size: var(--reader-font-size, 18px);
+  font-weight: var(--reader-font-weight, 400);
+  font-family: var(--reader-font-family, sans-serif);
+  color: var(--reader-font-color, var(--colorNeutralForeground1));
+  line-height: var(--reader-line-height, 1.8);
+  background-color: var(--reader-bg-color, transparent);
+}
+
+.novel-text p {
+  margin: 0 0 1em;
+}

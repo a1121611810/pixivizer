@@ -222,13 +222,30 @@ export default defineConfig({
     },
     overrides: [
       {
-        files: ["**/__tests__/**", "**/*.test.ts", "**/*.test.tsx"],
-        plugins: ["vitest"],
+        files: [
+          "tests/**/*.test.ts",
+          "tests/**/*.test.tsx",
+          "tests/**/*.browser.test.ts",
+          "tests/**/*.e2e.ts",
+          "tests/e2e/*.ts",
+        ],
+        // override 设置 plugins 会替换（而非合并）基线列表，必须包含所有所需插件
+        plugins: ["typescript", "unicorn", "oxc", "vitest"],
         env: { node: true },
         rules: {
           "no-console": "off",
-          // 测试 mock 的类型参数对可读性增益有限，关闭以专注测试逻辑
           "require-mock-type-parameters": "off",
+          "no-unused-vars": [
+            "error",
+            { argsIgnorePattern: "^_", varsIgnorePattern: "^_|^vi$|^beforeEach$|^afterEach$" },
+          ],
+          "no-underscore-dangle": "off",
+          "consistent-function-scoping": "off",
+          "no-await-in-loop": "off",
+          "expect-expect": "off",
+          "no-conditional-expect": "off",
+          "require-to-throw-message": "off",
+          "no-standalone-expect": "off",
         },
       },
       {

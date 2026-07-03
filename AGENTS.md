@@ -353,6 +353,7 @@ packages/app/src/
 
 - **代码智能规范**：涉及代码理解、调用链追踪、影响分析时，默认优先使用 CodeGraph，详见上方「代码智能规范」章节。
 - **Web API / 浏览器兼容性查询优先用 MCP MDN**：需要查 HTML、CSS、JS 标准 API 语法或浏览器兼容性时，优先使用 `mcp__mdn__*` 系列工具（`get-doc` / `search` / `get-compat`），这是 MDN 官方提供的 MCP 接口。
+- **SolidJS Suspense 规则**：路由组件（位于 `<Suspense>` 嵌套树内的组件）**禁止**使用 `createResource`。改用 `createSignal` + `createEffect` + 手动 fetch（带 AbortController）。`createResource` 仅限叶子组件或独立子树中使用。App.tsx 的 `<Suspense>` 包裹了整个路由树，任何路由级组件使用 `createResource` 都会触发整页切换为 fallback。
 
 ## 任务完成前自检
 

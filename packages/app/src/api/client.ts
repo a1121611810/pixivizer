@@ -25,6 +25,10 @@ export function setAccessToken(token: string) {
   accessToken = token;
 }
 
+export function getAccessToken(): string {
+  return accessToken;
+}
+
 export function setOnUnauthorized(handler: () => Promise<void>) {
   onUnauthorized = handler;
 }

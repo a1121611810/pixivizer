@@ -41,7 +41,7 @@ describe("api/illust.ts", () => {
 
   it("loadMangaRecommended delegates to loadRecommended with manga", async () => {
     mockGet.mockResolvedValue({ illusts: [] });
-    const { loadMangaRecommended, loadRecommended } = await loadApi();
+    const { loadMangaRecommended } = await loadApi();
     await loadMangaRecommended();
 
     expect(mockGet).toHaveBeenCalledWith("/v1/illust/recommended", {

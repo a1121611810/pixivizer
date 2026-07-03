@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { PixivIllust, RestrictType } from "@/api/types";
+import type { PixivIllust } from "@/api/types";
 
 // Completely mock solid-js createResource for test control
 let mockResourceValue: { illusts: PixivIllust[]; nextUrl: string | null } = {
@@ -15,7 +15,7 @@ vi.mock("solid-js", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...(actual as Record<string, unknown>),
-    createResource: (...args: unknown[]) => {
+    createResource: (..._args: unknown[]) => {
       // Capture the fetcher for later use
       const resourceFn = () => ({
         illusts: mockResourceValue.illusts,

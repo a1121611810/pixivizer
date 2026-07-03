@@ -1,8 +1,10 @@
 import { defineConfig } from "vitest/config";
+import solid from "vite-plugin-solid";
 import { playwright } from "@vitest/browser-playwright";
 import { resolve } from "node:path";
 
 export default defineConfig({
+  plugins: [solid()],
   test: {
     name: "browser",
     include: ["tests/browser/**/*.browser.test.{ts,tsx}"],

@@ -57,6 +57,7 @@
     "@capacitor/cli": "^8.4.1",
     "@playwright/test": "^1.61.1",
     "@resvg/resvg-js": "^2.6.2",
+    "@solidjs/testing-library": "^0.8.10",
     "@types/node": "^26.0.1",
     "@vitest/browser": "^4.1.9",
     "@vitest/browser-playwright": "^4.1.9",

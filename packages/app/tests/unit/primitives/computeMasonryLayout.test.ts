@@ -97,8 +97,8 @@ describe("computeMasonryLayout", () => {
       columnCount: 1,
       gap: 10,
     });
-    const h1 = 200 + CARD_INFO_HEIGHT;
-    const h2 = 100 + CARD_INFO_HEIGHT; // 200/(400/200) = 100
+    const _h1 = 200 + CARD_INFO_HEIGHT;
+    const _h2 = 100 + CARD_INFO_HEIGHT; // 200/(400/200) = 100
     expect(layout.totalHeight).toBe(780);
   });
 

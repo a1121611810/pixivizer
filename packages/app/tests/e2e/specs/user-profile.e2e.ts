@@ -1,5 +1,5 @@
 import { test, expect } from "../fixtures";
-import { clickNavTab, clientNavigate } from "../helpers";
+import { clientNavigate } from "../helpers";
 
 test.describe("User Profile (user/:id)", () => {
   test("navigating to illust detail then back to feed works", async ({ loggedInPage: page }) => {

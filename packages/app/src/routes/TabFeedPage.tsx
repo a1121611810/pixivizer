@@ -18,13 +18,20 @@ import {
   setRecommendSubTab,
   type RecommendSubTab,
 } from "../stores/feedStore";
-import { setCurrentTab, openSettingsDrawer, layoutMode } from "../stores/uiStore";
+import {
+  setCurrentTab,
+  openSettingsDrawer,
+  layoutMode,
+  contentType,
+  setContentType,
+} from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import type { PixivIllust } from "../api/types";
 import { user, isLoggedIn } from "../stores/authStore";
 import UserAvatar from "../components/UserAvatar";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
+import NovelFeedPage from "./NovelFeedPage";
 import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
 
@@ -71,6 +78,16 @@ const TabFeedPage: Component<Props> = (props) => {
       window.removeEventListener("r18gChanged", r18Handler);
     });
   });
+
+  // Content type changed -> save scroll position
+  const contentTypeHandler = () => {
+    saveTabScroll(props.tab);
+  };
+  onMount(() => {
+    window.addEventListener("contentTypeChanged", contentTypeHandler);
+    onCleanup(() => window.removeEventListener("contentTypeChanged", contentTypeHandler));
+  });
+
   return (
     <>
       <PageTransition>
@@ -89,10 +106,37 @@ const TabFeedPage: Component<Props> = (props) => {
                 <span class="truncate max-w-[120px]">{user()!.name}</span>
               </Show>
             </h1>
+
+            {/* ── Content type toggle ── */}
+            <div class="flex items-center bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusSmall)] p-0.5 gap-0.5">
+              <button
+                class="px-2.5 py-1 rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase100)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
+                classList={{
+                  "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
+                    contentType() === "illust",
+                  "bg-transparent text-[var(--colorNeutralForeground2)]":
+                    contentType() !== "illust",
+                }}
+                onClick={() => setContentType("illust")}
+              >
+                插画
+              </button>
+              <button
+                class="px-2.5 py-1 rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase100)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
+                classList={{
+                  "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
+                    contentType() === "novel",
+                  "bg-transparent text-[var(--colorNeutralForeground2)]": contentType() !== "novel",
+                }}
+                onClick={() => setContentType("novel")}
+              >
+                小说
+              </button>
+            </div>
           </header>
 
           {/* ── 关注页三层过滤 ── */}
-          <Show when={props.tab === "follow"}>
+          <Show when={props.tab === "follow" && contentType() === "illust"}>
             <div class="sticky top-12 z-10 surface-appbar px-4 pb-2" onDblClick={scrollToTop}>
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
                 {[
@@ -122,7 +166,7 @@ const TabFeedPage: Component<Props> = (props) => {
           </Show>
 
           {/* ── 推荐页子标签 ── */}
-          <Show when={props.tab === "recommended"}>
+          <Show when={props.tab === "recommended" && contentType() === "illust"}>
             <div class="sticky top-12 z-10 surface-appbar px-4 pb-2" onDblClick={scrollToTop}>
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
                 {[
@@ -167,18 +211,20 @@ const TabFeedPage: Component<Props> = (props) => {
             </div>
           </Show>
 
-          <VirtualFeed
-            illusts={filteredIllusts()}
-            loading={loading() || refreshing()}
-            error={error()}
-            hasMore={nextUrl() !== null}
-            onIllustClick={(id) => navigate(`/illust/${id}`)}
-            onLoadMore={fetchMore}
-            onRefresh={refresh}
-            skipAnimation={cached}
-            layoutMode={layoutMode()}
-            restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
-          />
+          <Show when={contentType() === "illust"} fallback={<NovelFeedPage tab={props.tab} />}>
+            <VirtualFeed
+              illusts={filteredIllusts()}
+              loading={loading() || refreshing()}
+              error={error()}
+              hasMore={nextUrl() !== null}
+              onIllustClick={(id) => navigate(`/illust/${id}`)}
+              onLoadMore={fetchMore}
+              onRefresh={refresh}
+              skipAnimation={cached}
+              layoutMode={layoutMode()}
+              restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
+            />
+          </Show>
         </div>
       </PageTransition>
 

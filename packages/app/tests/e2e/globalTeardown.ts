@@ -4,8 +4,6 @@
  * Must export a single default function.
  */
 
-import { execSync } from "node:child_process";
-
 export default async function globalTeardown(): Promise<void> {
   const proc = (globalThis as any).__e2eServerProcess;
   if (proc) {

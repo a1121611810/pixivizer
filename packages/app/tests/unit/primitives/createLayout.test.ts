@@ -4,7 +4,7 @@ import { createRoot, createSignal } from "solid-js";
 import { createLayout } from "@/components/LayoutEngine";
 import type { PixivIllust } from "@/api/types";
 import type { MasonryLayout } from "@/primitives/types";
-import { CARD_INFO_HEIGHT, computeMasonryLayout } from "@/primitives/computeMasonryLayout";
+import { computeMasonryLayout } from "@/primitives/computeMasonryLayout";
 import { makeIllust } from "../../helpers";
 
 /**

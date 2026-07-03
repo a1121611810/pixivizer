@@ -1,6 +1,6 @@
 // @vitest-environment browser
 import { describe, it, expect, vi } from "vitest";
-import { computeMasonryLayout, type ComputeMasonryInput } from "@/primitives/computeMasonryLayout";
+import { computeMasonryLayout } from "@/primitives/computeMasonryLayout";
 
 describe("createVirtualScroll integration", () => {
   it("createVirtualScroll is defined and importable", async () => {

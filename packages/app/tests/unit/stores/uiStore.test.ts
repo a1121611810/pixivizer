@@ -354,4 +354,47 @@ describe("resetUiStore", () => {
       value: "false",
     });
   });
+
+  describe("contentType", () => {
+    it("defaults to illust", async () => {
+      const { contentType } = await loadStore();
+      expect(contentType()).toBe("illust");
+    });
+
+    it("persists and updates on setContentType", async () => {
+      const { contentType, setContentType } = await loadStore();
+      await setContentType("novel");
+      expect(contentType()).toBe("novel");
+      expect(Preferences.set).toHaveBeenCalledWith({
+        key: "content_type",
+        value: "novel",
+      });
+    });
+
+    it("loads persisted contentType via loadContentTypePreference", async () => {
+      vi.mocked(Preferences.get).mockResolvedValue({ value: "novel" });
+      const { contentType, loadContentTypePreference } = await loadStore();
+      await loadContentTypePreference();
+      expect(contentType()).toBe("novel");
+    });
+
+    it("ignores invalid persisted values", async () => {
+      vi.mocked(Preferences.get).mockResolvedValue({ value: "invalid" });
+      const { contentType, loadContentTypePreference } = await loadStore();
+      await loadContentTypePreference();
+      expect(contentType()).toBe("illust"); // default unchanged
+    });
+
+    it("dispatches contentTypeChanged event", async () => {
+      const { setContentType } = await loadStore();
+      const dispatchSpy = vi.fn();
+      const origDispatch = window.dispatchEvent;
+      window.dispatchEvent = dispatchSpy;
+      await setContentType("novel");
+      expect(dispatchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "contentTypeChanged" }),
+      );
+      window.dispatchEvent = origDispatch;
+    });
+  });
 });

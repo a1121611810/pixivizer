@@ -9,6 +9,7 @@ import { setPredictiveBackEnabled } from "../services/predictiveBack";
 
 type Tab = "recommended" | "follow" | "bookmarks" | "me";
 export type { Tab };
+export type ContentType = "illust" | "novel";
 export type Theme = "light" | "dark" | "system";
 export type ImageQuality = "medium" | "large" | "original";
 export type CacheSize = number;
@@ -32,6 +33,9 @@ const PREF_KEY_AGE_CONFIRMED = "age_confirmed";
 const PREF_KEY_IS_ADULT = "is_adult";
 const PREF_KEY_AUTO_CHECK_UPDATE = "auto_check_update";
 const PREF_KEY_USE_DNS_OVERRIDE = "use_dns_override";
+const PREF_KEY_CONTENT_TYPE = "content_type";
+const PREF_KEY_NOVEL_CACHE_ENABLED = "novel_cache_enabled";
+const PREF_KEY_NOVEL_CACHE_SIZE = "novel_cache_size";
 const ANDROID_16_API_LEVEL = 36;
 
 // ── 主题辅助函数 ──
@@ -59,6 +63,11 @@ const initialState = () => {
   return {
     // 导航
     currentTab: "recommended" as Tab,
+
+    // 内容类型
+    contentType: "illust" as ContentType,
+    novelCacheEnabled: true,
+    novelCacheSize: 10,
 
     // 主题
     theme: initialTheme,
@@ -107,6 +116,42 @@ const [state, setState] = createStore(initialState());
 
 export const currentTab = () => state.currentTab;
 export const setCurrentTab = (tab: Tab) => setState("currentTab", tab);
+
+export const contentType = () => state.contentType;
+
+export async function setContentType(type: ContentType): Promise<void> {
+  const prev = state.contentType;
+  if (type === prev) return;
+  setState("contentType", type);
+  try {
+    await Preferences.set({ key: PREF_KEY_CONTENT_TYPE, value: type });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist contentType", e);
+    setState("contentType", prev);
+  }
+  window.dispatchEvent(new CustomEvent("contentTypeChanged"));
+}
+
+export const novelCacheEnabled = () => state.novelCacheEnabled;
+export const novelCacheSize = () => state.novelCacheSize;
+
+export async function setNovelCacheEnabled(v: boolean): Promise<void> {
+  setState("novelCacheEnabled", v);
+  try {
+    await Preferences.set({ key: PREF_KEY_NOVEL_CACHE_ENABLED, value: String(v) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist novelCacheEnabled", e);
+  }
+}
+
+export async function setNovelCacheSize(v: number): Promise<void> {
+  setState("novelCacheSize", v);
+  try {
+    await Preferences.set({ key: PREF_KEY_NOVEL_CACHE_SIZE, value: String(v) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist novelCacheSize", e);
+  }
+}
 
 export const theme = () => state.theme;
 export const setTheme = (t: Theme) => setState("theme", t);
@@ -422,6 +467,21 @@ export async function setUseDnsOverride(enabled: boolean): Promise<void> {
   }
 }
 
+export async function loadNovelCachePreference(): Promise<void> {
+  try {
+    const { value: enabled } = await Preferences.get({ key: PREF_KEY_NOVEL_CACHE_ENABLED });
+    if (enabled === "true") setState("novelCacheEnabled", true);
+    if (enabled === "false") setState("novelCacheEnabled", false);
+    const { value: size } = await Preferences.get({ key: PREF_KEY_NOVEL_CACHE_SIZE });
+    if (size) {
+      const n = Number.parseInt(size, 10);
+      if (n >= 1 && n <= 20) setState("novelCacheSize", n);
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load novel cache preference", e);
+  }
+}
+
 export async function loadUseDnsOverridePreference(): Promise<void> {
   try {
     const { value } = await Preferences.get({ key: PREF_KEY_USE_DNS_OVERRIDE });
@@ -430,6 +490,17 @@ export async function loadUseDnsOverridePreference(): Promise<void> {
     }
   } catch (e) {
     console.warn("[uiStore] Failed to load useDnsOverride preference", e);
+  }
+}
+
+export async function loadContentTypePreference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_CONTENT_TYPE });
+    if (value === "illust" || value === "novel") {
+      setState("contentType", value as ContentType);
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load contentType preference", e);
   }
 }
 

@@ -4,6 +4,7 @@ import "./styles/reset.css";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "virtual:uno.css";
+import "./styles/novel-reader.css";
 // ── 新增: Fluent Web Components 注册 + 主题同步 ──
 import { setTheme } from "@fluentui/web-components";
 import { webLightTheme, webDarkTheme } from "@fluentui/tokens";

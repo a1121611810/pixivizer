@@ -263,6 +263,9 @@ importers:
       '@resvg/resvg-js':
         specifier: ^2.6.2
         version: 2.6.2
+      '@solidjs/testing-library':
+        specifier: ^0.8.10
+        version: 0.8.10(@solidjs/router@0.16.1(solid-js@1.9.13))(solid-js@1.9.13)
       '@types/node':
         specifier: ^26.0.1
         version: 26.0.1
@@ -2029,6 +2032,16 @@ packages:
     resolution: {integrity: sha512-IhyjedgC6LRpw/8CPGGI89FrV+r0xTHzOl2c4CRyzYQ1bLepJxbVI1LLKvsavMWY5TRBRacV7hAeOhuTXkjiqg==}
     peerDependencies:
       solid-js: ^1.8.6
+
+  '@solidjs/testing-library@0.8.10':
+    resolution: {integrity: sha512-qdeuIerwyq7oQTIrrKvV0aL9aFeuwTd86VYD3afdq5HYEwoox1OBTJy4y8A3TFZr8oAR0nujYgCzY/8wgHGfeQ==}
+    engines: {node: '>= 14'}
+    peerDependencies:
+      '@solidjs/router': '>=0.9.0'
+      solid-js: '>=1.0.0'
+    peerDependenciesMeta:
+      '@solidjs/router':
+        optional: true
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -5962,6 +5975,13 @@ snapshots:
     dependencies:
       solid-js: 1.9.13
 
+  '@solidjs/testing-library@0.8.10(@solidjs/router@0.16.1(solid-js@1.9.13))(solid-js@1.9.13)':
+    dependencies:
+      '@testing-library/dom': 10.4.1
+      solid-js: 1.9.13
+    optionalDependencies:
+      '@solidjs/router': 0.16.1(solid-js@1.9.13)
+
   '@standard-schema/spec@1.1.0': {}
 
   '@swc/helpers@0.5.23':
@@ -8665,6 +8685,7 @@ time:
   '@playwright/test@1.61.1': '2026-06-23T19:49:12.825Z'
   '@resvg/resvg-js@2.6.2': '2024-03-26T13:43:37.598Z'
   '@solidjs/router@0.16.1': '2026-03-17T23:16:42.276Z'
+  '@solidjs/testing-library@0.8.10': '2024-09-25T13:24:08.486Z'
   '@types/node@26.0.1': '2026-06-24T20:33:01.352Z'
   '@vitest/browser-playwright@4.1.9': '2026-06-15T07:21:50.860Z'
   '@vitest/browser@4.1.9': '2026-06-15T07:21:58.373Z'

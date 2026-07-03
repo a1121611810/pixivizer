@@ -25,6 +25,8 @@ import {
   autoCheckUpdate,
   loadAutoCheckUpdatePreference,
   loadUseDnsOverridePreference,
+  loadContentTypePreference,
+  loadNovelCachePreference,
 } from "./stores/uiStore";
 import { checkForUpdate } from "./services/updateService";
 import {
@@ -48,6 +50,7 @@ const UserIllusts = lazy(() => import("./routes/UserIllusts"));
 const About = lazy(() => import("./routes/About"));
 const ImageHostSettings = lazy(() => import("./routes/ImageHostSettings"));
 const FollowListPage = lazy(() => import("./routes/FollowListPage"));
+const NovelDetail = lazy(() => import("./routes/NovelDetail"));
 import PredictiveBackContainer from "./components/PredictiveBackContainer";
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
@@ -107,6 +110,8 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadAgePreference();
     await loadAutoCheckUpdatePreference();
     await loadUseDnsOverridePreference();
+    await loadContentTypePreference();
+    await loadNovelCachePreference();
 
     // Load user content moderation state
     await loadReportedIds();
@@ -300,6 +305,7 @@ const App: Component = () => {
       <Route path="/following" component={() => <TabFeedPage tab="follow" />} />
       <Route path="/illust/:id" component={IllustDetail} />
       <Route path="/debug" component={DebugImage} />
+      <Route path="/novel/:id" component={NovelDetail} />
       <Route path="/bookmarks" component={Bookmarks} />
       <Route path="/me" component={PersonalCenter} />
       <Route path="/user/:id/illusts" component={UserIllusts} />

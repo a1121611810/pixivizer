@@ -60,6 +60,48 @@ export interface PixivIllust {
   meta_single_page: { original_image_url?: string };
 }
 
+// ─── 小说 ───
+export interface PixivNovel {
+  id: number;
+  title: string;
+  user: PixivUser;
+  image_urls: PixivIllustImageUrls;
+  tags: { name: string; translated_name?: string }[];
+  page_count: number;
+  text_length: number;
+  series?: { id: number; title: string };
+  has_chapters?: boolean;
+  is_original?: boolean;
+  is_bookmarked: boolean;
+  total_bookmarks: number;
+  total_comments?: number;
+  total_view?: number;
+  x_restrict: number;
+  create_date: string;
+  caption?: string;
+}
+
+export interface PixivNovelListResponse {
+  novels: PixivNovel[];
+  next_url: string | null;
+}
+
+export interface PixivNovelDetailResponse {
+  novel: PixivNovel;
+}
+
+// ─── 小说导航 ───
+export interface NovelNavItem {
+  id: number;
+  title: string;
+  viewable?: boolean;
+}
+
+export interface SeriesNavigation {
+  nextNovel?: NovelNavItem | null;
+  prevNovel?: NovelNavItem | null;
+}
+
 // ─── 响应包装 ───
 export interface PixivIllustListResponse {
   illusts: PixivIllust[];

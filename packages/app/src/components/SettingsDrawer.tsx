@@ -48,10 +48,15 @@ import {
   resetUiStore,
   useDnsOverride,
   setUseDnsOverride,
+  novelCacheEnabled,
+  novelCacheSize,
+  setNovelCacheEnabled,
+  setNovelCacheSize,
 } from "../stores/uiStore";
 import { isLoggedIn, logout, user } from "../stores/authStore";
 import { clearImageCache, resolveImageUrl } from "../utils/imageLoader";
 import { resetBlockedIds } from "../stores/blockStore";
+import { clearNovelCache } from "../stores/novelCache";
 import { resetReportedIds } from "../stores/reportStore";
 import { profile, loadProfile } from "../stores/userStore";
 import BlocklistSheet from "./BlocklistSheet";
@@ -152,6 +157,7 @@ const SettingsDrawer: Component = () => {
     try {
       await logout();
       clearImageCache();
+      clearNovelCache();
       resetBlockedIds();
       resetReportedIds();
       await Preferences.clear();
@@ -844,6 +850,62 @@ const SettingsDrawer: Component = () => {
             <p class="mt-2 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
               缓存数越大，图片加载越快，但占用的内存也越多。推荐 400~600。
             </p>
+          </div>
+
+          {/* ── Novel cache ── */}
+          <div class="mb-6">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4zm2 0v16h12V4H6zm2 3h8v2H8V7zm0 4h8v2H8v-2zm0 4h5v2H8v-2z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+                <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                  小说缓存
+                </p>
+              </div>
+              <fluent-switch
+                aria-label="启用小说缓存"
+                checked={novelCacheEnabled()}
+                on:change={() => setNovelCacheEnabled(!novelCacheEnabled())}
+                style="--switch-width:44px;--switch-height:22px"
+              ></fluent-switch>
+            </div>
+            <Show when={novelCacheEnabled()}>
+              <div class="flex items-center justify-between mb-2 mt-3">
+                <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground2)]">
+                  正文缓存篇数
+                </p>
+                <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorCompoundBrandForeground1)]">
+                  {novelCacheSize()}
+                </span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">
+                  1
+                </span>
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  step="1"
+                  value={novelCacheSize()}
+                  onInput={(e) => setNovelCacheSize(Number(e.currentTarget.value))}
+                  class="flex-1 h-1 rounded-[var(--borderRadiusCircular)] cursor-pointer"
+                  style={{ "accent-color": "var(--colorCompoundBrandBackground)" }}
+                />
+                <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">
+                  20
+                </span>
+              </div>
+              <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-1">
+                详情缓存自动设为 {novelCacheSize() * 10} 篇
+              </p>
+            </Show>
           </div>
 
           {/* 图床代理入口 */}

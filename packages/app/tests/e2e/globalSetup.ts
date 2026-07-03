@@ -7,7 +7,7 @@
 import { spawn, execSync, type ChildProcess } from "node:child_process";
 import { createServer } from "node:net";
 import { readFileSync, existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve as pathResolve } from "node:path";
 
 /**
  * Load environment variables from .env file (if exists).
@@ -15,7 +15,7 @@ import { resolve } from "node:path";
  * the shell environment.
  */
 function loadEnvFile(): void {
-  const envPath = resolve(new URL("../../.env", import.meta.url).pathname);
+  const envPath = pathResolve(new URL("../../.env", import.meta.url).pathname);
   if (!existsSync(envPath)) return;
 
   const content = readFileSync(envPath, "utf-8");
