@@ -173,3 +173,48 @@ Object.defineProperty(window, 'pixiv', { value: { sessionUserId: 123, novel: { "
     expect(result.navigation.nextNovel).toBeUndefined();
   });
 });
+
+describe("loadFollow", () => {
+  it("calls apiClient.get with /v1/novel/follow and restrict parameter", async () => {
+    mockGet.mockResolvedValue({ novels: [], next_url: null });
+    const { loadFollow } = await loadApi();
+    await loadFollow("public");
+
+    expect(mockGet).toHaveBeenCalledWith("/v1/novel/follow", { restrict: "public" });
+  });
+
+  it("defaults restrict to public", async () => {
+    mockGet.mockResolvedValue({ novels: [], next_url: null });
+    const { loadFollow } = await loadApi();
+    await loadFollow();
+
+    expect(mockGet).toHaveBeenCalledWith("/v1/novel/follow", { restrict: "public" });
+  });
+
+  it("returns PixivNovelListResponse", async () => {
+    const expected: import("@/api/types").PixivNovelListResponse = {
+      novels: [
+        {
+          id: 1,
+          title: "test",
+          user: { id: 1, name: "a", account: "a", profile_image_urls: {} },
+          image_urls: { square_medium: "", medium: "", large: "" },
+          tags: [],
+          page_count: 1,
+          text_length: 1000,
+          is_bookmarked: false,
+          total_bookmarks: 5,
+          x_restrict: 0,
+          create_date: "2026-01-01T00:00:00Z",
+        } as import("@/api/types").PixivNovel,
+      ],
+      next_url: null,
+    };
+    mockGet.mockResolvedValue(expected);
+    const { loadFollow } = await loadApi();
+    const result = await loadFollow("private");
+
+    expect(result).toEqual(expected);
+    expect(result.novels).toHaveLength(1);
+  });
+});
