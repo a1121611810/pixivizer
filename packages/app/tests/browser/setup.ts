@@ -9,6 +9,7 @@ import "@fluentui/web-components/web-components.js";
 vi.mock("@capacitor/core", () => ({
   Capacitor: { getPlatform: () => "web", isNativePlatform: () => false },
   CapacitorHttp: { request: vi.fn(), get: vi.fn(), post: vi.fn() },
+  registerPlugin: <T>(_pluginName: string): T => ({}) as T,
 }));
 
 vi.mock("@capacitor/preferences", () => ({
