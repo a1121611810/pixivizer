@@ -5,6 +5,9 @@ import type { PixivNovel, SeriesNavigation } from "../api/types";
 import { resolveImageUrl } from "../utils/imageLoader";
 import PixivImage from "../components/PixivImage";
 import LoadingSpinner from "../components/LoadingSpinner";
+import FluentIcon from "../components/ui/FluentIcon";
+import NovelSearchBar from "../components/NovelSearchBar";
+import { createNovelSearch } from "../primitives/createNovelSearch";
 import { readerStyle } from "../stores/readerSettingsStore";
 import { novelCacheEnabled } from "../stores/uiStore";
 import { getDetail, setDetail, getText, setText, getNav, setNav } from "../stores/novelCache";
@@ -83,6 +86,25 @@ const NovelDetail: Component = () => {
   });
 
   const [settingsOpen, setSettingsOpen] = createSignal(false);
+  const [searchOpen, setSearchOpen] = createSignal(false);
+  const [textContainerEl, setTextContainerEl] = createSignal<HTMLElement | undefined>();
+  const search = createNovelSearch(novelHtml, textContainerEl, { debounceMs: 150 });
+
+  function openSearch() {
+    setSearchOpen(true);
+  }
+
+  function closeSearch() {
+    setSearchOpen(false);
+    search.clearSearch();
+  }
+
+  // 切换小说时自动关闭搜索并清空高亮
+  createEffect(() => {
+    novelId();
+    closeSearch();
+  });
+
   const [showHeaderTitle, setShowHeaderTitle] = createSignal(false);
   const [titleEl, setTitleEl] = createSignal<HTMLHeadingElement | undefined>();
 
@@ -111,16 +133,42 @@ const NovelDetail: Component = () => {
             <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor" />
           </svg>
         </button>
-        <h1 class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] flex items-center gap-1 min-w-0">
-          <span class="whitespace-nowrap flex-shrink-0">小说</span>
-          <span
-            class="truncate text-[var(--colorNeutralForeground2)]"
-            classList={{ "opacity-0": !showHeaderTitle(), "opacity-100": showHeaderTitle() }}
-            style="transition:opacity var(--durationFast) var(--curveEasyEase)"
+        <Show
+          when={searchOpen()}
+          fallback={
+            <h1 class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] flex items-center gap-1 min-w-0 flex-1">
+              <span class="whitespace-nowrap flex-shrink-0">小说</span>
+              <span
+                class="truncate text-[var(--colorNeutralForeground2)]"
+                classList={{ "opacity-0": !showHeaderTitle(), "opacity-100": showHeaderTitle() }}
+                style="transition:opacity var(--durationFast) var(--curveEasyEase)"
+              >
+                《{novelData()?.title ?? ""}》
+              </span>
+            </h1>
+          }
+        >
+          <NovelSearchBar
+            query={search.query}
+            setQuery={search.setQuery}
+            matchCount={search.matchCount}
+            activeIndex={search.activeIndex}
+            onPrev={search.prevMatch}
+            onNext={search.nextMatch}
+            onClose={closeSearch}
+          />
+        </Show>
+        <Show when={!searchOpen()}>
+          <button
+            type="button"
+            class="w-8 h-8 flex items-center justify-center rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer"
+            onClick={openSearch}
+            aria-label="搜索"
+            title="搜索"
           >
-            《{novelData()?.title ?? ""}》
-          </span>
-        </h1>
+            <FluentIcon name="search" size={20} />
+          </button>
+        </Show>
       </header>
 
       {/* ── Loading state ── */}
@@ -204,7 +252,11 @@ const NovelDetail: Component = () => {
             <div class="px-4 py-6 max-w-2xl mx-auto">
               <Show when={novelHtml()}>
                 {(content) => (
-                  <div class="novel-text" style={readerStyle() as Record<string, string>}>
+                  <div
+                    class="novel-text"
+                    ref={setTextContainerEl}
+                    style={readerStyle() as Record<string, string>}
+                  >
                     {content()
                       .split("\n\n")
                       .map((p) => (

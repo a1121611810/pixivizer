@@ -13,3 +13,20 @@
 .novel-text p {
   margin: 0 0 1em;
 }
+
+.novel-search-match {
+  background-color: var(--colorBrandStroke2);
+  color: var(--colorNeutralForeground1);
+  border-radius: var(--borderRadiusSmall);
+  transition: background-color var(--durationFast) var(--curveEasyEase);
+}
+
+.novel-search-match-active {
+  background-color: var(--colorBrandBackground);
+  color: var(--colorNeutralForegroundOnBrand);
+}
+
+/* 隐藏搜索输入框自带的清除按钮，避免与自定义清除按钮重复 */
+input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+}
