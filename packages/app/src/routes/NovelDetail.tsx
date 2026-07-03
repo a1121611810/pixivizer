@@ -1,4 +1,4 @@
-import { type Component, createSignal, createEffect, Show, onCleanup } from "solid-js";
+import { type Component, createSignal, createEffect, Show, onMount, onCleanup } from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
 import { loadDetail, fetchNovelData } from "../api/novel";
 import type { PixivNovel, SeriesNavigation } from "../api/types";
