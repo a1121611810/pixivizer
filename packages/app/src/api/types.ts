@@ -79,6 +79,7 @@ export interface PixivNovel {
   x_restrict: number;
   create_date: string;
   caption?: string;
+  novel_ai_type?: number;
 }
 
 export interface PixivNovelListResponse {
