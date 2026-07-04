@@ -4,6 +4,7 @@ import {
   appendToLayout,
   computeWindow,
   CARD_INFO_HEIGHT,
+  estimateTagAreaHeight,
 } from "@/primitives/computeMasonryLayout";
 import type { MasonryLayout, MasonryItemLayout } from "@/primitives/types";
 
@@ -124,6 +125,45 @@ describe("computeMasonryLayout", () => {
     // All 3 columns should have at least 1 item
     const columnsUsed = new Set(layout.items.map((i) => i.column));
     expect(columnsUsed.size).toBe(3);
+  });
+});
+
+describe("estimateTagAreaHeight", () => {
+  it("returns 0 for empty tags", () => {
+    expect(estimateTagAreaHeight([], 200)).toBe(0);
+  });
+
+  it("returns 0 for undefined tags", () => {
+    expect(estimateTagAreaHeight(undefined, 200)).toBe(0);
+  });
+
+  it("fits short tags on a single row", () => {
+    const tags = [{ name: "a" }, { name: "b" }];
+    expect(estimateTagAreaHeight(tags, 200)).toBeGreaterThan(0);
+  });
+
+  it("adds extra rows for tags that overflow", () => {
+    const tags = Array.from({ length: 30 }, (_, i) => ({ name: `tag-${i}` }));
+    expect(estimateTagAreaHeight(tags, 100)).toBeGreaterThan(18);
+  });
+});
+
+describe("computeMasonryLayout with tags", () => {
+  it("includes tag height in total card height", () => {
+    const tags = Array.from({ length: 10 }, (_, i) => ({ name: `tag-${i}` }));
+    const withTags = computeMasonryLayout({
+      items: [{ width: 100, height: 100, tags }],
+      columnWidth: 100,
+      columnCount: 1,
+      gap: 12,
+    });
+    const withoutTags = computeMasonryLayout({
+      items: [{ width: 100, height: 100 }],
+      columnWidth: 100,
+      columnCount: 1,
+      gap: 12,
+    });
+    expect(withTags.items[0].height).toBeGreaterThan(withoutTags.items[0].height);
   });
 });
 
