@@ -7,7 +7,6 @@ import {
   onCleanup,
   createMemo,
 } from "solid-js";
-import { useNavigate } from "@solidjs/router";
 import { loadSeries, loadSeriesNext, type NovelSeriesDetailResponse } from "../api/novel";
 import type { PixivNovel } from "../api/types";
 import SeriesSheetItem from "./SeriesSheetItem";
@@ -22,11 +21,13 @@ interface Props {
   authorId: number;
   isOpen: boolean;
   onClose: () => void;
+  onNovelSelect?: (id: number) => void;
+  onAuthorClick?: () => void;
   activeNovelId?: number;
 }
 
 const SeriesSheet: Component<Props> = (props) => {
-  const navigate = useNavigate();
+  // SeriesSheet 不再负责导航；选择小说后回调外部。
 
   const [novels, setNovels] = createSignal<PixivNovel[]>([]);
   const [seriesDetail, setSeriesDetail] = createSignal<
@@ -201,7 +202,7 @@ const SeriesSheet: Component<Props> = (props) => {
 
   function handleItemClick(id: number) {
     close();
-    navigate(`/novel/${id}`, { replace: true });
+    props.onNovelSelect?.(id);
   }
 
   const isActive = (id: number) => props.activeNovelId != null && id === props.activeNovelId;
@@ -266,7 +267,7 @@ const SeriesSheet: Component<Props> = (props) => {
               class="[font-size:var(--fontSizeBase200)] text-[var(--colorBrandForeground1)] hover:underline bg-transparent border-none p-0 cursor-pointer mt-1"
               onClick={() => {
                 close();
-                navigate(`/user/${props.authorId}`);
+                props.onAuthorClick?.();
               }}
             >
               @{props.authorName}

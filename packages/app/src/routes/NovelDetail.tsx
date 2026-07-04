@@ -28,7 +28,10 @@ const NovelDetail: Component = () => {
     }
   }
 
-  const novelId = () => Number(params.id);
+  // 系列内切换只更新内部小说 ID，不 navigate，避免污染浏览器历史栈。
+  // 入口 URL 对应的 params.id 作为初始值，后续章节/目录跳转都通过这里。
+  const [currentNovelId, setCurrentNovelId] = createSignal(Number(params.id));
+  const novelId = currentNovelId;
 
   const [novelData, setNovelData] = createSignal<PixivNovel | null>(null);
   const [novelHtml, setNovelHtml] = createSignal<string | null>(null);
@@ -130,10 +133,11 @@ const NovelDetail: Component = () => {
     search.clearSearch();
   }
 
-  // 切换小说时自动关闭搜索并清空高亮
+  // 切换小说时自动关闭搜索、清空高亮，并滚动到页面顶部
   createEffect(() => {
-    novelId();
+    currentNovelId();
     closeSearch();
+    window.scrollTo({ top: 0, behavior: "auto" });
   });
 
   const [showHeaderTitle, setShowHeaderTitle] = createSignal(false);
@@ -318,7 +322,7 @@ const NovelDetail: Component = () => {
                     {(prev) => (
                       <button
                         class="px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
-                        onClick={() => navigate(`/novel/${prev().id}`, { replace: true })}
+                        onClick={() => setCurrentNovelId(prev().id)}
                       >
                         ◀ 上一章
                       </button>
@@ -347,7 +351,7 @@ const NovelDetail: Component = () => {
                     {(next) => (
                       <button
                         class="px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase200)] font-medium hover:opacity-90 active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
-                        onClick={() => navigate(`/novel/${next().id}`, { replace: true })}
+                        onClick={() => setCurrentNovelId(next().id)}
                       >
                         下一章 ▶
                       </button>
@@ -367,7 +371,9 @@ const NovelDetail: Component = () => {
                     authorId={novel().user.id}
                     isOpen={seriesOpen()}
                     onClose={() => setSeriesOpen(false)}
-                    activeNovelId={novelId()}
+                    onNovelSelect={(id) => setCurrentNovelId(id)}
+                    onAuthorClick={() => navigate(`/user/${novel().user.id}`)}
+                    activeNovelId={currentNovelId()}
                   />
                 )}
               </Show>
