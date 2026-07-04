@@ -1,5 +1,5 @@
 {
-  "version": "3.0.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.0",
-  "changelog": "🚀 新版本发布\n本次更新重点完善小说模块体验，并新增浏览器组件测试能力。\n\n✨ 新功能\n小说详情页系列目录支持分页加载与缓存\n小说阅读器新增正文搜索与高亮导航\n小说关注 Feed 支持筛选，接入 /v1/novel/follow\n小说详情页滚动时顶部显示标题\n🐛 修复\n修复小说滚动标题触发检测问题\n修复关注子标签切换时内容重叠问题\n补充 PixivNovel 类型定义\n🧪 测试\n新增小说详情"
+  "version": "3.0.1",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.1",
+  "changelog": "🧹 依赖升级\n  - 升级 5 个依赖：@capacitor/core@8.4.1, @capacitor/cli@8.4.1, @types/node@26.0.1, unocss@66.7.3, vite@8.1.0\n  - pnpm 供应链安全配置（minimumReleaseAge, trustPolicy, blockExoticSubdeps）\n  - lint 修复与代码清理\n\n\ud83d"
 }
