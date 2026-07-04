@@ -275,7 +275,7 @@ export const NovelCoverCard: Component<Props> = (props) => {
         <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorBrandForeground1)] truncate">
           @{props.novel.user.name}
         </p>
-        <div class="flex items-center gap-1 flex-wrap min-w-0">
+        <div class="flex items-center gap-1 flex-wrap min-w-0 overflow-hidden">
           <For each={tags().visible}>
             {(tag) => (
               <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] bg-[var(--colorNeutralBackground2)] px-1.5 py-0.5 rounded-[var(--borderRadiusSmall)] truncate max-w-[80px]">
@@ -291,7 +291,7 @@ export const NovelCoverCard: Component<Props> = (props) => {
         </div>
         {props.novel.series?.title && (
           <button
-            class="self-start inline-flex items-center bg-transparent border-none p-0 cursor-pointer mt-0.5"
+            class="self-start inline-flex items-center bg-transparent border-none p-0 cursor-pointer mt-0.5 w-full overflow-hidden"
             onClick={(e) => {
               e.stopPropagation();
               props.onSeriesClick?.(props.novel.series!.id!);
@@ -300,7 +300,7 @@ export const NovelCoverCard: Component<Props> = (props) => {
           >
             <fluent-badge
               appearance="subtle"
-              class="[font-size:var(--fontSizeBase100)] max-w-[calc(100%-0.5rem)] truncate"
+              class="[font-size:var(--fontSizeBase100)] truncate max-w-full"
             >
               📖 {props.novel.series.title}
             </fluent-badge>
