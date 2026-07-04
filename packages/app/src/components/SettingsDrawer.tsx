@@ -29,6 +29,9 @@ import {
   layoutMode,
   setLayoutMode,
   type LayoutMode,
+  novelLayoutMode,
+  setNovelLayoutMode,
+  type NovelLayoutMode,
   showDetailStairs,
   setShowDetailStairs,
   ageConfirmed,
@@ -509,6 +512,41 @@ const SettingsDrawer: Component = () => {
             </div>
             <p class="mt-1.5 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
               控制插画推荐、关注、收藏及用户作品列表的展示方式
+            </p>
+          </div>
+
+          {/* ── 小说布局模式 ── */}
+          <div class="py-3">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M6.5 2A2.5 2.5 0 0 0 4 4.5v15A2.5 2.5 0 0 0 6.5 22h11a2.5 2.5 0 0 0 2.5-2.5v-15A2.5 2.5 0 0 0 17.5 2h-11zM5.5 4.5A1 1 0 0 1 6.5 3.5h11a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-15zM7.75 6a.75.75 0 0 0 0 1.5h8.5a.75.75 0 0 0 0-1.5h-8.5zM7.75 9a.75.75 0 0 0 0 1.5h8.5a.75.75 0 0 0 0-1.5h-8.5z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </div>
+              <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                布局模式（小说）
+              </p>
+            </div>
+            <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
+              {(["list", "coverWall"] as NovelLayoutMode[]).map((m) => (
+                <button
+                  class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
+                  classList={{
+                    "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
+                      novelLayoutMode() === m,
+                    "bg-transparent text-[var(--colorNeutralForeground2)]": novelLayoutMode() !== m,
+                  }}
+                  onClick={() => setNovelLayoutMode(m)}
+                >
+                  {m === "list" ? "列表" : "封面墙"}
+                </button>
+              ))}
+            </div>
+            <p class="mt-1.5 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+              控制小说推荐、关注及收藏页的展示方式
             </p>
           </div>
 
