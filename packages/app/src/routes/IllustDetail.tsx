@@ -21,6 +21,7 @@ import { detailQuality, showDetailStairs } from "../stores/uiStore";
 import { blockUser, isBlocked } from "../stores/blockStore";
 import { sanitizeHtml } from "../utils/html";
 import ReportSheet from "../components/ReportSheet";
+import IllustTags from "../components/IllustTags";
 
 interface IllustDetailProps {
   illustId?: string;
@@ -618,11 +619,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
               </div>
 
               {/* Tags */}
-              <div class="flex flex-wrap gap-1.5">
-                {illust()!.tags.map((tag) => (
-                  <fluent-badge appearance="subtle">{tag.translated_name || tag.name}</fluent-badge>
-                ))}
-              </div>
+              <IllustTags tags={illust()!.tags} size="medium" />
 
               {/* Caption */}
               {illust()!.caption && (
