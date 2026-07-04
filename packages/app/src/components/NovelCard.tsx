@@ -210,7 +210,7 @@ export const NovelCoverCard: Component<Props> = (props) => {
 
   return (
     <div
-      class="bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] shadow-[var(--elevation2)] overflow-hidden cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] flex flex-col h-full"
+      class="relative bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] shadow-[var(--elevation2)] overflow-hidden cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] flex flex-col h-full"
       onClick={() => props.onClick(props.novel.id)}
     >
       {/* Cover image — square, fills card width */}
