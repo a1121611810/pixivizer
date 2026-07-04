@@ -15,7 +15,7 @@ import {
   novelFollowTab,
   setNovelFollowTab,
 } from "../stores/novelStore";
-import { setCurrentTab } from "../stores/uiStore";
+import { setCurrentTab, novelLayoutMode } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import NovelVirtualFeed from "../components/NovelVirtualFeed";
 import SeriesSheet from "../components/SeriesSheet";
@@ -113,6 +113,7 @@ const NovelFeedPage: Component<Props> = (props) => {
             onRefresh={refresh}
             restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
             onSeriesClick={openSeriesSheet}
+            layoutMode={novelLayoutMode()}
           />
           <Show when={sheetSeries()}>
             {(s) => (
