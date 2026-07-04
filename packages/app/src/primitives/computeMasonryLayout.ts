@@ -34,7 +34,7 @@ export function estimateTagAreaHeight(
   if (!tags || tags.length === 0 || columnWidth <= 0) return 0;
 
   const opts = { ...defaultTagOptions, ...options };
-  const availableWidth = Math.max(0, columnWidth - 16); // subtract card horizontal padding (2.5rem ≈ 10px each side, rounded to 16px)
+  const availableWidth = Math.max(0, columnWidth - 16); // subtract card horizontal padding (UnoCSS p-2.5 = 0.625rem ≈ 10px each side, rounded to 16px total)
 
   let currentRowWidth = 0;
   let rows = 1;

@@ -137,6 +137,11 @@ describe("estimateTagAreaHeight", () => {
     expect(estimateTagAreaHeight(undefined, 200)).toBe(0);
   });
 
+  it("returns 0 for non-positive column width", () => {
+    expect(estimateTagAreaHeight([{ name: "a" }], 0)).toBe(0);
+    expect(estimateTagAreaHeight([{ name: "a" }], -10)).toBe(0);
+  });
+
   it("fits short tags on a single row", () => {
     const tags = [{ name: "a" }, { name: "b" }];
     expect(estimateTagAreaHeight(tags, 200)).toBeGreaterThan(0);
@@ -145,6 +150,11 @@ describe("estimateTagAreaHeight", () => {
   it("adds extra rows for tags that overflow", () => {
     const tags = Array.from({ length: 30 }, (_, i) => ({ name: `tag-${i}` }));
     expect(estimateTagAreaHeight(tags, 100)).toBeGreaterThan(18);
+  });
+
+  it("wraps a single long tag", () => {
+    const tags = [{ name: "very-long-tag-name-that-will-not-fit" }];
+    expect(estimateTagAreaHeight(tags, 50)).toBeGreaterThan(0);
   });
 });
 

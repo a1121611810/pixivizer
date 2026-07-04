@@ -29,12 +29,16 @@ describe("IllustTags", () => {
     const { container } = render(() => <IllustTags tags={[{ name: "x" }]} />);
     const span = container.querySelector("span[role='listitem']");
     expect(span).toBeTruthy();
+    expect(span?.className).toContain("fontSizeBase100");
+    expect(span?.className).not.toContain("fontSizeBase200");
   });
 
   it("renders medium size when requested", () => {
     const { container } = render(() => <IllustTags tags={[{ name: "y" }]} size="medium" />);
     const span = container.querySelector("span[role='listitem']");
     expect(span).toBeTruthy();
+    expect(span?.className).toContain("fontSizeBase200");
+    expect(span?.className).not.toContain("fontSizeBase100");
   });
 
   it("applies custom class", () => {

@@ -1,9 +1,5 @@
 import * as Comlink from "comlink";
-import {
-  computeMasonryLayout,
-  appendToLayout,
-  estimateTagAreaHeight,
-} from "./computeMasonryLayout";
+import { computeMasonryLayout, appendToLayout } from "./computeMasonryLayout";
 import type { MasonryLayout } from "./types";
 import type { ComputeMasonryInput } from "./computeMasonryLayout";
 
@@ -21,7 +17,6 @@ const api = {
   ): MasonryLayout {
     return appendToLayout(existing, newItems);
   },
-  estimateTagAreaHeight,
 };
 
 Comlink.expose(api);
