@@ -39,6 +39,12 @@ const NovelDetail: Component = () => {
   const [detailLoading, setDetailLoading] = createSignal(false);
   const [detailError, setDetailError] = createSignal<string | null>(null);
   let abortController: AbortController | null = null;
+  const [footerHidden, setFooterHidden] = createSignal(false);
+  let lastScrollY = 0;
+  let accumulatedDelta = 0;
+  const HIDE_THRESHOLD = 30;
+  const BOTTOM_THRESHOLD = 80;
+  let scrollTicking = false;
 
   createEffect(() => {
     const id = novelId();
@@ -116,12 +122,64 @@ const NovelDetail: Component = () => {
   });
 
   onMount(() => {
+    // ── Close-settings event listener ──
     const onCloseSettings = () => {
       setSettingsOpen(false);
       setSeriesOpen(false);
     };
     window.addEventListener("closeSettings", onCloseSettings);
     onCleanup(() => window.removeEventListener("closeSettings", onCloseSettings));
+
+    // ── Scroll-driven bottom toolbar hide/show ──
+    lastScrollY = window.scrollY;
+    accumulatedDelta = 0;
+    scrollTicking = false;
+
+    function onScroll() {
+      const currentY = window.scrollY;
+
+      // 底部区域：距页面底部不足 BOTTOM_THRESHOLD 时强制显示
+      const atBottom =
+        window.innerHeight + currentY >= document.documentElement.scrollHeight - BOTTOM_THRESHOLD;
+      if (atBottom) {
+        setFooterHidden(false);
+        accumulatedDelta = 0;
+        lastScrollY = currentY;
+        return;
+      }
+
+      const delta = currentY - lastScrollY;
+      lastScrollY = currentY;
+
+      // 程序化滚动（页面切换等），重置跟踪
+      if (Math.abs(delta) > 200) {
+        accumulatedDelta = 0;
+        return;
+      }
+
+      accumulatedDelta += delta;
+
+      if (accumulatedDelta > HIDE_THRESHOLD) {
+        setFooterHidden(true);
+        accumulatedDelta = 0;
+      } else if (accumulatedDelta < -HIDE_THRESHOLD) {
+        setFooterHidden(false);
+        accumulatedDelta = 0;
+      }
+    }
+
+    function onScrollRaf() {
+      if (!scrollTicking) {
+        scrollTicking = true;
+        requestAnimationFrame(() => {
+          onScroll();
+          scrollTicking = false;
+        });
+      }
+    }
+
+    window.addEventListener("scroll", onScrollRaf, { passive: true });
+    onCleanup(() => window.removeEventListener("scroll", onScrollRaf));
   });
 
   function openSearch() {
@@ -133,11 +191,14 @@ const NovelDetail: Component = () => {
     search.clearSearch();
   }
 
-  // 切换小说时自动关闭搜索、清空高亮，并滚动到页面顶部
+  // 切换小说时自动关闭搜索、清空高亮，并滚动到页面顶部，重置底部栏显隐状态
   createEffect(() => {
     currentNovelId();
     closeSearch();
     window.scrollTo({ top: 0, behavior: "auto" });
+    setFooterHidden(false);
+    accumulatedDelta = 0;
+    lastScrollY = window.scrollY;
   });
 
   const [showHeaderTitle, setShowHeaderTitle] = createSignal(false);
@@ -290,7 +351,7 @@ const NovelDetail: Component = () => {
               </div>
 
               {/* ── Text content ── */}
-              <div class="px-4 py-6 max-w-2xl mx-auto">
+              <div class="px-4 py-6 max-w-2xl mx-auto pb-[64px]">
                 <Show when={novelHtml()}>
                   {(content) => (
                     <div
@@ -316,7 +377,16 @@ const NovelDetail: Component = () => {
               </div>
 
               {/* ── Footer: Nav + Settings ── */}
-              <div class="sticky bottom-0 surface-appbar border-t border-[var(--colorNeutralStroke2)] px-4 py-2">
+              <div
+                class="fixed bottom-0 left-0 right-0 surface-appbar border-t border-[var(--colorNeutralStroke2)] px-4 py-2"
+                style={{
+                  zIndex: 20,
+                  transform: footerHidden()
+                    ? "translateY(calc(100% + 8px + env(safe-area-inset-bottom, 0px)))"
+                    : "translateY(0)",
+                  transition: "transform var(--durationNormal) var(--curveEasyEase)",
+                }}
+              >
                 <div class="max-w-2xl mx-auto flex items-center justify-center gap-2">
                   <Show when={novelNav()?.prevNovel}>
                     {(prev) => (
