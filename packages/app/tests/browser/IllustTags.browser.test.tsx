@@ -5,7 +5,9 @@ import IllustTags from "../../src/components/IllustTags";
 
 describe("IllustTags", () => {
   it("renders tags with translated name", () => {
-    const { container } = render(() => <IllustTags tags={[{ name: "猫", translated_name: "cat" }]} />);
+    const { container } = render(() => (
+      <IllustTags tags={[{ name: "猫", translated_name: "cat" }]} />
+    ));
     expect(container.textContent).toContain("cat");
   });
 
@@ -15,7 +17,9 @@ describe("IllustTags", () => {
   });
 
   it("renders all tags", () => {
-    const { container } = render(() => <IllustTags tags={[{ name: "a" }, { name: "b" }, { name: "c" }]} />);
+    const { container } = render(() => (
+      <IllustTags tags={[{ name: "a" }, { name: "b" }, { name: "c" }]} />
+    ));
     const root = container.querySelector("[role='list']");
     const items = within(root as HTMLElement).getAllByRole("listitem");
     expect(items).toHaveLength(3);

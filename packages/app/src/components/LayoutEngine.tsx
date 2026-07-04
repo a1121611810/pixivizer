@@ -6,6 +6,7 @@ import {
   computeMasonryLayout,
   appendToLayout,
   CARD_INFO_HEIGHT,
+  estimateTagAreaHeight,
 } from "../primitives/computeMasonryLayout";
 import type { PixivIllust } from "../api/types";
 import { getMasonryWorker } from "../primitives/createMasonryWorker";
@@ -52,7 +53,8 @@ export function createLayout(
       const items = currentIllusts.map((_ill, i) => {
         const effectiveH = _ill.type === "ugoira" ? Math.round(_ill.height * 0.75) : _ill.height;
         const aspectRatio = effectiveH > 0 ? _ill.width / effectiveH : 1;
-        const h = cw / aspectRatio + CARD_INFO_HEIGHT;
+        const tagHeight = estimateTagAreaHeight(_ill.tags, cw);
+        const h = cw / aspectRatio + CARD_INFO_HEIGHT + tagHeight;
         const y = currentY;
         currentY += h + g;
         return { index: i, x: 0, y, width: cw, height: h, column: 0 };
@@ -92,6 +94,7 @@ export function createLayout(
       items: currentIllusts.map((ill) => ({
         width: ill.width,
         height: ill.type === "ugoira" ? Math.round(ill.height * 0.75) : ill.height,
+        tags: ill.tags,
       })),
       columnWidth: cw,
       columnCount: cc,
@@ -116,6 +119,7 @@ export function createLayout(
       const newItems = newRaw.map((ill) => ({
         width: ill.width,
         height: ill.type === "ugoira" ? Math.round(ill.height * 0.75) : ill.height,
+        tags: ill.tags,
       }));
       return appendToLayout(prev, newItems);
     }
@@ -146,6 +150,7 @@ export function createLayout(
       items: illusts().map((ill) => ({
         width: ill.width,
         height: ill.type === "ugoira" ? Math.round(ill.height * 0.75) : ill.height,
+        tags: ill.tags,
       })),
       columnWidth: cw,
       columnCount: cc,
