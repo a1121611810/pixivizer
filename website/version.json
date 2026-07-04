@@ -1,5 +1,5 @@
 {
-  "version": "3.0.3",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.3",
-  "changelog": "fix(novel): 修复小说详情页左上角返回与系统侧滑返回失效\n- 小说详情页统一包裹 PageTransition，与 IllustDetail 等页面结构一致\n- 返回按钮改为 fluent-button，并增加空历史栈兜底（回 /recommended）\n- ReaderSettingsSheet / SeriesSheet 接入全局 __settingsOpen，系统侧滑优先关闭 Sh"
+  "version": "3.0.4",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.4",
+  "changelog": "♻️ 重构\n  refactor(novel): 系列浮层与详情页小说切换改为内部状态管理"
 }
