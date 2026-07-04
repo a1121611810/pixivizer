@@ -27,6 +27,7 @@ import {
   loadUseDnsOverridePreference,
   loadContentTypePreference,
   loadNovelCachePreference,
+  loadNovelLayoutModePreference,
   loadLastDismissedVersionPreference,
   setHasUpdate,
   setLatestVersion,
@@ -121,6 +122,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadUseDnsOverridePreference();
     await loadContentTypePreference();
     await loadNovelCachePreference();
+    await loadNovelLayoutModePreference();
 
     // Load user content moderation state
     await loadReportedIds();
