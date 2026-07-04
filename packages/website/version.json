@@ -1,5 +1,5 @@
 {
-  "version": "3.0.5",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.5",
-  "changelog": "✨ 新功能\n  feat(app): 启动时自动检测更新并弹窗提示"
+  "version": "3.1.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.1.0",
+  "changelog": "✨ 新功能\n\n小说详情页底部栏滚动自动隐藏/显示\n小说封面墙布局模式（瀑布流/封面墙切换）\n收藏页支持插画与小说双内容类型切换\n标签系统：组件上线、卡片/详情页展示、瀑布流高度估算\n小说布局偏好持久化\n🐛 修复\n\n系列徽章在封面墙卡片中正确截断\n启动时加载布局偏好，确保生效\nNovelCoverCard Toast 覆盖层错位、NovelCard 高度一致性\n♻️ 重构 & 🧪 测试\n\n设置面"
 }
