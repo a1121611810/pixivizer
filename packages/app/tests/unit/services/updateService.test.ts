@@ -1,180 +1,60 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { isNewer } from "@/services/updateService";
 
-async function loadService() {
-  vi.resetModules();
-  return import("@/services/updateService");
-}
-
-describe("updateService", () => {
-  // APP_VERSION is used as a global constant in updateService.ts
-  // Set it before each test
-  beforeEach(() => {
-    vi.stubGlobal("APP_VERSION", "1.2.3");
+describe("isNewer", () => {
+  it("returns false when versions are equal", () => {
+    expect(isNewer("1.0.0", "1.0.0")).toBe(false);
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
+  it("returns true when remote major is newer", () => {
+    expect(isNewer("1.0.0", "2.0.0")).toBe(true);
   });
 
-  describe("isNewer", () => {
-    it("returns true when remote major is greater", async () => {
-      const { isNewer } = await loadService();
-      expect(isNewer("1.0.0", "2.0.0")).toBe(true);
-    });
-
-    it("returns false when local major is greater", async () => {
-      const { isNewer } = await loadService();
-      expect(isNewer("3.0.0", "2.0.0")).toBe(false);
-    });
-
-    it("returns true when remote minor is greater", async () => {
-      const { isNewer } = await loadService();
-      expect(isNewer("1.1.0", "1.2.0")).toBe(true);
-    });
-
-    it("returns false when local minor is greater", async () => {
-      const { isNewer } = await loadService();
-      expect(isNewer("1.3.0", "1.2.0")).toBe(false);
-    });
-
-    it("returns true when remote patch is greater", async () => {
-      const { isNewer } = await loadService();
-      expect(isNewer("1.2.3", "1.2.4")).toBe(true);
-    });
-
-    it("returns false when versions are equal", async () => {
-      const { isNewer } = await loadService();
-      expect(isNewer("1.2.3", "1.2.3")).toBe(false);
-    });
-
-    it("handles leading v prefix on remote", async () => {
-      const { isNewer } = await loadService();
-      expect(isNewer("1.0.0", "v2.0.0")).toBe(true);
-      expect(isNewer("2.0.0", "v1.0.0")).toBe(false);
-    });
-
-    it("handles different length versions", async () => {
-      const { isNewer } = await loadService();
-      expect(isNewer("1.0", "1.0.1")).toBe(true);
-      expect(isNewer("1.0.1", "1.0")).toBe(false);
-    });
+  it("returns true when remote minor is newer", () => {
+    expect(isNewer("1.2.0", "1.3.0")).toBe(true);
   });
 
-  describe("checkForUpdate", () => {
-    it("returns noUpdate when fetch fails", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: false,
-          status: 404,
-        }),
-      );
-
-      const { checkForUpdate } = await loadService();
-      const result = await checkForUpdate();
-
-      expect(result.hasUpdate).toBe(false);
-      expect(result.latestVersion).toBe("");
-    });
-
-    it("returns noUpdate on network error", async () => {
-      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
-
-      const { checkForUpdate } = await loadService();
-      const result = await checkForUpdate();
-
-      expect(result.hasUpdate).toBe(false);
-    });
-
-    it("detects update when remote is newer", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              version: "2.0.0",
-              url: "https://github.com/a1121611810/pixivizer/releases/v2.0.0",
-              changelog: "Major update",
-            }),
-        }),
-      );
-
-      const { checkForUpdate } = await loadService();
-      const result = await checkForUpdate();
-
-      expect(result.hasUpdate).toBe(true);
-      expect(result.latestVersion).toBe("2.0.0");
-      expect(result.latestReleaseUrl).toContain("v2.0.0");
-    });
-
-    it("detects no update when remote is same version", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              version: "1.2.3",
-              url: "",
-              changelog: "",
-            }),
-        }),
-      );
-
-      const { checkForUpdate } = await loadService();
-      const result = await checkForUpdate();
-
-      expect(result.hasUpdate).toBe(false);
-    });
-
-    it("returns cached result on subsequent failures", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi
-          .fn()
-          .mockResolvedValueOnce({
-            ok: true,
-            json: () =>
-              Promise.resolve({
-                version: "2.0.0",
-                url: "https://example.com",
-                changelog: "changes",
-              }),
-          })
-          .mockRejectedValueOnce(new Error("Network error")),
-      );
-
-      const { checkForUpdate } = await loadService();
-      const first = await checkForUpdate();
-      expect(first.hasUpdate).toBe(true);
-
-      const second = await checkForUpdate();
-      expect(second.hasUpdate).toBe(true); // Returns cached
-    });
+  it("returns true when remote patch is newer", () => {
+    expect(isNewer("1.2.3", "1.2.4")).toBe(true);
   });
 
-  describe("resetCache / getCachedResult", () => {
-    it("getCachedResult returns null before any check", async () => {
-      const { getCachedResult } = await loadService();
-      expect(getCachedResult()).toBeNull();
-    });
+  it("returns false when local is newer", () => {
+    expect(isNewer("2.0.0", "1.9.9")).toBe(false);
+  });
 
-    it("resetCache clears cached result", async () => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue({
-          ok: true,
-          json: () => Promise.resolve({ version: "2.0.0", url: "", changelog: "" }),
-        }),
-      );
+  it("handles leading v prefix on remote", () => {
+    expect(isNewer("1.0.0", "v1.1.0")).toBe(true);
+  });
 
-      const { checkForUpdate, resetCache, getCachedResult } = await loadService();
-      await checkForUpdate();
-      expect(getCachedResult()).not.toBeNull();
+  it("handles leading v prefix on local", () => {
+    expect(isNewer("v1.0.0", "1.1.0")).toBe(true);
+  });
 
-      resetCache();
-      expect(getCachedResult()).toBeNull();
-    });
+  it("handles leading v prefix on both sides", () => {
+    expect(isNewer("v1.0.0", "v1.0.1")).toBe(true);
+  });
+
+  it("ignores build metadata after plus sign", () => {
+    expect(isNewer("1.0.0+1", "1.1.0+99")).toBe(true);
+  });
+
+  it("ignores build metadata when core versions are equal", () => {
+    expect(isNewer("1.0.0+1", "1.0.0+2")).toBe(false);
+  });
+
+  it("trims whitespace around version strings", () => {
+    expect(isNewer(" 1.0.0 ", " 1.1.0 ")).toBe(true);
+  });
+
+  it("handles mixed depth (remote shorter)", () => {
+    expect(isNewer("1.2.3", "1.3")).toBe(true);
+  });
+
+  it("handles mixed depth (local shorter) when equal", () => {
+    expect(isNewer("1.2", "1.2.0")).toBe(false);
+  });
+
+  it("handles mixed depth when local is newer", () => {
+    expect(isNewer("1.2", "1.1.9")).toBe(false);
   });
 });

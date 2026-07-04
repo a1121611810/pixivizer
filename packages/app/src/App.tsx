@@ -27,6 +27,13 @@ import {
   loadUseDnsOverridePreference,
   loadContentTypePreference,
   loadNovelCachePreference,
+  loadLastDismissedVersionPreference,
+  setHasUpdate,
+  setLatestVersion,
+  setLatestReleaseUrl,
+  setLatestChangelog,
+  setShowUpdateDialog,
+  lastDismissedVersion,
 } from "./stores/uiStore";
 import { checkForUpdate } from "./services/updateService";
 import {
@@ -39,6 +46,7 @@ import {
 import { loadReportedIds } from "./stores/reportStore";
 import { loadBlockedIds } from "./stores/blockStore";
 import { loadImageHostPreference } from "./stores/imageHostStore";
+import StartupUpdateDialog from "./components/StartupUpdateDialog";
 const Login = lazy(() => import("./routes/Login"));
 const AgeConfirmation = lazy(() => import("./routes/AgeConfirmation"));
 const IllustDetail = lazy(() => import("./routes/IllustDetail"));
@@ -109,6 +117,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadShowDetailStairsPreference();
     await loadAgePreference();
     await loadAutoCheckUpdatePreference();
+    await loadLastDismissedVersionPreference();
     await loadUseDnsOverridePreference();
     await loadContentTypePreference();
     await loadNovelCachePreference();
@@ -118,9 +127,25 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadBlockedIds();
     await loadImageHostPreference();
 
-    // Silently check for updates on startup if toggle is enabled
+    // Background update check on startup if toggle is enabled.
+    // The result is stored in uiStore so StartupUpdateDialog can render it.
     if (autoCheckUpdate()) {
-      checkForUpdate(); // fire-and-forget, non-blocking
+      try {
+        const result = await checkForUpdate();
+        setHasUpdate(result.hasUpdate);
+        setLatestVersion(result.latestVersion);
+        setLatestReleaseUrl(result.latestReleaseUrl);
+        setLatestChangelog(result.latestChangelog);
+        if (
+          result.hasUpdate &&
+          result.latestVersion &&
+          result.latestVersion !== lastDismissedVersion()
+        ) {
+          setShowUpdateDialog(true);
+        }
+      } catch (e) {
+        console.warn("[App] Startup update check failed", e);
+      }
     }
 
     // Initialize route stack tracking
@@ -293,6 +318,8 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
           再按一次退出应用
         </div>
       </Show>
+
+      <StartupUpdateDialog />
     </div>
   );
 };

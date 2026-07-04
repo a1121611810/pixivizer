@@ -1,0 +1,74 @@
+import { type Component, Show } from "solid-js";
+import {
+  showUpdateDialog,
+  setShowUpdateDialog,
+  latestVersion,
+  latestReleaseUrl,
+  latestChangelog,
+  setLastDismissedVersion,
+} from "../stores/uiStore";
+
+/**
+ * Dismiss the current update version and hide the dialog.
+ */
+function handleDismiss() {
+  void setLastDismissedVersion(latestVersion());
+  setShowUpdateDialog(false);
+}
+
+/**
+ * Startup update dialog.
+ *
+ * Shown automatically on app launch when the background update check detects
+ * a version newer than the running build and the user has not already dismissed
+ * this particular version.
+ *
+ * Interaction:
+ * - "前往下载" opens the release URL in the system browser.
+ * - "稍后再说" persists the current version as dismissed so it won't be
+ *   shown again until an even newer version is available.
+ */
+const StartupUpdateDialog: Component = () => {
+  function handleDownload() {
+    const url = latestReleaseUrl();
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+    handleDismiss();
+  }
+
+  return (
+    <Show when={showUpdateDialog()}>
+      <fluent-dialog open on:close={handleDismiss} aria-label="发现新版本">
+        <h3
+          slot="title"
+          class="text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase500)] font-semibold"
+        >
+          发现新版本 v{latestVersion()}
+        </h3>
+
+        <div class="text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase300)] leading-relaxed max-w-[min(80vw,360px)]">
+          <p class="mb-3">
+            Pictelio {latestVersion()} 已发布，当前版本为 v{APP_VERSION}。
+          </p>
+          <Show when={latestChangelog()}>
+            <div class="rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] p-3 [font-size:var(--fontSizeBase200)] whitespace-pre-wrap text-[var(--colorNeutralForeground2)] max-h-[30vh] overflow-y-auto">
+              {latestChangelog()}
+            </div>
+          </Show>
+        </div>
+
+        <div slot="actions" class="flex gap-2 justify-end">
+          <fluent-button appearance="secondary" on:click={handleDismiss} class="min-h-[40px]">
+            稍后再说
+          </fluent-button>
+          <fluent-button appearance="primary" on:click={handleDownload} class="min-h-[40px]">
+            前往下载
+          </fluent-button>
+        </div>
+      </fluent-dialog>
+    </Show>
+  );
+};
+
+export default StartupUpdateDialog;

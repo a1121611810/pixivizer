@@ -24,13 +24,23 @@ let cachedResult: CheckResult | null = null;
 // ── Version comparison (no semver dependency) ──
 
 /**
+ * Normalize a version string for comparison.
+ * - Trims whitespace
+ * - Removes optional leading "v" prefix
+ * - Strips semver build metadata (everything after '+')
+ */
+function normalizeVersion(v: string): string {
+  return v.trim().replace(/^v/i, "").replace(/\+.*$/, "");
+}
+
+/**
  * Compare two version strings numerically.
  * Returns true if `remote` is newer than `local`.
- * Handles optional leading "v" prefix on remote.
+ * Handles optional leading "v" prefix and semver build metadata on either side.
  */
 export function isNewer(local: string, remote: string): boolean {
-  const lParts = local.split(".").map(Number);
-  const rParts = remote.replace(/^v/, "").split(".").map(Number);
+  const lParts = normalizeVersion(local).split(".").map(Number);
+  const rParts = normalizeVersion(remote).split(".").map(Number);
 
   // Compare up to major.minor.patch (standard semver, 3 parts max)
   for (let i = 0; i < 3; i++) {

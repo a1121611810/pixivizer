@@ -398,3 +398,67 @@ describe("resetUiStore", () => {
     });
   });
 });
+
+describe("lastDismissedVersion", () => {
+  beforeEach(() => {
+    vi.mocked(Preferences.set).mockResolvedValue(undefined);
+  });
+
+  it("defaults to empty string", async () => {
+    const { lastDismissedVersion } = await loadStore();
+    expect(lastDismissedVersion()).toBe("");
+  });
+
+  it("setLastDismissedVersion updates state and persists", async () => {
+    const { setLastDismissedVersion, lastDismissedVersion } = await loadStore();
+    await setLastDismissedVersion("1.2.3");
+    expect(lastDismissedVersion()).toBe("1.2.3");
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "dismissed_update_version",
+      value: "1.2.3",
+    });
+  });
+
+  it("loadLastDismissedVersionPreference restores persisted value", async () => {
+    vi.mocked(Preferences.get).mockResolvedValue({ value: "2.0.0" });
+    const { loadLastDismissedVersionPreference, lastDismissedVersion } = await loadStore();
+    await loadLastDismissedVersionPreference();
+    expect(lastDismissedVersion()).toBe("2.0.0");
+    expect(Preferences.get).toHaveBeenCalledWith({ key: "dismissed_update_version" });
+  });
+
+  it("loadLastDismissedVersionPreference leaves default when no persisted value", async () => {
+    vi.mocked(Preferences.get).mockResolvedValue({ value: null });
+    const { loadLastDismissedVersionPreference, lastDismissedVersion } = await loadStore();
+    await loadLastDismissedVersionPreference();
+    expect(lastDismissedVersion()).toBe("");
+  });
+
+  it("resetUiStore clears lastDismissedVersion and persists", async () => {
+    vi.mocked(Capacitor.getPlatform).mockReturnValue("web");
+    vi.mocked(Preferences.set).mockResolvedValue(undefined);
+    const { setLastDismissedVersion, resetUiStore, lastDismissedVersion } = await loadStore();
+    await setLastDismissedVersion("1.0.0");
+    await resetUiStore();
+    expect(lastDismissedVersion()).toBe("");
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "dismissed_update_version",
+      value: "",
+    });
+  });
+});
+
+describe("showUpdateDialog", () => {
+  it("defaults to false", async () => {
+    const { showUpdateDialog } = await loadStore();
+    expect(showUpdateDialog()).toBe(false);
+  });
+
+  it("can be toggled via setShowUpdateDialog", async () => {
+    const { setShowUpdateDialog, showUpdateDialog } = await loadStore();
+    setShowUpdateDialog(true);
+    expect(showUpdateDialog()).toBe(true);
+    setShowUpdateDialog(false);
+    expect(showUpdateDialog()).toBe(false);
+  });
+});

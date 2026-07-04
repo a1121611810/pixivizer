@@ -36,6 +36,7 @@ const PREF_KEY_USE_DNS_OVERRIDE = "use_dns_override";
 const PREF_KEY_CONTENT_TYPE = "content_type";
 const PREF_KEY_NOVEL_CACHE_ENABLED = "novel_cache_enabled";
 const PREF_KEY_NOVEL_CACHE_SIZE = "novel_cache_size";
+const PREF_KEY_DISMISSED_UPDATE_VERSION = "dismissed_update_version";
 const ANDROID_16_API_LEVEL = 36;
 
 // ── 主题辅助函数 ──
@@ -103,6 +104,8 @@ const initialState = () => {
     latestChangelog: "",
     isCheckingUpdate: false,
     checkCompleted: false,
+    lastDismissedVersion: "",
+    showUpdateDialog: false,
 
     // 自定义 DNS 解析（实验性，仅 Android）
     useDnsOverride: false,
@@ -457,6 +460,31 @@ export async function loadAutoCheckUpdatePreference(): Promise<void> {
   }
 }
 
+export const lastDismissedVersion = () => state.lastDismissedVersion;
+
+export async function setLastDismissedVersion(v: string): Promise<void> {
+  setState("lastDismissedVersion", v);
+  try {
+    await Preferences.set({ key: PREF_KEY_DISMISSED_UPDATE_VERSION, value: v });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist dismissed update version", e);
+  }
+}
+
+export async function loadLastDismissedVersionPreference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_DISMISSED_UPDATE_VERSION });
+    if (value !== null) {
+      setState("lastDismissedVersion", value);
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load dismissed update version preference", e);
+  }
+}
+
+export const showUpdateDialog = () => state.showUpdateDialog;
+export const setShowUpdateDialog = (v: boolean) => setState("showUpdateDialog", v);
+
 export const useDnsOverride = () => state.useDnsOverride;
 export async function setUseDnsOverride(enabled: boolean): Promise<void> {
   setState("useDnsOverride", enabled);
@@ -554,6 +582,7 @@ export async function resetUiStore(): Promise<void> {
   await setShowDetailStairs(false);
   await setAgeConfirmation(false, false);
   await setAutoCheckUpdate(false);
+  await setLastDismissedVersion("");
   if (Capacitor.getPlatform() === "android") {
     await setUsePredictiveBack(state.isPredictiveBackSupported);
   } else {
