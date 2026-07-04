@@ -1,5 +1,5 @@
 {
-  "version": "3.0.4",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.4",
-  "changelog": "♻️ 重构\n  refactor(novel): 系列浮层与详情页小说切换改为内部状态管理"
+  "version": "3.0.5",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.5",
+  "changelog": "✨ 新功能\n  feat(app): 启动时自动检测更新并弹窗提示"
 }
