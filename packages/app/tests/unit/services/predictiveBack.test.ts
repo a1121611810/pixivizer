@@ -186,17 +186,32 @@ describe("onEnd target actions", () => {
     expect(isPredictiveBackActive()).toBe(false);
   });
 
-  it("navigateBack calls navigate with -1", () => {
+  it("navigateBack calls navigate with -1 when route history exists", () => {
     const navigate = vi.fn();
     initPredictiveBack(navigate);
     (window as any).location.pathname = "/illust/123";
     pushRoute("/recommended");
+    pushRoute("/illust/123");
 
     handleStartForTest({ edge: "left", touchY: 0 });
     expect(predictiveBackTarget()).toEqual({ type: "navigateBack" });
     onEnd();
 
     expect(navigate).toHaveBeenCalledWith(-1);
+  });
+
+  it("navigateBack falls back to /recommended when route history is empty", () => {
+    const navigate = vi.fn();
+    initPredictiveBack(navigate);
+    (window as any).location.pathname = "/novel/123";
+    clearRouteStack();
+    pushRoute("/novel/123");
+
+    handleStartForTest({ edge: "left", touchY: 0 });
+    expect(predictiveBackTarget()).toEqual({ type: "navigateBack" });
+    onEnd();
+
+    expect(navigate).toHaveBeenCalledWith("/recommended");
   });
 
   it("finishActivity requires double press within 2 seconds", () => {

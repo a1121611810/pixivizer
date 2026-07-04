@@ -86,7 +86,7 @@ export const predictiveBackProgress = progress;
 export const predictiveBackTarget = target;
 export const predictiveBackEdge = edge;
 
-let navigateRef: ((delta: number) => void) | null = null;
+let navigateRef: ((to: string | number) => void) | null = null;
 let removeListeners: Array<() => void> = [];
 let enabled = false;
 
@@ -175,7 +175,7 @@ function animateProgressToOne(onDone?: () => void): void {
   syntheticRafId = requestAnimationFrame(tick);
 }
 
-export function initPredictiveBack(navigate: (delta: number) => void): void {
+export function initPredictiveBack(navigate: (to: string | number) => void): void {
   navigateRef = navigate;
 }
 
@@ -194,7 +194,12 @@ function executeBackTarget(backTarget: BackTarget): void {
       break;
     }
     case "navigateBack": {
-      navigateRef?.(-1);
+      // 如果路由栈只剩一条，说明没有可返回的历史记录（例如直接打开、WebView 历史重置），兜底回首页
+      if (routeStack.length > 1) {
+        navigateRef?.(-1);
+      } else {
+        navigateRef?.("/recommended");
+      }
       break;
     }
   }

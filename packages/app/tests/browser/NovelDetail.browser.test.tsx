@@ -1,12 +1,14 @@
 // @vitest-environment browser
 // 验证 NovelDetail 组件在浏览器中正确渲染 scroll-header 结构。
 // IntersectionObserver 的滚动行为已在 playwright-cli 端到端验证。
-import { render, screen } from "@solidjs/testing-library";
+import { render, screen, fireEvent } from "@solidjs/testing-library";
 import { describe, it, expect, vi } from "vitest";
+
+const mockNavigate = vi.fn();
 
 // Override router mock from setup.ts — provide novel ID in params
 vi.mock("@solidjs/router", () => ({
-  useNavigate: () => vi.fn(),
+  useNavigate: () => mockNavigate,
   useLocation: () => ({ pathname: "/novel/1" }),
   useParams: () => ({ id: "1" }),
   useBeforeLeave: (fn: unknown) => fn as any,
@@ -48,6 +50,7 @@ vi.mock("../../src/api/novel", () => ({
   loadFollow: vi.fn(),
   loadNext: vi.fn(),
   loadSeries: vi.fn(),
+  loadSeriesNext: vi.fn(),
   addBookmark: vi.fn(),
   deleteBookmark: vi.fn(),
 }));
@@ -75,5 +78,17 @@ describe("NovelDetail scroll-header", () => {
     const style = headerTitleSpan!.getAttribute("style");
     expect(style).toContain("transition");
     expect(style).toContain("opacity");
+  });
+
+  it("back button calls navigate when clicked", async () => {
+    mockNavigate.mockClear();
+    const { container } = render(() => <NovelDetail />);
+    await screen.findAllByText("Scroll Header 测试标题");
+
+    const backButton = container.querySelector('[aria-label="返回"]');
+    expect(backButton).not.toBeNull();
+
+    fireEvent.click(backButton!);
+    expect(mockNavigate).toHaveBeenCalled();
   });
 });
