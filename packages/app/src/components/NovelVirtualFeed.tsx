@@ -1,6 +1,6 @@
-import { createSignal, createEffect, For, createMemo } from "solid-js";
+import { createSignal, createEffect, For, createMemo, Show } from "solid-js";
 import type { Component } from "solid-js";
-import NovelCard from "./NovelCard";
+import NovelCard, { NovelCoverCard } from "./NovelCard";
 import SkeletonCard from "./SkeletonCard";
 import LoadingSpinner from "./LoadingSpinner";
 import PullIndicator from "./PullIndicator";
@@ -8,6 +8,7 @@ import type { PixivNovel } from "../api/types";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createVirtualScroll } from "../primitives/createVirtualScroll";
 import type { MasonryLayout } from "../primitives/types";
+import type { NovelLayoutMode } from "../stores/uiStore";
 
 const GAP = 12;
 
@@ -21,9 +22,12 @@ interface Props {
   onRefresh: () => Promise<void> | void;
   onSeriesClick?: (seriesId: number) => void;
   restoreScrollTop?: number;
+  layoutMode?: NovelLayoutMode;
 }
 
 const NovelVirtualFeed: Component<Props> = (props) => {
+  const mode = () => props.layoutMode ?? "list";
+
   const { attach: sentinelAttach } = createSentinelPaginator({
     rootMargin: "0px 0px 30% 0px",
     enabled: () => props.hasMore && !props.loading,
@@ -115,8 +119,45 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     };
   });
 
+  // 封面墙布局：2列，高度自适应
+  const coverWallLayout = createMemo((): MasonryLayout => {
+    const cw = containerWidth();
+    if (cw <= 0) {
+      return { items: [], totalHeight: 0, columns: 1, columnWidth: 0, gap: GAP, columnGap: 0 };
+    }
+    const columnWidth = (cw - GAP) / 2;
+    const CARD_INFO_HEIGHT = 112; // 标题(40) + 元数据(24) + 作者(20) + tags(20) + padding(8)
+    const items = props.novels.map((_, i) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const cardHeight = columnWidth + CARD_INFO_HEIGHT;
+      return {
+        index: i,
+        x: col * (columnWidth + GAP),
+        y: row * (cardHeight + GAP),
+        width: columnWidth,
+        height: cardHeight,
+        column: col,
+      };
+    });
+
+    const rows = Math.ceil(props.novels.length / 2);
+    const rowHeight = columnWidth + CARD_INFO_HEIGHT;
+    const totalHeight = rows > 0 ? rows * rowHeight + (rows - 1) * GAP : 0;
+
+    return {
+      items,
+      totalHeight,
+      columns: 2,
+      columnWidth,
+      gap: GAP,
+      columnGap: GAP,
+    };
+  });
+
+  const activeLayout = () => (mode() === "coverWall" ? coverWallLayout() : layout());
   const vs = createVirtualScroll({
-    layout,
+    layout: activeLayout,
     overscan: 400,
     useWindowScroll: true,
   });
@@ -173,11 +214,22 @@ const NovelVirtualFeed: Component<Props> = (props) => {
             const realIndex = baseIndex + i();
             return (
               <div style={vs.getItemStyle(realIndex)}>
-                <NovelCard
-                  novel={novel}
-                  onClick={props.onNovelClick}
-                  onSeriesClick={props.onSeriesClick}
-                />
+                <Show
+                  when={mode() === "coverWall"}
+                  fallback={
+                    <NovelCard
+                      novel={novel}
+                      onClick={props.onNovelClick}
+                      onSeriesClick={props.onSeriesClick}
+                    />
+                  }
+                >
+                  <NovelCoverCard
+                    novel={novel}
+                    onClick={props.onNovelClick}
+                    onSeriesClick={props.onSeriesClick}
+                  />
+                </Show>
               </div>
             );
           }}
