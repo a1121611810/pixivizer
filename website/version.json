@@ -1,5 +1,5 @@
 {
-  "version": "3.0.1",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.1",
+  "version": "3.0.2",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.2",
   "changelog": "🧹 依赖升级\n  - 升级 5 个依赖：@capacitor/core@8.4.1, @capacitor/cli@8.4.1, @types/node@26.0.1, unocss@66.7.3, vite@8.1.0\n  - pnpm 供应链安全配置（minimumReleaseAge, trustPolicy, blockExoticSubdeps）\n  - lint 修复与代码清理\n\n\ud83d"
 }
