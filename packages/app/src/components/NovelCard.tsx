@@ -59,10 +59,10 @@ const NovelCard: Component<Props> = (props) => {
 
   return (
     <div
-      class="bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] shadow-[var(--elevation2)] overflow-hidden cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)]"
+      class="bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] shadow-[var(--elevation2)] overflow-hidden cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] h-[180px]"
       onClick={() => props.onClick(props.novel.id)}
     >
-      <div class="flex gap-3 p-2.5">
+      <div class="flex gap-3 p-2.5 h-full">
         {/* Cover image — fixed 128px square */}
         <div class="relative w-[128px] h-[128px] flex-shrink-0 rounded-[var(--borderRadiusSmall)] overflow-hidden">
           <img
@@ -89,8 +89,8 @@ const NovelCard: Component<Props> = (props) => {
           </div>
         </div>
 
-        {/* Info area */}
-        <div class="flex-1 min-w-0 flex flex-col gap-1">
+        {/* Info area — 固定高度与 NovelVirtualFeed 的 CARD_HEIGHT 匹配 */}
+        <div class="flex-1 min-w-0 flex flex-col gap-1 h-[128px] overflow-hidden">
           <p class="[font-size:var(--fontSizeBase200)] font-semibold text-[var(--colorNeutralForeground1)] line-clamp-2 leading-tight">
             {props.novel.title}
           </p>
@@ -101,7 +101,7 @@ const NovelCard: Component<Props> = (props) => {
             <span>★ {props.novel.total_bookmarks}</span>
             {props.novel.page_count > 1 && <span>📄 {props.novel.page_count}页</span>}
           </div>
-          <IllustTags tags={props.novel.tags} size="small" />
+          <IllustTags tags={props.novel.tags} size="small" class="max-h-[36px] overflow-hidden" />
           <div class="mt-auto flex items-center gap-2 text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase100)]">
             <span>📖 {props.novel.text_length.toLocaleString()}字</span>
             {props.novel.series?.title && (
