@@ -1,5 +1,5 @@
 {
-  "version": "3.0.2",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.2",
-  "changelog": "🧹 依赖升级\n  - 升级 5 个依赖：@capacitor/core@8.4.1, @capacitor/cli@8.4.1, @types/node@26.0.1, unocss@66.7.3, vite@8.1.0\n  - pnpm 供应链安全配置（minimumReleaseAge, trustPolicy, blockExoticSubdeps）\n  - lint 修复与代码清理\n\n\ud83d"
+  "version": "3.0.3",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.0.3",
+  "changelog": "fix(novel): 修复小说详情页左上角返回与系统侧滑返回失效\n- 小说详情页统一包裹 PageTransition，与 IllustDetail 等页面结构一致\n- 返回按钮改为 fluent-button，并增加空历史栈兜底（回 /recommended）\n- ReaderSettingsSheet / SeriesSheet 接入全局 __settingsOpen，系统侧滑优先关闭 Sh"
 }
