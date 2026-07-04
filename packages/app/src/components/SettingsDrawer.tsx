@@ -489,7 +489,7 @@ const SettingsDrawer: Component = () => {
                 />
               </svg>
               <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                布局模式
+                布局模式（插画）
               </p>
             </div>
             <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
@@ -508,11 +508,7 @@ const SettingsDrawer: Component = () => {
               ))}
             </div>
             <p class="mt-1.5 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-              {layoutMode() === "waterfall"
-                ? "双列瀑布流，图片错落有致"
-                : layoutMode() === "single"
-                  ? "单列大图，适合浏览细节"
-                  : "三列网格，信息密度最高"}
+              控制插画推荐、关注、收藏及用户作品列表的展示方式
             </p>
           </div>
 
