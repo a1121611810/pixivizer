@@ -1,4 +1,4 @@
-import { type Component, createEffect, onMount, onCleanup, Show } from "solid-js";
+import { type Component, createEffect, onMount, onCleanup } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 import {
   illusts,
@@ -13,7 +13,7 @@ import {
   saveBookmarkScroll,
   getBookmarkScrollY,
 } from "../stores/bookmarkStore";
-import { user, isLoggedIn } from "../stores/authStore";
+import { user } from "../stores/authStore";
 import { layoutMode } from "../stores/uiStore";
 import VirtualFeed from "../components/VirtualFeed";
 

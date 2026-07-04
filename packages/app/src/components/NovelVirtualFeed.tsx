@@ -1,12 +1,14 @@
-import { createSignal, createEffect, For, createMemo, Show } from "solid-js";
+import { createSignal, createEffect, For, createMemo } from "solid-js";
 import type { Component } from "solid-js";
 import NovelCard, { NovelCoverCard } from "./NovelCard";
+import NovelTextListCard from "./NovelTextListCard";
 import SkeletonCard from "./SkeletonCard";
 import LoadingSpinner from "./LoadingSpinner";
 import PullIndicator from "./PullIndicator";
 import type { PixivNovel } from "../api/types";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createVirtualScroll } from "../primitives/createVirtualScroll";
+import { createTextListLayout } from "../primitives/createTextListLayout";
 import type { MasonryLayout } from "../primitives/types";
 import type { NovelLayoutMode } from "../stores/uiStore";
 
@@ -21,6 +23,7 @@ interface Props {
   onLoadMore: () => void;
   onRefresh: () => Promise<void> | void;
   onSeriesClick?: (seriesId: number) => void;
+  onAuthorClick?: (userId: number) => void;
   restoreScrollTop?: number;
   layoutMode?: NovelLayoutMode;
 }
@@ -155,7 +158,18 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     };
   });
 
-  const activeLayout = () => (mode() === "coverWall" ? coverWallLayout() : layout());
+  // 文本列表布局：由卡片自身 ResizeObserver 报告真实高度
+  const { layout: textListLayout, measureItem } = createTextListLayout(
+    () => props.novels,
+    containerWidth,
+    { gap: 20 },
+  );
+
+  const activeLayout = createMemo(() => {
+    const m = mode();
+    if (m === "textList") return textListLayout();
+    return m === "coverWall" ? coverWallLayout() : layout();
+  });
   const vs = createVirtualScroll({
     layout: activeLayout,
     overscan: 400,
@@ -193,13 +207,27 @@ const NovelVirtualFeed: Component<Props> = (props) => {
         </div>
       )}
 
-      {props.loading && props.novels.length === 0 && pullPhase() !== "refreshing" && (
-        <div class="flex flex-col gap-3">
-          {Array.from({ length: 3 }).map(() => (
-            <SkeletonCard width={containerWidth() || 400} height={140} />
-          ))}
-        </div>
-      )}
+      {props.loading &&
+        props.novels.length === 0 &&
+        pullPhase() !== "refreshing" &&
+        mode() !== "textList" && (
+          <div class="flex flex-col gap-3">
+            {Array.from({ length: 3 }).map(() => (
+              <SkeletonCard width={containerWidth() || 400} height={140} />
+            ))}
+          </div>
+        )}
+
+      {props.loading &&
+        props.novels.length === 0 &&
+        pullPhase() !== "refreshing" &&
+        mode() === "textList" && (
+          <div class="flex flex-col gap-4">
+            {Array.from({ length: 6 }).map(() => (
+              <div class="h-20 bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusLarge)] animate-pulse" />
+            ))}
+          </div>
+        )}
 
       <div style={{ position: "relative", width: "100%", height: `${vs.totalHeight() || 1}px` }}>
         <For
@@ -214,22 +242,27 @@ const NovelVirtualFeed: Component<Props> = (props) => {
             const realIndex = baseIndex + i();
             return (
               <div style={vs.getItemStyle(realIndex)}>
-                <Show
-                  when={mode() === "coverWall"}
-                  fallback={
-                    <NovelCard
-                      novel={novel}
-                      onClick={props.onNovelClick}
-                      onSeriesClick={props.onSeriesClick}
-                    />
-                  }
-                >
+                {mode() === "textList" ? (
+                  <NovelTextListCard
+                    novel={novel}
+                    onClick={props.onNovelClick}
+                    onAuthorClick={props.onAuthorClick}
+                    onSeriesClick={props.onSeriesClick}
+                    onMeasure={(height) => measureItem(novel.id, height)}
+                  />
+                ) : mode() === "coverWall" ? (
                   <NovelCoverCard
                     novel={novel}
                     onClick={props.onNovelClick}
                     onSeriesClick={props.onSeriesClick}
                   />
-                </Show>
+                ) : (
+                  <NovelCard
+                    novel={novel}
+                    onClick={props.onNovelClick}
+                    onSeriesClick={props.onSeriesClick}
+                  />
+                )}
               </div>
             );
           }}

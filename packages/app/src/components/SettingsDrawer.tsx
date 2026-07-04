@@ -531,7 +531,7 @@ const SettingsDrawer: Component = () => {
               </p>
             </div>
             <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
-              {(["list", "coverWall"] as NovelLayoutMode[]).map((m) => (
+              {(["list", "coverWall", "textList"] as NovelLayoutMode[]).map((m) => (
                 <button
                   class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
                   classList={{
@@ -541,7 +541,7 @@ const SettingsDrawer: Component = () => {
                   }}
                   onClick={() => setNovelLayoutMode(m)}
                 >
-                  {m === "list" ? "列表" : "封面墙"}
+                  {m === "list" ? "列表" : m === "coverWall" ? "封面墙" : "文本列表"}
                 </button>
               ))}
             </div>

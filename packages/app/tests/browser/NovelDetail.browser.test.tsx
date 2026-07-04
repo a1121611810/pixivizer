@@ -91,4 +91,26 @@ describe("NovelDetail scroll-header", () => {
     fireEvent.click(backButton!);
     expect(mockNavigate).toHaveBeenCalled();
   });
+
+  it("renders bottom toolbar with fixed positioning and Fluent transition", async () => {
+    const { container } = render(() => <NovelDetail />);
+    await screen.findAllByText("Scroll Header 测试标题");
+
+    // Find the bottom toolbar div (the one with "显示设置" text somewhere inside)
+    const toolbar = container.querySelector('[class*="fixed bottom-0"]');
+    expect(toolbar).not.toBeNull();
+
+    // Verify it uses translateY for show/hide
+    const style = toolbar!.getAttribute("style")?.replace(/\s+/g, " ");
+    expect(style).toContain("transform");
+    expect(style).toContain("translateY(0");
+
+    // Verify Fluent animation tokens
+    expect(style).toContain("var(--durationNormal)");
+    expect(style).toContain("var(--curveEasyEase)");
+
+    // Verify content area has bottom padding for the fixed bar
+    const contentArea = container.querySelector('[class*="max-w-2xl"]');
+    expect(contentArea?.classList.contains("pb-[64px]")).toBe(true);
+  });
 });

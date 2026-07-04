@@ -16,6 +16,10 @@ import SeriesSheet from "../components/SeriesSheet";
 import PageTransition from "../components/PageTransition";
 import { getRouteStackDepth } from "../services/predictiveBack";
 
+// ── Scroll-driven hide/show constants ──
+const HIDE_THRESHOLD = 30;
+const BOTTOM_THRESHOLD = 80;
+
 const NovelDetail: Component = () => {
   const params = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -42,8 +46,6 @@ const NovelDetail: Component = () => {
   const [footerHidden, setFooterHidden] = createSignal(false);
   let lastScrollY = 0;
   let accumulatedDelta = 0;
-  const HIDE_THRESHOLD = 30;
-  const BOTTOM_THRESHOLD = 80;
   let scrollTicking = false;
 
   createEffect(() => {

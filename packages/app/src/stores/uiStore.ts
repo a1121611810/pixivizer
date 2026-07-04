@@ -14,7 +14,7 @@ export type Theme = "light" | "dark" | "system";
 export type ImageQuality = "medium" | "large" | "original";
 export type CacheSize = number;
 export type LayoutMode = "waterfall" | "single" | "grid";
-export type NovelLayoutMode = "list" | "coverWall";
+export type NovelLayoutMode = "list" | "coverWall" | "textList";
 
 /** 布局模式 → 列数映射 */
 export const MODE_COLUMNS: Record<LayoutMode, number> = {
@@ -383,7 +383,7 @@ export async function loadLayoutModePreference(): Promise<void> {
 export async function loadNovelLayoutModePreference(): Promise<void> {
   try {
     const { value } = await Preferences.get({ key: PREF_KEY_NOVEL_LAYOUT_MODE });
-    if (value !== null && (value === "list" || value === "coverWall")) {
+    if (value !== null && (value === "list" || value === "coverWall" || value === "textList")) {
       setState("novelLayoutMode", value as NovelLayoutMode);
     }
   } catch (e) {

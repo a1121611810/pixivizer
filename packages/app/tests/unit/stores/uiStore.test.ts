@@ -462,3 +462,44 @@ describe("showUpdateDialog", () => {
     expect(showUpdateDialog()).toBe(false);
   });
 });
+
+describe("novelLayoutMode", () => {
+  beforeEach(() => {
+    vi.mocked(Capacitor.getPlatform).mockReturnValue("web");
+    vi.mocked(Preferences.set).mockResolvedValue(undefined);
+    vi.mocked(Preferences.get).mockResolvedValue({ value: null });
+    (globalThis as any).window = { dispatchEvent: vi.fn() };
+    (globalThis as any).CustomEvent = class CustomEvent {
+      constructor(public type: string) {}
+    };
+  });
+
+  it("defaults to list", async () => {
+    const { novelLayoutMode } = await loadStore();
+    expect(novelLayoutMode()).toBe("list");
+  });
+
+  it("persists textList", async () => {
+    const { setNovelLayoutMode, novelLayoutMode } = await loadStore();
+    await setNovelLayoutMode("textList");
+    expect(novelLayoutMode()).toBe("textList");
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: "novel_layout_mode",
+      value: "textList",
+    });
+  });
+
+  it("loads persisted textList", async () => {
+    vi.mocked(Preferences.get).mockResolvedValue({ value: "textList" });
+    const { loadNovelLayoutModePreference, novelLayoutMode } = await loadStore();
+    await loadNovelLayoutModePreference();
+    expect(novelLayoutMode()).toBe("textList");
+  });
+
+  it("ignores invalid persisted values", async () => {
+    vi.mocked(Preferences.get).mockResolvedValue({ value: "invalid" });
+    const { loadNovelLayoutModePreference, novelLayoutMode } = await loadStore();
+    await loadNovelLayoutModePreference();
+    expect(novelLayoutMode()).toBe("list");
+  });
+});

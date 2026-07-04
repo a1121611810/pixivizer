@@ -108,6 +108,7 @@ const NovelBookmarks: Component = () => {
         error={error()}
         hasMore={nextUrl() !== null}
         onNovelClick={(id) => navigate(`/novel/${id}`)}
+        onAuthorClick={(id) => navigate(`/user/${id}`)}
         onLoadMore={fetchMore}
         onRefresh={refresh}
         restoreScrollTop={cached ? getFeedScrollY("bookmarks") : undefined}

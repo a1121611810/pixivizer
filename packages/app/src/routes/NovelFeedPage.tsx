@@ -109,6 +109,7 @@ const NovelFeedPage: Component<Props> = (props) => {
             error={error()}
             hasMore={nextUrl() !== null}
             onNovelClick={(id) => navigate(`/novel/${id}`)}
+            onAuthorClick={(id) => navigate(`/user/${id}`)}
             onLoadMore={fetchMore}
             onRefresh={refresh}
             restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
