@@ -14,6 +14,7 @@ export type Theme = "light" | "dark" | "system";
 export type ImageQuality = "medium" | "large" | "original";
 export type CacheSize = number;
 export type LayoutMode = "waterfall" | "single" | "grid";
+export type NovelLayoutMode = "list" | "coverWall";
 
 /** 布局模式 → 列数映射 */
 export const MODE_COLUMNS: Record<LayoutMode, number> = {
@@ -34,6 +35,7 @@ const PREF_KEY_IS_ADULT = "is_adult";
 const PREF_KEY_AUTO_CHECK_UPDATE = "auto_check_update";
 const PREF_KEY_USE_DNS_OVERRIDE = "use_dns_override";
 const PREF_KEY_CONTENT_TYPE = "content_type";
+const PREF_KEY_NOVEL_LAYOUT_MODE = "novel_layout_mode";
 const PREF_KEY_NOVEL_CACHE_ENABLED = "novel_cache_enabled";
 const PREF_KEY_NOVEL_CACHE_SIZE = "novel_cache_size";
 const PREF_KEY_DISMISSED_UPDATE_VERSION = "dismissed_update_version";
@@ -76,6 +78,7 @@ const initialState = () => {
 
     // 布局
     layoutMode: "waterfall" as LayoutMode,
+    novelLayoutMode: "list" as NovelLayoutMode,
     autoHideNavBar: true,
 
     // 内容过滤
@@ -193,6 +196,18 @@ export const setLayoutMode = async (mode: LayoutMode): Promise<void> => {
     console.warn("[uiStore] Failed to persist layoutMode", e);
   }
   window.dispatchEvent(new CustomEvent("layoutModeChanged"));
+};
+
+export const novelLayoutMode = () => state.novelLayoutMode;
+
+export const setNovelLayoutMode = async (mode: NovelLayoutMode): Promise<void> => {
+  setState("novelLayoutMode", mode);
+  try {
+    await Preferences.set({ key: PREF_KEY_NOVEL_LAYOUT_MODE, value: mode });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist novelLayoutMode", e);
+  }
+  window.dispatchEvent(new CustomEvent("novelLayoutModeChanged"));
 };
 
 export const listQuality = () => state.listQuality;
@@ -362,6 +377,17 @@ export async function loadLayoutModePreference(): Promise<void> {
     }
   } catch (e) {
     console.warn("[uiStore] Failed to load layoutMode preference", e);
+  }
+}
+
+export async function loadNovelLayoutModePreference(): Promise<void> {
+  try {
+    const { value } = await Preferences.get({ key: PREF_KEY_NOVEL_LAYOUT_MODE });
+    if (value !== null && (value === "list" || value === "coverWall")) {
+      setState("novelLayoutMode", value as NovelLayoutMode);
+    }
+  } catch (e) {
+    console.warn("[uiStore] Failed to load novelLayoutMode preference", e);
   }
 }
 
@@ -579,6 +605,7 @@ export async function resetUiStore(): Promise<void> {
   await setShowR18(false);
   await setShowR18G(false);
   await setLayoutMode("waterfall");
+  await setNovelLayoutMode("list");
   await setShowDetailStairs(false);
   await setAgeConfirmation(false, false);
   await setAutoCheckUpdate(false);
