@@ -17,6 +17,7 @@ import {
 import { user } from "../stores/authStore";
 import NovelVirtualFeed from "../components/NovelVirtualFeed";
 import SeriesSheet from "../components/SeriesSheet";
+import { novelLayoutMode } from "../stores/uiStore";
 import { createSignal } from "solid-js";
 
 const r18Handler = () => refresh();
@@ -111,6 +112,7 @@ const NovelBookmarks: Component = () => {
         onRefresh={refresh}
         restoreScrollTop={cached ? getFeedScrollY("bookmarks") : undefined}
         onSeriesClick={openSeriesSheet}
+        layoutMode={novelLayoutMode()}
       />
 
       <Show when={sheetSeries()}>
