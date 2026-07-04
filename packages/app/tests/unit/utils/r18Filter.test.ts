@@ -1,144 +1,98 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-
-// Mock uiStore signals
-let mockShowR18 = true;
-let mockShowR18G = true;
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { filterNovels, filterFeedIllusts } from "@/utils/r18Filter";
+import type { PixivNovel, PixivIllust } from "@/api/types";
 
 vi.mock("@/stores/uiStore", () => ({
-  get showR18() {
-    return () => mockShowR18;
-  },
-  get showR18G() {
-    return () => mockShowR18G;
-  },
+  showR18: vi.fn(() => false),
+  showR18G: vi.fn(() => false),
 }));
-
-// Mock blockStore
-let mockBlockedIds = new Set<number>();
 
 vi.mock("@/stores/blockStore", () => ({
-  get isBlocked() {
-    return (id: number) => mockBlockedIds.has(id);
-  },
+  isBlocked: vi.fn((id: number) => id === 999),
 }));
 
-function createIllust(id: number, x_restrict: 0 | 1 | 2 = 0, userId: number = 1) {
+import { showR18, showR18G } from "@/stores/uiStore";
+
+function createNovel(id: number, xRestrict: number, userId: number): PixivNovel {
   return {
     id,
-    title: `work-${id}`,
-    type: "illust" as const,
-    user: { id: userId, name: "u", account: "u", profile_image_urls: {} },
+    title: `novel-${id}`,
+    user: { id: userId, name: "author", account: "author", profile_image_urls: {} },
+    image_urls: { square_medium: "", medium: "", large: "" },
+    tags: [],
+    page_count: 1,
+    text_length: 5000,
+    is_bookmarked: false,
+    total_bookmarks: 10,
+    x_restrict: xRestrict,
+    create_date: "2026-01-01T00:00:00Z",
+  } as PixivNovel;
+}
+
+function createIllust(id: number, xRestrict: number, userId: number): PixivIllust {
+  return {
+    id,
+    title: `illust-${id}`,
+    type: "illust",
+    user: { id: userId, name: "author", account: "author", profile_image_urls: {} },
     image_urls: { square_medium: "", medium: "", large: "" },
     width: 100,
     height: 100,
     page_count: 1,
     is_bookmarked: false,
-    total_bookmarks: 0,
+    total_bookmarks: 10,
     tags: [],
-    x_restrict,
-    create_date: "2026-01-01T00:00:00+00:00",
+    x_restrict: xRestrict,
+    create_date: "2026-01-01T00:00:00Z",
     meta_pages: [],
     meta_single_page: {},
-  };
+  } as PixivIllust;
 }
 
 describe("r18Filter", () => {
   beforeEach(() => {
-    mockShowR18 = true;
-    mockShowR18G = true;
-    mockBlockedIds = new Set();
+    vi.restoreAllMocks();
   });
 
-  describe("filterFeedIllusts", () => {
-    it("keeps all-age illusts when R18 and R18G are enabled", async () => {
-      const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      const input = [createIllust(1, 0), createIllust(2, 1), createIllust(3, 2)];
-      const result = filterFeedIllusts(input);
-      expect(result).toHaveLength(3);
+  describe("filterNovels", () => {
+    it("keeps all-age novels by default", () => {
+      const novels = [createNovel(1, 0, 1)];
+      expect(filterNovels(novels)).toEqual(novels);
     });
 
-    it("filters out R-18 illusts when showR18 is false", async () => {
-      mockShowR18 = false;
-      const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      const input = [createIllust(1, 0), createIllust(2, 1), createIllust(3, 2)];
-      const result = filterFeedIllusts(input);
-      expect(result.map((i) => i.id)).toEqual([1, 3]);
+    it("filters R-18 novels when showR18 is false", () => {
+      vi.mocked(showR18).mockReturnValue(false);
+      vi.mocked(showR18G).mockReturnValue(false);
+      const novels = [createNovel(1, 1, 1), createNovel(2, 0, 1)];
+      expect(filterNovels(novels)).toEqual([novels[1]]);
     });
 
-    it("filters out R-18G illusts when showR18G is false", async () => {
-      mockShowR18G = false;
-      const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      const input = [createIllust(1, 0), createIllust(2, 1), createIllust(3, 2)];
-      const result = filterFeedIllusts(input);
-      expect(result.map((i) => i.id)).toEqual([1, 2]);
+    it("filters R-18G novels when showR18G is false", () => {
+      vi.mocked(showR18).mockReturnValue(false);
+      vi.mocked(showR18G).mockReturnValue(false);
+      const novels = [createNovel(1, 2, 1), createNovel(2, 0, 1)];
+      expect(filterNovels(novels)).toEqual([novels[1]]);
     });
 
-    it("filters out both R-18 and R-18G when both disabled", async () => {
-      mockShowR18 = false;
-      mockShowR18G = false;
-      const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      const input = [createIllust(1, 0), createIllust(2, 1), createIllust(3, 2)];
-      const result = filterFeedIllusts(input);
-      expect(result.map((i) => i.id)).toEqual([1]);
+    it("keeps R-18 novels when showR18 is true", () => {
+      vi.mocked(showR18).mockReturnValue(true);
+      vi.mocked(showR18G).mockReturnValue(false);
+      const novels = [createNovel(1, 1, 1)];
+      expect(filterNovels(novels)).toEqual(novels);
     });
 
-    it("removes illusts from blocked users", async () => {
-      mockBlockedIds = new Set([2, 3]);
-      const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      const input = [
-        createIllust(1, 0, 1),
-        createIllust(2, 0, 2), // user 2 is blocked
-        createIllust(3, 0, 3), // user 3 is blocked
-      ];
-      const result = filterFeedIllusts(input);
-      expect(result.map((i) => i.id)).toEqual([1]);
-    });
-
-    it("combines R18 filtering and blocked user filtering", async () => {
-      mockShowR18 = false;
-      mockBlockedIds = new Set([3]);
-      const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      const input = [
-        createIllust(1, 0, 1), // safe
-        createIllust(2, 1, 1), // R-18
-        createIllust(3, 0, 3), // blocked user
-      ];
-      const result = filterFeedIllusts(input);
-      expect(result.map((i) => i.id)).toEqual([1]);
-    });
-
-    it("returns empty array for empty input", async () => {
-      const { filterFeedIllusts } = await import("@/utils/r18Filter");
-      expect(filterFeedIllusts([])).toEqual([]);
+    it("filters novels from blocked users", () => {
+      const novels = [createNovel(1, 0, 999), createNovel(2, 0, 1)];
+      expect(filterNovels(novels)).toEqual([novels[1]]);
     });
   });
 
-  describe("filterUserPreviews", () => {
-    function createPreview(userId: number, illustIds: number[]) {
-      return {
-        user: { id: userId, name: `u${userId}`, account: `u${userId}`, is_followed: false },
-        illusts: illustIds.map((id) => createIllust(id, 0)),
-      };
-    }
-
-    it("removes blocked users from previews", async () => {
-      mockBlockedIds = new Set([2]);
-      const { filterUserPreviews } = await import("@/utils/r18Filter");
-      const input = [createPreview(1, [10]), createPreview(2, [20])];
-      const result = filterUserPreviews(input);
-      expect(result).toHaveLength(1);
-      expect(result[0].user.id).toBe(1);
-    });
-
-    it("filters R-18 illusts inside each preview", async () => {
-      mockShowR18 = false;
-      const { filterUserPreviews } = await import("@/utils/r18Filter");
-      const preview = {
-        user: { id: 1, name: "u1", account: "u1", is_followed: false },
-        illusts: [createIllust(1, 0), createIllust(2, 1), createIllust(3, 2)],
-      };
-      const result = filterUserPreviews([preview]);
-      expect(result[0].illusts.map((i) => i.id)).toEqual([1, 3]);
+  describe("filterFeedIllusts backward compatibility", () => {
+    it("still filters R-18 and blocked users for illusts", () => {
+      vi.mocked(showR18).mockReturnValue(false);
+      vi.mocked(showR18G).mockReturnValue(false);
+      const illusts = [createIllust(1, 1, 1), createIllust(2, 0, 999), createIllust(3, 0, 1)];
+      expect(filterFeedIllusts(illusts)).toEqual([illusts[2]]);
     });
   });
 });

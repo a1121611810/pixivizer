@@ -1,17 +1,25 @@
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  Imports
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 import { createStore, produce } from "solid-js/store";
 import { createEffect, createRoot, batch } from "solid-js";
 import { loadRecommended, loadBookmarks, loadNext, loadFollow } from "../api/novel";
-import type { PixivNovel } from "../api/types";
+import type { PixivNovel, RestrictType } from "../api/types";
+import { filterNovels } from "../utils/r18Filter";
 import { currentTab } from "./uiStore";
 import { user } from "./authStore";
 
-// ── Tab cache ──
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  Tab cache
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const tabNovels: Record<string, PixivNovel[]> = {};
 const tabNextUrl: Record<string, string | null> = {};
 const tabScrollY: Record<string, number> = {};
 const tabLoaded: Record<string, boolean> = {};
 
-// ── Store ──
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  Store
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const [state, setState] = createStore({
   novels: [] as PixivNovel[],
   nextUrl: null as string | null,
@@ -19,27 +27,36 @@ const [state, setState] = createStore({
   refreshing: false,
   error: null as string | null,
   followTab: "all" as "all" | "public" | "private",
+  bookmarkRestrict: "public" as RestrictType,
 });
 
-// ── Exports ──
-export const novels = () => state.novels;
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  Exports
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+export const novels = () => filterNovels(state.novels);
 export const nextUrl = () => state.nextUrl;
 export const loading = () => state.loading;
 export const refreshing = () => state.refreshing;
 export const error = () => state.error;
 export const novelFollowTab = () => state.followTab;
+export const bookmarkRestrict = () => state.bookmarkRestrict;
 
 export function setNovelFollowTab(t: "all" | "public" | "private") {
   setState("followTab", t);
 }
 
+export function setBookmarkRestrict(r: RestrictType) {
+  if (state.bookmarkRestrict === r) return;
+  setState("bookmarkRestrict", r);
+}
+
 const pendingRefreshKeys = new Set<string>();
 
-function getSourceKey(tab?: string, subTab?: string): string {
+function getSourceKey(tab?: string, subTab?: string, restrict?: RestrictType): string {
   const t = tab ?? currentTab();
   const st = subTab ?? state.followTab;
   if (t === "recommended") return "novel_recommended";
-  if (t === "bookmarks") return "novel_bookmarks";
+  if (t === "bookmarks") return `novel_bookmarks_${restrict ?? state.bookmarkRestrict}`;
   if (t === "follow") return `novel_follow_${st}`;
   return `novel_${t}`;
 }
@@ -78,7 +95,35 @@ function computeFollowNovels(): PixivNovel[] {
   return mergeAndSort(pub, priv);
 }
 
-// ── Reactive ──
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  429 retry helper
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/* eslint-disable no-await-in-loop -- intentional sequential retry with backoff */
+async function fetchBookmarksWithRetry(
+  userId: number,
+  restrictVal: RestrictType,
+): Promise<{ novels: PixivNovel[]; nextUrl: string | null }> {
+  let attempt = 0;
+  while (true) {
+    try {
+      const data = await loadBookmarks(userId, restrictVal);
+      return { novels: data.novels, nextUrl: data.next_url };
+    } catch (e) {
+      const msg = (e as { message?: string }).message ?? "";
+      if ((msg.includes("429") || msg.includes("频繁")) && attempt < 3) {
+        attempt++;
+        await new Promise((r) => setTimeout(r, 3000));
+        continue;
+      }
+      throw e;
+    }
+  }
+}
+/* eslint-enable no-await-in-loop */
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  Reactive
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 createRoot(() => {
   createEffect(() => {
     const tab = currentTab();
@@ -155,12 +200,12 @@ export async function ensureLoaded(): Promise<void> {
         setState("error", "未登录");
         return;
       }
-      const data = await loadBookmarks(u.id);
+      const data = await fetchBookmarksWithRetry(u.id, state.bookmarkRestrict);
       tabNovels[sourceKey] = data.novels;
-      tabNextUrl[sourceKey] = data.next_url;
+      tabNextUrl[sourceKey] = data.nextUrl;
       batch(() => {
         setState("novels", data.novels);
-        setState("nextUrl", data.next_url);
+        setState("nextUrl", data.nextUrl);
       });
     }
     tabLoaded[sourceKey] = true;

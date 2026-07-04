@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { loadRecommended, loadBookmarks, loadNext, loadFollow } from "@/api/novel";
 import type { PixivNovel } from "@/api/types";
 
@@ -17,16 +17,24 @@ vi.mock("@/api/novel", () => ({
   loadFollow: vi.fn(),
 }));
 
+vi.mock("@/utils/r18Filter", () => ({
+  filterNovels: (novels: PixivNovel[]) => novels,
+}));
+
 let mockCurrentTab = "recommended";
 
-vi.mock("@/stores/uiStore", () => ({
-  get currentTab() {
-    return () => mockCurrentTab;
-  },
-  setCurrentTab: vi.fn((t: string) => {
-    mockCurrentTab = t;
-  }),
-}));
+vi.mock("@/stores/uiStore", async () => {
+  const actual = await vi.importActual<typeof import("@/stores/uiStore")>("@/stores/uiStore");
+  return {
+    ...actual,
+    get currentTab() {
+      return () => mockCurrentTab;
+    },
+    setCurrentTab: vi.fn((t: string) => {
+      mockCurrentTab = t;
+    }),
+  };
+});
 
 let mockUser: { id: number; name: string } | null = { id: 42, name: "testuser" };
 
@@ -62,6 +70,7 @@ describe("novelStore", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCurrentTab = "recommended";
+    mockUser = { id: 42, name: "testuser" };
   });
 
   describe("ensureLoaded — recommended tab", () => {
@@ -134,7 +143,7 @@ describe("novelStore", () => {
   });
 
   describe("ensureLoaded — bookmarks tab", () => {
-    it("loads bookmarked novels when user is logged in", async () => {
+    it("loads public bookmarked novels by default", async () => {
       mockCurrentTab = "bookmarks";
       const novels = [createNovel(1, "2026-01-01T00:00:00Z")];
       vi.mocked(loadBookmarks).mockResolvedValue({ novels, next_url: null });
@@ -142,8 +151,58 @@ describe("novelStore", () => {
       const store = await loadStore();
       await store.ensureLoaded();
 
-      expect(loadBookmarks).toHaveBeenCalledWith(42); // mockUser.id
+      expect(loadBookmarks).toHaveBeenCalledWith(42, "public");
       expect(store.novels()).toEqual(novels);
+    });
+
+    it("loads private bookmarked novels when restrict is switched", async () => {
+      mockCurrentTab = "bookmarks";
+      const publicNovels = [createNovel(1, "2026-01-01T00:00:00Z")];
+      const privateNovels = [createNovel(2, "2026-01-02T00:00:00Z")];
+      vi.mocked(loadBookmarks).mockImplementation((_, restrict) => {
+        if (restrict === "private")
+          return Promise.resolve({ novels: privateNovels, next_url: null });
+        return Promise.resolve({ novels: publicNovels, next_url: null });
+      });
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+      expect(store.novels()).toEqual(publicNovels);
+
+      store.setBookmarkRestrict("private");
+      await store.ensureLoaded();
+
+      expect(loadBookmarks).toHaveBeenCalledWith(42, "private");
+      expect(store.novels()).toEqual(privateNovels);
+    });
+
+    it("caches public and private bookmarks separately", async () => {
+      mockCurrentTab = "bookmarks";
+      const publicNovels = [createNovel(1, "2026-01-01T00:00:00Z")];
+      const privateNovels = [createNovel(2, "2026-01-02T00:00:00Z")];
+      vi.mocked(loadBookmarks).mockImplementation((_, restrict) => {
+        if (restrict === "private")
+          return Promise.resolve({ novels: privateNovels, next_url: null });
+        return Promise.resolve({ novels: publicNovels, next_url: null });
+      });
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+      store.setBookmarkRestrict("private");
+      await store.ensureLoaded();
+      expect(loadBookmarks).toHaveBeenCalledTimes(2);
+
+      // 切回 public 应直接使用缓存，不再请求
+      store.setBookmarkRestrict("public");
+      await store.ensureLoaded();
+      expect(loadBookmarks).toHaveBeenCalledTimes(2);
+      expect(store.novels()).toEqual(publicNovels);
+
+      // 再切回 private 也应使用缓存
+      store.setBookmarkRestrict("private");
+      await store.ensureLoaded();
+      expect(loadBookmarks).toHaveBeenCalledTimes(2);
+      expect(store.novels()).toEqual(privateNovels);
     });
 
     it("sets error when user is not logged in", async () => {
@@ -182,6 +241,20 @@ describe("novelStore", () => {
       expect(loadFollow).toHaveBeenCalled();
       expect(loadRecommended).not.toHaveBeenCalled();
     });
+
+    it("refresh re-fetches correct bookmark restrict", async () => {
+      mockCurrentTab = "bookmarks";
+      const publicNovels = [createNovel(1, "2026-01-01T00:00:00Z")];
+      vi.mocked(loadBookmarks).mockResolvedValue({ novels: publicNovels, next_url: null });
+
+      const store = await loadStore();
+      await store.ensureLoaded();
+      expect(loadBookmarks).toHaveBeenCalledWith(42, "public");
+
+      store.setBookmarkRestrict("private");
+      await store.refresh();
+      expect(loadBookmarks).toHaveBeenCalledWith(42, "private");
+    });
   });
 
   describe("scroll position", () => {
@@ -189,20 +262,19 @@ describe("novelStore", () => {
       const store = await loadStore();
       expect(store.getFeedScrollY("recommended")).toBe(0);
     });
-  });
 
-  // ⚠️ 测试盲区说明：
-  // 以下场景无法通过 unit test 覆盖，由 E2E 测试 (feed.e2e.ts "novel follow")
-  // 和 browser 测试覆盖：
-  //
-  // 1. 子 tab 切换后旧卡片 DOM 未被清理 → 卡片 Badge 重叠
-  //    原因：Unit test 运行在 Node 环境，无 DOM 渲染。
-  //    修复：For keyed remount (NovelFeedPage feedKey)
-  //    验证：tests/e2e/specs/feed.e2e.ts — 检查 absolute 子元素是否有重复 top 值
-  //
-  // 2. 虚拟滚动中 absolute 定位元素的数据竞争
-  //    原因：SolidJS For 组件 reconciliation 时序
-  //    验证：E2E 测试通过 page.evaluate 直接检查 DOM 结构
+    it("saves and restores scroll position per bookmark restrict", async () => {
+      mockCurrentTab = "bookmarks";
+      const store = await loadStore();
+      store.setBookmarkRestrict("public");
+      store.saveTabScroll("bookmarks");
+      store.setBookmarkRestrict("private");
+      store.saveTabScroll("bookmarks");
+      // 两者都是 0，但不应抛错，且 key 独立
+      expect(store.getFeedScrollY("bookmarks")).toBe(0);
+      expect(() => store.saveTabScroll("bookmarks")).not.toThrow();
+    });
+  });
 
   describe("isNovelCached", () => {
     it("returns true after loading", async () => {
@@ -215,6 +287,26 @@ describe("novelStore", () => {
       expect(store.isNovelCached("recommended")).toBe(false);
       await store.ensureLoaded();
       expect(store.isNovelCached("recommended")).toBe(true);
+    });
+
+    it("tracks cache per bookmark restrict", async () => {
+      mockCurrentTab = "bookmarks";
+      vi.mocked(loadBookmarks).mockImplementation((_, restrict) =>
+        Promise.resolve({
+          novels: [createNovel(restrict === "public" ? 1 : 2, "2026-01-01T00:00:00Z")],
+          next_url: null,
+        }),
+      );
+
+      const store = await loadStore();
+      expect(store.isNovelCached("bookmarks")).toBe(false);
+      await store.ensureLoaded();
+      expect(store.isNovelCached("bookmarks")).toBe(true);
+
+      store.setBookmarkRestrict("private");
+      expect(store.isNovelCached("bookmarks")).toBe(false);
+      await store.ensureLoaded();
+      expect(store.isNovelCached("bookmarks")).toBe(true);
     });
   });
 
@@ -366,6 +458,46 @@ describe("novelStore", () => {
       await store.fetchMore();
 
       expect(loadNext).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("429 retry", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("retries bookmarks up to 3 times on 429", async () => {
+      mockCurrentTab = "bookmarks";
+      vi.mocked(loadBookmarks)
+        .mockRejectedValueOnce(new Error("429 Too Many Requests"))
+        .mockRejectedValueOnce(new Error("429 Too Many Requests"))
+        .mockResolvedValue({ novels: [createNovel(1, "2026-01-01T00:00:00Z")], next_url: null });
+
+      const store = await loadStore();
+      const promise = store.ensureLoaded();
+      await vi.advanceTimersByTimeAsync(9000);
+      await promise;
+
+      expect(loadBookmarks).toHaveBeenCalledTimes(3);
+      expect(store.novels()).toHaveLength(1);
+      expect(store.error()).toBeNull();
+    });
+
+    it("gives up after 3 retries and sets error", async () => {
+      mockCurrentTab = "bookmarks";
+      vi.mocked(loadBookmarks).mockRejectedValue(new Error("429 Too Many Requests"));
+
+      const store = await loadStore();
+      const promise = store.ensureLoaded();
+      await vi.advanceTimersByTimeAsync(12000);
+      await promise;
+
+      expect(loadBookmarks).toHaveBeenCalledTimes(4); // initial + 3 retries
+      expect(store.error()).toContain("429");
     });
   });
 });
