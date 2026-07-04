@@ -4,7 +4,6 @@ import { listQuality } from "../stores/uiStore";
 import { addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import PixivImage from "./PixivImage";
 import HeartBurstEffect from "./HeartBurstEffect";
-import IllustTags from "./IllustTags";
 import { resolveImageUrl } from "../utils/imageLoader";
 
 function resolveUrl(illust: PixivIllust): string {
@@ -209,7 +208,6 @@ const ImageCard: Component<Props> = (props) => {
             {following() ? "…" : isFollowed() ? "已关注" : "关注"}
           </button>
         </p>
-        <IllustTags tags={props.illust.tags} size="small" class="mt-1.5" />
       </div>
     </div>
   );

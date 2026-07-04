@@ -2,6 +2,7 @@ import { type Component, createSignal } from "solid-js";
 import type { PixivNovel } from "../api/types";
 import { addBookmark, deleteBookmark } from "../api/novel";
 import HeartBurstEffect from "./HeartBurstEffect";
+import IllustTags from "./IllustTags";
 import { resolveImageUrl } from "../utils/imageLoader";
 
 interface Props {
@@ -100,6 +101,7 @@ const NovelCard: Component<Props> = (props) => {
             <span>★ {props.novel.total_bookmarks}</span>
             {props.novel.page_count > 1 && <span>📄 {props.novel.page_count}页</span>}
           </div>
+          <IllustTags tags={props.novel.tags} size="small" />
           <div class="mt-auto flex items-center gap-2 text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase100)]">
             <span>📖 {props.novel.text_length.toLocaleString()}字</span>
             {props.novel.series?.title && (

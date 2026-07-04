@@ -1,66 +1,7 @@
 import type { MasonryItemLayout, MasonryLayout, ScrollWindow } from "./types";
 
-export interface TagHeightEstimateOptions {
-  /** Width of a single character in pixels for small tag text (fontSizeBase100 ~10px) */
-  charWidth: number;
-  /** Horizontal gap between tags in pixels */
-  tagGap: number;
-  /** Horizontal padding inside a tag pill in pixels */
-  tagPaddingX: number;
-  /** Line height of one tag row in pixels */
-  lineHeight: number;
-  /** Vertical gap between tag rows */
-  rowGap: number;
-}
-
-const defaultTagOptions: TagHeightEstimateOptions = {
-  charWidth: 6, // small font ~10px, conservative CJK width estimate
-  tagGap: 4, // matches spacingHorizontalXXS
-  tagPaddingX: 8, // matches spacingHorizontalXS * 2
-  lineHeight: 18, // lineHeightBase100 * 10px ≈ 14px + vertical padding
-  rowGap: 4, // matches spacingVerticalXXS
-};
-
-/**
- * Estimate the height of the tag area for a single card.
- * Tags are laid out as rounded pills that wrap within the card width.
- * The estimate is intentionally conservative to avoid underestimating height.
- */
-export function estimateTagAreaHeight(
-  tags: ReadonlyArray<{ name: string; translated_name?: string }> | undefined,
-  columnWidth: number,
-  options: Partial<TagHeightEstimateOptions> = {},
-): number {
-  if (!tags || tags.length === 0 || columnWidth <= 0) return 0;
-
-  const opts = { ...defaultTagOptions, ...options };
-  const availableWidth = Math.max(0, columnWidth - 16); // subtract card horizontal padding (UnoCSS p-2.5 = 0.625rem ≈ 10px each side, rounded to 16px total)
-
-  let currentRowWidth = 0;
-  let rows = 1;
-
-  for (const tag of tags) {
-    const text = tag.translated_name ?? tag.name;
-    const textWidth = text.length * opts.charWidth;
-    const tagWidth = textWidth + opts.tagPaddingX * 2;
-
-    if (currentRowWidth + tagWidth > availableWidth && currentRowWidth > 0) {
-      rows++;
-      currentRowWidth = tagWidth;
-    } else {
-      currentRowWidth += tagWidth + opts.tagGap;
-    }
-  }
-
-  return rows * opts.lineHeight + (rows - 1) * opts.rowGap;
-}
-
 export interface ComputeMasonryInput {
-  items: ReadonlyArray<{
-    width: number;
-    height: number;
-    tags?: { name: string; translated_name?: string }[];
-  }>;
+  items: ReadonlyArray<{ width: number; height: number }>;
   columnWidth: number;
   columnCount: number;
   gap: number; // vertical gap between items
@@ -91,8 +32,7 @@ export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout 
     }
 
     const aspectRatio = width > 0 && height > 0 ? width / height : 1;
-    const tagHeight = estimateTagAreaHeight(items[i].tags, columnWidth);
-    const cardHeight = columnWidth / aspectRatio + CARD_INFO_HEIGHT + tagHeight;
+    const cardHeight = columnWidth / aspectRatio + CARD_INFO_HEIGHT;
 
     result[i] = {
       index: i,
@@ -122,11 +62,7 @@ export function computeMasonryLayout(input: ComputeMasonryInput): MasonryLayout 
  */
 export function appendToLayout(
   existing: MasonryLayout,
-  newItems: ReadonlyArray<{
-    width: number;
-    height: number;
-    tags?: { name: string; translated_name?: string }[];
-  }>,
+  newItems: ReadonlyArray<{ width: number; height: number }>,
 ): MasonryLayout {
   if (existing.items.length === 0) {
     return computeMasonryLayout({
@@ -162,8 +98,7 @@ export function appendToLayout(
     }
 
     const aspectRatio = width > 0 && height > 0 ? width / height : 1;
-    const tagHeight = estimateTagAreaHeight(newItems[i].tags, existing.columnWidth);
-    const cardHeight = existing.columnWidth / aspectRatio + CARD_INFO_HEIGHT + tagHeight;
+    const cardHeight = existing.columnWidth / aspectRatio + CARD_INFO_HEIGHT;
     const idx = startIndex + i;
 
     appended.push({

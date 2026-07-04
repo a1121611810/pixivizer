@@ -90,7 +90,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
   }
 
   // 单列固定高度布局（不使用 computeMasonryLayout，因其总是对图片卡片加 CARD_INFO_HEIGHT）
-  const CARD_HEIGHT = 148; // p-2.5(10) + cover(128) + p-2.5(10)
+  const CARD_HEIGHT = 180;
   const layout = createMemo((): MasonryLayout => {
     const cw = containerWidth();
     if (cw <= 0) {

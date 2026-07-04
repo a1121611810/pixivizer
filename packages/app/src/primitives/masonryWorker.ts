@@ -9,11 +9,7 @@ const api = {
   },
   append(
     existing: MasonryLayout,
-    newItems: ReadonlyArray<{
-      width: number;
-      height: number;
-      tags?: { name: string; translated_name?: string }[];
-    }>,
+    newItems: ReadonlyArray<{ width: number; height: number }>,
   ): MasonryLayout {
     return appendToLayout(existing, newItems);
   },
