@@ -298,7 +298,10 @@ export const NovelCoverCard: Component<Props> = (props) => {
             }}
             aria-label={`查看系列: ${props.novel.series.title}`}
           >
-            <fluent-badge appearance="subtle" class="[font-size:var(--fontSizeBase100)]">
+            <fluent-badge
+              appearance="subtle"
+              class="[font-size:var(--fontSizeBase100)] max-w-[calc(100%-0.5rem)] truncate"
+            >
               📖 {props.novel.series.title}
             </fluent-badge>
           </button>

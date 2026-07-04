@@ -126,7 +126,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
       return { items: [], totalHeight: 0, columns: 1, columnWidth: 0, gap: GAP, columnGap: 0 };
     }
     const columnWidth = (cw - GAP) / 2;
-    const CARD_INFO_HEIGHT = 112; // 标题(40) + 元数据(24) + 作者(20) + tags(20) + padding(8)
+    const CARD_INFO_HEIGHT = 128; // 标题(40) + 元数据(24) + 作者(20) + tags(20) + 系列标签(16) + padding(8)
     const items = props.novels.map((_, i) => {
       const col = i % 2;
       const row = Math.floor(i / 2);
