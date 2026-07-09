@@ -177,6 +177,13 @@
   /* ── Image badge (card corner label) ── */
   --colorImageBadgeBackground: rgba(0, 0, 0, 0.5);
   --colorImageBadgeForeground: #ffffff;
+
+  /* ── Color theme swatches (always defined so the selector is visible in any theme) ── */
+  --theme-coast-swatch: #3a506b;
+  --theme-rose-swatch: #a77c74;
+  --theme-sage-swatch: #5f6b4f;
+  --theme-lavender-swatch: #5d546a;
+  --theme-caramel-swatch: #8a624a;
 }
 
 /* ── Dark theme ── */
