@@ -1,27 +1,17 @@
 import type { ColorThemeId } from "@/stores/themeStore";
+import { THEME_CLASS_NAMES } from "@/stores/themeStore";
 
-const THEME_CLASS_NAMES: Exclude<ColorThemeId, "fluent">[] = [
-  "rose",
-  "coast",
-  "sage",
-  "lavender",
-  "caramel",
-];
-
-export function applyColorThemeClass(id: ColorThemeId, isDark: boolean): void {
+/**
+ * 仅管理 <html> 上的 theme-* 类名。
+ * .dark 类由 uiStore 单独维护，此函数绝不触碰。
+ */
+export function applyColorThemeClass(id: ColorThemeId): void {
   if (typeof document === "undefined") return;
 
   const root = document.documentElement;
   root.classList.remove(...THEME_CLASS_NAMES.map((name) => `theme-${name}`));
 
-  if (id === "fluent") {
-    if (isDark) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  } else {
+  if (id !== "fluent") {
     root.classList.add(`theme-${id}`);
-    root.classList.remove("dark");
   }
 }
