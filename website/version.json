@@ -1,5 +1,5 @@
 {
-  "version": "3.2.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.2.0",
-  "changelog": "🐛 修复\n  fix(routes): 修复小说详情刷新后正文空白\n  fix(novel): 非系列小说隐藏详情页底部系列导航按钮\n  fix(novel): 系列列表项点击进入小说详情页\n✨ 新功能\n  feat(routes): 小说详情支持内嵌图片与混合块虚拟化渲染\n  feat(novel): 使用 Pretext 实现小说正文布局与虚拟化\n🧹 杂项\n  chore: 停止跟踪并删除"
+  "version": "3.3.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.3.0",
+  "changelog": "新增主题切换。。。。。。"
 }
