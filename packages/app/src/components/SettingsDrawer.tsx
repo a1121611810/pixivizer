@@ -66,6 +66,7 @@ import BlocklistSheet from "./BlocklistSheet";
 import { checkForUpdate } from "../services/updateService";
 import { imageHostState, setMasterEnabled, modeLabel } from "../stores/imageHostStore";
 import ThemeSelector from "./ThemeSelector";
+import { colorTheme } from "@/stores/themeStore";
 
 function handleThemeChange(newTheme: Theme) {
   setThemePersisted(newTheme);
@@ -423,58 +424,64 @@ const SettingsDrawer: Component = () => {
             显示与交互
           </p>
 
-          {/* Theme picker row */}
-          <div class="flex items-center justify-between py-3">
-            <div class="flex items-center gap-3">
-              <div class="relative w-6 h-6 flex-shrink-0">
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    opacity: resolvedTheme() === "dark" ? 0 : 1,
-                    transition: "opacity var(--durationFast) var(--curveEasyEase)",
-                  }}
-                >
-                  <FluentIcon name="weatherSunny" size={24} active />
+          {/* Theme picker row — 仅 Fluent 默认主题支持明暗切换 */}
+          <Show when={colorTheme() === "fluent"}>
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="relative w-6 h-6 flex-shrink-0">
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      opacity: resolvedTheme() === "dark" ? 0 : 1,
+                      transition: "opacity var(--durationFast) var(--curveEasyEase)",
+                    }}
+                  >
+                    <FluentIcon name="weatherSunny" size={24} active />
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      opacity: resolvedTheme() === "dark" ? 1 : 0,
+                      transition: "opacity var(--durationFast) var(--curveEasyEase)",
+                    }}
+                  >
+                    <FluentIcon name="weatherMoon" size={24} active />
+                  </div>
                 </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    opacity: resolvedTheme() === "dark" ? 1 : 0,
-                    transition: "opacity var(--durationFast) var(--curveEasyEase)",
-                  }}
-                >
-                  <FluentIcon name="weatherMoon" size={24} active />
+                <div>
+                  <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                    明暗主题
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+                    {theme() === "light"
+                      ? "始终浅色"
+                      : theme() === "dark"
+                        ? "始终深色"
+                        : "跟随系统"}
+                  </p>
                 </div>
               </div>
-              <div>
-                <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                  明暗主题
-                </p>
-                <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                  {theme() === "light" ? "始终浅色" : theme() === "dark" ? "始终深色" : "跟随系统"}
-                </p>
-              </div>
-            </div>
 
-            {/* Three-segment theme selector */}
-            <div class="flex rounded-[var(--borderRadiusCircular)] overflow-hidden border border-[var(--colorNeutralStroke2)]">
-              {(["light", "system", "dark"] as const).map((t) => (
-                <button
-                  onClick={() => handleThemeChange(t)}
-                  class={`px-3 py-1.5 text-xs font-medium transition-colors duration-[var(--durationNormal)] ${
-                    theme() === t
-                      ? "bg-[var(--colorCompoundBrandBackground)] text-white"
-                      : "bg-transparent text-[var(--colorNeutralForeground2)] hover:text-[var(--colorNeutralForeground1)]"
-                  }`}
-                  aria-label={t === "light" ? "浅色" : t === "dark" ? "深色" : "跟随系统"}
-                >
-                  {t === "light" ? "☀️ 浅色" : t === "dark" ? "🌙 深色" : "🔄 跟随"}
-                </button>
-              ))}
+              {/* Three-segment theme selector */}
+              <div class="flex rounded-[var(--borderRadiusCircular)] overflow-hidden border border-[var(--colorNeutralStroke2)]">
+                {(["light", "system", "dark"] as const).map((t) => (
+                  <button
+                    onClick={() => handleThemeChange(t)}
+                    class={`px-3 py-1.5 text-xs font-medium transition-colors duration-[var(--durationNormal)] ${
+                      theme() === t
+                        ? "bg-[var(--colorCompoundBrandBackground)] text-white"
+                        : "bg-transparent text-[var(--colorNeutralForeground2)] hover:text-[var(--colorNeutralForeground1)]"
+                    }`}
+                    aria-label={t === "light" ? "浅色" : t === "dark" ? "深色" : "跟随系统"}
+                  >
+                    {t === "light" ? "☀️ 浅色" : t === "dark" ? "🌙 深色" : "🔄 跟随"}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          </Show>
 
           {/* Color theme selector */}
           <div class="py-3">
