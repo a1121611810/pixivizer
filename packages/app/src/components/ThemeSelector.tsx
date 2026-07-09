@@ -1,4 +1,4 @@
-import { type Component, For } from "solid-js";
+import { type Component, For, Show } from "solid-js";
 import { colorTheme, setColorTheme, type ColorThemeId } from "@/stores/themeStore";
 
 interface ThemeOption {
@@ -39,11 +39,32 @@ const ThemeSelector: Component = () => {
                 "active:scale-[0.97]": true,
               }}
             >
+              <span class="relative">
+                <span
+                  class="w-8 h-8 rounded-[var(--borderRadiusCircular)] border border-[var(--colorNeutralStroke2)] block"
+                  style={{ "background-color": option.swatchVar }}
+                />
+                <Show when={selected()}>
+                  <span
+                    data-testid="selected-indicator"
+                    class="absolute -top-1 -right-1 w-4 h-4 rounded-[var(--borderRadiusCircular)] bg-[var(--colorCompoundBrandBackground)] text-[var(--colorNeutralForegroundOnBrand)] flex items-center justify-center"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M4.53 12.97a.75.75 0 0 0-1.06 1.06l5.5 5.5a.75.75 0 0 0 1.06 0l12-12a.75.75 0 0 0-1.06-1.06L9.5 18.44 4.53 12.97z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </span>
+                </Show>
+              </span>
               <span
-                class="w-8 h-8 rounded-[var(--borderRadiusCircular)] border border-[var(--colorNeutralStroke2)]"
-                style={{ "background-color": option.swatchVar }}
-              />
-              <span class="[font-size:var(--fontSizeBase200)] font-medium text-[var(--colorNeutralForeground1)]">
+                class="[font-size:var(--fontSizeBase200)] font-medium"
+                classList={{
+                  "text-[var(--colorCompoundBrandForeground1)]": selected(),
+                  "text-[var(--colorNeutralForeground1)]": !selected(),
+                }}
+              >
                 {option.label}
               </span>
             </button>
