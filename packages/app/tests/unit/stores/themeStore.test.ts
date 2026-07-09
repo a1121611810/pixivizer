@@ -6,7 +6,7 @@ import {
   setColorTheme,
   loadColorThemePreference,
   applyColorThemeClass,
-} from "../themeStore";
+} from "@/stores/themeStore";
 
 vi.mock("@capacitor/preferences", () => ({
   Preferences: { get: vi.fn(), set: vi.fn() },
@@ -87,6 +87,7 @@ describe("applyColorThemeClass", () => {
   it("removes all theme-* classes and dark when fluent + isDark=false", () => {
     document.documentElement.classList.add("theme-coast");
     document.documentElement.classList.add("dark");
+    document.documentElement.classList.add.mockClear();
     applyColorThemeClass("fluent", false);
     expect(document.documentElement.classList.remove).toHaveBeenCalledWith(
       "theme-rose",
