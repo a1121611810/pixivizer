@@ -8,7 +8,7 @@ import PullIndicator from "./PullIndicator";
 import type { PixivNovel } from "../api/types";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createVirtualScroll } from "../primitives/createVirtualScroll";
-import { createTextListLayout } from "../primitives/createTextListLayout";
+import { createComputedTextCard } from "../primitives/createComputedTextCard";
 import type { MasonryLayout } from "../primitives/types";
 import type { NovelLayoutMode } from "../stores/uiStore";
 
@@ -96,25 +96,45 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     ro.observe(el);
   }
 
-  // 单列固定高度布局（不使用 computeMasonryLayout，因其总是对图片卡片加 CARD_INFO_HEIGHT）
-  const CARD_HEIGHT = 180;
+  // 单列布局：封面固定 128px + padding 20px，信息区高度由 createComputedTextCard 动态计算
+  const COVER_HEIGHT = 128;
+  const listCardMetrics = createComputedTextCard({
+    novels: () => props.novels,
+    containerWidth,
+    titleFont: () => ({
+      fontSize: 12,
+      fontWeight: 600,
+      fontFamily: "system-ui",
+      lineHeight: 1.25,
+    }),
+    tagFont: () => ({
+      fontSize: 10,
+      fontWeight: 400,
+      fontFamily: "system-ui",
+      lineHeight: 1.4,
+    }),
+    maxTitleLines: 3,
+    maxTagLines: 3,
+    stylePreset: () => "list",
+  });
+
   const layout = createMemo((): MasonryLayout => {
     const cw = containerWidth();
     if (cw <= 0) {
       return { items: [], totalHeight: 0, columns: 1, columnWidth: 0, gap: GAP, columnGap: 0 };
     }
-    const items = props.novels.map((_, i) => ({
-      index: i,
-      x: 0,
-      y: i * (CARD_HEIGHT + GAP),
-      width: cw,
-      height: CARD_HEIGHT,
-      column: 0,
-    }));
-    const count = items.length;
+    let y = 0;
+    const items = props.novels.map((novel, i) => {
+      const infoHeight = listCardMetrics.getInfoHeight(novel.id);
+      const height = Math.max(COVER_HEIGHT, infoHeight) + 20;
+      const item = { index: i, x: 0, y, width: cw, height, column: 0 };
+      y += height + GAP;
+      return item;
+    });
+    const totalHeight = items.length > 0 ? y - GAP : 0;
     return {
       items,
-      totalHeight: count > 0 ? count * CARD_HEIGHT + (count - 1) * GAP : 0,
+      totalHeight,
       columns: 1,
       columnWidth: cw,
       gap: GAP,
@@ -122,48 +142,93 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     };
   });
 
-  // 封面墙布局：2列，高度自适应
+  // 文本列表布局：纯计算卡片信息区高度，无 ResizeObserver
+  const textListCardMetrics = createComputedTextCard({
+    novels: () => props.novels,
+    containerWidth,
+    titleFont: () => ({
+      fontSize: 16,
+      fontWeight: 600,
+      fontFamily: "system-ui",
+      lineHeight: 1.5,
+    }),
+    tagFont: () => ({
+      fontSize: 10,
+      fontWeight: 400,
+      fontFamily: "system-ui",
+      lineHeight: 1.4,
+    }),
+    maxTitleLines: 2,
+    maxTagLines: 2,
+  });
+
+  const textListLayout = createMemo((): MasonryLayout => {
+    const cw = containerWidth();
+    if (cw <= 0) {
+      return { items: [], totalHeight: 0, columns: 1, columnWidth: 0, gap: 20, columnGap: 0 };
+    }
+    const gap = 20;
+    let y = 0;
+    const items = props.novels.map((novel, index) => {
+      const height = textListCardMetrics.getInfoHeight(novel.id);
+      const item = { index, x: 0, y, width: cw, height, column: 0 };
+      y += height + gap;
+      return item;
+    });
+    const totalHeight = items.length > 0 ? y - gap : 0;
+    return { items, totalHeight, columns: 1, columnWidth: cw, gap, columnGap: 0 };
+  });
+
+  // 封面墙布局：2列瀑布流，信息区高度动态计算
+  const coverWallCardMetrics = createComputedTextCard({
+    novels: () => props.novels,
+    containerWidth: () => {
+      const cw = containerWidth();
+      return cw > 0 ? (cw - GAP) / 2 : 0;
+    },
+    titleFont: () => ({
+      fontSize: 14,
+      fontWeight: 600,
+      fontFamily: "system-ui",
+      lineHeight: 1.25,
+    }),
+    tagFont: () => ({
+      fontSize: 10,
+      fontWeight: 400,
+      fontFamily: "system-ui",
+      lineHeight: 1.2,
+    }),
+    maxTitleLines: 2,
+    maxTagLines: 2,
+    stylePreset: () => "coverWall",
+  });
+
   const coverWallLayout = createMemo((): MasonryLayout => {
     const cw = containerWidth();
     if (cw <= 0) {
-      return { items: [], totalHeight: 0, columns: 1, columnWidth: 0, gap: GAP, columnGap: 0 };
+      return { items: [], totalHeight: 0, columns: 2, columnWidth: 0, gap: GAP, columnGap: GAP };
     }
     const columnWidth = (cw - GAP) / 2;
-    const CARD_INFO_HEIGHT = 128; // 标题(40) + 元数据(24) + 作者(20) + tags(20) + 系列标签(16) + padding(8)
-    const items = props.novels.map((_, i) => {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
-      const cardHeight = columnWidth + CARD_INFO_HEIGHT;
+    const nextY = [0, 0];
+    const items = props.novels.map((novel, i) => {
+      const col = nextY[0] <= nextY[1] ? 0 : 1;
+      const y = nextY[col];
+      const infoHeight = coverWallCardMetrics.getInfoHeight(novel.id);
+      const cardHeight = columnWidth + infoHeight;
+      nextY[col] = y + cardHeight + GAP;
       return {
         index: i,
         x: col * (columnWidth + GAP),
-        y: row * (cardHeight + GAP),
+        y,
         width: columnWidth,
         height: cardHeight,
         column: col,
       };
     });
 
-    const rows = Math.ceil(props.novels.length / 2);
-    const rowHeight = columnWidth + CARD_INFO_HEIGHT;
-    const totalHeight = rows > 0 ? rows * rowHeight + (rows - 1) * GAP : 0;
-
-    return {
-      items,
-      totalHeight,
-      columns: 2,
-      columnWidth,
-      gap: GAP,
-      columnGap: GAP,
-    };
+    const totalHeight = items.length > 0 ? Math.max(...nextY) - GAP : 0;
+    return { items, totalHeight, columns: 2, columnWidth, gap: GAP, columnGap: GAP };
   });
-
-  // 文本列表布局：由卡片自身 ResizeObserver 报告真实高度
-  const { layout: textListLayout, measureItem } = createTextListLayout(
-    () => props.novels,
-    containerWidth,
-    { gap: 20 },
-  );
 
   const activeLayout = createMemo(() => {
     const m = mode();
@@ -248,7 +313,6 @@ const NovelVirtualFeed: Component<Props> = (props) => {
                     onClick={props.onNovelClick}
                     onAuthorClick={props.onAuthorClick}
                     onSeriesClick={props.onSeriesClick}
-                    onMeasure={(height) => measureItem(novel.id, height)}
                   />
                 ) : mode() === "coverWall" ? (
                   <NovelCoverCard

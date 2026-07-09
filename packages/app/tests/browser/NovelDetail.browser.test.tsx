@@ -1,7 +1,7 @@
 // @vitest-environment browser
 // 验证 NovelDetail 组件在浏览器中正确渲染 scroll-header 结构。
 // IntersectionObserver 的滚动行为已在 playwright-cli 端到端验证。
-import { render, screen, fireEvent } from "@solidjs/testing-library";
+import { render, screen, fireEvent, waitFor } from "@solidjs/testing-library";
 import { describe, it, expect, vi } from "vitest";
 
 const mockNavigate = vi.fn();
@@ -112,5 +112,17 @@ describe("NovelDetail scroll-header", () => {
     // Verify content area has bottom padding for the fixed bar
     const contentArea = container.querySelector('[class*="max-w-2xl"]');
     expect(contentArea?.classList.contains("pb-[64px]")).toBe(true);
+  });
+
+  it("renders virtualized novel text content", async () => {
+    const { container } = render(() => <NovelDetail />);
+    await screen.findAllByText("Scroll Header 测试标题");
+
+    const textContainer = container.querySelector(".novel-text");
+    expect(textContainer).not.toBeNull();
+    await waitFor(() => {
+      expect(textContainer!.textContent).toContain("正文内容");
+    });
+    expect(textContainer!.textContent).toContain("第二段");
   });
 });

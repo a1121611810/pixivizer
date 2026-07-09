@@ -111,4 +111,11 @@ describe("NovelTextListCard", () => {
       expect(deleteBookmark).toHaveBeenCalledWith(1);
     });
   });
+
+  it("does not mount ResizeObserver", () => {
+    const observeSpy = vi.spyOn(ResizeObserver.prototype, "observe");
+    render(() => <NovelTextListCard novel={makeNovel()} onClick={() => {}} />);
+    expect(observeSpy).not.toHaveBeenCalled();
+    observeSpy.mockRestore();
+  });
 });

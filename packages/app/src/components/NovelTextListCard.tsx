@@ -1,4 +1,4 @@
-import { type Component, createSignal, For, onMount, onCleanup } from "solid-js";
+import { type Component, createSignal, For } from "solid-js";
 import type { PixivNovel } from "../api/types";
 import { addBookmark, deleteBookmark } from "../api/novel";
 import HeartBurstEffect from "./HeartBurstEffect";
@@ -8,38 +8,11 @@ interface Props {
   onClick: (id: number) => void;
   onAuthorClick?: (userId: number) => void;
   onSeriesClick?: (seriesId: number) => void;
-  onMeasure?: (height: number) => void;
 }
 
 const NovelTextListCard: Component<Props> = (props) => {
   const [bookmarked, setBookmarked] = createSignal(props.novel.is_bookmarked);
   const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
-
-  let rootRef: HTMLDivElement | null = null;
-
-  onMount(() => {
-    if (!rootRef || !props.onMeasure) return;
-
-    const report = () => {
-      const rect = rootRef.getBoundingClientRect();
-      if (rect.height > 0) props.onMeasure?.(rect.height);
-    };
-
-    report();
-
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const h =
-          entry.borderBoxSize?.[0]?.blockSize ?? entry.target.getBoundingClientRect().height;
-        if (h > 0) props.onMeasure?.(h);
-      }
-    });
-    ro.observe(rootRef);
-
-    onCleanup(() => {
-      ro.disconnect();
-    });
-  });
 
   const toggleBookmark = async (e: MouseEvent) => {
     e.stopPropagation();
@@ -71,7 +44,7 @@ const NovelTextListCard: Component<Props> = (props) => {
 
   return (
     <div
-      ref={(el) => (rootRef = el)}
+      data-testid="novel-text-list-card"
       class="relative w-full px-4 py-3 rounded-[var(--borderRadiusLarge)] bg-[var(--colorNeutralBackground1)] shadow-[var(--elevation2)] cursor-pointer active:bg-[var(--colorNeutralBackground1Pressed)] transition-colors duration-[var(--durationFast)] ease-[var(--curveEasyEase)]"
       onClick={() => props.onClick(props.novel.id)}
     >
@@ -86,23 +59,23 @@ const NovelTextListCard: Component<Props> = (props) => {
 
           <div
             data-testid="novel-meta"
-            class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground2)]"
+            class="mt-1 flex items-center gap-x-2 gap-y-1 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground2)] overflow-hidden"
           >
             <button
               data-testid="novel-author"
-              class="inline-block text-[var(--colorBrandForeground1)] hover:underline focus:outline-hidden focus-visible:underline"
+              class="inline-block text-[var(--colorBrandForeground1)] hover:underline focus:outline-hidden focus-visible:underline truncate max-w-[50%]"
               onClick={handleAuthorClick}
               aria-label={`作者: ${props.novel.user.name}`}
             >
               @{props.novel.user.name}
             </button>
-            <span>·</span>
-            <span>{props.novel.text_length.toLocaleString()}字</span>
-            <span>·</span>
-            <span>⭐ {props.novel.total_bookmarks.toLocaleString()}</span>
+            <span class="flex-shrink-0">·</span>
+            <span class="flex-shrink-0">{props.novel.text_length.toLocaleString()}字</span>
+            <span class="flex-shrink-0">·</span>
+            <span class="flex-shrink-0">⭐ {props.novel.total_bookmarks.toLocaleString()}</span>
           </div>
 
-          <div class="mt-1.5 flex flex-wrap items-center gap-2">
+          <div class="mt-1.5 flex items-center gap-2 overflow-hidden">
             {props.novel.x_restrict > 0 && (
               <fluent-badge
                 data-testid="novel-r18-badge"
@@ -141,7 +114,7 @@ const NovelTextListCard: Component<Props> = (props) => {
 
           <div
             data-testid="novel-tags"
-            class="mt-2 flex flex-wrap gap-[var(--spacingHorizontalXXS)]"
+            class="mt-2 flex flex-wrap gap-[var(--spacingHorizontalXXS)] overflow-hidden max-h-[36px]"
           >
             <For each={props.novel.tags}>
               {(tag) => (

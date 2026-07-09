@@ -1,4 +1,14 @@
-import { type Component, createSignal, createEffect, Show, onCleanup, onMount } from "solid-js";
+import {
+  type Component,
+  type JSX,
+  createSignal,
+  createEffect,
+  createMemo,
+  Show,
+  For,
+  onCleanup,
+  onMount,
+} from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
 import { loadDetail, fetchNovelData } from "../api/novel";
 import type { PixivNovel, SeriesNavigation } from "../api/types";
@@ -8,7 +18,14 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import FluentIcon from "../components/ui/FluentIcon";
 import NovelSearchBar from "../components/NovelSearchBar";
 import { createNovelSearch } from "../primitives/createNovelSearch";
-import { readerStyle } from "../stores/readerSettingsStore";
+import { createNovelVirtualLayout } from "../primitives/createNovelVirtualLayout";
+import {
+  readerStyle,
+  fontSize,
+  fontWeight,
+  fontFamily,
+  lineHeight,
+} from "../stores/readerSettingsStore";
 import { novelCacheEnabled } from "../stores/uiStore";
 import { getDetail, setDetail, getText, setText, getNav, setNav } from "../stores/novelCache";
 import ReaderSettingsSheet from "../components/ReaderSettingsSheet";
@@ -19,6 +36,34 @@ import { getRouteStackDepth } from "../services/predictiveBack";
 // ── Scroll-driven hide/show constants ──
 const HIDE_THRESHOLD = 30;
 const BOTTOM_THRESHOLD = 80;
+
+interface NovelProgress {
+  paragraphIndex: number;
+  charIndex: number;
+  progress: number;
+}
+
+function parseProgress(raw: string | null): NovelProgress | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      "paragraphIndex" in parsed &&
+      "charIndex" in parsed &&
+      Number.isInteger(parsed.paragraphIndex) &&
+      Number.isInteger(parsed.charIndex) &&
+      parsed.paragraphIndex >= 0 &&
+      parsed.charIndex >= 0
+    ) {
+      return parsed as NovelProgress;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
 
 const NovelDetail: Component = () => {
   const params = useParams<{ id: string }>();
@@ -108,11 +153,148 @@ const NovelDetail: Component = () => {
     abortController?.abort();
   });
 
+  // 小说正文加载完成后恢复阅读进度
+  createEffect(() => {
+    const html = novelHtml();
+    if (html && html.length > 0) {
+      requestAnimationFrame(() => restoreProgress());
+    }
+  });
+
   const [settingsOpen, setSettingsOpen] = createSignal(false);
   const [seriesOpen, setSeriesOpen] = createSignal(false);
   const [searchOpen, setSearchOpen] = createSignal(false);
-  const [textContainerEl, setTextContainerEl] = createSignal<HTMLElement | undefined>();
-  const search = createNovelSearch(novelHtml, textContainerEl, { debounceMs: 150 });
+  const [textContainerWidth, setTextContainerWidth] = createSignal(0);
+
+  const paragraphs = createMemo(
+    () =>
+      novelHtml()
+        ?.split(/\n+/)
+        .filter((p) => p.length > 0) ?? [],
+  );
+
+  const virtualLayout = createNovelVirtualLayout({
+    text: novelHtml,
+    containerWidth: textContainerWidth,
+    settings: () => ({
+      fontSize: fontSize(),
+      fontWeight: fontWeight(),
+      fontFamily: fontFamily(),
+      fontColor: "",
+      lineHeight: lineHeight(),
+      bgColor: "",
+    }),
+    containerRef: () => {},
+    novelId,
+    useWindowScroll: true,
+  });
+
+  const search = createNovelSearch(novelHtml, { debounceMs: 150 });
+
+  function renderParagraphWithHighlights(paragraphIndex: number): JSX.Element {
+    const text = paragraphs()[paragraphIndex] ?? "";
+    const matches = search.getMatchesForParagraph(paragraphIndex);
+    const activeIndex = search.activeIndex();
+    const allMatches = search.matches();
+    const activeMatch =
+      activeIndex >= 0 && activeIndex < allMatches.length ? allMatches[activeIndex] : null;
+
+    if (matches.length === 0) {
+      return <>{text}</>;
+    }
+
+    const nodes: JSX.Element[] = [];
+    let lastEnd = 0;
+
+    for (const match of matches) {
+      if (match.start > lastEnd) {
+        nodes.push(text.slice(lastEnd, match.start));
+      }
+      const isActive =
+        activeMatch != null &&
+        match.paragraphIndex === activeMatch.paragraphIndex &&
+        match.start === activeMatch.start &&
+        match.end === activeMatch.end;
+      nodes.push(
+        <mark class="novel-search-match" classList={{ "novel-search-match-active": isActive }}>
+          {text.slice(match.start, match.end)}
+        </mark>,
+      );
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < text.length) {
+      nodes.push(text.slice(lastEnd));
+    }
+
+    return <>{nodes}</>;
+  }
+
+  // ── 阅读进度持久化 ──
+  let progressSaveTimer: ReturnType<typeof setTimeout> | undefined;
+  function saveProgress() {
+    if (progressSaveTimer) clearTimeout(progressSaveTimer);
+    progressSaveTimer = setTimeout(() => {
+      const current = virtualLayout.currentCharIndex();
+      const layout = virtualLayout.layoutResult();
+      const layoutParagraphs = layout.paragraphs;
+      const totalChars = layoutParagraphs.reduce(
+        (sum, p) =>
+          sum + p.lineRanges.reduce((lineSum, line) => lineSum + (line.end - line.start), 0),
+        0,
+      );
+      const currentOffset =
+        layoutParagraphs
+          .slice(0, current.paragraphIndex)
+          .reduce(
+            (sum, p) =>
+              sum + p.lineRanges.reduce((lineSum, line) => lineSum + (line.end - line.start), 0),
+            0,
+          ) + current.charIndex;
+      const progress = totalChars > 0 ? currentOffset / totalChars : 0;
+      localStorage.setItem(
+        `novel_progress_${novelId()}`,
+        JSON.stringify({
+          paragraphIndex: current.paragraphIndex,
+          charIndex: current.charIndex,
+          progress,
+        }),
+      );
+    }, 500);
+  }
+
+  function restoreProgress() {
+    const saved = parseProgress(localStorage.getItem(`novel_progress_${novelId()}`));
+    if (!saved) return;
+    const layout = virtualLayout.layoutResult();
+    const layoutParagraphs = layout.paragraphs;
+    if (saved.paragraphIndex >= layoutParagraphs.length) return;
+    const paragraph = layoutParagraphs[saved.paragraphIndex];
+    if (!paragraph) return;
+    const maxCharIndex =
+      paragraph.lineRanges[paragraph.lineRanges.length - 1]?.end ?? paragraph.height;
+    if (saved.charIndex > maxCharIndex) return;
+    virtualLayout.scrollToCharIndex(saved.paragraphIndex, saved.charIndex);
+  }
+
+  // 滚动停止 500ms 后保存阅读进度
+  createEffect(() => {
+    virtualLayout.currentCharIndex();
+    saveProgress();
+  });
+
+  function onTextContainerRef(el: HTMLElement) {
+    if (!el) return;
+    setTextContainerWidth(el.clientWidth);
+    virtualLayout.containerRef(el);
+
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) setTextContainerWidth(entry.contentRect.width);
+    });
+    ro.observe(el);
+
+    onCleanup(() => ro.disconnect());
+  }
 
   // 同步 sheet 状态到全局返回手势标志，使系统侧滑优先关闭 sheet
   createEffect(() => {
@@ -355,19 +537,28 @@ const NovelDetail: Component = () => {
               {/* ── Text content ── */}
               <div class="px-4 py-6 max-w-2xl mx-auto pb-[64px]">
                 <Show when={novelHtml()}>
-                  {(content) => (
-                    <div
-                      class="novel-text"
-                      ref={setTextContainerEl}
-                      style={readerStyle() as Record<string, string>}
-                    >
-                      {content()
-                        .split("\n\n")
-                        .map((p) => (
-                          <p class="mb-4 indent-2">{p}</p>
-                        ))}
-                    </div>
-                  )}
+                  <div
+                    class="novel-text relative"
+                    ref={onTextContainerRef}
+                    style={{
+                      ...readerStyle(),
+                      height: `${virtualLayout.totalHeight()}px`,
+                    }}
+                  >
+                    <For each={virtualLayout.visibleParagraphs()}>
+                      {(paragraphIndex) => (
+                        <p
+                          class="novel-text-paragraph absolute"
+                          style={{
+                            ...virtualLayout.getParagraphStyle(paragraphIndex),
+                            textIndent: `${fontSize() * 2}px`,
+                          }}
+                        >
+                          {renderParagraphWithHighlights(paragraphIndex)}
+                        </p>
+                      )}
+                    </For>
+                  </div>
                 </Show>
                 <Show when={detailLoading() && !novelHtml()}>
                   <div class="space-y-3 animate-pulse">

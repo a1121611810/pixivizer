@@ -1,11 +1,21 @@
 // @vitest-environment happy-dom
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { createRoot, createSignal } from "solid-js";
 import {
   findMatches,
   clearHighlights,
   applyHighlights,
+  createNovelSearch,
   type NovelSearchMatch,
 } from "@/primitives/createNovelSearch";
+
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("findMatches", () => {
   it("returns empty array for empty query", () => {
@@ -72,7 +82,6 @@ describe("findMatches", () => {
   });
 
   it("does not find overlapping matches", () => {
-    // "aaa" with query "aa" should produce one match starting at 0.
     expect(findMatches(["aaa"], "aa", false)).toEqual([{ paragraphIndex: 0, start: 0, end: 2 }]);
   });
 });
@@ -142,4 +151,77 @@ describe("applyHighlights", () => {
     expect(marks).toHaveLength(1);
     expect(marks[0].textContent).toBe("new");
   });
+});
+
+describe("createNovelSearch", () => {
+  it("returns empty matches for empty query", () =>
+    createRoot((dispose) => {
+      const [text] = createSignal<string | null>("hello world\n\nfoo bar");
+      const search = createNovelSearch(text);
+      expect(search.matches()).toEqual([]);
+      expect(search.activeIndex()).toBe(-1);
+      dispose();
+    }));
+
+  it("finds matches after setting query", () =>
+    createRoot((dispose) => {
+      const [text] = createSignal<string | null>("hello world\n\nfoo bar");
+      const search = createNovelSearch(text, { debounceMs: 100 });
+      search.setQuery("world");
+      vi.advanceTimersByTime(100);
+      expect(search.matches()).toEqual([{ paragraphIndex: 0, start: 6, end: 11 }]);
+      expect(search.activeIndex()).toBe(0);
+      dispose();
+    }));
+
+  it("provides getMatchesForParagraph filtered by paragraph", () =>
+    createRoot((dispose) => {
+      const search = createNovelSearch(() => "hello world\n\nfoo bar", {
+        debounceMs: 100,
+      });
+      search.setQuery("o");
+      vi.advanceTimersByTime(100);
+
+      const paragraph0Matches = search.getMatchesForParagraph(0);
+      const paragraph1Matches = search.getMatchesForParagraph(1);
+      expect(paragraph0Matches.length).toBe(2);
+      expect(paragraph1Matches.length).toBe(2);
+      expect(paragraph0Matches[0]).toEqual({
+        paragraphIndex: 0,
+        start: 4,
+        end: 5,
+      });
+      dispose();
+    }));
+
+  it("navigates matches with nextMatch and prevMatch", () =>
+    createRoot((dispose) => {
+      const search = createNovelSearch(() => "a b a", { debounceMs: 100 });
+      search.setQuery("a");
+      vi.advanceTimersByTime(100);
+
+      expect(search.matches()).toHaveLength(2);
+      expect(search.activeIndex()).toBe(0);
+      search.nextMatch();
+      expect(search.activeIndex()).toBe(1);
+      search.nextMatch();
+      expect(search.activeIndex()).toBe(0);
+      search.prevMatch();
+      expect(search.activeIndex()).toBe(1);
+      dispose();
+    }));
+
+  it("clears search state", () =>
+    createRoot((dispose) => {
+      const search = createNovelSearch(() => "hello world", { debounceMs: 100 });
+      search.setQuery("world");
+      vi.advanceTimersByTime(100);
+      expect(search.matches()).toHaveLength(1);
+
+      search.clearSearch();
+      expect(search.query()).toBe("");
+      expect(search.matches()).toEqual([]);
+      expect(search.activeIndex()).toBe(-1);
+      dispose();
+    }));
 });

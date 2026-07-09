@@ -24,6 +24,8 @@ const DEFAULTS: ReaderSettings = {
   bgColor: "",
 };
 
+export const ALLOWED_FONT_FAMILIES = ["sans-serif", "serif", "system-ui", "monospace"] as const;
+
 const FONT_FAMILIES = [
   { value: "sans-serif", label: "无衬线" },
   { value: "serif", label: "衬线" },

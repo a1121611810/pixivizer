@@ -4,10 +4,10 @@
 
 ## 项目概览
 
-- **技术栈**: SolidJS 1.9 + TypeScript 6.0 (strict) + Vite 8.0 + UnoCSS 66.7 + Capacitor 8.4
+- **技术栈**: SolidJS 1.9 + TypeScript 6.0 (strict) + Vite 8.0 + UnoCSS 66.7 + Capacitor 8.4；小说正文布局使用 `@chenglou/pretext`
 - **Monorepo**: pnpm workspace，含两个子包：`pictelio-app`（SPA 主体）和 `pictelio-website`（VitePress 落地页）
 - **入口**: `packages/app/src/main.tsx` → `packages/app/src/App.tsx`（Solid Router）
-- **路由**: `/recommended` `/following` `/illust/:id` `/bookmarks` `/me` `/user/:id` `/user/:id/illusts` `/login` `/age-confirmation` `/about` `/debug`
+- **路由**: `/recommended` `/following` `/illust/:id` `/novel/:id` `/novel/bookmarks` `/bookmarks` `/me` `/user/:id` `/user/:id/illusts` `/login` `/age-confirmation` `/about` `/debug`
 - **设计系统**: **强制** Microsoft Fluent Design System 2 — 所有视觉和交互决策基于 Fluent 令牌和规范（详见「Fluent Design 规范」章节）
 - **Pixiv API**: 自建 HTTP 客户端 (`src/api/client.ts`)，双模式（Web: fetch + Vite 代理 / Native: CapacitorHttp 直连），iOS OAuth 凭证策略（Android 已弃用），401 自动刷新 + 防死循环
 - **CSS 架构**: 分层加载 `reset.css` → `tokens.css` → `base.css` → `virtual:uno.css`；PostCSS `postcss-pxtorem` 自动转换字号为 rem；Fluent Web Components 主题同步
@@ -133,6 +133,7 @@ packages/app/src/
 │   ├── userIllustsStore.ts # 用户作品列表状态
 │   ├── reportStore.ts  # 已举报作品 ID 持久化
 │   ├── blockStore.ts   # 已屏蔽用户 ID 持久化
+│   ├── readerSettingsStore.ts # 小说阅读设置（字号、字重、字体、行高、颜色）
 │   └── __tests__/      # Store 单元测试（uiStore、feedStore、reportStore、blockStore）
 ├── routes/             # 页面组件（lazy loaded）
 │   ├── Login.tsx              # 登录页（refresh_token / 用户名密码）
@@ -140,6 +141,9 @@ packages/app/src/
 │   ├── TabFeedPage.tsx        # Tab 容器（recommended / follow），委托 Feed 渲染
 │   ├── Feed.tsx               # 瀑布流内容（虚拟滚动、下拉刷新、无限加载、哨兵分页）
 │   ├── IllustDetail.tsx       # 作品详情（大图查看、多页、动图播放、楼梯式浏览）
+│   ├── NovelDetail.tsx        # 小说详情（正文虚拟化、搜索高亮、阅读进度）
+│   ├── NovelFeedPage.tsx      # 小说 Feed 页
+│   ├── NovelBookmarks.tsx     # 小说收藏页
 │   ├── Bookmarks.tsx          # 收藏页
 │   ├── PersonalCenter.tsx     # 个人中心 / 用户主页（根据路由参数区分）
 │   ├── UserIllusts.tsx        # 用户作品列表页
@@ -167,12 +171,23 @@ packages/app/src/
 │   ├── PageTransition.tsx       # 页面过渡动画
 │   ├── HeartBurstEffect.tsx     # 收藏爱心爆发效果
 │   ├── UserAvatar.tsx           # 用户头像组件
+│   ├── NovelVirtualFeed.tsx     # 小说虚拟滚动 Feed（textList / coverWall）
+│   ├── NovelTextListCard.tsx    # 小说文本列表卡片（纯渲染，无测量）
+│   ├── NovelCard.tsx            # 小说卡片
+│   ├── NovelSearchBar.tsx       # 小说搜索栏
+│   ├── ReaderSettingsSheet.tsx  # 阅读设置面板
 │   └── ui/FluentIcon.tsx        # Fluent 图标封装
 ├── primitives/         # 底层抽象（无 UI 的逻辑单元）
 │   ├── createVirtualScroll.ts   # 虚拟滚动核心（基于 MasonryLayout 计算可见窗口）
 │   ├── createSentinelPaginator.ts # 哨兵元素无限加载分页器
 │   ├── computeMasonryLayout.ts  # 瀑布流布局计算
 │   ├── masonryWorker.ts         # Web Worker 布局计算（通过 Comlink 通信）
+│   ├── createNovelTextLayout.ts # 小说正文纯文本布局（pretext）
+│   ├── createNovelVirtualLayout.ts # 小说正文虚拟化窗口管理
+│   ├── createComputedTextCard.ts # textList / coverWall 卡片信息区高度纯计算
+│   ├── novelTextLayoutCache.ts  # 小说布局结果 LRU 缓存
+│   ├── createNovelSearch.ts     # 小说正文搜索匹配（字符索引）
+│   ├── isPretextSupported.ts    # pretext 运行环境检测
 │   ├── useContainerWidth.ts     # 容器宽度响应式 Hook
 │   ├── useViewportLazy.ts       # 视口可见性 Hook
 │   └── types.ts                 # 布局类型定义

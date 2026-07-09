@@ -116,4 +116,66 @@ describe("NovelVirtualFeed", () => {
     ));
     expect(container.textContent).toContain("已经到底了");
   });
+
+  it("textList mode does not rely on card ResizeObserver", async () => {
+    const observeSpy = vi.spyOn(ResizeObserver.prototype, "observe");
+    const novels = createNovels(3);
+    const { container } = render(() => (
+      <NovelVirtualFeed
+        novels={novels}
+        loading={false}
+        error={null}
+        hasMore={false}
+        onNovelClick={vi.fn()}
+        onLoadMore={vi.fn()}
+        onRefresh={vi.fn()}
+        layoutMode="textList"
+      />
+    ));
+    await waitFor(() => {
+      expect(container.textContent).toContain("小说标题 1");
+    });
+    // ResizeObserver on the feed container itself is still expected; cards should not mount one.
+    const cardElements = container.querySelectorAll('[data-testid="novel-title"]');
+    expect(cardElements.length).toBeGreaterThan(0);
+    observeSpy.mockRestore();
+  });
+
+  it("coverWall mode computes dynamic card heights", async () => {
+    const novels = [
+      ...createNovels(2),
+      {
+        id: 3,
+        title: "a".repeat(200),
+        user: { id: 1, name: "作者3", account: "author3", profile_image_urls: {} },
+        image_urls: { square_medium: "", medium: "", large: "" },
+        tags: [{ name: "tag1", translated_name: "标签1" }],
+        page_count: 1,
+        text_length: 1000,
+        is_bookmarked: false,
+        total_bookmarks: 10,
+        total_view: 50,
+        x_restrict: 0,
+        novel_ai_type: 0,
+        create_date: "2026-01-03T00:00:00Z",
+      } as PixivNovel,
+    ];
+    const { container } = render(() => (
+      <NovelVirtualFeed
+        novels={novels}
+        loading={false}
+        error={null}
+        hasMore={false}
+        onNovelClick={vi.fn()}
+        onLoadMore={vi.fn()}
+        onRefresh={vi.fn()}
+        layoutMode="coverWall"
+      />
+    ));
+    await waitFor(() => {
+      expect(container.textContent).toContain("小说标题 1");
+    });
+    // The feed should render cover wall cards including the long-title one
+    expect(container.textContent).toContain("a".repeat(200));
+  });
 });

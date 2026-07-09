@@ -1,10 +1,11 @@
 import { defineConfig } from "vitest/config";
 import solid from "vite-plugin-solid";
+import UnoCSS from "unocss/vite";
 import { playwright } from "@vitest/browser-playwright";
 import { resolve } from "node:path";
 
 export default defineConfig({
-  plugins: [solid()],
+  plugins: [solid(), UnoCSS()],
   optimizeDeps: {
     include: [
       "@fluentui/web-components/web-components.js",

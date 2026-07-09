@@ -122,85 +122,62 @@ export function applyHighlights(
   }
 }
 
-function scrollToActive(container: HTMLElement, activeIndex: number): void {
-  if (activeIndex < 0) return;
-  const activeMark = container.querySelector<HTMLElement>(
-    `mark.novel-search-match[data-match-index="${activeIndex}"]`,
-  );
-  if (activeMark) {
-    activeMark.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-}
-
 /**
  * 小说正文搜索 primitive。
- * 提供查询、匹配列表、当前匹配、导航等状态，并负责在 DOM 上安全高亮。
+ * 提供查询、匹配列表、当前匹配、导航等纯状态接口，不再操作 DOM。
  */
-export function createNovelSearch(
-  text: Accessor<string | null>,
-  container: Accessor<HTMLElement | undefined>,
-  options: NovelSearchOptions = {},
-) {
+export function createNovelSearch(text: Accessor<string | null>, options: NovelSearchOptions = {}) {
   const {
     caseSensitive = false,
     maxMatches = DEFAULT_MAX_MATCHES,
     debounceMs = DEFAULT_DEBOUNCE_MS,
   } = options;
 
-  const [query, setQuery] = createSignal("");
+  const [query, setQuerySignal] = createSignal("");
   const [searchTerm, setSearchTerm] = createSignal("");
   const [matches, setMatches] = createSignal<NovelSearchMatch[]>([]);
   const [activeIndex, setActiveIndex] = createSignal(-1);
 
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-  let suppressDebounce = false;
 
-  createEffect(() => {
-    const value = query();
-    if (debounceTimer) clearTimeout(debounceTimer);
-
-    if (suppressDebounce) {
-      suppressDebounce = false;
-      return;
-    }
-
-    debounceTimer = setTimeout(() => setSearchTerm(value), debounceMs);
-
-    onCleanup(() => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-    });
-  });
-
-  createEffect(() => {
+  function recomputeMatches() {
     const term = searchTerm();
     const currentText = text();
     const paragraphs = currentText ? currentText.split("\n\n") : [];
     const newMatches = findMatches(paragraphs, term, caseSensitive, maxMatches);
     setMatches(newMatches);
     setActiveIndex(newMatches.length > 0 ? 0 : -1);
-  });
-
-  let rafId: ReturnType<typeof requestAnimationFrame> | undefined;
+  }
 
   createEffect(() => {
-    const currentMatches = matches();
-    const currentActive = activeIndex();
-    const currentContainer = container();
-    const currentText = text();
-    const paragraphs = currentText ? currentText.split("\n\n") : [];
+    // 跟踪 text 与 searchTerm 变化，自动重新计算匹配
+    text();
+    searchTerm();
+    recomputeMatches();
+  });
 
-    if (rafId) cancelAnimationFrame(rafId);
-    if (!currentContainer) return;
+  function setQuery(value: string) {
+    setQuerySignal(value);
+    if (debounceTimer) clearTimeout(debounceTimer);
 
-    rafId = requestAnimationFrame(() => {
-      applyHighlights(currentContainer, paragraphs, currentMatches, currentActive);
-      scrollToActive(currentContainer, currentActive);
-    });
+    if (debounceMs === 0) {
+      setSearchTerm(value);
+      recomputeMatches();
+    } else {
+      debounceTimer = setTimeout(() => {
+        setSearchTerm(value);
+        recomputeMatches();
+      }, debounceMs);
+    }
 
     onCleanup(() => {
-      if (rafId) cancelAnimationFrame(rafId);
+      if (debounceTimer) clearTimeout(debounceTimer);
     });
-  });
+  }
+
+  function getMatchesForParagraph(paragraphIndex: number): NovelSearchMatch[] {
+    return matches().filter((match) => match.paragraphIndex === paragraphIndex);
+  }
 
   function nextMatch() {
     const count = matches().length;
@@ -216,8 +193,7 @@ export function createNovelSearch(
 
   function clearSearch() {
     if (debounceTimer) clearTimeout(debounceTimer);
-    suppressDebounce = true;
-    setQuery("");
+    setQuerySignal("");
     setSearchTerm("");
     setMatches([]);
     setActiveIndex(-1);
@@ -231,6 +207,7 @@ export function createNovelSearch(
     matchCount: () => matches().length,
     activeIndex,
     setActiveIndex,
+    getMatchesForParagraph,
     nextMatch,
     prevMatch,
     clearSearch,
