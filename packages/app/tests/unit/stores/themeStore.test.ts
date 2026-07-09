@@ -6,11 +6,11 @@ import {
   colorTheme,
   setColorTheme,
   loadColorThemePreference,
-  applyColorThemeClass,
 } from "@/stores/themeStore";
+import { applyColorThemeClass } from "@/utils/themeApplier";
 
 vi.mock("@capacitor/preferences", () => ({
-  Preferences: { get: vi.fn(), set: vi.fn() },
+  Preferences: { get: vi.fn(), set: vi.fn(() => Promise.resolve()) },
 }));
 
 vi.mock("@/stores/uiStore", () => ({
@@ -26,8 +26,8 @@ function createMockClassList() {
     add: vi.fn((token: string) => {
       if (!classes.includes(token)) classes.push(token);
     }),
-    remove: vi.fn((token: string) => {
-      classes = classes.filter((c) => c !== token);
+    remove: vi.fn((...tokens: string[]) => {
+      classes = classes.filter((c) => !tokens.includes(c));
     }),
     contains: vi.fn((token: string) => classes.includes(token)),
     toggle: vi.fn((token: string, force?: boolean) => {
@@ -64,22 +64,22 @@ afterAll(() => {
 });
 
 beforeEach(() => {
-  classes = [];
+  setColorTheme("fluent");
   vi.clearAllMocks();
+  classes = [];
 });
 
 describe("applyColorThemeClass", () => {
   it("adds theme-rose and removes dark for non-fluent themes", () => {
-    document.documentElement.classList.add("dark");
-    applyColorThemeClass("rose");
+    classes = ["dark"];
+    applyColorThemeClass("rose", false);
     expect(document.documentElement.classList.add).toHaveBeenCalledWith("theme-rose");
     expect(document.documentElement.classList.remove).toHaveBeenCalledWith("dark");
   });
 
-  it("removes all theme-* classes and restores dark when fluent and resolvedTheme is dark", () => {
-    vi.mocked(resolvedTheme).mockReturnValue("dark");
-    document.documentElement.classList.add("theme-rose");
-    applyColorThemeClass("fluent");
+  it("removes all theme-* classes and restores dark when fluent and isDark is true", () => {
+    classes = ["theme-rose"];
+    applyColorThemeClass("fluent", true);
     expect(document.documentElement.classList.remove).toHaveBeenCalledWith(
       "theme-rose",
       "theme-coast",
@@ -90,12 +90,9 @@ describe("applyColorThemeClass", () => {
     expect(document.documentElement.classList.add).toHaveBeenCalledWith("dark");
   });
 
-  it("removes all theme-* classes and dark when fluent and resolvedTheme is light", () => {
-    vi.mocked(resolvedTheme).mockReturnValue("light");
-    document.documentElement.classList.add("theme-coast");
-    document.documentElement.classList.add("dark");
-    document.documentElement.classList.add.mockClear();
-    applyColorThemeClass("fluent");
+  it("removes all theme-* classes and dark when fluent and isDark is false", () => {
+    classes = ["theme-coast", "dark"];
+    applyColorThemeClass("fluent", false);
     expect(document.documentElement.classList.remove).toHaveBeenCalledWith(
       "theme-rose",
       "theme-coast",
@@ -107,13 +104,12 @@ describe("applyColorThemeClass", () => {
     expect(document.documentElement.classList.add).not.toHaveBeenCalledWith("dark");
   });
 
-  it("restores dark when switching back to fluent from a non-fluent theme and resolvedTheme is dark", () => {
-    vi.mocked(resolvedTheme).mockReturnValue("dark");
-    applyColorThemeClass("coast");
+  it("restores dark when switching back to fluent from a non-fluent theme and isDark is true", () => {
+    applyColorThemeClass("coast", true);
     expect(document.documentElement.classList.add).toHaveBeenCalledWith("theme-coast");
     document.documentElement.classList.add.mockClear();
 
-    applyColorThemeClass("fluent");
+    applyColorThemeClass("fluent", true);
     expect(document.documentElement.classList.remove).toHaveBeenCalledWith(
       "theme-rose",
       "theme-coast",
@@ -158,6 +154,23 @@ describe("loadColorThemePreference", () => {
 
     expect(colorTheme()).toBe("fluent");
   });
+
+  it("calls Preferences.set after restoring a stored theme", async () => {
+    vi.mocked(Preferences.get).mockResolvedValue({ value: "coast" });
+
+    await loadColorThemePreference();
+
+    expect(Preferences.set).toHaveBeenCalledWith({ key: "color_theme", value: "coast" });
+  });
+
+  it("falls back to fluent when Preferences.get rejects", async () => {
+    vi.mocked(Preferences.get).mockRejectedValue(new Error("storage unavailable"));
+
+    await loadColorThemePreference();
+
+    expect(colorTheme()).toBe("fluent");
+    expect(Preferences.set).not.toHaveBeenCalled();
+  });
 });
 
 describe("setColorTheme", () => {
@@ -172,5 +185,17 @@ describe("setColorTheme", () => {
       setColorTheme(id);
       expect(colorTheme()).toBe(id);
     }
+  });
+
+  it("triggers the DOM effect to apply the theme class and remove dark", () => {
+    vi.mocked(resolvedTheme).mockReturnValue("light");
+    setColorTheme("rose");
+    expect(document.documentElement.classList.add).toHaveBeenCalledWith("theme-rose");
+    expect(document.documentElement.classList.remove).toHaveBeenCalledWith("dark");
+  });
+
+  it("triggers the persistence effect to save the theme", () => {
+    setColorTheme("lavender");
+    expect(Preferences.set).toHaveBeenCalledWith({ key: "color_theme", value: "lavender" });
   });
 });

@@ -1,14 +1,13 @@
 import { createEffect, createRoot, createSignal } from "solid-js";
 import { Preferences } from "@capacitor/preferences";
 import { resolvedTheme } from "@/stores/uiStore";
+import { applyColorThemeClass } from "@/utils/themeApplier";
 
 export type ColorThemeId = "fluent" | "coast" | "rose" | "sage" | "lavender" | "caramel";
 
 const PREF_KEY_COLOR_THEME = "color_theme";
 
-const THEME_CLASS_NAMES: ColorThemeId[] = ["rose", "coast", "sage", "lavender", "caramel"];
-
-const VALID_THEME_IDS: readonly ColorThemeId[] = [
+export const VALID_THEME_IDS: readonly ColorThemeId[] = [
   "fluent",
   "rose",
   "coast",
@@ -19,26 +18,6 @@ const VALID_THEME_IDS: readonly ColorThemeId[] = [
 
 const [colorTheme, setColorTheme] = createSignal<ColorThemeId>("fluent");
 export { colorTheme, setColorTheme };
-
-/** 应用颜色主题类到 <html>；非 fluent 主题会移除 dark 类。
- * fluent 主题是否保留 .dark 由 uiStore.resolvedTheme() 决定。 */
-export function applyColorThemeClass(id: ColorThemeId): void {
-  if (typeof document === "undefined") return;
-
-  const root = document.documentElement;
-  root.classList.remove(...THEME_CLASS_NAMES.map((name) => `theme-${name}`));
-
-  if (id === "fluent") {
-    if (resolvedTheme() === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  } else {
-    root.classList.add(`theme-${id}`);
-    root.classList.remove("dark");
-  }
-}
 
 /** 从 Preferences 读取已保存的颜色主题并应用。 */
 export async function loadColorThemePreference(): Promise<void> {
@@ -55,15 +34,15 @@ export async function loadColorThemePreference(): Promise<void> {
 }
 
 // 自动应用主题类并持久化到 Preferences
-/* eslint-disable @typescript-eslint/no-floating-promises */
 createRoot(() => {
   createEffect(() => {
     const id = colorTheme();
-    if (typeof document === "undefined") return;
+    applyColorThemeClass(id, resolvedTheme() === "dark");
+  });
 
-    applyColorThemeClass(id);
-
-    Promise.resolve(Preferences.set({ key: PREF_KEY_COLOR_THEME, value: id })).catch((e) => {
+  createEffect(() => {
+    const id = colorTheme();
+    Preferences.set({ key: PREF_KEY_COLOR_THEME, value: id }).catch((e) => {
       console.warn("[themeStore] Failed to persist color theme", e);
     });
   });
