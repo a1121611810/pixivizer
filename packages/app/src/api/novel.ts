@@ -1,5 +1,6 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { apiClient, getAccessToken } from "./client";
+import { createDedupedRequest } from "@/utils/createDedupedRequest";
 import type {
   PixivNovelListResponse,
   PixivNovelDetailResponse,
@@ -10,6 +11,67 @@ import type {
 } from "./types";
 
 const isNative = Capacitor.isNativePlatform();
+
+// ─── 小说内嵌图片类型 ───
+
+export type NovelImageSize = "240mw" | "480mw" | "1200x1200" | "128x128" | "original";
+
+export type NovelImageUrls = Record<NovelImageSize, string>;
+
+export interface NovelImageItem {
+  novelImageId: string;
+  sl: string;
+  urls: NovelImageUrls;
+}
+
+export type NovelImagesMap = Record<string, NovelImageItem>;
+
+/**
+ * 按大括号平衡从 HTML 中提取指定 key 对应的 JSON 对象。
+ * 会跳过字符串内部的引号和转义字符，能处理任意层嵌套。
+ */
+function extractBalancedObject(html: string, key: string): unknown {
+  const pattern = new RegExp(`"${key}"\\s*:\\s*\\{`);
+  const match = pattern.exec(html);
+  if (!match) return undefined;
+
+  const start = html.indexOf("{", match.index);
+  if (start === -1) return undefined;
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+
+  for (let i = start; i < html.length; i++) {
+    const char = html[i];
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (char === "\\") {
+        escape = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+    } else {
+      if (char === '"') {
+        inString = true;
+      } else if (char === "{") {
+        depth++;
+      } else if (char === "}") {
+        depth--;
+        if (depth === 0) {
+          try {
+            return JSON.parse(html.slice(start, i + 1));
+          } catch {
+            return undefined;
+          }
+        }
+      }
+    }
+  }
+
+  return undefined;
+}
 
 /**
  * 从 /webview/v2/novel 返回的 HTML 中提取小说正文。
@@ -44,6 +106,7 @@ export async function fetchNovelText(novelId: number): Promise<string> {
 export function extractNovelDataFromHtml(html: string): {
   text: string;
   navigation: SeriesNavigation;
+  images: NovelImagesMap;
 } {
   // 复用已有的 text 提取
   const text = extractNovelTextFromHtml(html);
@@ -63,15 +126,19 @@ export function extractNovelDataFromHtml(html: string): {
     }
   }
 
-  return { text, navigation };
+  // 提取内嵌图片映射
+  const images = (extractBalancedObject(html, "images") as NovelImagesMap | undefined) ?? {};
+
+  return { text, navigation, images };
 }
 
 /**
- * 获取正文 + 系列导航数据。
+ * 获取正文 + 系列导航数据 + 内嵌图片映射。
  */
 export async function fetchNovelData(novelId: number): Promise<{
   text: string;
   navigation: SeriesNavigation;
+  images: NovelImagesMap;
 }> {
   const html = await loadText(novelId);
   return extractNovelDataFromHtml(html);
@@ -93,18 +160,22 @@ export function loadBookmarks(
   });
 }
 
-export function loadDetail(novelId: number): Promise<PixivNovelDetailResponse> {
-  return apiClient.get<PixivNovelDetailResponse>("/v2/novel/detail", {
+const detailDeduper = createDedupedRequest<number, PixivNovelDetailResponse>((novelId) =>
+  apiClient.get<PixivNovelDetailResponse>("/v2/novel/detail", {
     novel_id: String(novelId),
-  });
+  }),
+);
+
+export function loadDetail(novelId: number): Promise<PixivNovelDetailResponse> {
+  return detailDeduper.request(novelId);
 }
 
 /**
- * 返回小说正文 HTML。
+ * 返回小说正文 HTML 的原始实现（不带去重）。
  * 此 endpoint 位于 app-api.pixiv.net（与 apiClient 同一域名），接受 OAuth Bearer token。
  * 参数名是 id（非 novel_id），返回 HTML 而非 JSON，因此手动实现。
  */
-export async function loadText(novelId: number): Promise<string> {
+async function loadTextRaw(novelId: number): Promise<string> {
   const token = getAccessToken();
   const headers: Record<string, string> = {
     "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
@@ -135,6 +206,12 @@ export async function loadText(novelId: number): Promise<string> {
     throw new Error(`小说正文加载失败 (HTTP ${res.status})`);
   }
   return res.data as string;
+}
+
+const textDeduper = createDedupedRequest<number, string>((novelId) => loadTextRaw(novelId));
+
+export function loadText(novelId: number): Promise<string> {
+  return textDeduper.request(novelId);
 }
 
 export interface NovelSeriesDetailResponse {

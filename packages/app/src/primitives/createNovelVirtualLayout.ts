@@ -1,5 +1,7 @@
 import { createSignal, createEffect, createMemo, onCleanup, type Accessor } from "solid-js";
 import type { ReaderSettings } from "@/stores/readerSettingsStore";
+import type { NovelBlock, TextBlock } from "@/utils/novelBlocks";
+import type { NovelImageDimensions } from "@/utils/novelImageDimensions";
 import {
   createNovelTextLayout,
   type NovelTextLayoutResult,
@@ -9,12 +11,14 @@ import { getNovelTextLayoutCache } from "./novelTextLayoutCache";
 import { isPretextSupported } from "./isPretextSupported";
 
 export interface CreateNovelVirtualLayoutOptions {
-  /** 全文文本，按 \n\n 分段 */
-  text: Accessor<string | null>;
+  /** 小说正文块序列（文本 / 图片 / 分页） */
+  blocks: Accessor<NovelBlock[]>;
   /** 容器宽度 px */
   containerWidth: Accessor<number>;
   /** 阅读设置 */
   settings: Accessor<ReaderSettings>;
+  /** 内嵌图片尺寸映射；id → {width, height}，null 表示加载失败 */
+  imageDimensions: Accessor<NovelImageDimensions>;
   /** 容器 ref 回调函数（由外部通过返回值设置） */
   containerRef: (el: HTMLElement) => void;
   /** 上下缓冲区段落数，默认 5 */
@@ -28,10 +32,10 @@ export interface CreateNovelVirtualLayoutOptions {
 export interface NovelVirtualLayoutResult {
   /** 全文总高度 px */
   totalHeight: Accessor<number>;
-  /** 当前可见段落索引数组 */
-  visibleParagraphs: Accessor<number[]>;
-  /** 获取段落绝对定位样式 */
-  getParagraphStyle(index: number): {
+  /** 当前可见块索引数组 */
+  visibleBlocks: Accessor<number[]>;
+  /** 获取块绝对定位样式 */
+  getBlockStyle(index: number): {
     position: "absolute";
     top: string;
     left: string;
@@ -42,24 +46,31 @@ export interface NovelVirtualLayoutResult {
   scrollToCharIndex(paragraphIndex: number, charIndex: number): void;
   /** 当前视口顶部对应的字符索引 */
   currentCharIndex: Accessor<{ paragraphIndex: number; charIndex: number }>;
-  /** 底层布局结果，用于阅读进度等外部计算 */
+  /** 底层文本布局结果，用于阅读进度等外部计算 */
   layoutResult: Accessor<NovelTextLayoutResult>;
   /** 容器 ref 设置函数，由 NovelDetail 在 ref 回调中调用 */
   containerRef: (el: HTMLElement) => void;
 }
 
 const DEFAULT_OVERSCAN = 5;
+const IMAGE_FALLBACK_HEIGHT = 160;
+const PAGEBREAK_HEIGHT_RATIO = 3;
 
-function findFirstVisibleParagraph(
-  paragraphs: NovelTextLayoutResult["paragraphs"],
-  minY: number,
-): number {
+interface BlockLayout {
+  index: number;
+  offset: number;
+  height: number;
+  block: NovelBlock;
+  textParagraph?: ParagraphLayout;
+}
+
+function findFirstVisibleBlock(blocks: BlockLayout[], minY: number): number {
   let left = 0;
-  let right = paragraphs.length;
+  let right = blocks.length;
   while (left < right) {
     const mid = Math.floor((left + right) / 2);
-    const paragraph = paragraphs[mid];
-    if (paragraph.offset + paragraph.height > minY) {
+    const block = blocks[mid];
+    if (block.offset + block.height > minY) {
       right = mid;
     } else {
       left = mid + 1;
@@ -117,8 +128,8 @@ function buildFallbackLayout(
 /**
  * 小说正文虚拟化窗口管理。
  *
- * 基于 `createNovelTextLayout` 的布局结果，只渲染视口内 + 缓冲区的段落，
- * 提供滚动到字符索引、当前阅读字符索引等能力。
+ * 基于 `createNovelTextLayout` 的文本布局结果，把图片块、分页标记与文本段落
+ * 统一编排为绝对定位的块序列，只渲染视口内 + 缓冲区的块。
  */
 export function createNovelVirtualLayout(
   options: CreateNovelVirtualLayoutOptions,
@@ -130,13 +141,23 @@ export function createNovelVirtualLayout(
   const [scrollTop, setScrollTop] = createSignal(0);
   const [viewportHeight, setViewportHeight] = createSignal(0);
 
-  const layoutResult = createMemo<NovelTextLayoutResult>(() => {
-    const currentText = options.text();
+  const paragraphSpacing = createMemo(() => {
+    const settings = options.settings();
+    return Math.max(settings.fontSize * 0.5, 8);
+  });
+
+  /** 纯文本段落的布局结果 */
+  const textLayoutResult = createMemo<NovelTextLayoutResult>(() => {
+    const blocks = options.blocks();
     const width = options.containerWidth();
     const settings = options.settings();
     const id = options.novelId();
+    const spacing = paragraphSpacing();
 
-    if (!currentText || width <= 0) {
+    const textBlocks = blocks.filter((b): b is TextBlock => b.type === "text");
+    const paragraphs = textBlocks.map((b) => b.text);
+
+    if (width <= 0) {
       return {
         paragraphs: [],
         totalHeight: 0,
@@ -146,11 +167,8 @@ export function createNovelVirtualLayout(
       };
     }
 
-    const paragraphs = currentText.split(/\n+/).filter((p) => p.length > 0);
-    const paragraphSpacing = Math.max(settings.fontSize * 0.5, 8);
-
     if (!isPretextSupported()) {
-      return buildFallbackLayout(paragraphs, settings, paragraphSpacing);
+      return buildFallbackLayout(paragraphs, settings, spacing);
     }
 
     const cache = getNovelTextLayoutCache();
@@ -164,7 +182,7 @@ export function createNovelVirtualLayout(
       fontWeight: settings.fontWeight,
       fontFamily: settings.fontFamily,
       lineHeight: settings.lineHeight,
-      paragraphSpacing,
+      paragraphSpacing: spacing,
       textIndent: settings.fontSize * 2,
     });
 
@@ -172,13 +190,64 @@ export function createNovelVirtualLayout(
     return result;
   });
 
-  const totalHeight = createMemo(() => layoutResult().totalHeight);
-  const lineHeightPx = createMemo(() => layoutResult().lineHeightPx);
+  const lineHeightPx = createMemo(() => textLayoutResult().lineHeightPx);
 
-  const visibleParagraphs = createMemo<number[]>(() => {
-    const layout = layoutResult();
-    const paragraphs = layout.paragraphs;
-    if (paragraphs.length === 0) return [];
+  /** 混合块（文本 / 图片 / 分页）的统一布局 */
+  const blockLayouts = createMemo<BlockLayout[]>(() => {
+    const blocks = options.blocks();
+    const width = options.containerWidth();
+    const dimensions = options.imageDimensions();
+    const spacing = paragraphSpacing();
+    const textLayout = textLayoutResult();
+
+    if (width <= 0) return [];
+
+    let offset = 0;
+    let textIndex = 0;
+    const layouts: BlockLayout[] = [];
+
+    for (const block of blocks) {
+      let height = 0;
+      let textParagraph: ParagraphLayout | undefined;
+
+      if (block.type === "text") {
+        textParagraph = textLayout.paragraphs[textIndex++];
+        height = textParagraph?.height ?? 0;
+      } else if (block.type === "image") {
+        const dim = dimensions[block.imageId];
+        if (dim && dim.width > 0 && dim.height > 0) {
+          height = (width * dim.height) / dim.width;
+        } else {
+          height = IMAGE_FALLBACK_HEIGHT;
+        }
+      } else {
+        // pageBreak
+        height = spacing * PAGEBREAK_HEIGHT_RATIO;
+      }
+
+      layouts.push({
+        index: layouts.length,
+        offset,
+        height,
+        block,
+        textParagraph,
+      });
+      offset += height + spacing;
+    }
+
+    return layouts;
+  });
+
+  const totalHeight = createMemo(() => {
+    const layouts = blockLayouts();
+    if (layouts.length === 0) return 0;
+    const last = layouts[layouts.length - 1];
+    return last.offset + last.height;
+  });
+
+  const visibleBlocks = createMemo<number[]>(() => {
+    const layouts = blockLayouts();
+    if (layouts.length === 0) return [];
 
     const st = scrollTop();
     const vh = viewportHeight();
@@ -188,27 +257,50 @@ export function createNovelVirtualLayout(
     const minY = st - bufferLines * lh;
     const maxY = st + vh + bufferLines * lh;
 
-    const startIndex = findFirstVisibleParagraph(paragraphs, minY);
+    const startIndex = findFirstVisibleBlock(layouts, minY);
     const visible: number[] = [];
 
-    for (let i = startIndex; i < paragraphs.length; i++) {
-      const paragraph = paragraphs[i];
-      if (paragraph.offset > maxY) break;
-      visible.push(paragraph.index);
+    for (let i = startIndex; i < layouts.length; i++) {
+      const block = layouts[i];
+      if (block.offset > maxY) break;
+      visible.push(block.index);
     }
 
     return visible;
   });
 
   const currentCharIndex = createMemo(() => {
-    const layout = layoutResult();
-    return layout.getCharIndexByOffset(scrollTop());
+    const layouts = blockLayouts();
+    const st = scrollTop();
+    const textLayout = textLayoutResult();
+
+    let target: BlockLayout | undefined;
+    let nearest: BlockLayout | undefined;
+
+    for (const layout of layouts) {
+      if (layout.block.type !== "text" || !layout.textParagraph) continue;
+      nearest = layout;
+      if (st >= layout.offset && st < layout.offset + layout.height) {
+        target = layout;
+        break;
+      }
+    }
+
+    const textBlock = target ?? nearest;
+    if (!textBlock || !textBlock.textParagraph) {
+      return { paragraphIndex: 0, charIndex: 0 };
+    }
+
+    const localOffset = st - textBlock.offset;
+    const textOnlyOffset = textBlock.textParagraph.offset + localOffset;
+    const { charIndex } = textLayout.getCharIndexByOffset(textOnlyOffset);
+    return { paragraphIndex: textBlock.block.index, charIndex };
   });
 
-  function getParagraphStyle(index: number) {
-    const layout = layoutResult();
-    const paragraph = layout.paragraphs[index];
-    if (!paragraph) {
+  function getBlockStyle(index: number) {
+    const layouts = blockLayouts();
+    const block = layouts[index];
+    if (!block) {
       return {
         position: "absolute" as const,
         top: "0px",
@@ -219,16 +311,25 @@ export function createNovelVirtualLayout(
     }
     return {
       position: "absolute" as const,
-      top: `${paragraph.offset}px`,
+      top: `${block.offset}px`,
       left: "0px",
       width: "100%",
-      height: `${paragraph.height}px`,
+      height: `${block.height}px`,
     };
   }
 
   function scrollToCharIndex(paragraphIndex: number, charIndex: number) {
-    const layout = layoutResult();
-    const offset = layout.getOffsetByCharIndex(paragraphIndex, charIndex);
+    const layouts = blockLayouts();
+    const textLayout = textLayoutResult();
+    const textParagraph = textLayout.paragraphs[paragraphIndex];
+    if (!textParagraph) return;
+
+    const block = layouts.find((l) => l.block.type === "text" && l.block.index === paragraphIndex);
+    if (!block || !block.textParagraph) return;
+
+    const charOffset =
+      textLayout.getOffsetByCharIndex(paragraphIndex, charIndex) - textParagraph.offset;
+    const offset = block.offset + charOffset;
     const el = containerEl();
     if (!el) return;
 
@@ -243,8 +344,6 @@ export function createNovelVirtualLayout(
   function updateViewportMetrics() {
     if (useWindowScroll()) {
       const el = containerEl();
-      // 文本容器本身可能位于封面/元数据区域下方，window.scrollY 需要减去
-      // 容器相对于文档顶部的偏移，才是文本内容内的有效滚动距离。
       const containerOffsetTop = el ? el.getBoundingClientRect().top + window.scrollY : 0;
       setViewportHeight(window.innerHeight);
       setScrollTop(Math.max(0, window.scrollY - containerOffsetTop));
@@ -289,7 +388,6 @@ export function createNovelVirtualLayout(
       });
     }
 
-    // 初始同步一次视口尺寸
     updateViewportMetrics();
   });
 
@@ -300,11 +398,11 @@ export function createNovelVirtualLayout(
 
   return {
     totalHeight,
-    visibleParagraphs,
-    getParagraphStyle,
+    visibleBlocks,
+    getBlockStyle,
     scrollToCharIndex,
     currentCharIndex,
-    layoutResult,
+    layoutResult: textLayoutResult,
     containerRef,
   };
 }

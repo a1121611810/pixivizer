@@ -634,6 +634,7 @@ try {
 // Sync resolvedTheme 到 <html> class
 createRoot(() => {
   createEffect(() => {
+    if (typeof document === "undefined") return;
     const root = document.documentElement;
     if (state.resolvedTheme === "dark") {
       root.classList.add("dark");

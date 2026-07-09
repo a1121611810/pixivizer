@@ -1,5 +1,5 @@
 import type { PixivNovel, SeriesNavigation } from "../api/types";
-import type { NovelSeriesDetailResponse } from "../api/novel";
+import type { NovelImagesMap, NovelSeriesDetailResponse } from "../api/novel";
 
 // ─── Entry ───
 
@@ -22,6 +22,11 @@ let textMax = 10;
 
 const navCache = new Map<number, CacheEntry<SeriesNavigation>>();
 let navMax = 50;
+
+// ─── Images cache ───
+
+const imagesCache = new Map<number, CacheEntry<NovelImagesMap>>();
+let imagesMax = 20;
 
 // ─── Series cache ───
 
@@ -84,6 +89,14 @@ export function setNav(id: number, data: SeriesNavigation): void {
   lruSet(navCache, id, data, navMax);
 }
 
+export function getImages(id: number): NovelImagesMap | undefined {
+  return lruGet(imagesCache, id);
+}
+
+export function setImages(id: number, data: NovelImagesMap): void {
+  lruSet(imagesCache, id, data, imagesMax);
+}
+
 export function getSeries(id: number): NovelSeriesDetailResponse | undefined {
   return lruGet(seriesCache, id);
 }
@@ -144,5 +157,6 @@ export function clearNovelCache(): void {
   detailCache.clear();
   textCache.clear();
   navCache.clear();
+  imagesCache.clear();
   seriesCache.clear();
 }

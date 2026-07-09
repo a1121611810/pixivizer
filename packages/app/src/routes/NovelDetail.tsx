@@ -1,4 +1,5 @@
 import {
+  type Accessor,
   type Component,
   type JSX,
   createSignal,
@@ -6,12 +7,12 @@ import {
   createMemo,
   Show,
   For,
+  Switch,
+  Match,
   onCleanup,
   onMount,
 } from "solid-js";
 import { useParams, useNavigate } from "@solidjs/router";
-import { loadDetail, fetchNovelData } from "../api/novel";
-import type { PixivNovel, SeriesNavigation } from "../api/types";
 import { resolveImageUrl } from "../utils/imageLoader";
 import PixivImage from "../components/PixivImage";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -19,6 +20,7 @@ import FluentIcon from "../components/ui/FluentIcon";
 import NovelSearchBar from "../components/NovelSearchBar";
 import { createNovelSearch } from "../primitives/createNovelSearch";
 import { createNovelVirtualLayout } from "../primitives/createNovelVirtualLayout";
+import { createNovelLoader } from "../primitives/createNovelLoader";
 import {
   readerStyle,
   fontSize,
@@ -26,8 +28,14 @@ import {
   fontFamily,
   lineHeight,
 } from "../stores/readerSettingsStore";
-import { novelCacheEnabled } from "../stores/uiStore";
-import { getDetail, setDetail, getText, setText, getNav, setNav } from "../stores/novelCache";
+import {
+  parseNovelBlocks,
+  buildSearchText,
+  getImageBlocks,
+  selectInlineImageUrl,
+} from "../utils/novelBlocks";
+import type { NovelBlock, TextBlock, ImageBlock } from "../utils/novelBlocks";
+import { loadNovelImageDimensions, type NovelImageDimensions } from "../utils/novelImageDimensions";
 import ReaderSettingsSheet from "../components/ReaderSettingsSheet";
 import SeriesSheet from "../components/SeriesSheet";
 import PageTransition from "../components/PageTransition";
@@ -42,6 +50,79 @@ interface NovelProgress {
   charIndex: number;
   progress: number;
 }
+
+interface NovelImageBlockProps {
+  block: ImageBlock;
+  containerWidth: Accessor<number>;
+  dimensions: Accessor<NovelImageDimensions>;
+  style: {
+    position: "absolute";
+    top: string;
+    left: string;
+    width: string;
+    height: string;
+  };
+  onClick: () => void;
+}
+
+const NovelImageBlock: Component<NovelImageBlockProps> = (props) => {
+  const dim = createMemo(() => props.dimensions()[props.block.imageId]);
+
+  function handleClick() {
+    if (dim()) props.onClick();
+  }
+
+  return (
+    <figure
+      class="novel-image-block absolute overflow-hidden m-0"
+      classList={{ "cursor-pointer": dim() !== null && dim() !== undefined }}
+      style={props.style}
+      onClick={handleClick}
+    >
+      <Switch>
+        <Match when={dim() === undefined}>
+          <div
+            class="w-full h-full flex flex-col items-center justify-center gap-1.5"
+            style={{
+              background:
+                "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+              "background-size": "200% 100%",
+              animation: "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+            }}
+          >
+            <span class="spinner w-4 h-4" />
+            <span class="text-[var(--colorNeutralForegroundDisabled)] [font-size:var(--fontSizeBase100)]">
+              加载中...
+            </span>
+          </div>
+        </Match>
+        <Match when={dim() === null}>
+          <div
+            class="w-full h-full flex flex-col items-center justify-center gap-1"
+            style={{ "background-color": "var(--colorNeutralBackground2)" }}
+          >
+            <span class="text-[var(--colorNeutralForeground3)] text-xs">⚠</span>
+            <span class="text-[var(--colorNeutralForegroundDisabled)] [font-size:var(--fontSizeBase100)]">
+              图片加载失败
+            </span>
+          </div>
+        </Match>
+        <Match when={dim()}>
+          {(d) => (
+            <PixivImage
+              src={selectInlineImageUrl(props.block.urls, props.containerWidth())}
+              alt={`内嵌图片 ${props.block.imageId}`}
+              width={d().width}
+              height={d().height}
+              loading="lazy"
+              class="w-full h-full object-cover"
+            />
+          )}
+        </Match>
+      </Switch>
+    </figure>
+  );
+};
 
 function parseProgress(raw: string | null): NovelProgress | null {
   if (!raw) return null;
@@ -79,78 +160,36 @@ const NovelDetail: Component = () => {
 
   // 系列内切换只更新内部小说 ID，不 navigate，避免污染浏览器历史栈。
   // 入口 URL 对应的 params.id 作为初始值，后续章节/目录跳转都通过这里。
+  let skipRestoreProgress = false;
+
   const [currentNovelId, setCurrentNovelId] = createSignal(Number(params.id));
   const novelId = currentNovelId;
 
-  const [novelData, setNovelData] = createSignal<PixivNovel | null>(null);
-  const [novelHtml, setNovelHtml] = createSignal<string | null>(null);
-  const [novelNav, setNovelNav] = createSignal<SeriesNavigation | null>(null);
-  const [detailLoading, setDetailLoading] = createSignal(false);
-  const [detailError, setDetailError] = createSignal<string | null>(null);
-  let abortController: AbortController | null = null;
+  function switchNovel(id: number) {
+    skipRestoreProgress = true;
+    setCurrentNovelId(id);
+  }
+
+  const loader = createNovelLoader(novelId);
+  const { novelData, novelHtml, novelImages, novelNav, detailLoading, detailError } = loader;
+
+  const [imageDimensions, setImageDimensions] = createSignal<NovelImageDimensions>({});
   const [footerHidden, setFooterHidden] = createSignal(false);
   let lastScrollY = 0;
   let accumulatedDelta = 0;
   let scrollTicking = false;
 
+  // 小说 ID 变化或图片映射重置时，清空已计算的内嵌图尺寸
   createEffect(() => {
-    const id = novelId();
-    if (!id) return;
-
-    // 1. 尝试从缓存读取
-    if (novelCacheEnabled()) {
-      const cachedDetail = getDetail(id);
-      const cachedText = getText(id);
-      const cachedNav = getNav(id);
-      if (cachedDetail && cachedText) {
-        setNovelData(cachedDetail);
-        setNovelHtml(cachedText);
-        if (cachedNav) setNovelNav(cachedNav);
-        setDetailLoading(false);
-        return;
-      }
-      if (cachedDetail) setNovelData(cachedDetail);
-      if (cachedNav) setNovelNav(cachedNav);
-    }
-
-    abortController?.abort();
-    abortController = new AbortController();
-
-    setDetailLoading(!novelData());
-    setDetailError(null);
-    if (!novelData()) setNovelData(null);
-    if (!novelHtml()) setNovelHtml(null);
-
-    Promise.all([loadDetail(id), fetchNovelData(id).catch(() => ({ text: "", navigation: {} }))])
-      .then(([detail, novelResult]) => {
-        if (!abortController?.signal.aborted) {
-          setNovelData(detail.novel);
-          setNovelHtml(novelResult.text);
-          if (novelResult.navigation.nextNovel || novelResult.navigation.prevNovel) {
-            setNovelNav(novelResult.navigation);
-          }
-          setDetailLoading(false);
-
-          // 2. 写入缓存
-          if (novelCacheEnabled() && novelResult.text) {
-            setDetail(id, detail.novel);
-            setText(id, novelResult.text);
-            if (novelResult.navigation.nextNovel || novelResult.navigation.prevNovel) {
-              setNav(id, novelResult.navigation);
-            }
-          }
-        }
-      })
-      .catch((e) => {
-        if (!abortController?.signal.aborted) {
-          setDetailError((e as { message?: string }).message ?? "加载失败");
-          setDetailLoading(false);
-        }
-      });
+    novelImages();
+    setImageDimensions({});
   });
 
-  onCleanup(() => {
-    abortController?.abort();
+  // 加载出错时允许下次恢复阅读进度
+  createEffect(() => {
+    if (detailError()) {
+      skipRestoreProgress = false;
+    }
   });
 
   // 小说正文加载完成后恢复阅读进度
@@ -161,20 +200,35 @@ const NovelDetail: Component = () => {
     }
   });
 
+  // 获取到图片映射后，预加载每张内嵌图的真实尺寸
+  createEffect(() => {
+    const images = novelImages();
+    const ids = Object.keys(images);
+    if (ids.length === 0) return;
+
+    let cancelled = false;
+    loadNovelImageDimensions(images).then((dimensions) => {
+      if (!cancelled) setImageDimensions(dimensions);
+    });
+
+    onCleanup(() => {
+      cancelled = true;
+    });
+  });
+
   const [settingsOpen, setSettingsOpen] = createSignal(false);
   const [seriesOpen, setSeriesOpen] = createSignal(false);
   const [searchOpen, setSearchOpen] = createSignal(false);
   const [textContainerWidth, setTextContainerWidth] = createSignal(0);
 
-  const paragraphs = createMemo(
-    () =>
-      novelHtml()
-        ?.split(/\n+/)
-        .filter((p) => p.length > 0) ?? [],
-  );
+  const blocks = createMemo<NovelBlock[]>(() => {
+    return parseNovelBlocks(novelHtml() ?? "", novelImages());
+  });
+
+  const searchText = createMemo(() => buildSearchText(blocks()));
 
   const virtualLayout = createNovelVirtualLayout({
-    text: novelHtml,
+    blocks,
     containerWidth: textContainerWidth,
     settings: () => ({
       fontSize: fontSize(),
@@ -184,15 +238,15 @@ const NovelDetail: Component = () => {
       lineHeight: lineHeight(),
       bgColor: "",
     }),
+    imageDimensions,
     containerRef: () => {},
     novelId,
     useWindowScroll: true,
   });
 
-  const search = createNovelSearch(novelHtml, { debounceMs: 150 });
+  const search = createNovelSearch(searchText, { debounceMs: 150 });
 
-  function renderParagraphWithHighlights(paragraphIndex: number): JSX.Element {
-    const text = paragraphs()[paragraphIndex] ?? "";
+  function renderParagraphWithHighlights(paragraphIndex: number, text: string): JSX.Element {
     const matches = search.getMatchesForParagraph(paragraphIndex);
     const activeIndex = search.activeIndex();
     const allMatches = search.matches();
@@ -264,6 +318,10 @@ const NovelDetail: Component = () => {
   }
 
   function restoreProgress() {
+    if (skipRestoreProgress) {
+      skipRestoreProgress = false;
+      return;
+    }
     const saved = parseProgress(localStorage.getItem(`novel_progress_${novelId()}`));
     if (!saved) return;
     const layout = virtualLayout.layoutResult();
@@ -387,6 +445,11 @@ const NovelDetail: Component = () => {
 
   const [showHeaderTitle, setShowHeaderTitle] = createSignal(false);
   const [titleEl, setTitleEl] = createSignal<HTMLHeadingElement | undefined>();
+  const [imageViewerOpen, setImageViewerOpen] = createSignal(false);
+  const [imageViewerIndex, setImageViewerIndex] = createSignal(0);
+
+  const imageBlockList = createMemo(() => getImageBlocks(blocks()));
+  const imageViewerUrls = createMemo(() => imageBlockList().map((block) => block.urls.original));
 
   // IntersectionObserver: 检测原始标题元素是否滚出 header 区域
   createEffect(() => {
@@ -499,16 +562,14 @@ const NovelDetail: Component = () => {
                     @{novel().user.name}
                   </button>
 
-                  <Show when={novel().series}>
-                    {(series) => (
-                      <button
-                        class="[font-size:var(--fontSizeBase100)] text-[var(--colorBrandForeground1)] mt-1 bg-transparent border-none p-0 cursor-pointer hover:underline focus-visible:outline focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-2 focus-visible:-outline-offset-2"
-                        onClick={() => setSeriesOpen(true)}
-                        aria-label={`打开系列目录：${series().title}`}
-                      >
-                        系列：{series().title}
-                      </button>
-                    )}
+                  <Show when={novel().series?.id}>
+                    <button
+                      class="[font-size:var(--fontSizeBase100)] text-[var(--colorBrandForeground1)] mt-1 bg-transparent border-none p-0 cursor-pointer hover:underline focus-visible:outline focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-2 focus-visible:-outline-offset-2"
+                      onClick={() => setSeriesOpen(true)}
+                      aria-label={`打开系列目录：${novel().series?.title ?? ""}`}
+                    >
+                      系列：{novel().series?.title}
+                    </button>
                   </Show>
 
                   {/* Tags */}
@@ -545,18 +606,55 @@ const NovelDetail: Component = () => {
                       height: `${virtualLayout.totalHeight()}px`,
                     }}
                   >
-                    <For each={virtualLayout.visibleParagraphs()}>
-                      {(paragraphIndex) => (
-                        <p
-                          class="novel-text-paragraph absolute"
-                          style={{
-                            ...virtualLayout.getParagraphStyle(paragraphIndex),
-                            textIndent: `${fontSize() * 2}px`,
-                          }}
-                        >
-                          {renderParagraphWithHighlights(paragraphIndex)}
-                        </p>
-                      )}
+                    <For each={virtualLayout.visibleBlocks()}>
+                      {(blockIndex) => {
+                        const block = blocks()[blockIndex];
+                        const style = virtualLayout.getBlockStyle(blockIndex);
+
+                        return (
+                          <Switch>
+                            <Match when={block.type === "text"}>
+                              {() => {
+                                const textBlock = block as TextBlock;
+                                return (
+                                  <p
+                                    class="novel-text-paragraph absolute"
+                                    style={{
+                                      ...style,
+                                      textIndent: `${fontSize() * 2}px`,
+                                    }}
+                                  >
+                                    {renderParagraphWithHighlights(textBlock.index, textBlock.text)}
+                                  </p>
+                                );
+                              }}
+                            </Match>
+                            <Match when={block.type === "image"}>
+                              {() => {
+                                const imageBlock = block as ImageBlock;
+                                const imageIndex = imageBlockList().findIndex(
+                                  (b) => b.imageId === imageBlock.imageId,
+                                );
+                                return (
+                                  <NovelImageBlock
+                                    block={imageBlock}
+                                    containerWidth={textContainerWidth}
+                                    dimensions={imageDimensions}
+                                    style={style}
+                                    onClick={() => {
+                                      setImageViewerIndex(imageIndex);
+                                      setImageViewerOpen(true);
+                                    }}
+                                  />
+                                );
+                              }}
+                            </Match>
+                            <Match when={block.type === "pageBreak"}>
+                              <hr class="novel-page-break absolute m-0" style={style} />
+                            </Match>
+                          </Switch>
+                        );
+                      }}
                     </For>
                   </div>
                 </Show>
@@ -581,17 +679,17 @@ const NovelDetail: Component = () => {
                 }}
               >
                 <div class="max-w-2xl mx-auto flex items-center justify-center gap-2">
-                  <Show when={novel().series && novelNav()?.prevNovel}>
+                  <Show when={novel().series?.id && novelNav()?.prevNovel}>
                     {(prev) => (
                       <button
                         class="px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
-                        onClick={() => setCurrentNovelId(prev().id)}
+                        onClick={() => switchNovel(prev().id)}
                       >
                         ◀ 上一章
                       </button>
                     )}
                   </Show>
-                  <Show when={novel().series}>
+                  <Show when={novel().series?.id}>
                     <button
                       class="px-4 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-2"
                       onClick={() => setSeriesOpen(true)}
@@ -610,11 +708,11 @@ const NovelDetail: Component = () => {
                     </span>
                     显示设置
                   </button>
-                  <Show when={novel().series && novelNav()?.nextNovel}>
+                  <Show when={novel().series?.id && novelNav()?.nextNovel}>
                     {(next) => (
                       <button
                         class="px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase200)] font-medium hover:opacity-90 active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
-                        onClick={() => setCurrentNovelId(next().id)}
+                        onClick={() => switchNovel(next().id)}
                       >
                         下一章 ▶
                       </button>
@@ -625,20 +723,26 @@ const NovelDetail: Component = () => {
 
               <ReaderSettingsSheet isOpen={settingsOpen()} onClose={() => setSettingsOpen(false)} />
 
-              <Show when={novel().series}>
-                {(series) => (
-                  <SeriesSheet
-                    seriesId={series().id}
-                    seriesTitle={series().title}
-                    authorName={novel().user.name}
-                    authorId={novel().user.id}
-                    isOpen={seriesOpen()}
-                    onClose={() => setSeriesOpen(false)}
-                    onNovelSelect={(id) => setCurrentNovelId(id)}
-                    onAuthorClick={() => navigate(`/user/${novel().user.id}`)}
-                    activeNovelId={currentNovelId()}
-                  />
-                )}
+              <Show when={novel().series?.id}>
+                <SeriesSheet
+                  seriesId={novel().series!.id}
+                  seriesTitle={novel().series!.title}
+                  authorName={novel().user.name}
+                  authorId={novel().user.id}
+                  isOpen={seriesOpen()}
+                  onClose={() => setSeriesOpen(false)}
+                  onNovelSelect={(id) => switchNovel(id)}
+                  onAuthorClick={() => navigate(`/user/${novel().user.id}`)}
+                  activeNovelId={currentNovelId()}
+                />
+              </Show>
+
+              <Show when={imageViewerOpen() && imageViewerUrls().length > 0}>
+                <ImageViewer
+                  imageUrls={imageViewerUrls()}
+                  initialPage={imageViewerIndex()}
+                  onClose={() => setImageViewerOpen(false)}
+                />
               </Show>
 
               {/* ── Close the Show fragment ── */}

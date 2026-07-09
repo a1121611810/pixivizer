@@ -177,4 +177,26 @@ describe("NovelDetail scroll-header", () => {
     expect(toolbar!.textContent).toContain("上一章");
     expect(toolbar!.textContent).toContain("下一章");
   });
+
+  it("hides series controls when API returns an empty series object", async () => {
+    // Pixiv API returns series: {} for novels that are not in a series.
+    currentSeries = {} as { id: number; title: string };
+    currentNavigation = {
+      prevNovel: { id: 0, title: "Prev Novel" },
+      nextNovel: { id: 2, title: "Next Novel" },
+    };
+
+    const { container } = render(() => <NovelDetail />);
+    await screen.findAllByText("Scroll Header 测试标题");
+
+    const toolbar = container.querySelector('[class*="fixed bottom-0"]');
+    expect(toolbar).not.toBeNull();
+    expect(toolbar!.textContent).toContain("显示设置");
+    expect(toolbar!.textContent).not.toContain("目录");
+    expect(toolbar!.textContent).not.toContain("上一章");
+    expect(toolbar!.textContent).not.toContain("下一章");
+
+    // The metadata area should not show a "系列：" entry either.
+    expect(container.textContent).not.toContain("系列：");
+  });
 });

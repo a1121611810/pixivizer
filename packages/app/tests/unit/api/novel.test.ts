@@ -1,15 +1,20 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock apiClient
 const mockGet = vi.fn();
 const mockPost = vi.fn();
+const mockGetAccessToken = vi.fn().mockReturnValue("token");
+const mockFetch = vi.fn();
 
 vi.mock("@/api/client", () => ({
   apiClient: {
     get: (...args: unknown[]) => mockGet(...args),
     post: (...args: unknown[]) => mockPost(...args),
   },
+  getAccessToken: (...args: unknown[]) => mockGetAccessToken(...args),
 }));
+
+vi.stubGlobal("fetch", mockFetch);
 
 async function loadApi() {
   vi.resetModules();
@@ -17,6 +22,62 @@ async function loadApi() {
 }
 
 describe("api/novel.ts", () => {
+  beforeEach(() => {
+    mockGet.mockReset();
+    mockPost.mockReset();
+    mockGetAccessToken.mockReturnValue("token");
+    mockFetch.mockReset();
+  });
+
+  it("loadDetail deduplicates concurrent requests for the same novel id", async () => {
+    const expected: import("@/api/types").PixivNovelDetailResponse = {
+      novel: {
+        id: 42,
+        title: "Test Novel",
+        user: { id: 1, name: "Author", account: "author", profile_image_urls: {} },
+        image_urls: { square_medium: "", medium: "", large: "" },
+        tags: [],
+        page_count: 1,
+        text_length: 1000,
+        is_bookmarked: false,
+        total_bookmarks: 0,
+        total_view: 0,
+        x_restrict: 0,
+        create_date: "2026-01-01T00:00:00Z",
+      },
+    };
+    mockGet.mockResolvedValue(expected);
+
+    const { loadDetail } = await loadApi();
+    const [a, b] = await Promise.all([loadDetail(42), loadDetail(42)]);
+
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(mockGet).toHaveBeenCalledWith("/v2/novel/detail", { novel_id: "42" });
+    expect(a).toEqual(expected);
+    expect(b).toEqual(expected);
+  });
+
+  it("loadText deduplicates concurrent requests for the same novel id", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve('<script>window.pixiv={novel:{"text":"hello"}};</script>'),
+    });
+
+    const { loadText } = await loadApi();
+    const [a, b] = await Promise.all([loadText(42), loadText(42)]);
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/pixiv-api/webview/v2/novel?id=42",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer token" }),
+      }),
+    );
+    const expectedHtml = '<script>window.pixiv={novel:{"text":"hello"}};</script>';
+    expect(a).toBe(expectedHtml);
+    expect(b).toBe(expectedHtml);
+  });
+
   it("loadSeries calls apiClient.get with series_id", async () => {
     mockGet.mockResolvedValue({ novel_series_detail: {}, novels: [], next_url: null });
     const { loadSeries } = await loadApi();

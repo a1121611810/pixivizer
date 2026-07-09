@@ -198,6 +198,21 @@ body {
   }
 }
 
+/* Novel inline image block */
+.novel-image-block {
+  width: 100%;
+  border-radius: var(--borderRadiusMedium);
+  margin: var(--spacingVerticalM) 0;
+}
+
+/* Novel page break separator */
+.novel-page-break {
+  height: 1px;
+  border: none;
+  background-color: var(--colorNeutralStroke2);
+  margin: var(--spacingVerticalL) 0;
+}
+
 /* Accessibility: respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
