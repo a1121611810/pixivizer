@@ -1,47 +1,56 @@
 // @vitest-environment browser
 // 验证 NovelDetail 组件在浏览器中正确渲染 scroll-header 结构。
 // IntersectionObserver 的滚动行为已在 playwright-cli 端到端验证。
-import { render, screen, fireEvent, waitFor } from "@solidjs/testing-library";
-import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@solidjs/testing-library";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { SeriesNavigation } from "../../src/api/types";
 
 const mockNavigate = vi.fn();
 
 // Override router mock from setup.ts — provide novel ID in params
 vi.mock("@solidjs/router", () => ({
   useNavigate: () => mockNavigate,
-  useLocation: () => ({ pathname: "/novel/1" }),
-  useParams: () => ({ id: "1" }),
+  useLocation: () => ({ pathname: `/novel/${currentNovelId}` }),
+  useParams: () => ({ id: String(currentNovelId) }),
   useBeforeLeave: (fn: unknown) => fn as any,
 }));
 
-// Mock novel API to return data
-const mockNovel = {
-  novel: {
-    id: 1,
-    title: "Scroll Header 测试标题",
-    user: {
-      id: 1,
-      name: "测试作者",
-      account: "test_author",
-      profile_image_urls: { medium: "", px_16x16: "", px_50x50: "", px_170x170: "" },
-      is_followed: false,
-    },
-    image_urls: { square_medium: "", medium: "", large: "" },
-    tags: [{ name: "tag1" }],
-    page_count: 1,
-    text_length: 5000,
-    is_bookmarked: false,
-    total_bookmarks: 10,
-    total_view: 100,
-    x_restrict: 0,
-    create_date: "2026-01-01T00:00:00Z",
-    caption: "",
-  },
-};
+let currentNovelId = 1;
+let currentSeries: { id: number; title: string } | undefined = undefined;
+let currentNavigation: SeriesNavigation = {};
 
+function makeMockNovel() {
+  return {
+    novel: {
+      id: currentNovelId,
+      title: "Scroll Header 测试标题",
+      user: {
+        id: 1,
+        name: "测试作者",
+        account: "test_author",
+        profile_image_urls: { medium: "", px_16x16: "", px_50x50: "", px_170x170: "" },
+        is_followed: false,
+      },
+      image_urls: { square_medium: "", medium: "", large: "" },
+      tags: [{ name: "tag1" }],
+      page_count: 1,
+      text_length: 5000,
+      is_bookmarked: false,
+      total_bookmarks: 10,
+      total_view: 100,
+      x_restrict: 0,
+      create_date: "2026-01-01T00:00:00Z",
+      caption: "",
+      series: currentSeries,
+    },
+  };
+}
+
+// Mock novel API to return data
 vi.mock("../../src/api/novel", () => ({
-  loadDetail: () => Promise.resolve(mockNovel),
-  fetchNovelData: () => Promise.resolve({ text: "正文内容\n\n第二段", navigation: {} }),
+  loadDetail: () => Promise.resolve(makeMockNovel()),
+  fetchNovelData: () =>
+    Promise.resolve({ text: "正文内容\n\n第二段", navigation: currentNavigation }),
   extractNovelTextFromHtml: () => "",
   extractNovelDataFromHtml: () => ({ text: "", navigation: {} }),
   fetchNovelText: vi.fn(),
@@ -58,6 +67,14 @@ vi.mock("../../src/api/novel", () => ({
 import NovelDetail from "../../src/routes/NovelDetail";
 
 describe("NovelDetail scroll-header", () => {
+  beforeEach(() => {
+    cleanup();
+    currentNovelId++;
+    currentSeries = undefined;
+    currentNavigation = {};
+    mockNavigate.mockClear();
+  });
+
   it("renders metadata title and header title span after data loads", async () => {
     const { container } = render(() => <NovelDetail />);
 
@@ -81,7 +98,6 @@ describe("NovelDetail scroll-header", () => {
   });
 
   it("back button calls navigate when clicked", async () => {
-    mockNavigate.mockClear();
     const { container } = render(() => <NovelDetail />);
     await screen.findAllByText("Scroll Header 测试标题");
 
@@ -124,5 +140,41 @@ describe("NovelDetail scroll-header", () => {
       expect(textContainer!.textContent).toContain("正文内容");
     });
     expect(textContainer!.textContent).toContain("第二段");
+  });
+
+  it("hides series nav buttons when novel is not in a series", async () => {
+    currentSeries = undefined;
+    currentNavigation = {
+      prevNovel: { id: 0, title: "Prev Novel" },
+      nextNovel: { id: 2, title: "Next Novel" },
+    };
+
+    const { container } = render(() => <NovelDetail />);
+    await screen.findAllByText("Scroll Header 测试标题");
+
+    const toolbar = container.querySelector('[class*="fixed bottom-0"]');
+    expect(toolbar).not.toBeNull();
+    expect(toolbar!.textContent).toContain("显示设置");
+    expect(toolbar!.textContent).not.toContain("目录");
+    expect(toolbar!.textContent).not.toContain("上一章");
+    expect(toolbar!.textContent).not.toContain("下一章");
+  });
+
+  it("shows series nav buttons when novel is in a series", async () => {
+    currentSeries = { id: 100, title: "Test Series" };
+    currentNavigation = {
+      prevNovel: { id: 0, title: "Prev Novel" },
+      nextNovel: { id: 2, title: "Next Novel" },
+    };
+
+    const { container } = render(() => <NovelDetail />);
+    await screen.findAllByText("Scroll Header 测试标题");
+
+    const toolbar = container.querySelector('[class*="fixed bottom-0"]');
+    expect(toolbar).not.toBeNull();
+    expect(toolbar!.textContent).toContain("显示设置");
+    expect(toolbar!.textContent).toContain("目录");
+    expect(toolbar!.textContent).toContain("上一章");
+    expect(toolbar!.textContent).toContain("下一章");
   });
 });

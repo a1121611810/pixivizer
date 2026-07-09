@@ -581,7 +581,7 @@ const NovelDetail: Component = () => {
                 }}
               >
                 <div class="max-w-2xl mx-auto flex items-center justify-center gap-2">
-                  <Show when={novelNav()?.prevNovel}>
+                  <Show when={novel().series && novelNav()?.prevNovel}>
                     {(prev) => (
                       <button
                         class="px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
@@ -610,7 +610,7 @@ const NovelDetail: Component = () => {
                     </span>
                     显示设置
                   </button>
-                  <Show when={novelNav()?.nextNovel}>
+                  <Show when={novel().series && novelNav()?.nextNovel}>
                     {(next) => (
                       <button
                         class="px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase200)] font-medium hover:opacity-90 active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
