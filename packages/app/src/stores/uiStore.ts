@@ -631,19 +631,6 @@ try {
   // 测试环境或 SSR 中 window.matchMedia 不可用，静默跳过
 }
 
-// Sync resolvedTheme 到 <html> class
-createRoot(() => {
-  createEffect(() => {
-    if (typeof document === "undefined") return;
-    const root = document.documentElement;
-    if (state.resolvedTheme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  });
-});
-
 // Sync cache size limit to imageLoader whenever it changes
 createRoot(() => {
   createEffect(() => {

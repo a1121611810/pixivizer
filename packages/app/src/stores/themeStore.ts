@@ -1,5 +1,6 @@
 import { createEffect, createRoot, createSignal } from "solid-js";
 import { Preferences } from "@capacitor/preferences";
+import { resolvedTheme } from "@/stores/uiStore";
 import { applyColorThemeClass } from "@/utils/themeApplier";
 
 export type ColorThemeId = "fluent" | "coast" | "rose" | "sage" | "lavender" | "caramel";
@@ -15,47 +16,63 @@ export const VALID_THEME_IDS: readonly ColorThemeId[] = [
   "caramel",
 ];
 
-export const THEME_CLASS_NAMES = VALID_THEME_IDS.filter(
+export const NON_FLUENT_THEME_IDS = VALID_THEME_IDS.filter(
   (id): id is Exclude<ColorThemeId, "fluent"> => id !== "fluent",
 );
 
-const [internalColorTheme, setColorTheme] = createSignal<ColorThemeId | null>(null);
+const [internalColorTheme, _setColorTheme] = createSignal<ColorThemeId | null>(null);
 const [hasLoaded, setHasLoaded] = createSignal(false);
 
 export const colorTheme = () => internalColorTheme() ?? "fluent";
-export { setColorTheme };
+
+let userHasSetTheme = false;
+let lastPersistedId: ColorThemeId | null = null;
+
+export function setColorTheme(id: ColorThemeId): void {
+  userHasSetTheme = true;
+  _setColorTheme(id);
+}
 
 /** 从 Preferences 读取已保存的颜色主题并应用。 */
 export async function loadColorThemePreference(): Promise<void> {
+  let id: ColorThemeId = "fluent";
   try {
     const { value } = await Preferences.get({ key: PREF_KEY_COLOR_THEME });
-    const id: ColorThemeId =
+    id =
       value != null && (VALID_THEME_IDS as readonly string[]).includes(value)
         ? (value as ColorThemeId)
         : "fluent";
-    setColorTheme(id);
   } catch (e) {
     console.warn("[themeStore] Failed to load color theme preference", e);
-    setColorTheme("fluent");
+    id = "fluent";
   } finally {
+    if (!userHasSetTheme) {
+      lastPersistedId = id;
+      _setColorTheme(id);
+    }
     setHasLoaded(true);
   }
 }
 
-// 自动应用主题类并持久化到 Preferences
-// 注意：.dark 类由 uiStore 单独管理，themeStore 绝不触碰。
+// 自动应用主题类与 .dark 类，并持久化到 Preferences。
+// themeStore 是 <html> 上 theme-* 与 .dark 的唯一所有者。
 createRoot(() => {
   createEffect(() => {
     const id = internalColorTheme();
     if (id == null || typeof document === "undefined" || !hasLoaded()) return;
-    applyColorThemeClass(id);
+    applyColorThemeClass(id, resolvedTheme() === "dark");
   });
 
   createEffect(() => {
     const id = internalColorTheme();
     if (id == null || !hasLoaded()) return;
-    Preferences.set({ key: PREF_KEY_COLOR_THEME, value: id }).catch((e) => {
-      console.warn("[themeStore] Failed to persist color theme", e);
-    });
+    if (id === lastPersistedId) return;
+    Preferences.set({ key: PREF_KEY_COLOR_THEME, value: id })
+      .then(() => {
+        lastPersistedId = id;
+      })
+      .catch((e) => {
+        console.warn("[themeStore] Failed to persist color theme", e);
+      });
   });
 });
