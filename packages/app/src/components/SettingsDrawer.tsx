@@ -65,6 +65,7 @@ import { profile, loadProfile } from "../stores/userStore";
 import BlocklistSheet from "./BlocklistSheet";
 import { checkForUpdate } from "../services/updateService";
 import { imageHostState, setMasterEnabled, modeLabel } from "../stores/imageHostStore";
+import ThemeSelector from "./ThemeSelector";
 
 function handleThemeChange(newTheme: Theme) {
   setThemePersisted(newTheme);
@@ -449,7 +450,7 @@ const SettingsDrawer: Component = () => {
               </div>
               <div>
                 <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                  主题
+                  明暗主题
                 </p>
                 <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
                   {theme() === "light" ? "始终浅色" : theme() === "dark" ? "始终深色" : "跟随系统"}
@@ -473,6 +474,32 @@ const SettingsDrawer: Component = () => {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Color theme selector */}
+          <div class="py-3">
+            <div class="flex items-center gap-2 mb-2">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                class="text-[var(--colorNeutralForeground2)] flex-shrink-0"
+              >
+                <path
+                  d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 1.5a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17zM7.75 9a.75.75 0 0 0 0 1.5h8.5a.75.75 0 0 0 0-1.5h-8.5zM7 12.75a.75.75 0 0 0 .75.75h8.5a.75.75 0 0 0 0-1.5h-8.5a.75.75 0 0 0-.75.75zM7.75 16a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5h-4.5z"
+                  fill="currentColor"
+                />
+              </svg>
+              <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                颜色主题
+              </p>
+            </div>
+            <ThemeSelector />
+            <p class="mt-2 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
+              选择应用整体配色；Fluent 默认支持明暗切换，其他主题为单模式
+            </p>
           </div>
 
           {/* Layout mode selector */}

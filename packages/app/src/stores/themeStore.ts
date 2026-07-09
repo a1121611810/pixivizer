@@ -55,7 +55,7 @@ export async function loadColorThemePreference(): Promise<void> {
 }
 
 // 自动应用主题类与 .dark 类，并持久化到 Preferences。
-// themeStore 是 <html> 上 theme-* 与 .dark 的唯一所有者。
+// themeStore 是运行期间 <html> 上 theme-* 与 .dark 类的唯一所有者（index.html 仅在首屏前负责 .dark 防闪白）。
 createRoot(() => {
   createEffect(() => {
     const id = internalColorTheme();
@@ -69,7 +69,10 @@ createRoot(() => {
     if (id === lastPersistedId) return;
     Preferences.set({ key: PREF_KEY_COLOR_THEME, value: id })
       .then(() => {
-        lastPersistedId = id;
+        // 仅在主题仍是本次写入的值时才更新 lastPersistedId，避免快速切换 A→B→A 时陈旧写入覆盖最新状态。
+        if (internalColorTheme() === id) {
+          lastPersistedId = id;
+        }
       })
       .catch((e) => {
         console.warn("[themeStore] Failed to persist color theme", e);
