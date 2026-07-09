@@ -125,6 +125,7 @@ const NovelFeedPage: Component<Props> = (props) => {
                 authorId={s().authorId}
                 isOpen={sheetOpen()}
                 onClose={() => setSheetOpen(false)}
+                onNovelSelect={(id) => navigate(`/novel/${id}`)}
               />
             )}
           </Show>
