@@ -47,7 +47,7 @@ export async function loadColorThemePreference(): Promise<void> {
 createRoot(() => {
   createEffect(() => {
     const id = internalColorTheme();
-    if (id == null || typeof document === "undefined") return;
+    if (id == null || typeof document === "undefined" || !hasLoaded()) return;
     applyColorThemeClass(id);
   });
 
