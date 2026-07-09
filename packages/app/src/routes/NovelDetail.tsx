@@ -7,8 +7,6 @@ import {
   createMemo,
   Show,
   For,
-  Switch,
-  Match,
   onCleanup,
   onMount,
 } from "solid-js";
@@ -145,6 +143,65 @@ function parseProgress(raw: string | null): NovelProgress | null {
   }
   return null;
 }
+
+function isTextBlock(block: NovelBlock): block is TextBlock {
+  return block.type === "text";
+}
+
+function isImageBlock(block: NovelBlock): block is ImageBlock {
+  return block.type === "image";
+}
+
+interface NovelContentBlockProps {
+  block: Accessor<NovelBlock>;
+  style: Accessor<{
+    position: "absolute";
+    top: string;
+    left: string;
+    width: string;
+    height: string;
+  }>;
+  imageBlockList: Accessor<ImageBlock[]>;
+  imageDimensions: Accessor<NovelImageDimensions>;
+  containerWidth: Accessor<number>;
+  fontSize: Accessor<number>;
+  onImageClick: (index: number) => void;
+  renderParagraph: (paragraphIndex: number, text: string) => JSX.Element;
+}
+
+const NovelContentBlock: Component<NovelContentBlockProps> = (props) => {
+  const block = props.block();
+  const style = props.style();
+
+  if (isTextBlock(block)) {
+    return (
+      <p
+        class="novel-text-paragraph absolute"
+        style={{
+          ...style,
+          textIndent: `${props.fontSize() * 2}px`,
+        }}
+      >
+        {props.renderParagraph(block.index, block.text)}
+      </p>
+    );
+  }
+
+  if (isImageBlock(block)) {
+    const imageIndex = props.imageBlockList().findIndex((b) => b.imageId === block.imageId);
+    return (
+      <NovelImageBlock
+        block={block}
+        containerWidth={props.containerWidth}
+        dimensions={props.imageDimensions}
+        style={style}
+        onClick={() => props.onImageClick(imageIndex)}
+      />
+    );
+  }
+
+  return <hr class="novel-page-break absolute m-0" style={style} />;
+};
 
 const NovelDetail: Component = () => {
   const params = useParams<{ id: string }>();
@@ -607,54 +664,21 @@ const NovelDetail: Component = () => {
                     }}
                   >
                     <For each={virtualLayout.visibleBlocks()}>
-                      {(blockIndex) => {
-                        const block = blocks()[blockIndex];
-                        const style = virtualLayout.getBlockStyle(blockIndex);
-
-                        return (
-                          <Switch>
-                            <Match when={block.type === "text"}>
-                              {() => {
-                                const textBlock = block as TextBlock;
-                                return (
-                                  <p
-                                    class="novel-text-paragraph absolute"
-                                    style={{
-                                      ...style,
-                                      textIndent: `${fontSize() * 2}px`,
-                                    }}
-                                  >
-                                    {renderParagraphWithHighlights(textBlock.index, textBlock.text)}
-                                  </p>
-                                );
-                              }}
-                            </Match>
-                            <Match when={block.type === "image"}>
-                              {() => {
-                                const imageBlock = block as ImageBlock;
-                                const imageIndex = imageBlockList().findIndex(
-                                  (b) => b.imageId === imageBlock.imageId,
-                                );
-                                return (
-                                  <NovelImageBlock
-                                    block={imageBlock}
-                                    containerWidth={textContainerWidth}
-                                    dimensions={imageDimensions}
-                                    style={style}
-                                    onClick={() => {
-                                      setImageViewerIndex(imageIndex);
-                                      setImageViewerOpen(true);
-                                    }}
-                                  />
-                                );
-                              }}
-                            </Match>
-                            <Match when={block.type === "pageBreak"}>
-                              <hr class="novel-page-break absolute m-0" style={style} />
-                            </Match>
-                          </Switch>
-                        );
-                      }}
+                      {(blockIndex) => (
+                        <NovelContentBlock
+                          block={() => blocks()[blockIndex]}
+                          style={() => virtualLayout.getBlockStyle(blockIndex)}
+                          imageBlockList={imageBlockList}
+                          imageDimensions={imageDimensions}
+                          containerWidth={textContainerWidth}
+                          fontSize={fontSize}
+                          onImageClick={(imageIndex) => {
+                            setImageViewerIndex(imageIndex);
+                            setImageViewerOpen(true);
+                          }}
+                          renderParagraph={renderParagraphWithHighlights}
+                        />
+                      )}
                     </For>
                   </div>
                 </Show>
