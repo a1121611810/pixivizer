@@ -135,91 +135,91 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  try {
-    let response;
-    if (isNative) {
-      // 原生模式
-      if (method === "POST") {
-        headers["Content-Type"] = "application/x-www-form-urlencoded";
-      }
-      if (useDnsOverride()) {
-        // 自定义 DNS：通过 OkHttp + DoH 绕过 DNS 污染
-        const resp = await PictelioHttp.request({
-          url,
-          method,
-          headers,
-          body: method === "POST" && data ? new URLSearchParams(data).toString() : undefined,
-        });
-        try {
-          response = { status: resp.status, data: JSON.parse(resp.data) };
-        } catch {
-          response = { status: resp.status, data: resp.data };
+  const MAX_RETRIES = 3;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      let response;
+      if (isNative) {
+        if (method === "POST") {
+          headers["Content-Type"] = "application/x-www-form-urlencoded";
         }
-      } else if (method === "GET") {
-        response = await CapacitorHttp.request({
-          method: "GET",
-          url,
-          headers,
-          params: data as any,
-        });
+        if (useDnsOverride()) {
+          const resp = await PictelioHttp.request({
+            url,
+            method,
+            headers,
+            body: method === "POST" && data ? new URLSearchParams(data).toString() : undefined,
+          });
+          try {
+            response = { status: resp.status, data: JSON.parse(resp.data) };
+          } catch {
+            response = { status: resp.status, data: resp.data };
+          }
+        } else if (method === "GET") {
+          response = await CapacitorHttp.request({
+            method: "GET",
+            url,
+            headers,
+            params: data as any,
+          });
+        } else {
+          const body = data ? new URLSearchParams(data).toString() : "";
+          response = await CapacitorHttp.request({ method: "POST", url, headers, data: body });
+        }
       } else {
-        const body = data ? new URLSearchParams(data).toString() : "";
-        response = await CapacitorHttp.request({ method: "POST", url, headers, data: body });
-      }
-    } else {
-      // Web 模式：fetch 走 Vite 代理（同源，无 CORS 问题）
-      if (method === "GET") {
-        const params = data ? "?" + new URLSearchParams(data).toString() : "";
-        const res = await fetch(url + params, { method: "GET", headers });
-        response = { status: res.status, data: await res.json() };
-      } else {
-        const body = data ? new URLSearchParams(data).toString() : "";
-        headers["Content-Type"] = "application/x-www-form-urlencoded";
-        const res = await fetch(url, { method: "POST", headers, body });
-        // 先尝试 JSON，失败则读文本（处理 Cloudflare HTML 拦截）
-        const contentType = res.headers.get("content-type") || "";
-        if (contentType.includes("application/json")) {
+        if (method === "GET") {
+          const params = data ? "?" + new URLSearchParams(data).toString() : "";
+          const res = await fetch(url + params, { method: "GET", headers });
           response = { status: res.status, data: await res.json() };
         } else {
-          const text = await res.text().catch(() => "");
-          throw new Error(`服务器返回非 JSON (HTTP ${res.status}): ${text.slice(0, 300)}`);
+          const body = data ? new URLSearchParams(data).toString() : "";
+          headers["Content-Type"] = "application/x-www-form-urlencoded";
+          const res = await fetch(url, { method: "POST", headers, body });
+          const contentType = res.headers.get("content-type") || "";
+          if (contentType.includes("application/json")) {
+            response = { status: res.status, data: await res.json() };
+          } else {
+            const text = await res.text().catch(() => "");
+            throw new Error(`\u670d\u52a1\u5668\u8fd4\u56de\u975e JSON (HTTP ${res.status}): ${text.slice(0, 300)}`);
+          }
         }
       }
-    }
 
-    if (response!.status === 401 && onUnauthorized) {
-      // 共享 Promise 队列：首次 401 创建 refresh，后续 401 await 同一个
-      if (!refreshPromise) {
-        refreshPromise = onUnauthorized().finally(() => {
-          refreshPromise = null;
-        });
+      if (response!.status === 401 && onUnauthorized) {
+        if (!refreshPromise) {
+          refreshPromise = onUnauthorized().finally(() => {
+            refreshPromise = null;
+          });
+        }
+        await refreshPromise;
+        if (!accessToken) {
+          throw classifyError(401, null);
+        }
+        return request<T>(method, path, data);
       }
-      await refreshPromise;
 
-      // 如果 refresh 后 token 仍为空（登录已注销），不重试
-      if (!accessToken) {
-        throw classifyError(401, null);
+      if (response!.status === 429 && attempt < MAX_RETRIES) {
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
       }
-      return request<T>(method, path, data);
-    }
 
-    if (response!.status >= 400) {
-      // 尝试读取响应体以提取 Pixiv 错误信息
-      let errorBody: unknown;
-      try {
-        errorBody = response!.data;
-      } catch {
-        // ignore
+      if (response!.status >= 400) {
+        let errorBody: unknown;
+        try {
+          errorBody = response!.data;
+        } catch {
+          // ignore
+        }
+        throw classifyError(response!.status, null, errorBody);
       }
-      throw classifyError(response!.status, null, errorBody);
-    }
 
-    return response!.data as T;
-  } catch (e) {
-    if ((e as ApiError).type) throw e;
-    // 保留原始错误信息，传递给 classifyError
-    const errMsg = e instanceof Error ? e.message : String(e ?? "");
-    throw classifyError(0, e, { message: errMsg });
+      return response!.data as T;
+    } catch (e) {
+      if ((e as ApiError).type) throw e;
+      const errMsg = e instanceof Error ? e.message : String(e ?? "");
+      throw classifyError(0, e, { message: errMsg });
+    }
   }
 }
 

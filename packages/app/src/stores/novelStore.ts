@@ -96,32 +96,6 @@ function computeFollowNovels(): PixivNovel[] {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  429 retry helper
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-/* eslint-disable no-await-in-loop -- intentional sequential retry with backoff */
-async function fetchBookmarksWithRetry(
-  userId: number,
-  restrictVal: RestrictType,
-): Promise<{ novels: PixivNovel[]; nextUrl: string | null }> {
-  let attempt = 0;
-  while (true) {
-    try {
-      const data = await loadBookmarks(userId, restrictVal);
-      return { novels: data.novels, nextUrl: data.next_url };
-    } catch (e) {
-      const msg = (e as { message?: string }).message ?? "";
-      if ((msg.includes("429") || msg.includes("频繁")) && attempt < 3) {
-        attempt++;
-        await new Promise((r) => setTimeout(r, 3000));
-        continue;
-      }
-      throw e;
-    }
-  }
-}
-/* eslint-enable no-await-in-loop */
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  Reactive
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 createRoot(() => {
@@ -200,7 +174,7 @@ export async function ensureLoaded(): Promise<void> {
         setState("error", "未登录");
         return;
       }
-      const data = await fetchBookmarksWithRetry(u.id, state.bookmarkRestrict);
+      const data = await loadBookmarks(u.id, state.bookmarkRestrict);
       tabNovels[sourceKey] = data.novels;
       tabNextUrl[sourceKey] = data.nextUrl;
       batch(() => {

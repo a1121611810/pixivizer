@@ -461,43 +461,4 @@ describe("novelStore", () => {
     });
   });
 
-  describe("429 retry", () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    it("retries bookmarks up to 3 times on 429", async () => {
-      mockCurrentTab = "bookmarks";
-      vi.mocked(loadBookmarks)
-        .mockRejectedValueOnce(new Error("429 Too Many Requests"))
-        .mockRejectedValueOnce(new Error("429 Too Many Requests"))
-        .mockResolvedValue({ novels: [createNovel(1, "2026-01-01T00:00:00Z")], next_url: null });
-
-      const store = await loadStore();
-      const promise = store.ensureLoaded();
-      await vi.advanceTimersByTimeAsync(9000);
-      await promise;
-
-      expect(loadBookmarks).toHaveBeenCalledTimes(3);
-      expect(store.novels()).toHaveLength(1);
-      expect(store.error()).toBeNull();
-    });
-
-    it("gives up after 3 retries and sets error", async () => {
-      mockCurrentTab = "bookmarks";
-      vi.mocked(loadBookmarks).mockRejectedValue(new Error("429 Too Many Requests"));
-
-      const store = await loadStore();
-      const promise = store.ensureLoaded();
-      await vi.advanceTimersByTimeAsync(12000);
-      await promise;
-
-      expect(loadBookmarks).toHaveBeenCalledTimes(4); // initial + 3 retries
-      expect(store.error()).toContain("429");
-    });
-  });
 });
