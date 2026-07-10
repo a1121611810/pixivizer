@@ -1,5 +1,5 @@
 {
-  "version": "3.5.3",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.5.3",
-  "changelog": "✨ 新功能\n  feat(user-works): 用户作品页新增小说 tab，支持三类型切换缓存"
+  "version": "3.5.4",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.5.4",
+  "changelog": "⚡ 性能\n  perf(cache): add byte budget to LRU image cache (200MB max)\n  perf(auth): pre-emptive token refresh on app foreground resume\n  perf(api): add 429 exponential backoff retry, remove store duplica"
 }
