@@ -1,5 +1,5 @@
 {
-  "version": "3.5.2",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.5.2",
-  "changelog": "✨ 新功能\n  feat(uiStore): add update check state management and sync with startup check"
+  "version": "3.5.3",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.5.3",
+  "changelog": "✨ 新功能\n  feat(user-works): 用户作品页新增小说 tab，支持三类型切换缓存"
 }
