@@ -11,6 +11,7 @@ import com.getcapacitor.BridgeActivity;
 import io.pictelio.app.PredictiveBackPlugin;
 
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 
 /**
@@ -95,7 +96,7 @@ public class MainActivity extends BridgeActivity {
 
         try {
             String path = url.substring(url.indexOf("/pixiv-img/") + "/pixiv-img/".length());
-            String pixivUrl = "https://i.pximg.net/" + path;
+            String pixivUrl = new URI("https://i.pximg.net/" + path).normalize().toString();
 
             HttpURLConnection conn = (HttpURLConnection) new URL(pixivUrl).openConnection();
             conn.setRequestProperty("Referer", "https://app-api.pixiv.net/");
