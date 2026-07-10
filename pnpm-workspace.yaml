@@ -49,3 +49,6 @@ shellEmulator: true
 updateConfig:
   ignoreDependencies:
     - capacitor-secure-storage-plugin
+
+patchedDependencies:
+  capacitor-secure-storage-plugin@0.13.0: patches/capacitor-secure-storage-plugin@0.13.0.patch

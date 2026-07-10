@@ -193,6 +193,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  capacitor-secure-storage-plugin@0.13.0: 95e639e239ec04f7798ff5f6c671337bd838cc471656b1e9720ff60608552bd0
+
 importers:
 
   .: {}
@@ -228,7 +231,7 @@ importers:
         version: 0.16.1(solid-js@1.9.13)
       capacitor-secure-storage-plugin:
         specifier: ^0.13.0
-        version: 0.13.0(@capacitor/core@8.4.1)
+        version: 0.13.0(patch_hash=95e639e239ec04f7798ff5f6c671337bd838cc471656b1e9720ff60608552bd0)(@capacitor/core@8.4.1)
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
@@ -6944,7 +6947,7 @@ snapshots:
       node-addon-api: 7.1.1
       prebuild-install: 7.1.3
 
-  capacitor-secure-storage-plugin@0.13.0(@capacitor/core@8.4.1):
+  capacitor-secure-storage-plugin@0.13.0(patch_hash=95e639e239ec04f7798ff5f6c671337bd838cc471656b1e9720ff60608552bd0)(@capacitor/core@8.4.1):
     dependencies:
       '@capacitor/core': 8.4.1
 
