@@ -1,4 +1,9 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+//
+// AGP / Gradle / JDK 版本兼容性（2026-07-08 已通过本地 Debug 构建验证）：
+// - AGP 9.2.1 + Gradle 9.6.1 在 Gradle 9.6.1 官方测试覆盖范围内（AGP 9.0 ~ 9.3.0-alpha06）
+// - JDK 21 在 Gradle 9.6.1（JDK 17-26）和 AGP 9.2.1 上均完全支持
+// - 升级参考：https://developer.android.com/build/releases/gradle-plugin#agp-gradle-compatibility
 
 buildscript {
     
@@ -7,7 +12,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.13.0'
+        classpath 'com.android.tools.build:gradle:9.2.1'
         classpath 'com.google.gms:google-services:4.4.4'
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -21,6 +26,14 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android.buildToolsVersion = "36.1.0"
+        }
     }
 }
 

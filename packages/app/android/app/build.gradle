@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 android {
     namespace = "io.pictelio.app"
     compileSdk = rootProject.ext.compileSdkVersion
+    buildToolsVersion = "36.1.0"
     defaultConfig {
         applicationId "io.pictelio.app"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -17,8 +18,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
     signingConfigs {
         release {
@@ -31,7 +32,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
     }

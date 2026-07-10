@@ -332,6 +332,7 @@ packages/app/src/
   - 自定义 Capacitor 插件在 `MainActivity.java` 中通过 `registerPlugin()` 注册（**必须在 `super.onCreate()` 之前**）
   - 构建 APK: `pnpm build:android`（Debug）或 `pnpm build:android:release`（Release）
   - `app/build.gradle` 中 versionCode 和 versionName 通过 `scripts/sync-android-version.mjs` 从 `package.json` 同步
+  - AGP 9.2.1 + Gradle 9.6.1 + JDK 21 版本锁定决策：Gradle 9.6.1 官方测试覆盖 AGP 9.0~9.3.0-alpha06，AGP 9.2.1 在此范围内。JDK 21 完整支持。详见 `android/build.gradle` 顶部注释。
 - **Android 发布签名**：Release 构建使用 `android/app/pictelio-release.keystore`，密码通过环境变量 `PICTELIO_KEYSTORE_PASSWORD` 与 `PICTELIO_KEY_PASSWORD` 注入。Keystore 禁止提交到 git。详细步骤见 `docs/release-signing.md`。
 - **Gradle 任务图校验**: `build.gradle` 通过 `gradle.taskGraph.whenReady` 仅在 Release 任务触发时检查签名凭据，Debug 构建不需要环境变量。
 - **代码探索**：使用 CodeGraph 作为默认代码理解工具，普通搜索工具仅作 fallback

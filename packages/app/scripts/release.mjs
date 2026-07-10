@@ -170,31 +170,6 @@ function bump(v, part) {
   }
 }
 
-async function patchJavaCompat() {
-  // 临时将 Capacitor 各库的 Java 21 → 17，匹配当前环境 JDK
-  const gradleFiles = [
-    "node_modules/@capacitor/android/capacitor/build.gradle",
-    "node_modules/@capacitor/app/android/build.gradle",
-    "node_modules/@capacitor/preferences/android/build.gradle",
-    "node_modules/@capacitor/device/android/build.gradle",
-    "node_modules/capacitor-secure-storage-plugin/android/build.gradle",
-    "android/app/capacitor.build.gradle",
-    "android/capacitor-cordova-android-plugins/build.gradle",
-    "android/app/build.gradle",
-  ];
-  const results = await Promise.all(
-    gradleFiles.map(async (f) => {
-      if (!(await exists(f))) return 0;
-      let content = await readText(f);
-      if (!content.includes("VERSION_21")) return 0;
-      content = content.replace(/VERSION_21/g, "VERSION_17");
-      await writeText(f, content);
-      return 1;
-    }),
-  );
-  return results.reduce((a, b) => a + b, 0);
-}
-
 async function askQuestion(query) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   return new Promise((resolve) => {
@@ -505,30 +480,15 @@ async function main() {
   }
   console.log("");
 
-  // ── 5. Java 兼容性补丁 ──
-  const patched = await patchJavaCompat();
-  if (patched > 0) ok(`已修补 ${patched} 个 Gradle 文件的 Java 兼容性`);
-  else warn("未找到需要修补的 Gradle 文件");
-  console.log("");
-
-  // ── 6. 构建 APK ──
+  // ── 5. 构建 APK ──
   if (!dryRun) {
     log("开始构建 Release APK...");
     await run("pnpm", ["run", "sync:android-version"], { stdio: "inherit" });
     await run("pnpm", ["run", "build"], { stdio: "inherit" });
     await run("pnpm", ["run", "cap:sync"], { stdio: "inherit" });
-    // cap:sync 会重新生成 capacitor.build.gradle（VERSION_21），需要重新修补
-    const patchedAfterSync = await patchJavaCompat();
-    if (patchedAfterSync > 0) ok(`cap:sync 后重新修补 ${patchedAfterSync} 个 Gradle 文件`);
-    // 使用临时目录避免 ~/.gradle / ~/.android 因 com.apple.provenance 不可写
     await run("./gradlew", ["assembleRelease"], {
       cwd: resolvePath(rootDir, "android"),
       stdio: "inherit",
-      env: {
-        ...process.env,
-        GRADLE_USER_HOME: "/tmp/gr",
-        ANDROID_USER_HOME: "/tmp/android-home",
-      },
     });
     ok("APK 构建成功");
   } else {
