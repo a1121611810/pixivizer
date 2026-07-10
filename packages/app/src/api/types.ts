@@ -130,7 +130,7 @@ export interface PixivUgoiraMetadataResponse {
 }
 
 // ─── 请求参数 ───
-export type ContentType = "illust" | "manga";
+export type ContentType = "illust" | "manga" | "novel";
 export type RestrictType = "public" | "private";
 
 // ─── 用户关注/粉丝 ───

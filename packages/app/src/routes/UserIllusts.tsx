@@ -3,16 +3,18 @@ import { useNavigate, useParams } from "@solidjs/router";
 import { user } from "../stores/authStore";
 import {
   illusts,
+  novels,
   nextUrl,
   loading,
   error,
   contentType,
   load,
   loadMore,
-  switchType,
+  saveScrollPosition,
+  getScrollPosition,
 } from "../stores/userIllustsStore";
 import { viewedUser, loadProfile } from "../stores/userStore";
-import VirtualFeed from "../components/VirtualFeed";
+import UserWorksFeed from "../components/UserWorksFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
@@ -23,9 +25,11 @@ const UserIllusts: Component = () => {
   const params = useParams<{ id: string }>();
   const userId = () => Number(params.id);
 
-  createEffect(() => {
+  let prevUserId = 0;
+createEffect(() => {
     const uid = userId();
-    if (uid) {
+    if (uid && uid !== prevUserId) {
+      prevUserId = uid;
       load(uid, contentType());
       loadProfile(uid);
     }
@@ -40,6 +44,12 @@ const UserIllusts: Component = () => {
     window.addEventListener("r18Changed", handler);
     onCleanup(() => window.removeEventListener("r18Changed", handler));
   });
+
+  function handleTabSwitch(type: "illust" | "manga" | "novel") {
+    // Save current scroll position before switching; restoreScrollTop prop handles restoration
+    saveScrollPosition(window.scrollY);
+    load(userId(), type);
+  }
 
   return (
     <>
@@ -59,7 +69,7 @@ const UserIllusts: Component = () => {
             </h1>
           </header>
 
-          {/* Segmented: 插画 / 漫画 */}
+          {/* Segmented: 插画 / 漫画 / 小说 */}
           <div class="px-4 py-3">
             <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
               <button
@@ -67,10 +77,7 @@ const UserIllusts: Component = () => {
                   "segmented-item-active": contentType() === "illust",
                   "segmented-item-inactive": contentType() !== "illust",
                 }}
-                onClick={() => {
-                  switchType("illust");
-                  load(userId(), "illust");
-                }}
+                onClick={() => handleTabSwitch("illust")}
               >
                 插画
               </button>
@@ -79,28 +86,38 @@ const UserIllusts: Component = () => {
                   "segmented-item-active": contentType() === "manga",
                   "segmented-item-inactive": contentType() !== "manga",
                 }}
-                onClick={() => {
-                  switchType("manga");
-                  load(userId(), "manga");
-                }}
+                onClick={() => handleTabSwitch("manga")}
               >
                 漫画
+              </button>
+              <button
+                classList={{
+                  "segmented-item-active": contentType() === "novel",
+                  "segmented-item-inactive": contentType() !== "novel",
+                }}
+                onClick={() => handleTabSwitch("novel")}
+              >
+                小说
               </button>
             </div>
           </div>
 
-          <VirtualFeed
+          <UserWorksFeed
+            contentType={contentType()}
             illusts={illusts()}
+            novels={novels()}
             loading={loading()}
             error={error()}
             hasMore={nextUrl() !== null}
             onIllustClick={(id) => navigate(`/illust/${id}`)}
+            onNovelClick={(id) => navigate(`/novel/${id}`)}
             onLoadMore={loadMore}
             onRefresh={async () => {
               const uid = userId();
-              if (uid) await load(uid, contentType());
+              if (uid) await load(uid, contentType(), true);
             }}
             layoutMode={layoutMode()}
+            restoreScrollTop={getScrollPosition(contentType())}
           />
         </div>
       </PageTransition>

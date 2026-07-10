@@ -254,6 +254,18 @@ export function loadFollow(restrict: RestrictType = "public"): Promise<PixivNove
   return apiClient.get<PixivNovelListResponse>("/v1/novel/follow", { restrict });
 }
 
+/**
+ * 获取指定用户的全部小说。
+ * Pixiv App-API: GET /v1/user/novels
+ * @param userId 目标用户 ID
+ */
+export function loadUserNovels(userId: number): Promise<PixivNovelListResponse> {
+  return apiClient.get<PixivNovelListResponse>("/v1/user/novels", {
+    user_id: String(userId),
+    filter: "for_ios",
+  });
+}
+
 export function addBookmark(novelId: number, restrict: RestrictType = "public"): Promise<void> {
   return apiClient.post("/v2/novel/bookmark/add", {
     novel_id: String(novelId),

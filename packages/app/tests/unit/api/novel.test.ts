@@ -314,3 +314,43 @@ describe("loadFollow", () => {
     expect(result.novels).toHaveLength(1);
   });
 });
+
+describe("loadUserNovels", () => {
+  it("calls apiClient.get with /v1/user/novels and user_id", async () => {
+    mockGet.mockResolvedValue({ novels: [], next_url: null });
+    const { loadUserNovels } = await loadApi();
+    await loadUserNovels(42);
+
+    expect(mockGet).toHaveBeenCalledWith("/v1/user/novels", {
+      user_id: "42",
+      filter: "for_ios",
+    });
+  });
+
+  it("returns PixivNovelListResponse", async () => {
+    const expected: import("@/api/types").PixivNovelListResponse = {
+      novels: [
+        {
+          id: 1,
+          title: "test novel",
+          user: { id: 1, name: "a", account: "a", profile_image_urls: {} },
+          image_urls: { square_medium: "", medium: "", large: "" },
+          tags: [],
+          page_count: 1,
+          text_length: 1000,
+          is_bookmarked: false,
+          total_bookmarks: 5,
+          x_restrict: 0,
+          create_date: "2026-01-01T00:00:00Z",
+        } as import("@/api/types").PixivNovel,
+      ],
+      next_url: null,
+    };
+    mockGet.mockResolvedValue(expected);
+    const { loadUserNovels } = await loadApi();
+    const result = await loadUserNovels(42);
+
+    expect(result).toEqual(expected);
+    expect(result.novels).toHaveLength(1);
+  });
+});
