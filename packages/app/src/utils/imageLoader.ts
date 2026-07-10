@@ -1,4 +1,5 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
+import { PIXIV_USER_AGENT } from "../api/userAgent";
 import { isImageHostEnabled } from "../stores/imageHostStore";
 import { getEffectiveImageUrl, getRaceCandidateUrls } from "../services/imageHostService";
 
@@ -345,7 +346,7 @@ function loadWithProgressNative(url: string, onProgress: (p: LoadProgress) => vo
     xhr.open("GET", url, true);
     xhr.responseType = "blob";
     xhr.setRequestHeader("Referer", "https://app-api.pixiv.net/");
-    xhr.setRequestHeader("User-Agent", "PixivIOSApp/7.16.9 (iOS 16.4.1; iPad13,4)");
+    xhr.setRequestHeader("User-Agent", PIXIV_USER_AGENT);
 
     xhr.addEventListener("progress", (e) => {
       if (e.lengthComputable) {
@@ -408,7 +409,7 @@ async function fetchSingleNative(url: string): Promise<Blob> {
     url,
     headers: {
       Referer: "https://app-api.pixiv.net/",
-      "User-Agent": "PixivIOSApp/7.16.9 (iOS 16.4.1; iPad13,4)",
+      "User-Agent": PIXIV_USER_AGENT,
     },
     responseType: "arraybuffer",
   } as any);

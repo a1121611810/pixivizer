@@ -100,7 +100,8 @@ public class MainActivity extends BridgeActivity {
 
             HttpURLConnection conn = (HttpURLConnection) new URL(pixivUrl).openConnection();
             conn.setRequestProperty("Referer", "https://app-api.pixiv.net/");
-            conn.setRequestProperty("User-Agent", "PixivIOSApp/7.16.9 (iOS 16.4.1; iPad13,4)");
+            // 与 JS 侧 src/api/userAgent.ts 的 PIXIV_USER_AGENT 保持一致
+            conn.setRequestProperty("User-Agent", "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)");
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(15000);
 

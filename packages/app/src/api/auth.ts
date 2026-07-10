@@ -2,6 +2,7 @@ import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { setAccessToken } from "./client";
 import type { PixivAuthResponse } from "./types";
 import SparkMD5 from "spark-md5";
+import { PIXIV_USER_AGENT } from "./userAgent";
 
 // ─── 平台检测 ───
 const isNative = Capacitor.isNativePlatform();
@@ -24,7 +25,7 @@ function makeClientHeaders(): Record<string, string> {
     "X-Client-Hash": hash,
     "App-OS": "ios",
     "App-OS-Version": "18.5",
-    "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+    "User-Agent": PIXIV_USER_AGENT,
   };
 }
 

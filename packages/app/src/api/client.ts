@@ -2,6 +2,7 @@ import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { ApiErrorType, type ApiError } from "./types";
 import { PictelioHttp } from "../native/PictelioHttp";
 import { useDnsOverride } from "../stores/uiStore";
+import { PIXIV_USER_AGENT } from "./userAgent";
 
 // ─── 端点 ───
 const PIXIV_API_BASE = "https://app-api.pixiv.net";
@@ -127,7 +128,7 @@ async function request<T>(
 ): Promise<T> {
   const url = rewriteUrl(path);
   const headers: Record<string, string> = {
-    "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+    "User-Agent": PIXIV_USER_AGENT,
     Referer: "https://app-api.pixiv.net/",
   };
   if (accessToken) {

@@ -1,5 +1,6 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { apiClient, getAccessToken } from "./client";
+import { PIXIV_USER_AGENT } from "./userAgent";
 import { createDedupedRequest } from "@/utils/createDedupedRequest";
 import type {
   PixivNovelListResponse,
@@ -178,7 +179,7 @@ export function loadDetail(novelId: number): Promise<PixivNovelDetailResponse> {
 async function loadTextRaw(novelId: number): Promise<string> {
   const token = getAccessToken();
   const headers: Record<string, string> = {
-    "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+    "User-Agent": PIXIV_USER_AGENT,
     Referer: "https://app-api.pixiv.net/",
   };
   if (token) {

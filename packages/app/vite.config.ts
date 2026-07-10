@@ -111,6 +111,7 @@ export default defineConfig({
 
   server: {
     proxy: {
+      // User-Agent 值保持与 src/api/userAgent.ts 的 PIXIV_USER_AGENT 一致
       "/pixiv-img": {
         target: "https://i.pximg.net",
         changeOrigin: true,
