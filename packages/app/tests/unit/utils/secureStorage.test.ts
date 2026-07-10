@@ -6,7 +6,7 @@ const mockSecureSet = vi.fn();
 const mockSecureRemove = vi.fn();
 
 vi.mock("@aparajita/capacitor-secure-storage", () => ({
-  SecureStoragePlugin: {
+  SecureStorage: {
     get: (...args: unknown[]) => mockSecureGet(...args),
     set: (...args: unknown[]) => mockSecureSet(...args),
     remove: (...args: unknown[]) => mockSecureRemove(...args),
