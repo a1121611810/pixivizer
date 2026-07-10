@@ -34,6 +34,8 @@ import {
   setLatestReleaseUrl,
   setLatestChangelog,
   setShowUpdateDialog,
+  setIsCheckingUpdate,
+  setCheckCompleted,
   lastDismissedVersion,
 } from "./stores/uiStore";
 import { checkForUpdate } from "./services/updateService";
@@ -131,7 +133,10 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
 
     // Background update check on startup if toggle is enabled.
     // The result is stored in uiStore so StartupUpdateDialog can render it.
+    // isCheckingUpdate/checkCompleted are kept in sync so the Settings drawer
+    // can show the version indicator ("v3.5.1 ✅") after a startup check.
     if (autoCheckUpdate()) {
+      setIsCheckingUpdate(true);
       try {
         const result = await checkForUpdate();
         setHasUpdate(result.hasUpdate);
@@ -147,6 +152,9 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
         }
       } catch (e) {
         console.warn("[App] Startup update check failed", e);
+      } finally {
+        setIsCheckingUpdate(false);
+        setCheckCompleted(true);
       }
     }
 
