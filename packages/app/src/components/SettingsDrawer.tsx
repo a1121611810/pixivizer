@@ -888,7 +888,7 @@ const SettingsDrawer: Component = () => {
                   <FluentIcon name="server" size={24} />
                 </div>
                 <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                  图片缓存数
+                  图片缓存限制
                 </p>
               </div>
               <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorCompoundBrandForeground1)]">
@@ -916,7 +916,7 @@ const SettingsDrawer: Component = () => {
               </span>
             </div>
             <p class="mt-2 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-              缓存数越大，图片加载越快，但占用的内存也越多。推荐 400~600。
+              设置同时限制缓存条目数和总内存上限（约 200MB），超出时优先淘汰大图。推荐 400~600。
             </p>
           </div>
 

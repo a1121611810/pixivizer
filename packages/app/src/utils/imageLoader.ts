@@ -11,10 +11,34 @@ interface CacheEntry {
   blob: Blob;
   blobUrl: string;
   lastAccess: number;
+  /** 缓存插入时的 blob.size 快照，避免频繁访问 size getter */
+  byteSize: number;
 }
 
 let maxCacheSize = 600;
+/** 最大缓存字节数（约 200MB） */
+const MAX_CACHE_BYTES = 200 * 1024 * 1024;
+let totalBytes = 0;
 const cache = new Map<string, CacheEntry>();
+
+/** 找出最旧条目并从缓存中移除 */
+function evictOldest() {
+  let oldestKey = "";
+  let oldestTime = Infinity;
+  for (const [k, v] of cache) {
+    if (v.lastAccess < oldestTime) {
+      oldestTime = v.lastAccess;
+      oldestKey = k;
+    }
+  }
+  if (!oldestKey) return;
+  const old = cache.get(oldestKey);
+  if (old) {
+    totalBytes -= old.byteSize;
+    URL.revokeObjectURL(old.blobUrl);
+    cache.delete(oldestKey);
+  }
+}
 
 /** 从缓存获取持久 Blob URL，同时更新 LRU 访问时间 */
 function cacheGet(key: string): string | undefined {
@@ -34,44 +58,19 @@ export function checkImageCache(originalUrl: string): string | undefined {
 /** Update the cache size limit. If lowered, evict oldest entries immediately. */
 export function setMaxCacheSize(n: number): void {
   maxCacheSize = n;
-  while (cache.size > maxCacheSize) {
-    let oldestKey = "";
-    let oldestTime = Infinity;
-    for (const [k, v] of cache) {
-      if (v.lastAccess < oldestTime) {
-        oldestTime = v.lastAccess;
-        oldestKey = k;
-      }
-    }
-    if (oldestKey) {
-      const old = cache.get(oldestKey);
-      if (old) URL.revokeObjectURL(old.blobUrl);
-      cache.delete(oldestKey);
-    } else {
-      break;
-    }
+  while (cache.size > maxCacheSize || totalBytes > MAX_CACHE_BYTES) {
+    evictOldest();
   }
 }
 
-/** 存入缓存，创建持久 Blob URL；超出容量时淘汰并释放最旧条目 */
+/** 存入缓存，创建持久 Blob URL；超出容量或字节预算时淘汰并释放最旧条目 */
 function cacheSet(key: string, blob: Blob) {
-  if (cache.size >= maxCacheSize) {
-    let oldestKey = "";
-    let oldestTime = Infinity;
-    for (const [k, v] of cache) {
-      if (v.lastAccess < oldestTime) {
-        oldestTime = v.lastAccess;
-        oldestKey = k;
-      }
-    }
-    if (oldestKey) {
-      const old = cache.get(oldestKey);
-      if (old) URL.revokeObjectURL(old.blobUrl);
-      cache.delete(oldestKey);
-    }
+  while (cache.size >= maxCacheSize || totalBytes + blob.size > MAX_CACHE_BYTES) {
+    evictOldest();
   }
   const blobUrl = URL.createObjectURL(blob);
-  cache.set(key, { blob, blobUrl, lastAccess: Date.now() });
+  totalBytes += blob.size;
+  cache.set(key, { blob, blobUrl, lastAccess: Date.now(), byteSize: blob.size });
 }
 
 /** 清空缓存，释放所有 Blob URL */
