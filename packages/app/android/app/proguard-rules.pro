@@ -5,17 +5,12 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ── Capacitor 插件 keep 规则 ──
+# Capacitor 通过 @CapacitorPlugin 注解反射发现插件类。
+# R8 全优化模式下会移除未直接引用的类，此规则保留所有带该注解的类。
+-keep @com.getcapacitor.annotation.CapacitorPlugin class * { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# ── OkHttp ──
+# OkHttp 4.12.0 AAR 内自带 consumer-rules.pro，R8 会自动合并。
+# DohDns 通过 new DohDns() 直接实例化，R8 能追踪调用链自动保留。
+# 无需额外规则。

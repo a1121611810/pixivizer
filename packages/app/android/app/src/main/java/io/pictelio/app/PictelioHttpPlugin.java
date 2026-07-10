@@ -17,10 +17,13 @@ import okhttp3.Response;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -96,11 +99,39 @@ public class PictelioHttpPlugin extends Plugin {
 
     // ---- Capacitor 插件方法 ----
 
+    /** 允许通过 PictelioHttp 请求的域名白名单 */
+    static final Set<String> ALLOWED_HOSTS = Set.of(
+            "app-api.pixiv.net",
+            "i.pximg.net"
+    );
+
+    /**
+     * 校验 URL 是否在白名单内。
+     * 要求：https 协议 + host 精确匹配 ALLOWED_HOSTS。
+     */
+    static boolean isAllowedUrl(String url) {
+        if (url == null || url.isEmpty()) return false;
+        try {
+            URI uri = new URI(url);
+            String host = uri.getHost();
+            String scheme = uri.getScheme();
+            return "https".equals(scheme)
+                    && host != null
+                    && ALLOWED_HOSTS.contains(host);
+        } catch (URISyntaxException e) {
+            return false;
+        }
+    }
+
     @PluginMethod
     public void request(PluginCall call) {
         String url = call.getString("url");
         if (url == null || url.isEmpty()) {
             call.reject("url is required");
+            return;
+        }
+        if (!isAllowedUrl(url)) {
+            call.reject("url not allowed: " + url);
             return;
         }
 
