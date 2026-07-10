@@ -8,12 +8,18 @@ import {
   removeRefreshToken,
   migrateRefreshTokenFromPreferences,
 } from "../utils/secureStorage";
+import { App } from "@capacitor/app";
 
 const [accessTokenSig, setAccessTokenSig] = createSignal<string | null>(null);
 const [refreshTokenSig, setRefreshTokenSig] = createSignal<string | null>(null);
 const [user, setUser] = createSignal<PixivUser | null>(null);
 const [isLoggedIn, setIsLoggedIn] = createSignal(false);
 const [isLoading, setIsLoading] = createSignal(true);
+
+/** 上次 token 刷新的时间戳 */
+let lastRefreshTime = 0;
+/** 预判性刷新阈值：前台恢复后距离上次刷新超过此值则预刷新（10 分钟） */
+const PRE_REFRESH_THRESHOLD_MS = 10 * 60 * 1000;
 
 export { isLoggedIn, user, isLoading, setIsLoading, accessTokenSig, refreshTokenSig };
 
@@ -22,7 +28,9 @@ function syncToken(token: string) {
   setAccessToken(token);
 }
 
-/** 安装 onUnauthorized 处理器，始终使用最新的 refreshTokenSig */
+/** 安装 onUnauthorized 处理器 + 前台恢复预刷新监听 */
+let appStateListener: ReturnType<typeof App.addListener> | null = null;
+
 function setupUnauthorizedHandler() {
   setOnUnauthorized(async () => {
     const latest = refreshTokenSig();
@@ -30,6 +38,14 @@ function setupUnauthorizedHandler() {
       await performRefresh(latest);
     } else {
       await logout();
+    }
+  });
+
+  // 前台恢复时预判性刷新：如果距离上次刷新超过阈值，提前 refresh
+  appStateListener = App.addListener("appStateChange", ({ isActive }) => {
+    if (isActive && refreshTokenSig() && Date.now() - lastRefreshTime > PRE_REFRESH_THRESHOLD_MS) {
+      const latest = refreshTokenSig();
+      if (latest) performRefresh(latest);
     }
   });
 }
@@ -55,6 +71,7 @@ async function performRefresh(token: string) {
     setRefreshTokenSig(resp.refresh_token);
     setUser(resp.user);
     setIsLoggedIn(true);
+    lastRefreshTime = Date.now();
     await setRefreshToken(resp.refresh_token);
   } catch {
     await logout();
@@ -72,6 +89,8 @@ export async function loginWithToken(token: string) {
 }
 
 export async function logout() {
+  appStateListener?.remove();
+  appStateListener = null;
   syncToken("");
   setRefreshTokenSig(null);
   setUser(null);
