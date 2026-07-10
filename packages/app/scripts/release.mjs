@@ -489,6 +489,10 @@ async function main() {
     await run("./gradlew", ["assembleRelease"], {
       cwd: resolvePath(rootDir, "android"),
       stdio: "inherit",
+      env: {
+        ...process.env,
+        GRADLE_USER_HOME: resolvePath(rootDir, "android", ".gradle"),
+      },
     });
     ok("APK 构建成功");
   } else {
