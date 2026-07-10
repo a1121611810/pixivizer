@@ -1,5 +1,5 @@
 {
-  "version": "3.5.1",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.5.1",
-  "changelog": "🐛 修复\n  fix: 修正 @aparajita/capacitor-secure-storage 导入名\n♻️ 重构\n  refactor: 替换 secure-storage 插件为 @aparajita/capacitor-secure-storage v8"
+  "version": "3.5.2",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.5.2",
+  "changelog": "✨ 新功能\n  feat(uiStore): add update check state management and sync with startup check"
 }
