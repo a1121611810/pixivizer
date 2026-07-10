@@ -1,5 +1,5 @@
 {
-  "version": "3.3.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.3.0",
-  "changelog": "新增主题切换。。。。。。"
+  "version": "3.5.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.5.0",
+  "changelog": "🐛 修复\n  fix(build): 恢复 capacitor-secure-storage-plugin 的 proguard 补丁\n  fix(build): 使用项目本地 Gradle 缓存避免系统级权限问题\n🔧 其他\n  build: 升级至 AGP 9.2.1 + Gradle 9.6.1 + JDK 21，清理 Java 17 兼容补丁"
 }
