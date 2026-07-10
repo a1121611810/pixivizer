@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  备份排除规则 — Android 12+ (API 31+)
+  @aparajita/capacitor-secure-storage 使用 EncryptedSharedPreferences
+  存储在 _capacitor_secure_storage.xml 中（包含加密的 refresh_token）。
+
+  排除该文件确保云备份和跨设备传输不会泄露敏感凭据。
+  应用启动时通过 checkBackupIntegrity() 自检确认完整性。
+-->
+<data-extraction-rules>
+  <cloud-backup>
+    <exclude domain="sharedpref" path="_capacitor_secure_storage.xml" />
+  </cloud-backup>
+  <device-transfer>
+    <exclude domain="sharedpref" path="_capacitor_secure_storage.xml" />
+  </device-transfer>
+</data-extraction-rules>

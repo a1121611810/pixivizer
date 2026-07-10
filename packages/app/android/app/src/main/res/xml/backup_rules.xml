@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  全量备份排除规则 — Android 11- (API 30-)
+  与 data_extraction_rules.xml 同步排除 SecureStorage 文件，
+  确保旧版本 Android 也受到保护。
+-->
+<full-backup-content>
+  <exclude domain="sharedpref" path="_capacitor_secure_storage.xml" />
+</full-backup-content>
