@@ -19,7 +19,8 @@ export interface PixivApiClient {
 // ─── 状态 ───
 let accessToken = "";
 let onUnauthorized: (() => Promise<void>) | null = null;
-let isRetryingAfter401 = false; // 防止 401 → refresh 失败 → 401 无限循环
+/** 401 刷新 Promise — 共享给所有并发 401 请求，确保 refresh 只执行一次 */
+let refreshPromise: Promise<void> | null = null;
 
 export function setAccessToken(token: string) {
   accessToken = token;
@@ -186,19 +187,15 @@ async function request<T>(
     }
 
     if (response!.status === 401 && onUnauthorized) {
-      // 防止无限重试：refresh 失败 → logout → 清空 token → retry → 又是 401
-      if (isRetryingAfter401) {
-        isRetryingAfter401 = false;
-        throw classifyError(401, null);
+      // 共享 Promise 队列：首次 401 创建 refresh，后续 401 await 同一个
+      if (!refreshPromise) {
+        refreshPromise = onUnauthorized().finally(() => {
+          refreshPromise = null;
+        });
       }
-      isRetryingAfter401 = true;
-      try {
-        await onUnauthorized();
-      } catch {
-        // onUnauthorized 内部已处理，忽略异常
-      }
-      isRetryingAfter401 = false;
-      // 如果 refresh 成功，重试；如果失败且 token 已被清空，不重试
+      await refreshPromise;
+
+      // 如果 refresh 后 token 仍为空（登录已注销），不重试
       if (!accessToken) {
         throw classifyError(401, null);
       }
