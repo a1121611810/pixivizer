@@ -192,10 +192,10 @@ async function interceptApi(page) {
  * @param {import("playwright").Page} page
  */
 async function seedFakeToken(page) {
-  // capacitor-secure-storage-plugin web implementation stores base64 values
-  // under the "cap_sec_" prefix.
+  // @aparajita/capacitor-secure-storage web implementation stores JSON-stringified
+  // values under the "capacitor-storage_" prefix.
   await page.evaluate((token) => {
-    localStorage.setItem("cap_sec_refresh_token", btoa(token));
+    localStorage.setItem("capacitor-storage_refresh_token", JSON.stringify(token));
   }, REFRESH_TOKEN);
 }
 

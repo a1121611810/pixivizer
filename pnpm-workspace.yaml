@@ -44,11 +44,3 @@ allowedDeprecatedVersions:
 
 # 跨平台 bash 模拟（Windows/Mac/Linux 脚本统一）
 shellEmulator: true
-
-# 忽略不打算升级的包（pnpm outdated 不再提示）
-updateConfig:
-  ignoreDependencies:
-    - capacitor-secure-storage-plugin
-
-patchedDependencies:
-  capacitor-secure-storage-plugin@0.13.0: patches/capacitor-secure-storage-plugin@0.13.0.patch

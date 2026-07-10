@@ -82,9 +82,9 @@ async function main() {
   log("Navigating to login page...");
   await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle", timeout: 15000 });
 
-  // Seed real refresh_token into Capacitor SecureStorage (web: localStorage cap_sec_ prefix)
+  // Seed real refresh_token into @aparajita/capacitor-secure-storage (web: localStorage capacitor-storage_ prefix)
   await page.evaluate((token) => {
-    localStorage.setItem("cap_sec_refresh_token", btoa(token));
+    localStorage.setItem("capacitor-storage_refresh_token", JSON.stringify(token));
   }, REFRESH_TOKEN);
 
   log("Reloading to trigger auth with real token...");

@@ -5,7 +5,7 @@ const mockSecureGet = vi.fn();
 const mockSecureSet = vi.fn();
 const mockSecureRemove = vi.fn();
 
-vi.mock("capacitor-secure-storage-plugin", () => ({
+vi.mock("@aparajita/capacitor-secure-storage", () => ({
   SecureStoragePlugin: {
     get: (...args: unknown[]) => mockSecureGet(...args),
     set: (...args: unknown[]) => mockSecureSet(...args),
@@ -25,11 +25,11 @@ async function loadModule() {
 describe("secureStorage", () => {
   describe("getRefreshToken", () => {
     it("returns token from SecureStoragePlugin", async () => {
-      mockSecureGet.mockResolvedValue({ value: "my-token" });
+      mockSecureGet.mockResolvedValue("my-token");
       const { getRefreshToken } = await loadModule();
       const result = await getRefreshToken();
       expect(result).toBe("my-token");
-      expect(mockSecureGet).toHaveBeenCalledWith({ key: "refresh_token" });
+      expect(mockSecureGet).toHaveBeenCalledWith("refresh_token");
     });
 
     it("returns null when secure storage throws", async () => {
@@ -40,7 +40,7 @@ describe("secureStorage", () => {
     });
 
     it("returns null when no value stored", async () => {
-      mockSecureGet.mockResolvedValue({ value: null });
+      mockSecureGet.mockResolvedValue(null);
       const { getRefreshToken } = await loadModule();
       const result = await getRefreshToken();
       expect(result).toBeNull();
@@ -52,19 +52,16 @@ describe("secureStorage", () => {
       mockSecureSet.mockResolvedValue(undefined);
       const { setRefreshToken } = await loadModule();
       await setRefreshToken("new-token");
-      expect(mockSecureSet).toHaveBeenCalledWith({
-        key: "refresh_token",
-        value: "new-token",
-      });
+      expect(mockSecureSet).toHaveBeenCalledWith("refresh_token", "new-token");
     });
   });
 
   describe("removeRefreshToken", () => {
     it("removes token from SecureStoragePlugin", async () => {
-      mockSecureRemove.mockResolvedValue(undefined);
+      mockSecureRemove.mockResolvedValue(true);
       const { removeRefreshToken } = await loadModule();
       await removeRefreshToken();
-      expect(mockSecureRemove).toHaveBeenCalledWith({ key: "refresh_token" });
+      expect(mockSecureRemove).toHaveBeenCalledWith("refresh_token");
     });
   });
 
@@ -78,10 +75,7 @@ describe("secureStorage", () => {
       const result = await migrateRefreshTokenFromPreferences();
 
       expect(result).toBe("old-token");
-      expect(mockSecureSet).toHaveBeenCalledWith({
-        key: "refresh_token",
-        value: "old-token",
-      });
+      expect(mockSecureSet).toHaveBeenCalledWith("refresh_token", "old-token");
       expect(Preferences.remove).toHaveBeenCalledWith({ key: "refresh_token" });
     });
 
