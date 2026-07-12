@@ -21,6 +21,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -100,10 +102,10 @@ public class PictelioHttpPlugin extends Plugin {
     // ---- Capacitor 插件方法 ----
 
     /** 允许通过 PictelioHttp 请求的域名白名单 */
-    static final Set<String> ALLOWED_HOSTS = Set.of(
+    static final Set<String> ALLOWED_HOSTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             "app-api.pixiv.net",
             "i.pximg.net"
-    );
+    )));
 
     /**
      * 校验 URL 是否在白名单内。
