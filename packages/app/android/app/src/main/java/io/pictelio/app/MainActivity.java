@@ -1,5 +1,6 @@
 package io.pictelio.app;
 
+import android.content.pm.PackageInfo;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -19,8 +20,16 @@ import java.net.URL;
  */
 public class MainActivity extends BridgeActivity {
 
+    /** WebView 最低主版本号要求（低于此版本拦截启动并提示用户升级）。 */
+    private static final int MIN_WEBVIEW_MAJOR_VERSION = 85;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (!isWebViewVersionOk()) {
+            showWebViewUpgradeError();
+            return;
+        }
+
         registerPlugin(PredictiveBackPlugin.class);
         registerPlugin(PictelioHttpPlugin.class);
         super.onCreate(savedInstanceState);
@@ -119,5 +128,50 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    // ── WebView 版本检测 ────────────────────────────────────────────
+
+    /**
+     * 提取当前设备 WebView 的主版本号。
+     *
+     * @return 主版本号（如 85）；无法获取时返回 -1。
+     */
+    private static int getWebViewMajorVersion() {
+        try {
+            PackageInfo pi = WebView.getCurrentWebViewPackage();
+            if (pi == null || pi.versionName == null) return -1;
+            int dotIdx = pi.versionName.indexOf('.');
+            if (dotIdx > 0) {
+                return Integer.parseInt(pi.versionName.substring(0, dotIdx));
+            }
+            return -1;
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /**
+     * 检查当前 WebView 版本是否满足最低要求。
+     *
+     * 无法检测到版本时保守放行（避免误杀非标准实现）。
+     */
+    private boolean isWebViewVersionOk() {
+        int major = getWebViewMajorVersion();
+        if (major < 0) return true;     // 检测失败 → 放行，让应用自己处理
+        return major >= MIN_WEBVIEW_MAJOR_VERSION;
+    }
+
+    /**
+     * 显示 WebView 升级提示页，阻止应用正常启动。
+     *
+     * 直接加载本地静态 HTML，不初始化 Capacitor Bridge / 插件 / WebViewClient 等任何额外组件。
+     */
+    private void showWebViewUpgradeError() {
+        setContentView(R.layout.activity_webview_error);
+        WebView wv = findViewById(R.id.webview_error);
+        if (wv != null) {
+            wv.getSettings().setJavaScriptEnabled(true);
+            wv.loadUrl("file:///android_res/raw/upgrade.html");
+        }
+    }
 
 }
