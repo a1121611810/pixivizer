@@ -117,6 +117,8 @@ pixivizer/
 
 **环境要求：** [Node.js](https://nodejs.org/) 18+、[pnpm](https://pnpm.io/) 11.9.0、Android 构建需要 [Android Studio](https://developer.android.com/studio)、JDK 17、Android SDK
 
+> **⚠️ Android 平台要求：** 应用最低兼容 **Android 11.0（API 30）**，且需要 **WebView ≥ 85**。低于 Android 11 的设备无法安装，WebView 版本不足时启动会显示升级提示。详见 `docs/platform-compatibility.md`。
+
 ```bash
 # 安装依赖
 pnpm install
@@ -298,6 +300,8 @@ pixivizer/
 - [Node.js](https://nodejs.org/) 18+
 - [pnpm](https://pnpm.io/) 11.9.0
 - Android builds require: [Android Studio](https://developer.android.com/studio), JDK 17, Android SDK, `ANDROID_HOME` env var
+
+> **⚠️ Android Platform Requirements:** The app targets **Android 11.0 (API 30)** minimum and requires **WebView ≥ 85**. Devices below Android 11 cannot install the APK. If the WebView version is too old, the app shows an upgrade prompt on launch. See `docs/platform-compatibility.md` for details.
 
 ### Install dependencies
 

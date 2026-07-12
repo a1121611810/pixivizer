@@ -327,6 +327,9 @@ packages/app/src/
   - 测试文件额外启用 vitest 插件，禁用 `no-console` 和 `require-mock-type-parameters`
 - **格式化**: 使用 `vite-plus` 内置 oxfmt，配置在 `vite.config.ts` 的 `fmt` 字段
 - **Android**：
+  - **平台要求**：`minSdkVersion = 30`（Android 11.0），WebView ≥ **85**（2020-08 Chrome/WebView）。详见 `docs/platform-compatibility.md`。
+  - `minSdkVersion = 30` 在 `variables.gradle` 中定义；低于 Android 11 的设备安装时由系统直接拒绝。
+  - 启动时 `MainActivity` 通过 `WebView.getCurrentWebViewPackage()` 检测 WebView 主版本号，低于 85 则加载 `res/raw/upgrade.html` 提示用户升级 WebView，不初始化 Capacitor / JS 环境。
   - 项目位于 `packages/app/android/`，源码与关键配置纳入版本控制
   - `android/.gitignore` 负责忽略构建产物（`.gradle/`、`build/` 等）和 Capacitor 自动生成文件（`capacitor.config.json`、`capacitor.settings.gradle`、`app/capacitor.build.gradle`、复制的 `app/src/main/assets/public` 等）
   - 自定义 Capacitor 插件在 `MainActivity.java` 中通过 `registerPlugin()` 注册（**必须在 `super.onCreate()` 之前**）
