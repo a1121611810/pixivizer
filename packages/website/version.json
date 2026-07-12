@@ -1,5 +1,5 @@
 {
-  "version": "3.5.4",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.5.4",
-  "changelog": "⚡ 性能\n  perf(cache): add byte budget to LRU image cache (200MB max)\n  perf(auth): pre-emptive token refresh on app foreground resume\n  perf(api): add 429 exponential backoff retry, remove store duplica"
+  "version": "3.5.5",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.5.5",
+  "changelog": "♻️ 重构\n  refactor(android): rewrite allowed hosts set initialization"
 }
