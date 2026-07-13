@@ -52,8 +52,8 @@ describe("createNovelTextLayout", () => {
     });
     expect(result.paragraphs).toHaveLength(1);
     expect(result.paragraphs[0].lineCount).toBe(1);
-    expect(result.paragraphs[0].height).toBe(24);
-    expect(result.totalHeight).toBe(24);
+    expect(result.paragraphs[0].height).toBe(26); // 1行 × 24px + 2px 安全边距
+    expect(result.totalHeight).toBe(26);
   });
 
   it("computes line ranges for a wrapped paragraph", () => {

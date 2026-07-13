@@ -136,7 +136,8 @@ function computeParagraph(
   }
 
   const lineCount = lineRanges.length;
-  const height = lineCount * lineHeightPx;
+  // +2px 安全边距补偿 Android WebView Canvas measureText vs DOM 渲染差异
+  const height = lineCount * lineHeightPx + 2;
 
   return {
     index,
