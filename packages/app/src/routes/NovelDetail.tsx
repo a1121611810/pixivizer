@@ -292,15 +292,15 @@ const NovelDetail: Component = () => {
     useWindowScroll: true,
   });
 
-  // 从 pretext 布局结果中提取每个文本段落的计算高度，用作正常流中的 min-height 保底。
-  // 这样容器高度不会因为未渲染段落的 dom 高度塌掉而缩水，同时正常流不会重叠。
-  const paragraphHeights = createMemo<Record<number, number>>(() => {
+  // 将 pretext 计算的段落高度注入 block 对象——数组引用变化后 <For> 自动重 render。
+  const blocksWithHeights = createMemo(() => {
     const layout = virtualLayout.layoutResult();
-    const result: Record<number, number> = {};
-    for (const paragraph of layout.paragraphs) {
-      result[paragraph.index] = paragraph.height;
-    }
-    return result;
+    const h: Record<number, number> = {};
+    for (const p of layout.paragraphs) h[p.index] = p.height;
+    return blocks().map((b) => ({
+      ...b,
+      ph: b.type === "text" ? h[(b as TextBlock).index] : undefined,
+    }));
   });
 
   const search = createNovelSearch(searchText, { debounceMs: 150 });
@@ -664,7 +664,7 @@ const NovelDetail: Component = () => {
                       ...readerStyle(),
                     }}
                   >
-                    <For each={blocks()}>
+                    <For each={blocksWithHeights()}>
                       {(block) => (
                         <NovelContentBlock
                           block={() => block}
@@ -672,9 +672,7 @@ const NovelDetail: Component = () => {
                           imageDimensions={imageDimensions}
                           containerWidth={textContainerWidth}
                           fontSize={fontSize}
-                          paragraphHeight={
-                            block.type === "text" ? paragraphHeights()[block.index] : undefined
-                          }
+                          paragraphHeight={block.ph}
                           onImageClick={(imageIndex) => {
                             setImageViewerIndex(imageIndex);
                             setImageViewerOpen(true);
