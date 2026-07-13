@@ -468,12 +468,14 @@ async function fetchSingleNative(url: string): Promise<Blob> {
   const contentType =
     resp.headers?.["Content-Type"] || resp.headers?.["content-type"] || "image/jpeg";
 
-  // Capacitor 将 arraybuffer 响应编码为 base64 字符串返回（无 data: 前缀）
-  // 使用 data: URL + fetch 解码 — 浏览器内置能力，比 atob() 更可靠
-  const dataUrl = `data:${contentType};base64,${resp.data}`;
-  const decoded = await fetch(dataUrl);
-  if (!decoded.ok) throw new Error(`Failed to decode image: HTTP ${decoded.status}`);
-  return decoded.blob();
+  // Capacitor 将 arraybuffer 响应编码为 base64 字符串返回，无 data: 前缀
+  // 同步解码：atob → Uint8Array → Blob，避免 data: URL + fetch 在 Network 面板产生额外条目
+  const binaryStr = atob(resp.data);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: contentType });
 }
 
 /**
@@ -522,10 +524,14 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-/** 将 Base64 字符串还原为 Blob */
-async function base64ToBlob(base64: string): Promise<Blob> {
-  const resp = await fetch(`data:image/jpeg;base64,${base64}`);
-  return resp.blob();
+/** 将 Base64 字符串还原为 Blob（同步，无 data: URL fetch） */
+function base64ToBlob(base64: string, mimeType: string = "image/jpeg"): Blob {
+  const binaryStr = atob(base64);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mimeType });
 }
 
 // ─── 磁盘缓存预热 ───
