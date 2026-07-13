@@ -63,6 +63,22 @@ function ok(...m) {
   console.log(`[release] ✅`, ...m);
 }
 
+async function runBuildStep(label, cmd, argsArr, opts = {}) {
+  log(`▶ ${label}...`);
+  const start = Date.now();
+  try {
+    const elapsed = await run(cmd, argsArr, opts);
+    ok(`${label} 完成 (${elapsed}s)`);
+  } catch (err) {
+    console.error(`\n[release] ── 构建错误 ──────────────────────`);
+    console.error(`  步骤: ${label}`);
+    console.error(`  命令: ${cmd} ${argsArr.join(" ")}`);
+    console.error(`  原因: ${err.message}`);
+    console.error(`────────────────────────────────────────\n`);
+    throw err;
+  }
+}
+
 async function readText(path) {
   return readFile(resolvePath(rootDir, path), "utf-8");
 }
@@ -82,11 +98,14 @@ async function exists(path) {
 
 function run(cmd, argsArr, opts = {}) {
   return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const label = `${cmd} ${argsArr.join(" ")}`;
     const child = execFile(cmd, argsArr, { cwd: rootDir, stdio: "inherit", ...opts });
     child.on("error", reject);
     child.on("close", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`"${cmd} ${argsArr.join(" ")}" exited with code ${code}`));
+      const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+      if (code === 0) resolve(elapsed);
+      else reject(new Error(`"${label}" 失败 (退出码 ${code}, 耗时 ${elapsed}s)`));
     });
   });
 }
@@ -482,19 +501,30 @@ async function main() {
 
   // ── 5. 构建 APK ──
   if (!dryRun) {
-    log("开始构建 Release APK...");
-    await run("pnpm", ["run", "sync:android-version"], { stdio: "inherit" });
-    await run("pnpm", ["run", "build"], { stdio: "inherit" });
-    await run("pnpm", ["run", "cap:sync"], { stdio: "inherit" });
-    await run("./gradlew", ["assembleRelease"], {
-      cwd: resolvePath(rootDir, "android"),
-      stdio: "inherit",
-      env: {
-        ...process.env,
-        GRADLE_USER_HOME: resolvePath(rootDir, "android", ".gradle"),
-      },
-    });
-    ok("APK 构建成功");
+    const buildSteps = [
+      ["同步 Android 版本", "pnpm", ["run", "sync:android-version"]],
+      ["构建 Web 产物", "pnpm", ["run", "build"]],
+      ["同步 Capacitor 资源", "pnpm", ["run", "cap:sync"]],
+      [
+        "编译 Release APK",
+        "./gradlew",
+        ["assembleRelease", "--stacktrace"],
+        {
+          cwd: resolvePath(rootDir, "android"),
+          stdio: "inherit",
+          env: {
+            ...process.env,
+            GRADLE_USER_HOME: resolvePath(rootDir, "android", ".gradle"),
+          },
+        },
+      ],
+    ];
+    const buildStart = Date.now();
+    for (const [label, cmd, args, opts] of buildSteps) {
+      await runBuildStep(label, cmd, args, opts || {});
+    }
+    const buildTotal = ((Date.now() - buildStart) / 1000).toFixed(1);
+    ok(`APK 构建成功 (总耗时 ${buildTotal}s)`);
   } else {
     log("[dry-run] 将执行 pnpm run build:android:release");
   }
@@ -580,6 +610,8 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(`\n[release] ❌ 失败: ${err.message}`);
+  console.error(`\n[release] ❌ 发布流程失败`);
+  console.error(`   ${err.message}`);
+  console.error(`\n提示: 检查上方输出了解详细错误。如果问题持续，可以运行 pnpm run build:android:release 单独测试构建步骤。`);
   process.exit(1);
 });
