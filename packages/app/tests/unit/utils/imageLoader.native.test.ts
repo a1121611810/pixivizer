@@ -42,7 +42,7 @@ describe("loadImage on native platform", () => {
         responseType: "arraybuffer",
       }),
     );
-    // 返回的 url 应为 blob: URL，非空
-    expect(result.url).toMatch(/^blob:/);
+    // loadImage 返回代理 URL（不再产生 blob: 条目），浏览器 HTTP 缓存提供 0ms 显示
+    expect(result.url).toMatch(/^\/pixiv-img\//);
   });
 });

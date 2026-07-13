@@ -58,18 +58,14 @@ function evictOldest() {
 }
 
 /** 从缓存获取持久 Blob URL，同时更新 LRU 访问时间 */
-function cacheGet(key: string): string | undefined {
-  const entry = cache.get(key);
-  if (entry) {
-    entry.lastAccess = Date.now();
-    return entry.blobUrl;
+/** 同步检查缓存中是否存在指定图片（不触发加载），命中时返回代理 URL。
+ * 代理 URL 走浏览器 HTTP 缓存（0ms，不产生 blob: 条目），
+ * 而 blob: URL 需 0.5ms 的 createObjectURL + 跨语言边界解码开销。 */
+export function checkImageCache(originalUrl: string): string | undefined {
+  if (cache.get(originalUrl)) {
+    return resolveImageUrl(originalUrl);
   }
   return undefined;
-}
-
-/** 同步检查缓存中是否存在指定图片（不触发加载），返回持久 Blob URL */
-export function checkImageCache(originalUrl: string): string | undefined {
-  return cacheGet(originalUrl);
 }
 
 /** Update the cache size limit. If lowered, evict oldest entries immediately. */
@@ -176,14 +172,16 @@ export interface LoadedImage {
 }
 
 /**
- * 加载 Pixiv 图片（带 LRU 缓存 + 持久 Blob URL + 飞行中请求去重）。
+ * 加载 Pixiv 图片（带 LRU 缓存 + 飞行中请求去重）。
  *
- * - 命中缓存：直接返回持久 Blob URL（浏览器瞬间识别，零解码延迟）
+ * 缓存命中时返回代理 URL（走浏览器 HTTP 缓存，0ms，无 blob: 条目）；
+ * 未命中时下载 → 存入 LRU → 返回代理 URL。
+ *
+ * - 命中缓存：直接返回代理 URL，浏览器在 HTTP 缓存中已有解码结果
  * - 未命中但已有同一 URL 正请求中：复用该 Promise，不发重复请求
- * - 未命中且无飞行中请求：发起 HTTP 请求 → 存入缓存 → 返回
+ * - 未命中且无飞行中请求：发起 HTTP 请求 → 存入 LRU → 返回代理 URL
  *
  * 返回 { url, cleanup }。
- * Blob URL 由缓存持有，只在淘汰/清空时 revoke。
  * cleanup() 为兼容保留，实际是 no-op。
  */
 export async function loadImage(originalUrl: string): Promise<LoadedImage> {
@@ -191,10 +189,9 @@ export async function loadImage(originalUrl: string): Promise<LoadedImage> {
     return { url: "", cleanup: () => {} };
   }
 
-  // 1. 检查缓存 — 返回持久 Blob URL，浏览器瞬间识别
-  const cachedUrl = cacheGet(originalUrl);
-  if (cachedUrl) {
-    return { url: cachedUrl, cleanup: () => {} };
+  // 1. 检查缓存 — 无需异步操作，直接代理 URL 走浏览器缓存
+  if (cache.has(originalUrl)) {
+    return { url: resolveImageUrl(originalUrl), cleanup: () => {} };
   }
 
   // 2. 检查是否已有相同 URL 正在加载中 — 复用 Promise，避免重复请求
@@ -230,8 +227,7 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
         if (cached?.base64) {
           const decoded = await base64ToBlob(cached.base64);
           cacheSet(originalUrl, decoded);
-          const url = cacheGet(originalUrl);
-          return { url: url ?? "", cleanup: () => {} };
+          return { url: resolveImageUrl(originalUrl), cleanup: () => {} };
         }
       } catch (e) {
         console.warn("[ImageCache] Disk cache check failed, falling back to network", e);
@@ -253,14 +249,13 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
       blob = await fetchWeb(targetUrl, originalUrl);
     }
 
-    // 存入缓存（cacheSet 创建持久 Blob URL）
+    // 存入缓存（cacheSet 创建持久 Blob URL 供内部使用）
     cacheSet(originalUrl, blob);
 
-    // 从缓存读取持久 URL
-    const url = cacheGet(originalUrl);
+    // 返回代理 URL（不走 blob: URL，避免 Network 面板条目 + 0.5ms 开销）
     return {
-      url: url ?? "",
-      cleanup: () => {}, // 持久 URL 由缓存管理，无需手动 revoke
+      url: resolveImageUrl(originalUrl),
+      cleanup: () => {},
     };
   } catch (e) {
     console.warn(`[ImageCache] Load failed: ${originalUrl}`, e);
@@ -309,11 +304,10 @@ export async function loadImageWithProgress(
     return { url: "", cleanup: () => {}, durationMs: 0 };
   }
 
-  // 1. 缓存命中 — 直接返回
-  const cachedUrl = cacheGet(originalUrl);
-  if (cachedUrl) {
+  // 1. 缓存命中 — 直接返回代理 URL（走浏览器 HTTP 缓存，0ms，无 blob: 条目）
+  if (cache.has(originalUrl)) {
     onProgress({ loaded: 0, total: 0, percent: 100 });
-    return { url: cachedUrl, cleanup: () => {}, durationMs: 0 };
+    return { url: resolveImageUrl(originalUrl), cleanup: () => {}, durationMs: 0 };
   }
 
   // 1b. 检查是否有 loadImage（无进度版）正在请求同一 URL
@@ -321,9 +315,8 @@ export async function loadImageWithProgress(
   const mainInflight = inflightRequests.get(originalUrl);
   if (mainInflight) {
     await mainInflight;
-    const url = cacheGet(originalUrl);
     onProgress({ loaded: 0, total: 0, percent: 100 });
-    return { url: url ?? "", cleanup: () => {}, durationMs: 0 };
+    return { url: resolveImageUrl(originalUrl), cleanup: () => {}, durationMs: 0 };
   }
 
   const startTime = performance.now();
@@ -344,13 +337,12 @@ export async function loadImageWithProgress(
     // 4. 存入缓存
     cacheSet(originalUrl, blob);
 
-    const url = cacheGet(originalUrl);
     const durationMs = Math.round(performance.now() - startTime);
 
     // 5. 最终 100% 回调
     onProgress({ loaded: blob.size, total: blob.size, percent: 100 });
 
-    return { url: url ?? "", cleanup: () => {}, durationMs };
+    return { url: resolveImageUrl(originalUrl), cleanup: () => {}, durationMs };
   } catch (e) {
     console.warn(`[ImageCache] LoadWithProgress failed: ${originalUrl}`, e);
     onProgress({ loaded: 0, total: 0, percent: -1 });

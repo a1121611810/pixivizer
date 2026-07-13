@@ -279,7 +279,8 @@ describe("loadImage", () => {
       // 加载后：缓存命中
       const cachedUrl = checkImageCache("https://i.pximg.net/test/cache.jpg");
       expect(cachedUrl).toBeTruthy();
-      expect(cachedUrl).toMatch(/^blob:/);
+      // checkImageCache 现在返回代理 URL 而非 blob: URL（避免 Network 面板噪声）
+      expect(cachedUrl).toMatch(/^\/pixiv-img\//);
 
       vi.unstubAllGlobals();
     });
