@@ -508,7 +508,7 @@ async function main() {
       [
         "编译 Release APK",
         "./gradlew",
-        ["assembleRelease"],           // 首次不加 --stacktrace
+        ["assembleRelease"], // 首次不加 --stacktrace
         {
           cwd: resolvePath(rootDir, "android"),
           stdio: "inherit",
@@ -624,6 +624,8 @@ async function main() {
 main().catch((err) => {
   console.error(`\n[release] ❌ 发布流程失败`);
   console.error(`   ${err.message}`);
-  console.error(`\n提示: 检查上方输出了解详细错误。如果问题持续，可以运行 pnpm run build:android:release 单独测试构建步骤。`);
+  console.error(
+    `\n提示: 检查上方输出了解详细错误。如果问题持续，可以运行 pnpm run build:android:release 单独测试构建步骤。`,
+  );
   process.exit(1);
 });

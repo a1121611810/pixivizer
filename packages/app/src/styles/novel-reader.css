@@ -2,6 +2,7 @@
 .novel-text {
   word-break: break-word;
   overflow-wrap: break-word;
+  overflow: hidden; /* 防止字号/布局重算期间绝对定位段落溢出重叠 */
   font-size: var(--reader-font-size, 18px);
   font-weight: var(--reader-font-weight, 400);
   font-family: var(--reader-font-family, sans-serif);
