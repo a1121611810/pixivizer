@@ -157,6 +157,7 @@ interface NovelContentBlockProps {
   imageDimensions: Accessor<NovelImageDimensions>;
   containerWidth: Accessor<number>;
   fontSize: Accessor<number>;
+  paragraphHeight: number | undefined;
   onImageClick: (index: number) => void;
   renderParagraph: (paragraphIndex: number, text: string) => JSX.Element;
 }
@@ -165,11 +166,13 @@ const NovelContentBlock: Component<NovelContentBlockProps> = (props) => {
   const block = props.block();
 
   if (isTextBlock(block)) {
+    const minH = props.paragraphHeight;
     return (
       <p
         class="novel-text-paragraph"
         style={{
           textIndent: `${props.fontSize() * 2}px`,
+          ...(minH != null ? { "min-height": `${minH}px` } : {}),
         }}
       >
         {props.renderParagraph(block.index, block.text)}
@@ -287,6 +290,17 @@ const NovelDetail: Component = () => {
     containerRef: () => {},
     novelId,
     useWindowScroll: true,
+  });
+
+  // 从 pretext 布局结果中提取每个文本段落的计算高度，用作正常流中的 min-height 保底。
+  // 这样容器高度不会因为未渲染段落的 dom 高度塌掉而缩水，同时正常流不会重叠。
+  const paragraphHeights = createMemo<Record<number, number>>(() => {
+    const layout = virtualLayout.layoutResult();
+    const result: Record<number, number> = {};
+    for (const paragraph of layout.paragraphs) {
+      result[paragraph.index] = paragraph.height;
+    }
+    return result;
   });
 
   const search = createNovelSearch(searchText, { debounceMs: 150 });
@@ -658,6 +672,9 @@ const NovelDetail: Component = () => {
                           imageDimensions={imageDimensions}
                           containerWidth={textContainerWidth}
                           fontSize={fontSize}
+                          paragraphHeight={
+                            block.type === "text" ? paragraphHeights()[block.index] : undefined
+                          }
                           onImageClick={(imageIndex) => {
                             setImageViewerIndex(imageIndex);
                             setImageViewerOpen(true);
