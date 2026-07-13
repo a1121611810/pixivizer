@@ -53,13 +53,7 @@ interface NovelImageBlockProps {
   block: ImageBlock;
   containerWidth: Accessor<number>;
   dimensions: Accessor<NovelImageDimensions>;
-  style: {
-    position: "absolute";
-    top: string;
-    left: string;
-    width: string;
-    height: string;
-  };
+  style?: Record<string, string>;
   onClick: () => void;
 }
 
@@ -72,9 +66,14 @@ const NovelImageBlock: Component<NovelImageBlockProps> = (props) => {
 
   return (
     <figure
-      class="novel-image-block absolute overflow-hidden m-0"
+      class="novel-image-block overflow-hidden m-0"
       classList={{ "cursor-pointer": dim() !== null && dim() !== undefined }}
-      style={props.style}
+      style={{
+        "aspect-ratio":
+          dim() && dim().width > 0 && dim().height > 0
+            ? `${dim().width} / ${dim().height}`
+            : "16 / 9",
+      }}
       onClick={handleClick}
     >
       <Switch>
@@ -154,13 +153,6 @@ function isImageBlock(block: NovelBlock): block is ImageBlock {
 
 interface NovelContentBlockProps {
   block: Accessor<NovelBlock>;
-  style: Accessor<{
-    position: "absolute";
-    top: string;
-    left: string;
-    width: string;
-    height: string;
-  }>;
   imageBlockList: Accessor<ImageBlock[]>;
   imageDimensions: Accessor<NovelImageDimensions>;
   containerWidth: Accessor<number>;
@@ -171,14 +163,12 @@ interface NovelContentBlockProps {
 
 const NovelContentBlock: Component<NovelContentBlockProps> = (props) => {
   const block = props.block();
-  const style = props.style();
 
   if (isTextBlock(block)) {
     return (
       <p
-        class="novel-text-paragraph absolute"
+        class="novel-text-paragraph"
         style={{
-          ...style,
           textIndent: `${props.fontSize() * 2}px`,
         }}
       >
@@ -194,13 +184,11 @@ const NovelContentBlock: Component<NovelContentBlockProps> = (props) => {
         block={block}
         containerWidth={props.containerWidth}
         dimensions={props.imageDimensions}
-        style={style}
+        style={{}}
         onClick={() => props.onImageClick(imageIndex)}
       />
     );
   }
-
-  return <hr class="novel-page-break absolute m-0" style={style} />;
 };
 
 const NovelDetail: Component = () => {
@@ -656,18 +644,16 @@ const NovelDetail: Component = () => {
               <div class="px-4 py-6 max-w-2xl mx-auto pb-[64px]">
                 <Show when={novelHtml()}>
                   <div
-                    class="novel-text relative"
+                    class="novel-text"
                     ref={onTextContainerRef}
                     style={{
                       ...readerStyle(),
-                      height: `${virtualLayout.totalHeight()}px`,
                     }}
                   >
                     <For each={virtualLayout.visibleBlocks()}>
                       {(blockIndex) => (
                         <NovelContentBlock
                           block={() => blocks()[blockIndex]}
-                          style={() => virtualLayout.getBlockStyle(blockIndex)}
                           imageBlockList={imageBlockList}
                           imageDimensions={imageDimensions}
                           containerWidth={textContainerWidth}

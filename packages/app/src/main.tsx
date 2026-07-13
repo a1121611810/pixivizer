@@ -5,10 +5,21 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "virtual:uno.css";
 import "./styles/novel-reader.css";
-// ── Fluent Web Components 注册 + 主题同步 ──
+// ── Fluent Web Components 按需注册 + 主题同步 ──
 import { setTheme } from "@fluentui/web-components";
 import { webLightTheme, webDarkTheme } from "@fluentui/tokens";
-import "@fluentui/web-components/web-components.js";
+import "@fluentui/web-components/badge.js";
+import "@fluentui/web-components/button.js";
+import "@fluentui/web-components/checkbox.js";
+import "@fluentui/web-components/dialog.js";
+import "@fluentui/web-components/divider.js";
+import "@fluentui/web-components/drawer.js";
+import "@fluentui/web-components/message-bar.js";
+import "@fluentui/web-components/radio.js";
+import "@fluentui/web-components/radio-group.js";
+import "@fluentui/web-components/spinner.js";
+import "@fluentui/web-components/switch.js";
+import "@fluentui/web-components/textarea.js";
 import { initializeStartupPreferences } from "@/startup";
 
 function syncFluentTheme() {
