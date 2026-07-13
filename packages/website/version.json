@@ -1,5 +1,5 @@
 {
-  "version": "3.5.6",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.5.6",
-  "changelog": "📝 文档\n  docs: document Android 11+ and WebView 85+ platform requirements\n✨ 新功能\n  feat(android): enforce minSdkVersion 30 and WebView >= 85"
+  "version": "3.6.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.6.0",
+  "changelog": "🐛 修复\n  fix: 小说底部导航栏按钮在窄屏下折行错位\n  fix: Canvas 容器宽度缩小 3% 修复 Android WebView 小说段落重叠\n  fix: 修复 Android WebView 小说段落重叠问题\n📝 文档\n  docs: 添加 blob URL vs proxy URL 性能基准文档\n⚡ 性能\n  perf: LRU 命中时返回代理 URL 而非 blob: "
 }
