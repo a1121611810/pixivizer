@@ -118,6 +118,25 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/github-api/, ""),
       },
+      // Pixiv Web Ajax API — 用于评论等 web 端接口
+      "/pixiv-www": {
+        target: "https://www.pixiv.net",
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/pixiv-www/, ""),
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36",
+          Referer: "https://www.pixiv.net/",
+        },
+        agent: proxyAgent,
+        configure: (proxy: any) => {
+          proxy.on("error", (_err: Error, _req: IncomingMessage, res: ServerResponse) => {
+            if (res && "headersSent" in res && !res.headersSent) {
+              res.writeHead(502, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({ error: "proxy_error", message: "Pixiv Web 代理连接失败" }));
+            }
+          });
+        },
+      },
     },
   },
 

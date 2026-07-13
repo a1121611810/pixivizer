@@ -6,8 +6,8 @@ export function loadIllustRootComments(
   signal?: AbortSignal,
 ): Promise<PixivCommentRootResponse> {
   return apiClient.get<PixivCommentRootResponse>(
-    "/v1/illust/comment/root",
-    { illust_id: String(illustId) },
+    "/v3/illust/comments",
+    { illust_id: String(illustId), include_total_comments: "true" },
     signal,
   );
 }
@@ -20,13 +20,12 @@ export function loadIllustRootCommentsNext(
 }
 
 export function loadIllustReplies(
-  illustId: number,
-  rootCommentId: number,
+  commentId: number,
   signal?: AbortSignal,
 ): Promise<PixivCommentReplyResponse> {
   return apiClient.get<PixivCommentReplyResponse>(
-    "/v1/illust/comment/reply",
-    { illust_id: String(illustId), root_comment_id: String(rootCommentId) },
+    "/v2/illust/comment/replies",
+    { comment_id: String(commentId) },
     signal,
   );
 }
@@ -55,8 +54,8 @@ export function loadNovelRootComments(
   signal?: AbortSignal,
 ): Promise<PixivCommentRootResponse> {
   return apiClient.get<PixivCommentRootResponse>(
-    "/v1/novel/comment/root",
-    { novel_id: String(novelId) },
+    "/v1/novel/comments",
+    { novel_id: String(novelId), include_total_comments: "true" },
     signal,
   );
 }
@@ -69,13 +68,12 @@ export function loadNovelRootCommentsNext(
 }
 
 export function loadNovelReplies(
-  novelId: number,
-  rootCommentId: number,
+  commentId: number,
   signal?: AbortSignal,
 ): Promise<PixivCommentReplyResponse> {
   return apiClient.get<PixivCommentReplyResponse>(
-    "/v1/novel/comment/reply",
-    { novel_id: String(novelId), root_comment_id: String(rootCommentId) },
+    "/v2/novel/comment/replies",
+    { comment_id: String(commentId) },
     signal,
   );
 }

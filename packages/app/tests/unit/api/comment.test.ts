@@ -26,8 +26,8 @@ describe("api/comment.ts", () => {
     const { loadIllustRootComments } = await loadApi();
     await loadIllustRootComments(123);
     expect(mockGet).toHaveBeenCalledWith(
-      "/v1/illust/comment/root",
-      { illust_id: "123" },
+      "/v3/illust/comments",
+      { illust_id: "123", include_total_comments: "true" },
       undefined,
     );
   });
@@ -42,10 +42,10 @@ describe("api/comment.ts", () => {
   it("loadIllustReplies calls apiClient.get with correct params", async () => {
     mockGet.mockResolvedValue({ comments: [] });
     const { loadIllustReplies } = await loadApi();
-    await loadIllustReplies(123, 456);
+    await loadIllustReplies(456);
     expect(mockGet).toHaveBeenCalledWith(
-      "/v1/illust/comment/reply",
-      { illust_id: "123", root_comment_id: "456" },
+      "/v2/illust/comment/replies",
+      { comment_id: "456" },
       undefined,
     );
   });
@@ -85,8 +85,8 @@ describe("api/comment.ts", () => {
     const { loadNovelRootComments } = await loadApi();
     await loadNovelRootComments(42);
     expect(mockGet).toHaveBeenCalledWith(
-      "/v1/novel/comment/root",
-      { novel_id: "42" },
+      "/v1/novel/comments",
+      { novel_id: "42", include_total_comments: "true" },
       undefined,
     );
   });
@@ -101,10 +101,10 @@ describe("api/comment.ts", () => {
   it("loadNovelReplies calls apiClient.get with correct params", async () => {
     mockGet.mockResolvedValue({ comments: [] });
     const { loadNovelReplies } = await loadApi();
-    await loadNovelReplies(42, 99);
+    await loadNovelReplies(99);
     expect(mockGet).toHaveBeenCalledWith(
-      "/v1/novel/comment/reply",
-      { novel_id: "42", root_comment_id: "99" },
+      "/v2/novel/comment/replies",
+      { comment_id: "99" },
       undefined,
     );
   });
@@ -145,8 +145,8 @@ describe("api/comment.ts", () => {
     const ac = new AbortController();
     await loadIllustRootComments(1, ac.signal);
     expect(mockGet).toHaveBeenCalledWith(
-      "/v1/illust/comment/root",
-      { illust_id: "1" },
+      "/v3/illust/comments",
+      { illust_id: "1", include_total_comments: "true" },
       ac.signal,
     );
   });

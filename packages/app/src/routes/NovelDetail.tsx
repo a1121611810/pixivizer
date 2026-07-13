@@ -38,6 +38,7 @@ import ReaderSettingsSheet from "../components/ReaderSettingsSheet";
 import SeriesSheet from "../components/SeriesSheet";
 import PageTransition from "../components/PageTransition";
 import { getRouteStackDepth } from "../services/predictiveBack";
+import CommentOverlay from "../components/CommentOverlay";
 
 // ── Scroll-driven hide/show constants ──
 const HIDE_THRESHOLD = 30;
@@ -265,6 +266,7 @@ const NovelDetail: Component = () => {
   });
 
   const [settingsOpen, setSettingsOpen] = createSignal(false);
+  const [showComments, setShowComments] = createSignal(false);
   const [seriesOpen, setSeriesOpen] = createSignal(false);
   const [searchOpen, setSearchOpen] = createSignal(false);
   const [textContainerWidth, setTextContainerWidth] = createSignal(0);
@@ -645,7 +647,12 @@ const NovelDetail: Component = () => {
                     <span>📖 {novel().text_length.toLocaleString()}字</span>
                     <span>⭐ {novel().total_bookmarks}</span>
                     <Show when={novel().total_comments != null}>
-                      <span>💬 {novel().total_comments}</span>
+                      <span
+                        class="flex items-center gap-1 cursor-pointer hover:text-[var(--colorBrandForeground1)] transition-colors"
+                        onClick={() => setShowComments(true)}
+                      >
+                        💬 {novel().total_comments}
+                      </span>
                     </Show>
                     <Show when={novel().total_view != null}>
                       <span>👁 {novel().total_view}</span>
@@ -791,6 +798,13 @@ const NovelDetail: Component = () => {
                   onClose={() => setImageViewerOpen(false)}
                 />
               </Show>
+
+              <CommentOverlay
+                type="novel"
+                targetId={novel().id}
+                isOpen={showComments()}
+                onClose={() => setShowComments(false)}
+              />
 
               {/* ── Close the Show fragment ── */}
             </>

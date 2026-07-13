@@ -130,11 +130,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     ]);
 
     // Load user content moderation state — 并行加载
-    await Promise.all([
-      loadReportedIds(),
-      loadBlockedIds(),
-      loadImageHostPreference(),
-    ]);
+    await Promise.all([loadReportedIds(), loadBlockedIds(), loadImageHostPreference()]);
 
     // 后台预热 LRU 缓存（从 Android 文件系统读取最近图片，不阻塞启动流程）
     warmCacheFromDisk();

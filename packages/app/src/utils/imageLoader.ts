@@ -138,6 +138,8 @@ export function parsePixivUrlDimensions(url: string): { width: number; height: n
 export function resolveImageUrl(originalUrl: string): string {
   if (!originalUrl) return "";
   if (originalUrl.startsWith("/pixiv-img/")) return originalUrl;
+  // s.pximg.net 是静态资源 CDN（默认头像、印章等），不需要 Referer 验证，直接使用
+  if (originalUrl.startsWith("https://s.pximg.net/")) return originalUrl;
 
   const parts = originalUrl.split("/");
   const path = parts.slice(3).join("/");

@@ -1,22 +1,15 @@
-import {
-  type Component,
-  Show,
-  For,
-  createSignal,
-  createEffect,
-  createMemo,
-  onCleanup,
-} from "solid-js";
+import { type Component, Show, For, createSignal, createEffect, createMemo, onCleanup } from "solid-js";
+import { useNavigate } from "@solidjs/router";
 import type { PixivComment } from "../api/types";
+import { user } from "../stores/authStore";
+import { resolveImageUrl } from "../utils/imageLoader";
 import {
   loadIllustRootComments,
   loadIllustRootCommentsNext,
-  loadIllustReplies,
   postIllustComment,
   deleteIllustComment,
   loadNovelRootComments,
   loadNovelRootCommentsNext,
-  loadNovelReplies,
   postNovelComment,
   deleteNovelComment,
 } from "../api/comment";
@@ -29,13 +22,11 @@ interface CommentOverlayProps {
 }
 
 const CommentOverlay: Component<CommentOverlayProps> = (props) => {
+  const navigate = useNavigate();
   const [rootComments, setRootComments] = createSignal<PixivComment[]>([]);
+  const [hasLoaded, setHasLoaded] = createSignal(false);
   const [nextUrl, setNextUrl] = createSignal<string | null>(null);
-  const [loading, setLoading] = createSignal(false);
   const [loadingMore, setLoadingMore] = createSignal(false);
-  const [expandedReplies, setExpandedReplies] = createSignal<Set<number>>(new Set());
-  const [repliesMap, setRepliesMap] = createSignal<Record<number, PixivComment[]>>({});
-  const [replyLoading, setReplyLoading] = createSignal<number | null>(null);
   const [inputText, setInputText] = createSignal("");
   const [replyingTo, setReplyingTo] = createSignal<PixivComment | null>(null);
   const [error, setError] = createSignal<string | null>(null);
@@ -49,7 +40,6 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
     return {
       loadRoot: isIllust ? loadIllustRootComments : loadNovelRootComments,
       loadRootNext: isIllust ? loadIllustRootCommentsNext : loadNovelRootCommentsNext,
-      loadReplies: isIllust ? loadIllustReplies : loadNovelReplies,
       post: isIllust
         ? (comment: string, parentId?: number) =>
             postIllustComment(props.targetId, comment, parentId)
@@ -63,26 +53,21 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
   createEffect(() => {
     if (!props.isOpen) return;
     const ac = new AbortController();
-    setLoading(true);
     setError(null);
     setRootComments([]);
     setNextUrl(null);
-    setExpandedReplies(new Set());
-    setRepliesMap({});
 
     api()
       .loadRoot(props.targetId, ac.signal)
       .then((res) => {
         setRootComments(res.comments);
         setNextUrl(res.next_url);
+        setHasLoaded(true);
       })
       .catch((e) => {
         if ((e as { name?: string }).name !== "AbortError") {
           setError("加载评论失败，请重试");
         }
-      })
-      .finally(() => {
-        setLoading(false);
       });
 
     onCleanup(() => ac.abort());
@@ -90,6 +75,7 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
 
   // 分页哨兵
   let sentinelRef: HTMLDivElement | undefined;
+  let inputRef: HTMLInputElement | undefined;
 
   async function loadMore() {
     const url = nextUrl();
@@ -120,26 +106,6 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
     onCleanup(() => observer.disconnect());
   });
 
-  // 展开/收起回复
-  async function toggleReplies(rootCommentId: number) {
-    if (expandedReplies().has(rootCommentId)) {
-      const next = new Set(expandedReplies());
-      next.delete(rootCommentId);
-      setExpandedReplies(next);
-      return;
-    }
-    setReplyLoading(rootCommentId);
-    try {
-      const res = await api().loadReplies(props.targetId, rootCommentId);
-      setRepliesMap((prev) => ({ ...prev, [rootCommentId]: res.comments }));
-      setExpandedReplies((prev) => new Set(prev).add(rootCommentId));
-    } catch {
-      setError("加载回复失败");
-    } finally {
-      setReplyLoading(null);
-    }
-  }
-
   // 发表/回复
   async function handleSubmit() {
     const text = inputText().trim();
@@ -150,10 +116,9 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
       await api().post(text, replyingTo()?.id);
       setInputText("");
       setReplyingTo(null);
-      // 刷新根评论列表
+      // 刷新评论列表
       const res = await api().loadRoot(props.targetId);
       setRootComments(res.comments);
-      setNextUrl(res.next_url);
     } catch {
       setPostError("发送失败，请重试");
     } finally {
@@ -166,19 +131,29 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
     setInputText("");
   }
 
+  function goToUser(userId: number) {
+    props.onClose();
+    navigate(`/user/${userId}`);
+  }
+
   function cancelReply() {
     setReplyingTo(null);
     setInputText("");
   }
+
+  // 点击回复后自动聚焦到输入框
+  createEffect(() => {
+    if (replyingTo() && inputRef) {
+      inputRef.focus();
+    }
+  });
 
   // 删除
   async function handleDelete(commentId: number) {
     setDeletingId(commentId);
     try {
       await api().del(commentId);
-      setRootComments((prev) =>
-        prev.filter((c) => c.id !== commentId && c.root_comment_id !== commentId),
-      );
+      setRootComments((prev) => prev.filter((c) => c.id !== commentId));
     } catch {
       setError("删除失败");
     } finally {
@@ -190,7 +165,7 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
     <Show when={props.isOpen}>
       <div
         class="fixed inset-0 z-50"
-        style={{ "background-color": "rgba(0,0,0,0.5)" }}
+        style={{ "background-color": "var(--colorOverlayBackground)" }}
         onClick={(e) => {
           if (e.target === e.currentTarget) props.onClose();
         }}
@@ -239,16 +214,51 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
 
           {/* Comment list */}
           <div class="flex-1 overflow-y-auto">
-            <Show when={loading}>
-              <div class="flex justify-center py-8">
-                <div class="spinner w-6 h-6" />
-              </div>
-            </Show>
-
-            <Show when={!loading && rootComments().length === 0}>
+            <Show when={hasLoaded() && rootComments().length === 0}>
               <div class="flex flex-col items-center justify-center py-12 text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase200)]">
                 <p>还没有评论</p>
                 <p class="mt-1">来写第一条吧</p>
+              </div>
+            </Show>
+
+            <Show when={!hasLoaded()}>
+              <div class="px-4 py-2 space-y-5">
+                {Array.from({ length: 4 }).map(() => (
+                  <div class="flex gap-3">
+                    <div
+                      class="w-8 h-8 rounded-[var(--borderRadiusCircular)] flex-shrink-0"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+                        "background-size": "200% 100%",
+                        animation:
+                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+                      }}
+                    />
+                    <div class="flex-1 min-w-0 space-y-2">
+                      <div
+                        class="h-3 rounded w-[120px]"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+                          "background-size": "200% 100%",
+                          animation:
+                            "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+                        }}
+                      />
+                      <div
+                        class="h-3 rounded w-[60%]"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+                          "background-size": "200% 100%",
+                          animation:
+                            "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </Show>
 
@@ -257,13 +267,11 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
                 {(comment) => (
                   <CommentItem
                     comment={comment}
-                    replies={repliesMap()[comment.id] ?? []}
-                    isExpanded={expandedReplies().has(comment.id)}
-                    replyLoading={replyLoading() === comment.id}
                     isDeleting={deletingId() === comment.id}
-                    onToggleReplies={() => toggleReplies(comment.id)}
+                    currentUserId={user()?.id}
                     onReply={() => handleReply(comment)}
                     onDelete={() => handleDelete(comment.id)}
+                    onClickUser={() => goToUser(comment.user.id)}
                   />
                 )}
               </For>
@@ -280,15 +288,15 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
           </div>
 
           {/* Input bar */}
-          <div class="flex-shrink-0 border-t border-[var(--colorNeutralStroke2)] px-4 py-3">
+          <div class="flex-shrink-0 border-t border-[var(--colorNeutralStroke2)] px-3 py-2.5 surface-appbar">
             <Show when={replyingTo()}>
-              <div class="flex items-center gap-2 mb-2 text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase200)]">
-                <span>回复 @{replyingTo()!.user.name}</span>
+              <div class="flex items-center gap-1 mb-1.5 px-1 text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase200)]">
+                <span class="truncate">回复 @{replyingTo()!.user.name}</span>
                 <button
-                  class="text-[var(--colorBrandForeground1)] underline bg-transparent border-none p-0 cursor-pointer"
+                  class="text-[var(--colorBrandForeground1)] font-medium bg-transparent border-none p-0 cursor-pointer flex-shrink-0 ml-auto text-[var(--fontSizeBase100)]"
                   onClick={cancelReply}
                 >
-                  取消
+                  取消回复
                 </button>
               </div>
             </Show>
@@ -299,10 +307,11 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
               </div>
             </Show>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 border border-[var(--colorNeutralStroke2)] rounded-[var(--borderRadiusMedium)] px-3 has-[input:focus-visible]:border-[var(--colorBrandStroke1)] has-[input:focus-visible]:ring-1 has-[input:focus-visible]:ring-[var(--colorBrandStroke1)] transition-all">
               <input
+                ref={inputRef!}
                 type="text"
-                class="flex-1 h-9 px-3 rounded-[var(--borderRadiusMedium)] border border-[var(--colorNeutralStroke2)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] outline-none focus-visible:border-[var(--colorBrandStroke1)] placeholder:text-[var(--colorNeutralForeground3)]"
+                class="flex-1 h-9 bg-transparent text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] outline-none border-none placeholder:text-[var(--colorNeutralForeground3)] p-0"
                 placeholder={replyingTo() ? `回复 @${replyingTo()!.user.name}...` : "写下评论..."}
                 value={inputText()}
                 onInput={(e) => setInputText((e.target as HTMLInputElement).value)}
@@ -311,11 +320,11 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
                 }}
               />
               <button
-                class="h-9 px-4 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase200)] font-semibold border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
+                class="h-7 px-3 rounded-[var(--borderRadiusSmall)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase100)] font-medium border-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.97] transition-all flex-shrink-0"
                 disabled={!inputText().trim() || posting()}
                 onClick={handleSubmit}
               >
-                {posting() ? "..." : "发送"}
+                {posting() ? "···" : "发送"}
               </button>
             </div>
           </div>
@@ -345,109 +354,96 @@ function formatDate(dateStr: string): string {
 
 interface CommentItemProps {
   comment: PixivComment;
-  replies: PixivComment[];
-  isExpanded: boolean;
-  replyLoading: boolean;
   isDeleting: boolean;
-  onToggleReplies: () => void;
+  currentUserId?: number;
   onReply: () => void;
   onDelete: () => void;
+  onClickUser: () => void;
 }
 
 const CommentItem: Component<CommentItemProps> = (props) => {
-  const { comment, replies } = props;
+  const parent = () => {
+    const p = props.comment.parent_comment as
+      | { id: number; comment: string; user: { name: string } }
+      | Record<string, never>
+      | undefined;
+    return p && "id" in p && p.id
+      ? (p as { id: number; comment: string; user: { name: string } })
+      : null;
+  };
 
   return (
-    <div class="flex gap-3" classList={{ "opacity-50 pointer-events-none": props.isDeleting }}>
-      {/* Avatar */}
-      <div class="w-8 h-8 rounded-[var(--borderRadiusCircular)] flex-shrink-0 overflow-hidden bg-[var(--colorNeutralBackground3)]">
-        <Show when={comment.user.profile_image_urls?.medium}>
-          <img
-            src={comment.user.profile_image_urls.medium!}
-            alt={comment.user.name}
-            class="w-full h-full object-cover"
-          />
-        </Show>
+    <div
+      class="border border-[var(--colorNeutralStroke2)] rounded-[var(--borderRadiusMedium)] overflow-hidden"
+      classList={{ "opacity-50 pointer-events-none": props.isDeleting }}
+    >
+      {/* Header: avatar + username + time */}
+      <div class="flex items-center gap-2 px-3 py-2 bg-[var(--colorNeutralBackground2)] border-b border-[var(--colorNeutralStroke2)]">
+        <button
+          class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0 overflow-hidden bg-[var(--colorNeutralBackground3)] border-none p-0 cursor-pointer active:scale-95 transition-all"
+          onClick={props.onClickUser}
+          aria-label={props.comment.user.name}
+        >
+          <Show when={props.comment.user.profile_image_urls?.medium}>
+            <img
+              src={resolveImageUrl(props.comment.user.profile_image_urls.medium!)}
+              alt={props.comment.user.name}
+              class="w-full h-full object-cover"
+            />
+          </Show>
+        </button>
+        <button
+          class="[font-size:var(--fontSizeBase200)] font-semibold text-[var(--colorNeutralForeground1)] bg-transparent border-none p-0 cursor-pointer hover:underline active:scale-[0.98] transition-all truncate"
+          onClick={props.onClickUser}
+        >
+          {props.comment.user.name}
+        </button>
+        <span class="[font-size:var(--fontSizeBase75)] text-[var(--colorNeutralForeground3)] ml-auto">
+          {formatDate(props.comment.date)}
+        </span>
       </div>
 
-      {/* Content */}
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2">
-          <span class="[font-size:var(--fontSizeBase200)] font-semibold text-[var(--colorNeutralForeground1)]">
-            {comment.user.name}
-          </span>
-          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">
-            {formatDate(comment.comment_date)}
-          </span>
-        </div>
-        <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground2)] mt-0.5 break-words">
-          {comment.comment}
+      {/* Body */}
+      <div class="px-3 py-2">
+        {/* Quote block for replies */}
+        <Show when={parent()}>
+          {(p) => (
+            <div class="mb-2 pl-2.5 border-l-[3px] border-[var(--colorBrandStroke1)] py-1">
+              <span class="[font-size:var(--fontSizeBase75)] text-[var(--colorBrandForeground1)] font-medium">
+                @{p().user.name}
+              </span>
+              <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground2)] mt-0.5 leading-relaxed break-words">
+                {p().comment}
+              </p>
+            </div>
+          )}
+        </Show>
+
+        {/* Comment text */}
+        <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground1)] leading-relaxed break-words whitespace-pre-wrap">
+          {props.comment.comment ||
+            (props.comment.stamp && (
+              <span class="inline-block w-6 h-6 bg-[var(--colorNeutralBackground3)] rounded" />
+            ))}
         </p>
 
         {/* Actions */}
-        <div class="flex items-center gap-3 mt-1">
+        <div class="flex items-center gap-3 mt-2 pt-1.5 border-t border-[var(--colorNeutralStroke2)]">
           <button
-            class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] hover:text-[var(--colorBrandForeground1)] bg-transparent border-none p-0 cursor-pointer transition-colors"
+            class="[font-size:var(--fontSizeBase75)] text-[var(--colorNeutralForeground3)] hover:text-[var(--colorBrandForeground1)] font-medium bg-transparent border-none p-0 cursor-pointer transition-colors"
             onClick={props.onReply}
           >
             回复
           </button>
-          <button
-            class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerForeground1)] bg-transparent border-none p-0 cursor-pointer transition-colors"
-            onClick={props.onDelete}
-          >
-            删除
-          </button>
+          <Show when={Number(props.currentUserId) === Number(props.comment.user.id)}>
+            <button
+              class="[font-size:var(--fontSizeBase75)] text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerForeground1)] font-medium bg-transparent border-none p-0 cursor-pointer transition-colors"
+              onClick={props.onDelete}
+            >
+              删除
+            </button>
+          </Show>
         </div>
-
-        {/* Replies */}
-        <Show when={replies && replies.length > 0 && props.isExpanded}>
-          <div class="mt-2 pl-3 border-l-2 border-[var(--colorNeutralStroke2)] space-y-2">
-            <For each={replies}>
-              {(reply) => (
-                <div class="flex gap-2">
-                  <div class="w-6 h-6 rounded-[var(--borderRadiusCircular)] flex-shrink-0 overflow-hidden bg-[var(--colorNeutralBackground3)]">
-                    <Show when={reply.user.profile_image_urls?.medium}>
-                      <img
-                        src={reply.user.profile_image_urls.medium!}
-                        alt={reply.user.name}
-                        class="w-full h-full object-cover"
-                      />
-                    </Show>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                      <span class="[font-size:var(--fontSizeBase100)] font-semibold text-[var(--colorNeutralForeground1)]">
-                        {reply.user.name}
-                      </span>
-                      <span class="[font-size:var(--fontSizeBase75)] text-[var(--colorNeutralForeground3)]">
-                        {formatDate(reply.comment_date)}
-                      </span>
-                    </div>
-                    <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground2)] break-words">
-                      {reply.comment}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </For>
-          </div>
-        </Show>
-
-        {/* Toggle replies button */}
-        <Show when={props.replyLoading}>
-          <div class="mt-1">
-            <span class="spinner w-3 h-3 inline-block" />
-          </div>
-        </Show>
-        <Show when={!props.replyLoading && (replies.length > 0 || props.isExpanded)}>
-          <button
-            class="[font-size:var(--fontSizeBase100)] text-[var(--colorBrandForeground1)] mt-1 bg-transparent border-none p-0 cursor-pointer hover:underline"
-            onClick={props.onToggleReplies}
-          >
-            {props.isExpanded ? "收起回复" : `${replies.length} 条回复`}
-          </button>
-        </Show>
       </div>
     </div>
   );

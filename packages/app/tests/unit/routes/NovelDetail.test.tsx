@@ -128,5 +128,3 @@ describe("NovelDetail content rendering", () => {
     expect(document.querySelectorAll("hr.novel-page-break").length).toBeGreaterThanOrEqual(0);
   });
 });
-
-export {};

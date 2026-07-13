@@ -22,6 +22,7 @@ import { blockUser, isBlocked } from "../stores/blockStore";
 import { sanitizeHtml } from "../utils/html";
 import ReportSheet from "../components/ReportSheet";
 import IllustTags from "../components/IllustTags";
+import CommentOverlay from "../components/CommentOverlay";
 
 interface IllustDetailProps {
   illustId?: string;
@@ -45,6 +46,7 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
   const [following, setFollowing] = createSignal(false);
   const [showReportSheet, setShowReportSheet] = createSignal(false);
   const [showActionMenu, setShowActionMenu] = createSignal(false);
+  const [showComments, setShowComments] = createSignal(false);
   const [toastMessage, setToastMessage] = createSignal<string | null>(null);
   const isBlockedAuthor = createMemo(() => {
     const i = illust();
@@ -587,6 +589,15 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
                     <span>{illust()!.total_view}</span>
                   </span>
                 )}
+                {illust()!.total_comments !== undefined && (
+                  <span
+                    class="flex items-center gap-1 cursor-pointer hover:text-[var(--colorBrandForeground1)] transition-colors"
+                    onClick={() => setShowComments(true)}
+                  >
+                    <span>💬</span>
+                    <span>{illust()!.total_comments}</span>
+                  </span>
+                )}
                 {illust()!.page_count > 1 && (
                   <span class="flex items-center gap-1">
                     <span>📄</span>
@@ -728,6 +739,12 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
           illustId={illust()?.id ?? 0}
           isOpen={showReportSheet()}
           onClose={() => setShowReportSheet(false)}
+        />
+        <CommentOverlay
+          type="illust"
+          targetId={illust()!.id}
+          isOpen={showComments()}
+          onClose={() => setShowComments(false)}
         />
       </div>
     </PageTransition>

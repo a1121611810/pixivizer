@@ -137,14 +137,26 @@ export interface PixivCommentUser {
   profile_image_urls: { medium?: string };
 }
 
+export interface PixivCommentStamp {
+  stamp_id: number;
+  stamp_url: string;
+}
+
+export interface PixivCommentParent {
+  id: number;
+  comment: string;
+  date: string;
+  user: PixivCommentUser;
+}
+
 export interface PixivComment {
   id: number;
   comment: string;
-  comment_date: string;
+  date: string;
   user: PixivCommentUser;
-  parent_comment_id?: number;
-  storable: boolean;
-  root_comment_id?: number;
+  has_replies: boolean;
+  stamp?: PixivCommentStamp | null;
+  parent_comment?: PixivCommentParent | Record<string, never>;
 }
 
 export interface PixivCommentRootResponse {
