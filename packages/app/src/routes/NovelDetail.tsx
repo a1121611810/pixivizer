@@ -702,11 +702,11 @@ const NovelDetail: Component = () => {
                   transition: "transform var(--durationNormal) var(--curveEasyEase)",
                 }}
               >
-                <div class="max-w-2xl mx-auto flex items-center justify-center gap-2">
+                <div class="max-w-2xl mx-auto flex items-center justify-center gap-1 overflow-x-auto">
                   <Show when={novel().series?.id && novelNav()?.prevNovel}>
                     {(prev) => (
                       <button
-                        class="px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
+                        class="flex-shrink-0 whitespace-nowrap px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
                         onClick={() => switchNovel(prev().id)}
                       >
                         ◀ 上一章
@@ -715,7 +715,7 @@ const NovelDetail: Component = () => {
                   </Show>
                   <Show when={novel().series?.id}>
                     <button
-                      class="px-4 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-2"
+                      class="flex-shrink-0 whitespace-nowrap px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-2"
                       onClick={() => setSeriesOpen(true)}
                       aria-label="打开系列目录"
                     >
@@ -724,7 +724,7 @@ const NovelDetail: Component = () => {
                     </button>
                   </Show>
                   <button
-                    class="px-4 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-2"
+                    class="flex-shrink-0 whitespace-nowrap px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-2"
                     onClick={() => setSettingsOpen(true)}
                   >
                     <span class="font-bold tracking-tight" style="font-size:16px">
@@ -735,7 +735,7 @@ const NovelDetail: Component = () => {
                   <Show when={novel().series?.id && novelNav()?.nextNovel}>
                     {(next) => (
                       <button
-                        class="px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase200)] font-medium hover:opacity-90 active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
+                        class="flex-shrink-0 whitespace-nowrap px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase200)] font-medium hover:opacity-90 active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
                         onClick={() => switchNovel(next().id)}
                       >
                         下一章 ▶
