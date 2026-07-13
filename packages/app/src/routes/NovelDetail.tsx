@@ -648,6 +648,7 @@ const NovelDetail: Component = () => {
                     ref={onTextContainerRef}
                     style={{
                       ...readerStyle(),
+                      minHeight: `${virtualLayout.totalHeight()}px`,
                     }}
                   >
                     <For each={virtualLayout.visibleBlocks()}>
