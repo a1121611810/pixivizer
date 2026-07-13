@@ -174,7 +174,11 @@ export function createNovelTextLayout(input: NovelTextLayoutInput): NovelTextLay
   } = input;
 
   const lineHeightPx = fontSize * lineHeight;
-  const firstLineWidth = Math.max(0, containerWidth - textIndent);
+  // 缩小 3% 容器宽度补偿 Android WebView Canvas measureText vs DOM 字体度量差异。
+  // 不同字体（如 Noto Sans CJK vs MiSans）的字符宽度不同，缩小宽度让 Canvas 提前换行，
+  // 使计算行数 >= 实际行数，避免因少算行导致的文字溢出重叠。
+  const adjustedWidth = Math.max(1, containerWidth * 0.97);
+  const firstLineWidth = Math.max(0, adjustedWidth - textIndent);
   const fontString = buildFontString(fontWeight, fontSize, fontFamily);
 
   const paragraphLayouts: ParagraphLayout[] = [];
@@ -186,7 +190,7 @@ export function createNovelTextLayout(input: NovelTextLayoutInput): NovelTextLay
       paragraph,
       i,
       currentOffset,
-      containerWidth,
+      adjustedWidth,
       firstLineWidth,
       lineHeightPx,
       fontString,
