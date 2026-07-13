@@ -129,6 +129,34 @@ export interface PixivUgoiraMetadataResponse {
   ugoira_metadata: PixivUgoiraMetadata;
 }
 
+// ─── 评论 ───
+export interface PixivCommentUser {
+  id: number;
+  name: string;
+  account: string;
+  profile_image_urls: { medium?: string };
+}
+
+export interface PixivComment {
+  id: number;
+  comment: string;
+  comment_date: string;
+  user: PixivCommentUser;
+  parent_comment_id?: number;
+  storable: boolean;
+  root_comment_id?: number;
+}
+
+export interface PixivCommentRootResponse {
+  comments: PixivComment[];
+  next_url: string | null;
+}
+
+export interface PixivCommentReplyResponse {
+  comments: PixivComment[];
+  next_url: string | null;
+}
+
 // ─── 请求参数 ───
 export type ContentType = "illust" | "manga" | "novel";
 export type RestrictType = "public" | "private";
