@@ -8,7 +8,9 @@ import { PIXIV_USER_AGENT } from "@/api/userAgent";
  */
 describe("PIXIV_USER_AGENT", () => {
   it("包含预期格式: PixivIOSApp/版本号 (iOS 版本; 设备型号)", () => {
-    expect(PIXIV_USER_AGENT).toMatch(/^PixivIOSApp\/\d+\.\d+\.\d+ \(iOS \d+\.\d+(\.\d+)?; [A-Za-z0-9,]+\)$/);
+    expect(PIXIV_USER_AGENT).toMatch(
+      /^PixivIOSApp\/\d+\.\d+\.\d+ \(iOS \d+\.\d+(\.\d+)?; [A-Za-z0-9,]+\)$/,
+    );
   });
 
   it("版本号为 7.18.3", () => {

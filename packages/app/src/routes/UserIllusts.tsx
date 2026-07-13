@@ -26,7 +26,7 @@ const UserIllusts: Component = () => {
   const userId = () => Number(params.id);
 
   let prevUserId = 0;
-createEffect(() => {
+  createEffect(() => {
     const uid = userId();
     if (uid && uid !== prevUserId) {
       prevUserId = uid;

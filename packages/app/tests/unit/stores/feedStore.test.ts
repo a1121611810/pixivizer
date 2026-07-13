@@ -219,7 +219,7 @@ describe("fetchMoreMixed", () => {
 
     await fetchMoreMixed();
     expect(illusts().map((i) => i.id)).toEqual([1, 2, 3]);
-    expect(loadNext).toHaveBeenCalledWith("next-manga");
+    expect(loadNext).toHaveBeenCalledWith("next-manga", undefined);
   });
 
   it("falls back to the other source when the preferred source has no next_url", async () => {
@@ -246,7 +246,7 @@ describe("fetchMoreMixed", () => {
 
     await fetchMoreMixed();
     expect(illusts().map((i) => i.id)).toEqual([2, 1, 3]);
-    expect(loadNext).toHaveBeenCalledWith("next-manga");
+    expect(loadNext).toHaveBeenCalledWith("next-manga", undefined);
   });
 
   it("clears error on successful load", async () => {
@@ -305,7 +305,7 @@ describe("fetchMoreMixed", () => {
     await fetchMoreMixed();
     expect(illusts().map((i) => i.id)).toEqual([2, 1, 3]);
     expect(error()).toBeNull();
-    expect(loadNext).toHaveBeenCalledWith("next-manga");
+    expect(loadNext).toHaveBeenCalledWith("next-manga", undefined);
   });
 
   it("deduplicates when more-loaded illust overlaps with existing manga source", async () => {
@@ -413,7 +413,7 @@ describe("recommended sub-tab routing", () => {
     await ensureLoaded();
     await vi.waitFor(() => illusts().length > 0);
 
-    expect(loadRecommended).toHaveBeenCalledWith("illust");
+    expect(loadRecommended).toHaveBeenCalledWith("illust", undefined);
     expect(illusts().map((i) => i.id)).toEqual([1]);
   });
 
@@ -429,7 +429,7 @@ describe("recommended sub-tab routing", () => {
     await ensureLoaded();
     await vi.waitFor(() => illusts().length > 0);
 
-    expect(loadRecommended).toHaveBeenCalledWith("manga");
+    expect(loadRecommended).toHaveBeenCalledWith("manga", undefined);
     expect(illusts().map((i) => i.id)).toEqual([2]);
   });
 
@@ -451,8 +451,8 @@ describe("recommended sub-tab routing", () => {
     await ensureLoaded();
     await vi.waitFor(() => illusts().length > 0);
 
-    expect(loadRecommended).toHaveBeenCalledWith("illust");
-    expect(loadRecommended).toHaveBeenCalledWith("manga");
+    expect(loadRecommended).toHaveBeenCalledWith("illust", undefined);
+    expect(loadRecommended).toHaveBeenCalledWith("manga", undefined);
     expect(illusts().map((i) => i.id)).toEqual([1, 2]);
   });
 
@@ -467,7 +467,7 @@ describe("recommended sub-tab routing", () => {
     setRecommendSubTab("illust");
     await refresh();
 
-    expect(loadRecommended).toHaveBeenCalledWith("illust");
+    expect(loadRecommended).toHaveBeenCalledWith("illust", undefined);
   });
 
   it("refresh loads both sources for mixed sub-tab", async () => {
@@ -487,8 +487,8 @@ describe("recommended sub-tab routing", () => {
     setRecommendSubTab("mixed");
     await refresh();
 
-    expect(loadRecommended).toHaveBeenCalledWith("illust");
-    expect(loadRecommended).toHaveBeenCalledWith("manga");
+    expect(loadRecommended).toHaveBeenCalledWith("illust", undefined);
+    expect(loadRecommended).toHaveBeenCalledWith("manga", undefined);
   });
 
   it("fetchMore loads next page for illust sub-tab", async () => {
@@ -508,7 +508,7 @@ describe("recommended sub-tab routing", () => {
     await ensureLoaded();
     await fetchMore();
 
-    expect(loadNext).toHaveBeenCalledWith("next-illust");
+    expect(loadNext).toHaveBeenCalledWith("next-illust", undefined);
     expect(illusts().map((i) => i.id)).toEqual([1, 3]);
   });
 
@@ -529,7 +529,7 @@ describe("recommended sub-tab routing", () => {
     await ensureLoaded();
     await fetchMore();
 
-    expect(loadNext).toHaveBeenCalledWith("next-manga");
+    expect(loadNext).toHaveBeenCalledWith("next-manga", undefined);
     expect(illusts().map((i) => i.id)).toEqual([2, 4]);
   });
 
@@ -544,7 +544,7 @@ describe("recommended sub-tab routing", () => {
     setRecommendSubTab("manga");
     await fetchManga();
 
-    expect(loadRecommended).toHaveBeenCalledWith("manga");
+    expect(loadRecommended).toHaveBeenCalledWith("manga", undefined);
     expect(illusts().map((i) => i.id)).toEqual([5]);
   });
 });
@@ -739,8 +739,8 @@ describe("refresh concurrent lock", () => {
 
     // loadRecommended 应被调用 2 次：第一次 illust，第二次 manga
     expect(loadRecommended).toHaveBeenCalledTimes(2);
-    expect(loadRecommended).toHaveBeenCalledWith("illust");
-    expect(loadRecommended).toHaveBeenCalledWith("manga");
+    expect(loadRecommended).toHaveBeenCalledWith("illust", undefined);
+    expect(loadRecommended).toHaveBeenCalledWith("manga", undefined);
 
     resolveIllust!({ illusts: [createIllust(1, "2026-07-01T12:00:00+09:00")], next_url: null });
     await firstRefresh;

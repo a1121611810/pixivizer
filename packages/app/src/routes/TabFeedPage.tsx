@@ -51,6 +51,7 @@ const TabFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
   const cached = isFeedCached(props.tab);
   const [isSwitchingSubTab, setIsSwitchingSubTab] = createSignal(false);
+  let abortController: AbortController | null = null;
 
   const filteredIllusts = createMemo<PixivIllust[]>(() => {
     // Track followTab changes so filter updates immediately
@@ -61,11 +62,13 @@ const TabFeedPage: Component<Props> = (props) => {
   // Set current tab on mount so feedStore knows which data to fetch
   onMount(() => {
     setCurrentTab(props.tab);
-    void ensureLoaded();
+    abortController = new AbortController();
+    void ensureLoaded(abortController.signal);
   });
 
-  // Save scroll + R18 auto refresh
+  // Save scroll + abort pending requests on unmount
   onCleanup(() => {
+    abortController?.abort();
     saveTabScroll(props.tab);
   });
 
@@ -194,10 +197,13 @@ const TabFeedPage: Component<Props> = (props) => {
                         return;
                       }
                       setIsSwitchingSubTab(true);
+                      // 中止当前请求，创建新的 AbortController
+                      abortController?.abort();
+                      abortController = new AbortController();
                       try {
                         saveTabScroll(props.tab);
                         setRecommendSubTab(opt.key);
-                        await ensureLoaded();
+                        await ensureLoaded(abortController.signal);
                         window.scrollTo(0, getFeedScrollY(props.tab));
                       } finally {
                         setIsSwitchingSubTab(false);
@@ -218,8 +224,8 @@ const TabFeedPage: Component<Props> = (props) => {
               error={error()}
               hasMore={nextUrl() !== null}
               onIllustClick={(id) => navigate(`/illust/${id}`)}
-              onLoadMore={fetchMore}
-              onRefresh={refresh}
+              onLoadMore={() => fetchMore(abortController?.signal)}
+              onRefresh={() => refresh(abortController?.signal)}
               skipAnimation={cached}
               layoutMode={layoutMode()}
               restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}

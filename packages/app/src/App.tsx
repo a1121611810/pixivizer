@@ -46,10 +46,11 @@ import {
   popRoute,
   clearRouteStack,
 } from "./services/predictiveBack";
+import { warmCacheFromDisk } from "./utils/imageLoader";
 import { loadReportedIds } from "./stores/reportStore";
 import { loadBlockedIds } from "./stores/blockStore";
 import { loadImageHostPreference } from "./stores/imageHostStore";
-import StartupUpdateDialog from "./components/StartupUpdateDialog";
+const StartupUpdateDialog = lazy(() => import("./components/StartupUpdateDialog"));
 const Login = lazy(() => import("./routes/Login"));
 const AgeConfirmation = lazy(() => import("./routes/AgeConfirmation"));
 const IllustDetail = lazy(() => import("./routes/IllustDetail"));
@@ -62,7 +63,7 @@ const About = lazy(() => import("./routes/About"));
 const ImageHostSettings = lazy(() => import("./routes/ImageHostSettings"));
 const FollowListPage = lazy(() => import("./routes/FollowListPage"));
 const NovelDetail = lazy(() => import("./routes/NovelDetail"));
-import PredictiveBackContainer from "./components/PredictiveBackContainer";
+const PredictiveBackContainer = lazy(() => import("./components/PredictiveBackContainer"));
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
   const navigate = useNavigate();
@@ -130,6 +131,9 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     await loadReportedIds();
     await loadBlockedIds();
     await loadImageHostPreference();
+
+    // 后台预热 LRU 缓存（从 Android 文件系统读取最近图片，不阻塞启动流程）
+    warmCacheFromDisk();
 
     // Background update check on startup if toggle is enabled.
     // The result is stored in uiStore so StartupUpdateDialog can render it.

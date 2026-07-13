@@ -1,9 +1,26 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
+import type { ImageCachePlugin } from "../native/ImageCache";
 import { PIXIV_USER_AGENT } from "../api/userAgent";
 import { isImageHostEnabled } from "../stores/imageHostStore";
 import { getEffectiveImageUrl, getRaceCandidateUrls } from "../services/imageHostService";
 
 const isNative = Capacitor.isNativePlatform();
+
+// ─── 惰性加载 ImageCache 插件（避免在测试/Web 环境下误注册） ───
+let imageCacheImpl: ImageCachePlugin | null = null;
+
+async function getImageCache(): Promise<ImageCachePlugin | null> {
+  if (!imageCacheImpl) {
+    try {
+      const { ImageCache } = await import("../native/ImageCache");
+      imageCacheImpl = ImageCache;
+    } catch {
+      // 插件不可用（Web/测试环境），返回 null，调用方自行降级
+      return null;
+    }
+  }
+  return imageCacheImpl;
+}
 
 // ─── LRU 图片缓存 ───
 
@@ -71,6 +88,14 @@ function cacheSet(key: string, blob: Blob) {
   const blobUrl = URL.createObjectURL(blob);
   totalBytes += blob.size;
   cache.set(key, { blob, blobUrl, lastAccess: Date.now(), byteSize: blob.size });
+}
+
+/**
+ * 公开 API：将下载完成的 Blob 注入 LRU 缓存。
+ * 用于 App.tsx 启动时从磁盘缓存预热。
+ */
+export function injectCacheEntry(key: string, blob: Blob): void {
+  cacheSet(key, blob);
 }
 
 /** 清空缓存，释放所有 Blob URL */
@@ -198,7 +223,32 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
     let blob: Blob;
 
     if (isNative) {
+      // 1) 先检查 Android 文件缓存（异常时降级到网络，不阻塞加载路径）
+      try {
+        const cache = await getImageCache();
+        const cached = await cache.getImage({ key: originalUrl });
+        if (cached?.base64) {
+          const decoded = await base64ToBlob(cached.base64);
+          cacheSet(originalUrl, decoded);
+          const url = cacheGet(originalUrl);
+          return { url: url ?? "", cleanup: () => {} };
+        }
+      } catch (e) {
+        console.warn("[ImageCache] Disk cache check failed, falling back to network", e);
+      }
+
+      // 2) 未命中，发网络请求
       blob = await fetchNative(targetUrl, originalUrl);
+
+      // 3) 后台保存到磁盘缓存（异常不影响主加载路径）
+      try {
+        const base64 = await blobToBase64(blob);
+        cache
+          .saveImage({ key: originalUrl, base64 })
+          .catch((e) => console.warn("[ImageCache] Failed to save to disk", e));
+      } catch (e) {
+        console.warn("[ImageCache] Failed to encode blob for disk cache", e);
+      }
     } else {
       blob = await fetchWeb(targetUrl, originalUrl);
     }
@@ -449,5 +499,68 @@ async function raceFetch<T>(
   } catch {
     console.warn(`[ImageCache] All race candidates failed, fallback to ${fallbackUrl}`);
     return fetcher(fallbackUrl);
+  }
+}
+
+// ─── Blob ↔ Base64 工具（用于 ImageCache 插件） ───
+
+/** 将 Blob 转为 Base64 字符串 */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        // 去掉 data:...;base64, 前缀
+        const base64 = reader.result.split(",")[1] ?? reader.result;
+        resolve(base64);
+      } else {
+        reject(new Error("FileReader did not return a string"));
+      }
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("FileReader error"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** 将 Base64 字符串还原为 Blob */
+async function base64ToBlob(base64: string): Promise<Blob> {
+  const resp = await fetch(`data:image/jpeg;base64,${base64}`);
+  return resp.blob();
+}
+
+// ─── 磁盘缓存预热 ───
+
+/**
+ * 启动时从 Android 文件缓存读取最近使用的图片，预填到 LRU 缓存。
+ * 仅在 Native 平台生效；Web 平台无操作。
+ *
+ * 在 App.tsx onMount 中调用，与 auth 初始化并行执行。
+ * 预热失败不影响正常功能（降级为冷启动重新下载）。
+ */
+export async function warmCacheFromDisk(): Promise<void> {
+  if (!isNative) return;
+
+  try {
+    const cache = await getImageCache();
+    const { keys } = await cache.getCachedKeys();
+    if (!keys || keys.length === 0) return;
+
+    // 取最近 50 张，并行加载到 LRU
+    const recentKeys = keys.slice(-50);
+    const results = await Promise.allSettled(
+      recentKeys.map(async (key: string) => {
+        const cached = await cache.getImage({ key });
+        if (cached?.base64) {
+          const blob = await base64ToBlob(cached.base64);
+          injectCacheEntry(key, blob);
+        }
+      }),
+    );
+
+    const loaded = results.filter((r) => r.status === "fulfilled").length;
+    console.log(`[ImageCache] Warmup: loaded ${loaded}/${recentKeys.length} entries`);
+  } catch (e) {
+    // 预热失败不阻塞启动
+    console.warn("[ImageCache] Warmup failed", e);
   }
 }

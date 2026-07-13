@@ -460,5 +460,4 @@ describe("novelStore", () => {
       expect(loadNext).not.toHaveBeenCalled();
     });
   });
-
 });

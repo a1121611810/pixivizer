@@ -189,7 +189,7 @@ createRoot(() => {
 
 // ── Actions ──
 
-export async function ensureLoaded(): Promise<void> {
+export async function ensureLoaded(signal?: AbortSignal): Promise<void> {
   const tab = currentTab();
   if (tab === "follow") {
     // Follow tab: show cached data if available
@@ -212,7 +212,7 @@ export async function ensureLoaded(): Promise<void> {
       if (!pubCached && !privCached) {
         setState("illusts", []);
       }
-      await fetchFollow();
+      await fetchFollow(signal);
       tabLoaded[tab] = true;
     }
     return;
@@ -236,7 +236,7 @@ export async function ensureLoaded(): Promise<void> {
         if (!illustCached && !mangaCached) {
           setState("illusts", []);
         }
-        await fetchMixed();
+        await fetchMixed(signal);
         tabLoaded["recommended_mixed"] = true;
       }
       return;
@@ -262,9 +262,9 @@ export async function ensureLoaded(): Promise<void> {
     }
     setState("illusts", []);
     if (subTab === "illust") {
-      await fetchRecommended("illust");
+      await fetchRecommended("illust", signal);
     } else {
-      await fetchManga();
+      await fetchManga(signal);
     }
     tabLoaded[sourceKey] = true;
     return;
@@ -292,7 +292,7 @@ export async function ensureLoaded(): Promise<void> {
   tabLoaded[tab] = true;
 }
 
-export async function refresh() {
+export async function refresh(signal?: AbortSignal) {
   const tab = currentTab();
   const sourceKeys = getRefreshSourceKeys(tab);
 
@@ -311,14 +311,14 @@ export async function refresh() {
     if (tab === "recommended") {
       const subTab = recommendSubTab();
       if (subTab === "mixed") {
-        await fetchMixed();
+        await fetchMixed(signal);
       } else if (subTab === "illust") {
-        await fetchRecommended("illust");
+        await fetchRecommended("illust", signal);
       } else {
-        await fetchManga();
+        await fetchManga(signal);
       }
     } else if (tab === "follow") {
-      await fetchFollow();
+      await fetchFollow(signal);
     }
   } finally {
     // 释放锁定
@@ -381,12 +381,12 @@ export function getFeedScrollY(tab?: string) {
 
 // ── Internal fetch functions ──
 
-export async function fetchRecommended(contentType: ContentType = "illust") {
+export async function fetchRecommended(contentType: ContentType = "illust", signal?: AbortSignal) {
   setState("loading", true);
   setState("error", null);
   const sourceKey = contentType === "manga" ? "recommended_manga" : "recommended_illust";
   try {
-    const data = await loadRecommended(contentType);
+    const data = await loadRecommended(contentType, signal);
     // Cache raw data; illusts uses filtered version
     tabIllusts[sourceKey] = data.illusts;
     tabNextUrl[sourceKey] = data.next_url;
@@ -406,19 +406,19 @@ export async function fetchRecommended(contentType: ContentType = "illust") {
   }
 }
 
-export async function fetchManga() {
-  return fetchRecommended("manga");
+export async function fetchManga(signal?: AbortSignal) {
+  return fetchRecommended("manga", signal);
 }
 
-export async function fetchMixed() {
+export async function fetchMixed(signal?: AbortSignal) {
   setState("loading", true);
   setState("error", null);
   const errors: string[] = [];
 
   try {
     const [illustResult, mangaResult] = await Promise.allSettled([
-      loadRecommended("illust"),
-      loadRecommended("manga"),
+      loadRecommended("illust", signal),
+      loadRecommended("manga", signal),
     ]);
 
     if (illustResult.status === "fulfilled") {
@@ -457,7 +457,7 @@ export async function fetchMixed() {
   }
 }
 
-export async function fetchMoreMixed() {
+export async function fetchMoreMixed(signal?: AbortSignal) {
   if (state.loading) return;
   setState("loading", true);
   setState("error", null);
@@ -474,7 +474,7 @@ export async function fetchMoreMixed() {
     const next = tabNextUrl[key];
     if (!next) return false;
     try {
-      const data = await loadNext(next);
+      const data = await loadNext(next, signal);
       tabIllusts[key] = [...(tabIllusts[key] || []), ...data.illusts];
       tabNextUrl[key] = data.next_url;
       return true;
@@ -509,14 +509,14 @@ export async function fetchMoreMixed() {
   setState("loading", false);
 }
 
-export async function fetchFollow() {
+export async function fetchFollow(signal?: AbortSignal) {
   setState("loading", true);
   setState("error", null);
   let errors: string[] = [];
   try {
     const [publicResult, privateResult] = await Promise.allSettled([
-      loadFollow("public"),
-      loadFollow("private"),
+      loadFollow("public", signal),
+      loadFollow("private", signal),
     ]);
     // Process public result
     if (publicResult.status === "fulfilled") {
@@ -559,11 +559,11 @@ export async function fetchFollow() {
   }
 }
 
-export async function fetchMore() {
+export async function fetchMore(signal?: AbortSignal) {
   if (state.loading) return;
   const tab = currentTab();
   if (tab === "recommended" && recommendSubTab() === "mixed") {
-    return fetchMoreMixed();
+    return fetchMoreMixed(signal);
   }
   if (tab !== "follow") {
     const sourceKey =
@@ -575,7 +575,7 @@ export async function fetchMore() {
     if (!state.nextUrl) return;
     setState("loading", true);
     try {
-      const data = await loadNext(state.nextUrl);
+      const data = await loadNext(state.nextUrl, signal);
       tabIllusts[sourceKey] = [...(tabIllusts[sourceKey] || []), ...data.illusts];
       tabNextUrl[sourceKey] = data.next_url;
       batch(() => {
@@ -605,7 +605,7 @@ export async function fetchMore() {
         setState("loading", false);
         return;
       }
-      const data = await loadNext(pubNext);
+      const data = await loadNext(pubNext, signal);
       tabIllusts["follow_public"] = [...(tabIllusts["follow_public"] || []), ...data.illusts];
       tabNextUrl["follow_public"] = data.next_url;
       setState(
@@ -621,7 +621,7 @@ export async function fetchMore() {
         setState("loading", false);
         return;
       }
-      const data = await loadNext(privNext);
+      const data = await loadNext(privNext, signal);
       tabIllusts["follow_private"] = [...(tabIllusts["follow_private"] || []), ...data.illusts];
       tabNextUrl["follow_private"] = data.next_url;
       setState(
@@ -651,7 +651,7 @@ export async function fetchMore() {
       const loadSource = async (key: "follow_public" | "follow_private"): Promise<boolean> => {
         const next = tabNextUrl[key];
         if (!next) return false;
-        const data = await loadNext(next);
+        const data = await loadNext(next, signal);
         tabIllusts[key] = [...(tabIllusts[key] || []), ...data.illusts];
         tabNextUrl[key] = data.next_url;
         return true;

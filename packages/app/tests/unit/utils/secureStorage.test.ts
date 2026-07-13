@@ -15,7 +15,7 @@ vi.mock("@aparajita/capacitor-secure-storage", () => ({
   },
 }));
 
-import { checkBackupIntegrity, removeRefreshToken } from "@/utils/secureStorage";
+import { checkBackupIntegrity } from "@/utils/secureStorage";
 
 describe("checkBackupIntegrity", () => {
   beforeEach(() => {

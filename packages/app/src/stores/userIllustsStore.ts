@@ -86,8 +86,7 @@ export const loading = () =>
   contentType() === "novel" ? novelResource.loading : illustResource.loading;
 
 export const error = () => {
-  const err =
-    contentType() === "novel" ? novelResource.error : illustResource.error;
+  const err = contentType() === "novel" ? novelResource.error : illustResource.error;
   if (!err) return null;
   return (err as { message?: string }).message ?? "加载失败";
 };
@@ -129,7 +128,10 @@ export async function loadMore() {
     const current = novelResource();
     if (!current?.nextUrl || novelResource.loading) return;
     const data = await loadNovelNext(current.nextUrl);
-    const entry: NovelCacheEntry = { novels: [...current.novels, ...data.novels], nextUrl: data.next_url };
+    const entry: NovelCacheEntry = {
+      novels: [...current.novels, ...data.novels],
+      nextUrl: data.next_url,
+    };
     novelCache = entry;
     mutateNovel(entry);
     return;
@@ -139,7 +141,10 @@ export async function loadMore() {
   if (!current?.nextUrl || illustResource.loading) return;
   const data = await loadIllustNext(current.nextUrl);
   const ct = contentType();
-  const entry: IllustCacheEntry = { illusts: [...current.illusts, ...data.illusts], nextUrl: data.next_url };
+  const entry: IllustCacheEntry = {
+    illusts: [...current.illusts, ...data.illusts],
+    nextUrl: data.next_url,
+  };
   illustCache[ct] = entry;
   mutateIllust(entry);
 }

@@ -13,7 +13,7 @@ const isNative = Capacitor.isNativePlatform();
 
 // ─── 对外接口 ───
 export interface PixivApiClient {
-  get<T>(path: string, params?: Record<string, string>): Promise<T>;
+  get<T>(path: string, params?: Record<string, string>, signal?: AbortSignal): Promise<T>;
   post<T>(path: string, body: Record<string, string>): Promise<T>;
 }
 
@@ -22,6 +22,14 @@ let accessToken = "";
 let onUnauthorized: (() => Promise<void>) | null = null;
 /** 401 刷新 Promise — 共享给所有并发 401 请求，确保 refresh 只执行一次 */
 let refreshPromise: Promise<void> | null = null;
+
+// ─── GET 请求去重 ───
+/** 飞行中的 GET 请求，相同 URL+参数只发一个真实 HTTP 请求 */
+const inflightGetRequests = new Map<string, Promise<any>>();
+
+function getRequestKey(path: string, data?: Record<string, string>): string {
+  return `GET:${path}:${JSON.stringify(data ?? {})}`;
+}
 
 export function setAccessToken(token: string) {
   accessToken = token;
@@ -121,11 +129,17 @@ export function rewriteUrl(path: string): string {
   return `${PIXIV_API_BASE}${path}`;
 }
 
-async function request<T>(
+/** 实际执行 HTTP 请求（不含去重层），含 401 刷新和 429 重试 */
+async function executeRequest<T>(
   method: "GET" | "POST",
   path: string,
   data?: Record<string, string>,
+  signal?: AbortSignal,
 ): Promise<T> {
+  // 请求前检查是否已取消
+  if (signal?.aborted) {
+    throw new DOMException("请求已取消", "AbortError");
+  }
   const url = rewriteUrl(path);
   const headers: Record<string, string> = {
     "User-Agent": PIXIV_USER_AGENT,
@@ -169,18 +183,20 @@ async function request<T>(
       } else {
         if (method === "GET") {
           const params = data ? "?" + new URLSearchParams(data).toString() : "";
-          const res = await fetch(url + params, { method: "GET", headers });
+          const res = await fetch(url + params, { method: "GET", headers, signal });
           response = { status: res.status, data: await res.json() };
         } else {
           const body = data ? new URLSearchParams(data).toString() : "";
           headers["Content-Type"] = "application/x-www-form-urlencoded";
-          const res = await fetch(url, { method: "POST", headers, body });
+          const res = await fetch(url, { method: "POST", headers, body, signal });
           const contentType = res.headers.get("content-type") || "";
           if (contentType.includes("application/json")) {
             response = { status: res.status, data: await res.json() };
           } else {
             const text = await res.text().catch(() => "");
-            throw new Error(`\u670d\u52a1\u5668\u8fd4\u56de\u975e JSON (HTTP ${res.status}): ${text.slice(0, 300)}`);
+            throw new Error(
+              `\u670d\u52a1\u5668\u8fd4\u56de\u975e JSON (HTTP ${res.status}): ${text.slice(0, 300)}`,
+            );
           }
         }
       }
@@ -195,10 +211,14 @@ async function request<T>(
         if (!accessToken) {
           throw classifyError(401, null);
         }
-        return request<T>(method, path, data);
+        // 401 后 token 已刷新，递归调用时绕过去重层
+        return executeRequest<T>(method, path, data, signal);
       }
 
       if (response!.status === 429 && attempt < MAX_RETRIES) {
+        if (signal?.aborted) {
+          throw new DOMException("请求已取消", "AbortError");
+        }
         const delay = Math.pow(2, attempt) * 1000;
         await new Promise((r) => setTimeout(r, delay));
         continue;
@@ -223,7 +243,37 @@ async function request<T>(
   }
 }
 
+/**
+ * 发送 HTTP 请求（GET 带去重，POST 不缓存）。
+ * GET 请求去重：同一 URL+参数的并发请求自动合并为一个真实 HTTP 请求。
+ */
+async function request<T>(
+  method: "GET" | "POST",
+  path: string,
+  data?: Record<string, string>,
+  signal?: AbortSignal,
+): Promise<T> {
+  // GET 请求去重：相同 path+data 只发一个真实 HTTP 请求
+  if (method === "GET") {
+    const key = getRequestKey(path, data);
+    const existing = inflightGetRequests.get(key);
+    if (existing) {
+      return existing as Promise<T>;
+    }
+    const promise = executeRequest<T>(method, path, data, signal);
+    inflightGetRequests.set(key, promise);
+    promise.finally(() => {
+      inflightGetRequests.delete(key);
+    });
+    return promise;
+  }
+
+  // POST 请求透传（不做去重，因为涉及收藏/关注等副作用）
+  return executeRequest<T>(method, path, data, signal);
+}
+
 export const apiClient: PixivApiClient = {
-  get: <T>(path: string, params?: Record<string, string>) => request<T>("GET", path, params),
+  get: <T>(path: string, params?: Record<string, string>, signal?: AbortSignal) =>
+    request<T>("GET", path, params, signal),
   post: <T>(path: string, body: Record<string, string>) => request<T>("POST", path, body),
 };

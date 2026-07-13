@@ -91,7 +91,9 @@ describe("429 重试 — 指数退避", () => {
       headers: new Headers({ "content-type": "application/json" }),
       json: () => Promise.resolve({}),
       text: () => Promise.resolve(""),
-      clone: function () { return this; },
+      clone: function () {
+        return this;
+      },
     } as unknown as Response);
 
     await expect(apiClient.get("/v1/illust/detail")).rejects.toThrow(/500/);
@@ -104,17 +106,22 @@ describe("429 重试 — 指数退避", () => {
     const { setAccessToken, setOnUnauthorized, apiClient } = await loadModule();
 
     setAccessToken("expired");
-    const mockRefresh = vi.fn(async () => { setAccessToken("new-token"); });
+    const mockRefresh = vi.fn(async () => {
+      setAccessToken("new-token");
+    });
     setOnUnauthorized(mockRefresh);
 
     // 首次 401 → refresh → 重试 200
     mockFetch
       .mockResolvedValueOnce({
-        ok: false, status: 401,
+        ok: false,
+        status: 401,
         headers: new Headers({ "content-type": "application/json" }),
         json: () => Promise.resolve({}),
         text: () => Promise.resolve(""),
-        clone: function () { return this; },
+        clone: function () {
+          return this;
+        },
       } as unknown as Response)
       .mockResolvedValueOnce(make200Response({ data: "ok" }));
 

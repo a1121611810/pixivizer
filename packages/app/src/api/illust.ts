@@ -9,49 +9,65 @@ import type {
 
 export function loadRecommended(
   contentType: ContentType = "illust",
+  signal?: AbortSignal,
 ): Promise<PixivIllustListResponse> {
-  return apiClient.get<PixivIllustListResponse>("/v1/illust/recommended", {
-    content_type: contentType,
-    filter: "for_ios",
-  });
+  return apiClient.get<PixivIllustListResponse>(
+    "/v1/illust/recommended",
+    {
+      content_type: contentType,
+      filter: "for_ios",
+    },
+    signal,
+  );
 }
 
-export function loadMangaRecommended(): Promise<PixivIllustListResponse> {
-  return loadRecommended("manga");
+export function loadMangaRecommended(signal?: AbortSignal): Promise<PixivIllustListResponse> {
+  return loadRecommended("manga", signal);
 }
 
-export function loadFollow(restrict: RestrictType = "public"): Promise<PixivIllustListResponse> {
-  return apiClient.get<PixivIllustListResponse>("/v2/illust/follow", {
-    restrict,
-  });
+export function loadFollow(
+  restrict: RestrictType = "public",
+  signal?: AbortSignal,
+): Promise<PixivIllustListResponse> {
+  return apiClient.get<PixivIllustListResponse>("/v2/illust/follow", { restrict }, signal);
 }
 
-export function loadDetail(illustId: number): Promise<PixivIllustDetailResponse> {
-  return apiClient.get<PixivIllustDetailResponse>("/v1/illust/detail", {
-    illust_id: String(illustId),
-  });
+export function loadDetail(
+  illustId: number,
+  signal?: AbortSignal,
+): Promise<PixivIllustDetailResponse> {
+  return apiClient.get<PixivIllustDetailResponse>(
+    "/v1/illust/detail",
+    { illust_id: String(illustId) },
+    signal,
+  );
 }
 
-export function loadNext(url: string): Promise<PixivIllustListResponse> {
-  return apiClient.get<PixivIllustListResponse>(url);
+export function loadNext(url: string, signal?: AbortSignal): Promise<PixivIllustListResponse> {
+  return apiClient.get<PixivIllustListResponse>(url, undefined, signal);
 }
 
 export function loadBookmarks(
   userId: number,
   restrict: RestrictType = "public",
+  signal?: AbortSignal,
 ): Promise<PixivIllustListResponse> {
-  return apiClient.get<PixivIllustListResponse>("/v1/user/bookmarks/illust", {
-    user_id: String(userId),
-    restrict,
-  });
+  return apiClient.get<PixivIllustListResponse>(
+    "/v1/user/bookmarks/illust",
+    { user_id: String(userId), restrict },
+    signal,
+  );
 }
 
 export async function loadUgoiraMetadata(
   illustId: number,
+  signal?: AbortSignal,
 ): Promise<PixivUgoiraMetadataResponse["ugoira_metadata"]> {
-  const res = await apiClient.get<PixivUgoiraMetadataResponse>("/v1/ugoira/metadata", {
-    illust_id: String(illustId),
-  });
+  const res = await apiClient.get<PixivUgoiraMetadataResponse>(
+    "/v1/ugoira/metadata",
+    { illust_id: String(illustId) },
+    signal,
+  );
   return res.ugoira_metadata;
 }
 
@@ -84,9 +100,11 @@ export function unfollowUser(userId: number): Promise<void> {
 export function loadUserIllusts(
   userId: number,
   type: ContentType = "illust",
+  signal?: AbortSignal,
 ): Promise<PixivIllustListResponse> {
-  return apiClient.get<PixivIllustListResponse>("/v1/user/illusts", {
-    user_id: String(userId),
-    type,
-  });
+  return apiClient.get<PixivIllustListResponse>(
+    "/v1/user/illusts",
+    { user_id: String(userId), type },
+    signal,
+  );
 }

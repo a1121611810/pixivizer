@@ -1,7 +1,6 @@
 import { defineConfig } from "vite-plus";
 import solid from "vite-plugin-solid";
 import UnoCSS from "unocss/vite";
-import { VitePWA } from "vite-plugin-pwa";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import postcssPxToRem from "postcss-pxtorem";
@@ -31,68 +30,7 @@ export default defineConfig({
       "@": resolve(__dirname, "src"),
     },
   },
-  plugins: [
-    solid(),
-    UnoCSS(),
-    VitePWA({
-      registerType: "autoUpdate",
-      srcDir: "src",
-      filename: "sw.ts",
-      workbox: {
-        globPatterns: [],
-        runtimeCaching: [
-          {
-            // Pixiv images through dev proxy
-            urlPattern: /^\/pixiv-img\//,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "pixiv-images",
-              expiration: {
-                maxEntries: 500,
-                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-              },
-            },
-          },
-          {
-            // Third-party image host: i.pixiv.re
-            urlPattern: /^\/pixiv-re\//,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "pixiv-images-re",
-              expiration: {
-                maxEntries: 500,
-                maxAgeSeconds: 30 * 24 * 60 * 60,
-              },
-            },
-          },
-          {
-            // Third-party image host: i.pixiv.nl
-            urlPattern: /^\/pixiv-nl\//,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "pixiv-images-nl",
-              expiration: {
-                maxEntries: 500,
-                maxAgeSeconds: 30 * 24 * 60 * 60,
-              },
-            },
-          },
-        ],
-      },
-      manifest: {
-        name: "Pictelio",
-        short_name: "Pictelio",
-        description: "A third-party Pixiv illustration browser",
-        theme_color: "#141414",
-        background_color: "#141414",
-        display: "standalone",
-        icons: [
-          { src: "/favicon-192x192.png", sizes: "192x192", type: "image/png" },
-          { src: "/logo-192x192.png", sizes: "192x192", type: "image/png" },
-        ],
-      },
-    }),
-  ],
+  plugins: [solid(), UnoCSS()],
   define: {
     APP_VERSION: JSON.stringify(pkg.version),
   },

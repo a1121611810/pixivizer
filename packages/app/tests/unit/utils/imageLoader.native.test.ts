@@ -8,12 +8,17 @@ vi.mock("@capacitor/core", async () => {
     ...actual,
     Capacitor: { isNativePlatform: vi.fn(() => true) },
     CapacitorHttp: { request: mockRequest },
+    registerPlugin: vi.fn(() => ({
+      saveImage: vi.fn().mockResolvedValue({}),
+      getImage: vi.fn().mockResolvedValue({}),
+      getCachedKeys: vi.fn().mockResolvedValue({ keys: [] }),
+      clearCache: vi.fn(),
+    })),
   };
 });
 
 describe("loadImage on native platform", () => {
   beforeEach(() => {
-    vi.resetModules();
     mockRequest.mockReset();
   });
 

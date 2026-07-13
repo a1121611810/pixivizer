@@ -71,9 +71,9 @@ describe("401 并发重试 — Promise 队列", () => {
 
     // mockFetch: 前两次调用返回 401，后续返回 200
     mockFetch
-      .mockResolvedValueOnce(make401Response())  // 请求 A 首次
-      .mockResolvedValueOnce(make401Response())  // 请求 B 首次（并发）
-      .mockResolvedValueOnce(make200Response({ data: "A" }))  // 请求 A 重试
+      .mockResolvedValueOnce(make401Response()) // 请求 A 首次
+      .mockResolvedValueOnce(make401Response()) // 请求 B 首次（并发）
+      .mockResolvedValueOnce(make200Response({ data: "A" })) // 请求 A 重试
       .mockResolvedValueOnce(make200Response({ data: "B" })); // 请求 B 重试
 
     // 并发发起两个请求

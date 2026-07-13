@@ -22,10 +22,14 @@ describe("api/illust.ts", () => {
     const { loadRecommended } = await loadApi();
     await loadRecommended("illust");
 
-    expect(mockGet).toHaveBeenCalledWith("/v1/illust/recommended", {
-      content_type: "illust",
-      filter: "for_ios",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/v1/illust/recommended",
+      {
+        content_type: "illust",
+        filter: "for_ios",
+      },
+      undefined,
+    );
   });
 
   it("loadRecommended defaults to illust", async () => {
@@ -33,10 +37,14 @@ describe("api/illust.ts", () => {
     const { loadRecommended } = await loadApi();
     await loadRecommended();
 
-    expect(mockGet).toHaveBeenCalledWith("/v1/illust/recommended", {
-      content_type: "illust",
-      filter: "for_ios",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/v1/illust/recommended",
+      {
+        content_type: "illust",
+        filter: "for_ios",
+      },
+      undefined,
+    );
   });
 
   it("loadMangaRecommended delegates to loadRecommended with manga", async () => {
@@ -44,10 +52,14 @@ describe("api/illust.ts", () => {
     const { loadMangaRecommended } = await loadApi();
     await loadMangaRecommended();
 
-    expect(mockGet).toHaveBeenCalledWith("/v1/illust/recommended", {
-      content_type: "manga",
-      filter: "for_ios",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/v1/illust/recommended",
+      {
+        content_type: "manga",
+        filter: "for_ios",
+      },
+      undefined,
+    );
   });
 
   it("loadFollow calls apiClient.get with restrict", async () => {
@@ -55,9 +67,13 @@ describe("api/illust.ts", () => {
     const { loadFollow } = await loadApi();
     await loadFollow("private");
 
-    expect(mockGet).toHaveBeenCalledWith("/v2/illust/follow", {
-      restrict: "private",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/v2/illust/follow",
+      {
+        restrict: "private",
+      },
+      undefined,
+    );
   });
 
   it("loadFollow defaults to public", async () => {
@@ -65,9 +81,13 @@ describe("api/illust.ts", () => {
     const { loadFollow } = await loadApi();
     await loadFollow();
 
-    expect(mockGet).toHaveBeenCalledWith("/v2/illust/follow", {
-      restrict: "public",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/v2/illust/follow",
+      {
+        restrict: "public",
+      },
+      undefined,
+    );
   });
 
   it("loadDetail calls apiClient.get with illust_id", async () => {
@@ -75,9 +95,13 @@ describe("api/illust.ts", () => {
     const { loadDetail } = await loadApi();
     await loadDetail(456);
 
-    expect(mockGet).toHaveBeenCalledWith("/v1/illust/detail", {
-      illust_id: "456",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/v1/illust/detail",
+      {
+        illust_id: "456",
+      },
+      undefined,
+    );
   });
 
   it("loadNext passes URL directly", async () => {
@@ -87,6 +111,8 @@ describe("api/illust.ts", () => {
 
     expect(mockGet).toHaveBeenCalledWith(
       "https://app-api.pixiv.net/v1/illust/recommended?offset=30",
+      undefined,
+      undefined,
     );
   });
 
@@ -95,10 +121,14 @@ describe("api/illust.ts", () => {
     const { loadBookmarks } = await loadApi();
     await loadBookmarks(789, "public");
 
-    expect(mockGet).toHaveBeenCalledWith("/v1/user/bookmarks/illust", {
-      user_id: "789",
-      restrict: "public",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/v1/user/bookmarks/illust",
+      {
+        user_id: "789",
+        restrict: "public",
+      },
+      undefined,
+    );
   });
 
   it("loadUgoiraMetadata returns ugoira_metadata", async () => {
@@ -109,9 +139,13 @@ describe("api/illust.ts", () => {
     const result = await loadUgoiraMetadata(123);
 
     expect(result).toEqual({ frames: [{ file: "1.jpg", delay: 100 }] });
-    expect(mockGet).toHaveBeenCalledWith("/v1/ugoira/metadata", {
-      illust_id: "123",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/v1/ugoira/metadata",
+      {
+        illust_id: "123",
+      },
+      undefined,
+    );
   });
 
   it("addBookmark calls apiClient.post with illust_id and restrict", async () => {
@@ -161,10 +195,14 @@ describe("api/illust.ts", () => {
     const { loadUserIllusts } = await loadApi();
     await loadUserIllusts(555, "manga");
 
-    expect(mockGet).toHaveBeenCalledWith("/v1/user/illusts", {
-      user_id: "555",
-      type: "manga",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/v1/user/illusts",
+      {
+        user_id: "555",
+        type: "manga",
+      },
+      undefined,
+    );
   });
 
   it("loadUserIllusts defaults to illust type", async () => {
@@ -172,9 +210,13 @@ describe("api/illust.ts", () => {
     const { loadUserIllusts } = await loadApi();
     await loadUserIllusts(555);
 
-    expect(mockGet).toHaveBeenCalledWith("/v1/user/illusts", {
-      user_id: "555",
-      type: "illust",
-    });
+    expect(mockGet).toHaveBeenCalledWith(
+      "/v1/user/illusts",
+      {
+        user_id: "555",
+        type: "illust",
+      },
+      undefined,
+    );
   });
 });

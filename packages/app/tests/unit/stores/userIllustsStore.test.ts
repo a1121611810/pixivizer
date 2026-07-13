@@ -41,9 +41,7 @@ vi.mock("solid-js", async (importOriginal) => {
             mutate: mockIllustMutate.mockImplementation(
               (
                 fn:
-                  | ((
-                      prev: typeof mockIllustValue,
-                    ) => typeof mockIllustValue)
+                  | ((prev: typeof mockIllustValue) => typeof mockIllustValue)
                   | typeof mockIllustValue,
               ) => {
                 if (typeof fn === "function") {
@@ -65,11 +63,7 @@ vi.mock("solid-js", async (importOriginal) => {
         {
           mutate: mockNovelMutate.mockImplementation(
             (
-              fn:
-                | ((
-                    prev: typeof mockNovelValue,
-                  ) => typeof mockNovelValue)
-                | typeof mockNovelValue,
+              fn: ((prev: typeof mockNovelValue) => typeof mockNovelValue) | typeof mockNovelValue,
             ) => {
               if (typeof fn === "function") {
                 mockNovelValue = fn(mockNovelValue);
