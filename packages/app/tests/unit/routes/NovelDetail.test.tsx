@@ -124,13 +124,9 @@ describe("NovelDetail content rendering", () => {
 
     expect(screen.getByText("第一段正文内容")).toBeDefined();
     expect(screen.getByText("第二段正文内容")).toBeDefined();
-    // 图片和分页标记的渲染依赖于虚拟滚动可见块计算，在测试环境中可能不完整。
-    // 在实际浏览器/WebView 中应正常显示。
     expect(document.querySelectorAll("figure.novel-image-block").length).toBeGreaterThanOrEqual(0);
     expect(document.querySelectorAll("hr.novel-page-break").length).toBeGreaterThanOrEqual(0);
   });
 });
-
-export {};
 
 export {};

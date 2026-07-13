@@ -648,13 +648,12 @@ const NovelDetail: Component = () => {
                     ref={onTextContainerRef}
                     style={{
                       ...readerStyle(),
-                      minHeight: `${virtualLayout.totalHeight()}px`,
                     }}
                   >
-                    <For each={virtualLayout.visibleBlocks()}>
-                      {(blockIndex) => (
+                    <For each={blocks()}>
+                      {(block) => (
                         <NovelContentBlock
-                          block={() => blocks()[blockIndex]}
+                          block={() => block}
                           imageBlockList={imageBlockList}
                           imageDimensions={imageDimensions}
                           containerWidth={textContainerWidth}
