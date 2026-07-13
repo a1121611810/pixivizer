@@ -13,7 +13,7 @@ import { computeMasonryLayout } from "../primitives/computeMasonryLayout";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createVirtualScroll } from "../primitives/createVirtualScroll";
 import { createLayout } from "./LayoutEngine";
-import { loadImage } from "../utils/imageLoader";
+import { loadImage, checkImageCache } from "../utils/imageLoader";
 import { isImageHostEnabled } from "../stores/imageHostStore";
 
 interface Props {
@@ -184,8 +184,10 @@ const VirtualFeed: Component<Props> = (props) => {
       if (!ill) break;
       const url = ill.image_urls.medium || ill.image_urls.large;
       if (url) {
-        // Fire-and-forget: warm both SW cache and in-memory LRU cache
-        loadImage(url).catch(() => {});
+        // 仅在 LRU 缓存未命中时预取，避免重复网络请求和 Blob 创建
+        if (!checkImageCache(url)) {
+          loadImage(url).catch(() => {});
+        }
       }
     }
   });
