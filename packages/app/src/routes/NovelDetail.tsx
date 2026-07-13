@@ -664,23 +664,45 @@ const NovelDetail: Component = () => {
                       ...readerStyle(),
                     }}
                   >
-                    <For each={blocksWithHeights()}>
-                      {(block) => (
-                        <NovelContentBlock
-                          block={() => block}
-                          imageBlockList={imageBlockList}
-                          imageDimensions={imageDimensions}
-                          containerWidth={textContainerWidth}
-                          fontSize={fontSize}
-                          paragraphHeight={block.ph}
-                          onImageClick={(imageIndex) => {
-                            setImageViewerIndex(imageIndex);
-                            setImageViewerOpen(true);
-                          }}
-                          renderParagraph={renderParagraphWithHighlights}
-                        />
-                      )}
-                    </For>
+                    {/* 虚拟滚动：只渲染视口 ±5 段内的块，上下用撑杆占位保持滚动条正确 */}
+                    {(() => {
+                      const all = blocksWithHeights();
+                      const vis = virtualLayout.visibleBlocks();
+                      if (vis.length === 0 || all.length === 0) return null;
+                      const first = virtualLayout.getBlockLayout(vis[0]);
+                      const last = virtualLayout.getBlockLayout(vis[vis.length - 1]);
+                      const topH = first?.offset ?? 0;
+                      const bottomH = last
+                        ? virtualLayout.totalHeight() - (last.offset + last.height)
+                        : 0;
+                      return (
+                        <>
+                          <div style={{ height: `${Math.max(0, topH)}px` }} aria-hidden="true" />
+                          <For each={vis}>
+                            {(idx) => {
+                              const block = all[idx];
+                              if (!block) return null;
+                              return (
+                                <NovelContentBlock
+                                  block={() => block}
+                                  imageBlockList={imageBlockList}
+                                  imageDimensions={imageDimensions}
+                                  containerWidth={textContainerWidth}
+                                  fontSize={fontSize}
+                                  paragraphHeight={block.ph}
+                                  onImageClick={(imageIndex) => {
+                                    setImageViewerIndex(imageIndex);
+                                    setImageViewerOpen(true);
+                                  }}
+                                  renderParagraph={renderParagraphWithHighlights}
+                                />
+                              );
+                            }}
+                          </For>
+                          <div style={{ height: `${Math.max(0, bottomH)}px` }} aria-hidden="true" />
+                        </>
+                      );
+                    })()}
                   </div>
                 </Show>
                 <Show when={detailLoading() && !novelHtml()}>

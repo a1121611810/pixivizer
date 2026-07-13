@@ -50,6 +50,8 @@ export interface NovelVirtualLayoutResult {
   layoutResult: Accessor<NovelTextLayoutResult>;
   /** 容器 ref 设置函数，由 NovelDetail 在 ref 回调中调用 */
   containerRef: (el: HTMLElement) => void;
+  /** 获取单个块的预估布局（offset + height），用于虚拟滚动撑杆 */
+  getBlockLayout(index: number): BlockLayout | undefined;
 }
 
 const DEFAULT_OVERSCAN = 5;
@@ -404,5 +406,6 @@ export function createNovelVirtualLayout(
     currentCharIndex,
     layoutResult: textLayoutResult,
     containerRef,
+    getBlockLayout: (index: number) => blockLayouts()[index],
   };
 }
