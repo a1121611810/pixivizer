@@ -111,26 +111,30 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
       backButtonListener?.remove();
     });
 
-    // Load persisted preferences (async)
-    await loadThemePreference();
-    await loadPredictiveBackPreference();
-    await loadAutoHideNavBarPreference();
-    await loadShowR18Preference();
-    await loadShowR18GPreference();
-    await loadLayoutModePreference();
-    await loadShowDetailStairsPreference();
-    await loadAgePreference();
-    await loadAutoCheckUpdatePreference();
-    await loadLastDismissedVersionPreference();
-    await loadUseDnsOverridePreference();
-    await loadContentTypePreference();
-    await loadNovelCachePreference();
-    await loadNovelLayoutModePreference();
+    // Load persisted preferences (async) — 并行加载
+    await Promise.all([
+      loadThemePreference(),
+      loadPredictiveBackPreference(),
+      loadAutoHideNavBarPreference(),
+      loadShowR18Preference(),
+      loadShowR18GPreference(),
+      loadLayoutModePreference(),
+      loadShowDetailStairsPreference(),
+      loadAgePreference(),
+      loadAutoCheckUpdatePreference(),
+      loadLastDismissedVersionPreference(),
+      loadUseDnsOverridePreference(),
+      loadContentTypePreference(),
+      loadNovelCachePreference(),
+      loadNovelLayoutModePreference(),
+    ]);
 
-    // Load user content moderation state
-    await loadReportedIds();
-    await loadBlockedIds();
-    await loadImageHostPreference();
+    // Load user content moderation state — 并行加载
+    await Promise.all([
+      loadReportedIds(),
+      loadBlockedIds(),
+      loadImageHostPreference(),
+    ]);
 
     // 后台预热 LRU 缓存（从 Android 文件系统读取最近图片，不阻塞启动流程）
     warmCacheFromDisk();
