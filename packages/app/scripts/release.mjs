@@ -508,7 +508,7 @@ async function main() {
       [
         "编译 Release APK",
         "./gradlew",
-        ["assembleRelease", "--stacktrace"],
+        ["assembleRelease"],           // 首次不加 --stacktrace
         {
           cwd: resolvePath(rootDir, "android"),
           stdio: "inherit",
@@ -521,7 +521,19 @@ async function main() {
     ];
     const buildStart = Date.now();
     for (const [label, cmd, args, opts] of buildSteps) {
-      await runBuildStep(label, cmd, args, opts || {});
+      if (cmd === "./gradlew") {
+        // Gradle 构建：首次不加 --stacktrace（更快），失败后自动重试加详细堆栈
+        const gradleOpts = opts || {};
+        try {
+          await runBuildStep(label, cmd, args, gradleOpts);
+        } catch {
+          const retryArgs = [...args, "--stacktrace"];
+          log("Gradle 构建失败，重试并输出详细堆栈...");
+          await runBuildStep(`${label}（详细堆栈）`, cmd, retryArgs, gradleOpts);
+        }
+      } else {
+        await runBuildStep(label, cmd, args, opts || {});
+      }
     }
     const buildTotal = ((Date.now() - buildStart) / 1000).toFixed(1);
     ok(`APK 构建成功 (总耗时 ${buildTotal}s)`);
