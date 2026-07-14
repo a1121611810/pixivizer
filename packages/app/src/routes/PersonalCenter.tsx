@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup, createSignal, createEffect, Show } from "solid-js";
+import { type Component, onMount, onCleanup, createSignal, Show } from "solid-js";
 import { useNavigate, useParams, useRouter } from "@tanstack/solid-router";
 import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
@@ -55,7 +55,6 @@ import {
   loadMoreFollowers,
   toggleUserFollow,
   switchTab,
-  resetData,
 } from "../stores/userStore";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
@@ -103,18 +102,6 @@ const PersonalCenter: Component<Props> = (props) => {
     }
     window.addEventListener("scroll", onScrollRaf, { passive: true });
     onCleanup(() => window.removeEventListener("scroll", onScrollRaf));
-  });
-
-  // 用户切换时加载，缓存命中则跳过请求
-  let prevUid = 0;
-  createEffect(() => {
-    const uid = targetUserId();
-    if (uid === prevUid) return;
-    prevUid = uid;
-    resetData();
-    loadProfile(uid);
-    loadFollowing(uid);
-    window.scrollTo(0, 0);
   });
 
   const { attach: sentinelAttach } = createSentinelPaginator({

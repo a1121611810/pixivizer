@@ -9,8 +9,9 @@ import {
   For,
   onCleanup,
   onMount,
+  batch,
 } from "solid-js";
-import { useParams, useNavigate, useRouter } from "@tanstack/solid-router";
+import { useParams, useNavigate, useRouter, getRouteApi } from "@tanstack/solid-router";
 import { resolveImageUrl } from "../utils/imageLoader";
 import PixivImage from "../components/PixivImage";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -18,7 +19,9 @@ import FluentIcon from "../components/ui/FluentIcon";
 import NovelSearchBar from "../components/NovelSearchBar";
 import { createNovelSearch } from "../primitives/createNovelSearch";
 import { createNovelVirtualLayout } from "../primitives/createNovelVirtualLayout";
-import { createNovelLoader } from "../primitives/createNovelLoader";
+import { loadDetail, fetchNovelData, type NovelImagesMap } from "@/api/novel";
+import type { PixivNovel, SeriesNavigation } from "@/api/types";
+import { getEntry, peekEntry, setEntry, type CacheEntry } from "@/stores/novelCache";
 import {
   readerStyle,
   fontSize,
@@ -38,6 +41,8 @@ import ReaderSettingsSheet from "../components/ReaderSettingsSheet";
 import SeriesSheet from "../components/SeriesSheet";
 import PageTransition from "../components/PageTransition";
 import CommentOverlay from "../components/CommentOverlay";
+
+const routeApi = getRouteApi("/novel/$id");
 
 // ── Scroll-driven hide/show constants ──
 const HIDE_THRESHOLD = 30;
@@ -219,8 +224,98 @@ const NovelDetail: Component = () => {
     setCurrentNovelId(id);
   }
 
-  const loader = createNovelLoader(novelId);
-  const { novelData, novelHtml, novelImages, novelNav, detailLoading, detailError } = loader;
+  const data = routeApi.useLoaderData();
+
+  // URL 参数变化时同步内部小说 ID（外部链接/前进后退），系列内切换不触发此效果。
+  createEffect(() => {
+    const paramId = Number(params().id);
+    if (paramId && paramId !== currentNovelId()) {
+      setCurrentNovelId(paramId);
+    }
+  });
+
+  const [novelData, setNovelData] = createSignal<PixivNovel | null>(null);
+  const [novelHtml, setNovelHtml] = createSignal<string | null>(null);
+  const [novelImages, setNovelImages] = createSignal<NovelImagesMap>({});
+  const [novelNav, setNovelNav] = createSignal<SeriesNavigation | null>(null);
+  const [detailLoading, setDetailLoading] = createSignal(false);
+  const [detailError, setDetailError] = createSignal<string | null>(null);
+
+  function applyEntry(entry: CacheEntry) {
+    batch(() => {
+      setNovelData(entry.detail);
+      setNovelHtml(entry.text);
+      setNovelImages(entry.images ?? {});
+      setNovelNav(entry.nav);
+      setDetailLoading(false);
+      setDetailError(null);
+    });
+  }
+
+  async function loadNovelById(id: number) {
+    if (!id) return;
+    const hot = peekEntry(id);
+    if (hot) {
+      applyEntry(hot);
+      return;
+    }
+    setDetailLoading(true);
+    setDetailError(null);
+    try {
+      const cached = await getEntry(id);
+      if (cached) {
+        applyEntry(cached);
+        return;
+      }
+      const [{ novel }, novelResult] = await Promise.all([
+        loadDetail(id),
+        fetchNovelData(id).catch(() => ({
+          text: "",
+          navigation: {} as SeriesNavigation,
+          images: {},
+        })),
+      ]);
+      const entry: CacheEntry = {
+        detail: novel,
+        text: novelResult.text,
+        nav: novelResult.navigation,
+        images: novelResult.images ?? {},
+      };
+      applyEntry(entry);
+      if (entry.text) await setEntry(id, entry);
+    } catch (e) {
+      setDetailError((e as { message?: string }).message ?? "加载失败");
+      setDetailLoading(false);
+    }
+  }
+
+  // Hydrate initial data from route loader
+  createEffect(() => {
+    const d = data();
+    if (d.error) {
+      setDetailError(d.error);
+      setDetailLoading(false);
+      return;
+    }
+    if (d.novel) {
+      applyEntry({
+        detail: d.novel,
+        text: d.text ?? "",
+        nav: d.nav ?? {},
+        images: d.images ?? {},
+      });
+    }
+  });
+
+  // 系列内切换时手动加载；URL 变化导致的 ID 变化由路由 loader 提供数据，避免重复请求。
+  createEffect(() => {
+    const id = currentNovelId();
+    if (!id) return;
+    const d = data();
+    if (id === d.novel?.id && d.error === null) return;
+    if (id === Number(params().id)) return;
+    void loadNovelById(id);
+  });
 
   const [imageDimensions, setImageDimensions] = createSignal<NovelImageDimensions>({});
   const [footerHidden, setFooterHidden] = createSignal(false);

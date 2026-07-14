@@ -1,4 +1,4 @@
-import { type Component, createEffect, onMount, onCleanup } from "solid-js";
+import { type Component, onMount, onCleanup } from "solid-js";
 import { useNavigate, useParams, useRouter } from "@tanstack/solid-router";
 import { user } from "../stores/authStore";
 import {
@@ -13,7 +13,7 @@ import {
   saveScrollPosition,
   getScrollPosition,
 } from "../stores/userIllustsStore";
-import { viewedUser, loadProfile } from "../stores/userStore";
+import { viewedUser } from "../stores/userStore";
 import UserWorksFeed from "../components/UserWorksFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
@@ -25,16 +25,6 @@ const UserIllusts: Component = () => {
   const router = useRouter();
   const params = useParams({ strict: false });
   const userId = () => Number(params().id);
-
-  let prevUserId = 0;
-  createEffect(() => {
-    const uid = userId();
-    if (uid && uid !== prevUserId) {
-      prevUserId = uid;
-      load(uid, contentType());
-      loadProfile(uid);
-    }
-  });
 
   // R18 开关切换时自动刷新
   onMount(() => {

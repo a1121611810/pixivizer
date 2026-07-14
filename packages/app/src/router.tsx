@@ -7,8 +7,16 @@ import {
 } from "@tanstack/solid-router";
 import RootLayout from "@/routes/__root";
 import { loadDetail } from "@/api/illust";
-import type { PixivIllust } from "@/api/types";
+import { loadDetail as loadNovelDetail, fetchNovelData } from "@/api/novel";
+import type { PixivIllust, PixivNovel, SeriesNavigation } from "@/api/types";
+import type { NovelImagesMap } from "@/api/novel";
+import { user } from "@/stores/authStore";
+import { ensureLoaded } from "@/stores/feedStore";
 import { loadList as loadFollowList, reset as resetFollowList } from "@/stores/followListStore";
+import { setEntry } from "@/stores/novelCache";
+import { setCurrentTab } from "@/stores/uiStore";
+import { load as loadUserIllusts, contentType } from "@/stores/userIllustsStore";
+import { loadProfile, loadFollowing } from "@/stores/userStore";
 
 /** 将普通 Solid 组件/懒加载组件断言为 TanStack RouteComponent，避免每处重复转换。 */
 function asRoute(component: Component): RouteComponent {
@@ -40,12 +48,22 @@ const loginRoute = createRoute({
 const recommendedRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "recommended",
+  loader: async ({ abortController }) => {
+    setCurrentTab("recommended");
+    await ensureLoaded(abortController.signal);
+    return {};
+  },
   component: () => <TabFeedPage tab="recommended" />,
 });
 
 const followingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "following",
+  loader: async ({ abortController }) => {
+    setCurrentTab("follow");
+    await ensureLoaded(abortController.signal);
+    return {};
+  },
   component: () => <TabFeedPage tab="follow" />,
 });
 
@@ -75,6 +93,37 @@ const debugRoute = createRoute({
 const novelRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "novel/$id",
+  loader: async ({ params }) => {
+    try {
+      const id = Number(params.id);
+      const [{ novel }, novelData] = await Promise.all([
+        loadNovelDetail(id),
+        fetchNovelData(id).catch(() => ({ text: "", navigation: {}, images: {} })),
+      ]);
+      await setEntry(id, {
+        detail: novel,
+        text: novelData.text,
+        nav: novelData.navigation,
+        images: novelData.images ?? {},
+      });
+      await loadProfile(novel.user.id);
+      return {
+        novel,
+        text: novelData.text,
+        nav: novelData.navigation,
+        images: novelData.images ?? {},
+        error: null as string | null,
+      };
+    } catch (e) {
+      return {
+        novel: null as PixivNovel | null,
+        text: "",
+        nav: {} as SeriesNavigation,
+        images: {} as NovelImagesMap,
+        error: (e as { message?: string }).message ?? "加载失败",
+      };
+    }
+  },
   component: asRoute(NovelDetail),
 });
 
@@ -87,6 +136,15 @@ const bookmarksRoute = createRoute({
 const meRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "me",
+  loader: async () => {
+    setCurrentTab("me");
+    const uid = user()?.id;
+    if (uid) {
+      await loadProfile(uid);
+      await loadFollowing(uid);
+    }
+    return {};
+  },
   component: asRoute(PersonalCenter),
 });
 
@@ -117,12 +175,25 @@ const ageConfirmationRoute = createRoute({
 const userRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "user/$id",
+  loader: async ({ params }) => {
+    setCurrentTab("me");
+    const uid = Number(params.id);
+    await loadProfile(uid);
+    await loadFollowing(uid);
+    return { userId: uid };
+  },
   component: asRoute(PersonalCenter),
 });
 
 const userIllustsRoute = createRoute({
   getParentRoute: () => userRoute,
   path: "illusts",
+  loader: async ({ params }) => {
+    const uid = Number(params.id);
+    loadUserIllusts(uid, contentType());
+    await loadProfile(uid);
+    return { userId: uid };
+  },
   component: asRoute(UserIllusts),
 });
 
