@@ -6,6 +6,8 @@ import {
   setImageCacheBrowser,
   imageCachePrefetch,
   setImageCachePrefetch,
+  imageCacheDiskSize,
+  setImageCacheDiskSize,
 } from "../stores/uiStore";
 
 /**
@@ -21,7 +23,8 @@ const ImageCacheSettings: Component = () => {
       <div class="flex items-center gap-3 p-4 border-b border-[var(--colorNeutralStroke2)]">
         <button
           class="text-[var(--colorNeutralForeground2)] hover:text-[var(--colorNeutralForeground1)]
-                 transition-colors p-1 -ml-1 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                 p-1 -ml-1 min-w-[40px] min-h-[40px] flex items-center justify-center
+                 focus-visible:outline-2 focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-offset-2"
           onClick={() => window.history.back()}
           aria-label="返回"
         >
@@ -49,7 +52,7 @@ const ImageCacheSettings: Component = () => {
           </div>
           <p class="text-[var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
             将图片缓存到本地文件。开启后：重复浏览无需重新下载，
-            重启应用后缓存仍在（缓存上限约 50MB）。
+            重启应用后缓存仍在。磁盘缓存上限可在下方调节。
           </p>
         </div>
 
@@ -90,6 +93,32 @@ const ImageCacheSettings: Component = () => {
           <p class="text-[var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
             提前加载视口外的图片。开启后：滚动更流畅，但消耗更多流量。
             流量敏感用户建议关闭。
+          </p>
+        </div>
+
+        {/* 磁盘缓存上限 */}
+        <div class="surface-flyout p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-[var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)]">
+              磁盘缓存上限
+            </h2>
+            <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorCompoundBrandForeground1)]">
+              {imageCacheDiskSize()} MB
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)]">50</span>
+            <input type="range" min="50" max="1000" step="50"
+              value={imageCacheDiskSize()}
+              onInput={(e) => setImageCacheDiskSize(Number(e.currentTarget.value))}
+              class="flex-1 h-1 rounded-[var(--borderRadiusCircular)] cursor-pointer"
+              style={{ "accent-color": "var(--colorCompoundBrandBackground)" }}
+            />
+            <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)]">1000</span>
+          </div>
+          <p class="text-[var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug mt-2">
+            当前最多缓存约 {imageCacheDiskSize()} MB。
+            修改后新写入的缓存文件按新上限淘汰。
           </p>
         </div>
 

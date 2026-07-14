@@ -6,6 +6,9 @@ import {
   setImageCacheBrowser,
   imageCachePrefetch,
   setImageCachePrefetch,
+  imageCacheDiskSize,
+  setImageCacheDiskSize,
+  loadImageCachePrefs,
   resetUiStore,
 } from "@/stores/uiStore";
 
@@ -108,5 +111,32 @@ describe("imageCache A/B/C 开关", () => {
     expect(mod.imageCacheDisk()).toBe(false);
     expect(mod.imageCacheBrowser()).toBe(false);
     expect(mod.imageCachePrefetch()).toBe(false);
+  });
+});
+
+describe("imageCacheDiskSize 磁盘缓存上限", () => {
+  it("默认值为 300 MB", () => {
+    expect(imageCacheDiskSize()).toBe(300);
+  });
+
+  it("setImageCacheDiskSize(150) 更新值", () => {
+    setImageCacheDiskSize(150);
+    expect(imageCacheDiskSize()).toBe(150);
+  });
+
+  it("低于下限 30 被 clamp 到 50", () => {
+    setImageCacheDiskSize(30);
+    expect(imageCacheDiskSize()).toBe(50);
+  });
+
+  it("高于上限 1200 被 clamp 到 1000", () => {
+    setImageCacheDiskSize(1200);
+    expect(imageCacheDiskSize()).toBe(1000);
+  });
+
+  it("resetUiStore 重置为 300", async () => {
+    await setImageCacheDiskSize(500);
+    await resetUiStore();
+    expect(imageCacheDiskSize()).toBe(300);
   });
 });

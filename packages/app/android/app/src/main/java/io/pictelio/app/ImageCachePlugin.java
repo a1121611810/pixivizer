@@ -1,5 +1,7 @@
 package io.pictelio.app;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Base64;
 import android.util.Log;
 
@@ -22,7 +24,7 @@ import java.util.Comparator;
  * 将 Pixiv 图片缓存在应用内部存储目录，使冷启动后无需重新下载。
  *
  * 缓存目录：context.getCacheDir()/pictelio-images/
- * 淘汰策略：总大小超过 MAX_CACHE_BYTES 时，删除最旧访问的文件
+ * 淘汰策略：总大小超过 getMaxCacheBytes() 返回值时，删除最旧访问的文件
  * 文件名：Base64URL-safe 编码的 URL key（不含 padding）
  */
 @CapacitorPlugin(name = "ImageCache")
@@ -30,8 +32,22 @@ public class ImageCachePlugin extends Plugin {
 
     private static final String TAG = "ImageCachePlugin";
     private static final String CACHE_DIR = "pictelio-images";
-    /** 最大缓存字节数：300 MB */
-    private static final long MAX_CACHE_BYTES = 300L * 1024 * 1024;
+    /** 默认最大缓存字节数：300 MB */
+    private static final long DEFAULT_MAX_CACHE_BYTES = 300L * 1024 * 1024;
+
+    private long getMaxCacheBytes() {
+        try {
+            SharedPreferences prefs = getContext().getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE);
+            String val = prefs.getString("image_cache_disk_size", null);
+            if (val != null) {
+                long mb = Long.parseLong(val);
+                return mb * 1024 * 1024;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to read image_cache_disk_size, using default", e);
+        }
+        return DEFAULT_MAX_CACHE_BYTES;
+    }
 
     private File getCacheDir() {
         File dir = new File(getContext().getCacheDir(), CACHE_DIR);
@@ -166,13 +182,13 @@ public class ImageCachePlugin extends Plugin {
             total += f.length();
         }
 
-        if (total <= MAX_CACHE_BYTES) return;
+        if (total <= getMaxCacheBytes()) return;
 
         // 按最后修改时间升序（最旧在前）
         Arrays.sort(files, Comparator.comparingLong(File::lastModified));
 
         for (File f : files) {
-            if (total <= MAX_CACHE_BYTES) break;
+            if (total <= getMaxCacheBytes()) break;
             total -= f.length();
             f.delete();
         }

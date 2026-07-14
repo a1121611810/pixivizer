@@ -39,6 +39,7 @@ const PREF_KEY_NOVEL_CACHE_SIZE = "novel_cache_size";
 const PREF_KEY_IMAGE_CACHE_DISK = "image_cache_disk";
 const PREF_KEY_IMAGE_CACHE_BROWSER = "image_cache_browser";
 const PREF_KEY_IMAGE_CACHE_PREFETCH = "image_cache_prefetch";
+const PREF_KEY_IMAGE_CACHE_DISK_SIZE = "image_cache_disk_size";
 const PREF_KEY_DISMISSED_UPDATE_VERSION = "dismissed_update_version";
 const ANDROID_16_API_LEVEL = 36;
 
@@ -99,6 +100,7 @@ const initialState = () => {
     imageCacheDisk: true,      // A: Java 磁盘缓存
     imageCacheBrowser: true,   // B: 浏览器缓存头
     imageCachePrefetch: true,  // C: JS 预取
+    imageCacheDiskSize: 300,  // 单位 MB，范围 50～1000
 
     // 预测返回手势
     usePredictiveBack: false,
@@ -251,6 +253,18 @@ export const setImageCachePrefetch = async (v: boolean): Promise<void> => {
   }
 };
 
+export const imageCacheDiskSize = () => state.imageCacheDiskSize;
+
+export const setImageCacheDiskSize = async (v: number): Promise<void> => {
+  const clamped = Math.max(50, Math.min(1000, Math.round(v / 50) * 50));
+  setState("imageCacheDiskSize", clamped);
+  try {
+    await Preferences.set({ key: PREF_KEY_IMAGE_CACHE_DISK_SIZE, value: String(clamped) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist imageCacheDiskSize", e);
+  }
+};
+
 export async function loadImageCachePrefs(): Promise<void> {
   try {
     const disk = await Preferences.get({ key: PREF_KEY_IMAGE_CACHE_DISK });
@@ -259,6 +273,8 @@ export async function loadImageCachePrefs(): Promise<void> {
     if (browser.value !== null) setState("imageCacheBrowser", browser.value === "true");
     const prefetch = await Preferences.get({ key: PREF_KEY_IMAGE_CACHE_PREFETCH });
     if (prefetch.value !== null) setState("imageCachePrefetch", prefetch.value === "true");
+    const size = await Preferences.get({ key: PREF_KEY_IMAGE_CACHE_DISK_SIZE });
+    if (size.value !== null) setState("imageCacheDiskSize", parseInt(size.value, 10));
   } catch (e) {
     console.warn("[uiStore] Failed to load image cache prefs", e);
   }
@@ -649,6 +665,7 @@ export async function resetUiStore(): Promise<void> {
   await setImageCacheDisk(true);
   await setImageCacheBrowser(true);
   await setImageCachePrefetch(true);
+  await setImageCacheDiskSize(300);
   await setShowR18(false);
   await setShowR18G(false);
   await setLayoutMode("waterfall");
