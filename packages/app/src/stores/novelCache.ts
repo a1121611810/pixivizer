@@ -194,9 +194,13 @@ export async function setEntry(id: number, data: CacheEntry): Promise<void> {
 }
 
 /**
- * 加载小说详情与正文，并写入缓存。
+ * 加载小说详情与正文。
  *
  * 这是 `/novel/$id` 路由 loader 与系列内章节切换的统一入口。
+ *
+ * 详情与正文并行请求；正文提取失败会被静默吞掉，返回空 text、空 navigation、
+ * 空 images 的条目，调用方仍可正常渲染详情页。为避免把无效结果固化到缓存，
+ * 只有在 text 非空时才写入 IndexedDB / 热缓存。
  */
 export async function loadNovelEntry(id: number): Promise<NovelCacheEntry> {
   const [{ novel }, novelData] = await Promise.all([
@@ -213,7 +217,9 @@ export async function loadNovelEntry(id: number): Promise<NovelCacheEntry> {
     nav: novelData.navigation,
     images: novelData.images ?? {},
   };
-  await setEntry(id, entry);
+  if (entry.text) {
+    await setEntry(id, entry);
+  }
   return entry;
 }
 

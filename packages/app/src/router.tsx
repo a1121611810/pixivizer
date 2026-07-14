@@ -4,10 +4,10 @@ import {
   createRoute,
   createRouter,
   type RouteComponent,
+  type LoaderFnContext,
 } from "@tanstack/solid-router";
 import RootLayout from "@/routes/__root";
 import { loadDetail } from "@/api/illust";
-import type { PixivIllust } from "@/api/types";
 import { user } from "@/stores/authStore";
 import { ensureLoaded } from "@/stores/feedStore";
 import {
@@ -30,7 +30,7 @@ type FeedTab = "recommended" | "follow";
 
 /** 构造 Feed 路由的 loader，仅 tab 不同。 */
 function makeFeedLoader(tab: FeedTab) {
-  return async ({ abortController }: { abortController: AbortController }) => {
+  return async ({ abortController }: LoaderFnContext) => {
     setCurrentTab(tab);
     await ensureLoaded(abortController.signal);
     return {};
@@ -39,7 +39,7 @@ function makeFeedLoader(tab: FeedTab) {
 
 /** 构造用户关注/粉丝列表路由的 loader，仅 mode 不同。 */
 function makeFollowLoader(mode: FollowMode) {
-  return async ({ params }: { params: { id: string } }) => {
+  return async ({ params }: LoaderFnContext) => {
     resetFollowList();
     await loadFollowList(mode, Number(params.id));
     return {};
@@ -88,10 +88,10 @@ const illustRoute = createRoute({
   loader: async ({ params }) => {
     try {
       const data = await loadDetail(Number(params.id));
-      return { illust: data.illust, error: null as string | null };
+      return { illust: data.illust, error: null };
     } catch (e) {
       return {
-        illust: null as PixivIllust | null,
+        illust: null,
         error: (e as { message?: string }).message ?? "加载失败",
       };
     }
@@ -124,8 +124,8 @@ const novelRoute = createRoute({
       return {
         novel: null,
         text: "",
-        nav: {} as import("@/api/types").SeriesNavigation,
-        images: {} as import("@/api/novel").NovelImagesMap,
+        nav: {},
+        images: {},
         error: (e as { message?: string }).message ?? "加载失败",
       };
     }
