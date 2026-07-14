@@ -59,7 +59,7 @@
 
 | 🎨 浏览体验                                                     | 🔧 实用功能                                          | 📱 原生优化                                      |
 | :-------------------------------------------------------------- | :--------------------------------------------------- | :----------------------------------------------- |
-| **推荐插画流** `/recommended` — 发现精选作品                    | **收藏管理** `/bookmarks` — 管理你的收藏             | **预测返回手势** — Android 原生过渡动画          |
+| **推荐插画流** `/recommended` — 发现精选作品                    | **收藏管理** `/bookmarks` — 管理你的收藏             | **返回键处理** — Android 原生返回统一处理        |
 | **关注动态流** `/following` — 追踪关注的画师                    | **个人中心** `/me` — 个人主页与设置                  | **底部导航栏** — 符合直觉的多 Tab 切换           |
 | **作品详情页** `/illust/:id` — 大图、多页、Ugoira 动图          | **用户主页** `/user/:id` — 浏览画师作品集            | **下拉刷新** — 滑动到顶继续下拉触发              |
 | **用户作品页** `/user/:id/illusts` — 画师全部作品               | **关注/取消关注** — 在卡片上直接操作                 | **自动隐藏导航** — 沉浸式浏览体验                |
@@ -94,7 +94,7 @@ pixivizer/
 │   │   │   ├── components/      # 可复用 UI 组件
 │   │   │   ├── primitives/      # 底层逻辑单元（虚拟滚动、瀑布流计算、Web Worker）
 │   │   │   ├── routes/          # 页面组件
-│   │   │   ├── services/        # 服务封装 (predictiveBack, pixiv, updateService)
+│   │   │   ├── services/        # 服务封装 (pixiv, updateService)
 │   │   │   ├── stores/          # SolidJS 响应式状态管理
 │   │   │   ├── styles/          # CSS 分层 (reset.css, tokens.css, base.css)
 │   │   │   ├── types/           # 环境类型声明
@@ -272,7 +272,7 @@ pixivizer/
 │   │   │   ├── components/      # Reusable UI components
 │   │   │   ├── primitives/      # Low-level logic (virtual scroll, masonry, Web Worker)
 │   │   │   ├── routes/          # Page components
-│   │   │   ├── services/        # Service layer (predictiveBack, pixiv, updateService)
+│   │   │   ├── services/        # Service layer (pixiv, updateService)
 │   │   │   ├── stores/          # SolidJS reactive state management
 │   │   │   ├── styles/          # CSS layers (reset.css, tokens.css, base.css)
 │   │   │   ├── types/           # Ambient type declarations

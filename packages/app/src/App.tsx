@@ -8,12 +8,11 @@ import {
   Suspense,
   ErrorBoundary,
 } from "solid-js";
-import { Route, Router, useNavigate, useLocation, useBeforeLeave } from "@solidjs/router";
+import { Route, Router, useNavigate, useLocation } from "@solidjs/router";
 import type { RouteSectionProps } from "@solidjs/router";
 import { App as CapApp } from "@capacitor/app";
 import { isLoggedIn, isLoading, setIsLoading, initializeAuth } from "./stores/authStore";
 import {
-  loadPredictiveBackPreference,
   loadAutoHideNavBarPreference,
   loadShowR18Preference,
   loadShowR18GPreference,
@@ -39,13 +38,7 @@ import {
   lastDismissedVersion,
 } from "./stores/uiStore";
 import { checkForUpdate } from "./services/updateService";
-import {
-  initPredictiveBack,
-  setPredictiveBackEnabled,
-  pushRoute,
-  popRoute,
-  clearRouteStack,
-} from "./services/predictiveBack";
+
 import { warmCacheFromDisk } from "./utils/imageLoader";
 import { loadReportedIds } from "./stores/reportStore";
 import { loadBlockedIds } from "./stores/blockStore";
@@ -64,7 +57,6 @@ const ImageHostSettings = lazy(() => import("./routes/ImageHostSettings"));
 const ImageCacheSettings = lazy(() => import("./routes/ImageCacheSettings"));
 const FollowListPage = lazy(() => import("./routes/FollowListPage"));
 const NovelDetail = lazy(() => import("./routes/NovelDetail"));
-const PredictiveBackContainer = lazy(() => import("./components/PredictiveBackContainer"));
 
 const RootLayout: Component<RouteSectionProps> = (props) => {
   const navigate = useNavigate();
@@ -72,29 +64,12 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
   const [showExitHint, setShowExitHint] = createSignal(false);
   let exitHintTimer: ReturnType<typeof setTimeout>;
 
-  useBeforeLeave((e) => {
-    const to = e.to;
-    if (typeof to === "string") {
-      if (e.options?.replace) {
-        // Replace current top
-        popRoute();
-        pushRoute(to);
-      } else {
-        pushRoute(to);
-      }
-    } else if (typeof to === "number") {
-      // Back/forward navigation: pop for back, we can't reliably push for forward
-      if (to < 0) {
-        for (let i = 0; i < Math.abs(to); i++) {
-          popRoute();
-        }
-      }
-    }
-  });
-
   onMount(async () => {
-    // Initialize predictive back coordinator before auth
-    initPredictiveBack(navigate);
+    // Disable browser native scroll restoration — we manage scroll ourselves via stores + restoreScrollTop.
+    // Without this, window.history.go(-1) triggers popstate and the browser may fight our scroll restoration.
+    if (history.scrollRestoration) {
+      history.scrollRestoration = "manual";
+    }
 
     // Show "press again to exit" toast handler
     const onExitHint = () => {
@@ -115,7 +90,6 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     // Load persisted preferences (async) — 并行加载
     await Promise.all([
       loadThemePreference(),
-      loadPredictiveBackPreference(),
       loadAutoHideNavBarPreference(),
       loadShowR18Preference(),
       loadShowR18GPreference(),
@@ -163,10 +137,6 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
       }
     }
 
-    // Initialize route stack tracking
-    clearRouteStack();
-    pushRoute(location.pathname);
-
     // Fallback JS back-button handler: registered unconditionally, but only receives
     // events when the native predictive back plugin is disabled (or unavailable).
     const rootPaths = new Set(["/recommended", "/following", "/bookmarks", "/login"]);
@@ -213,12 +183,6 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
     } catch (e) {
       console.error("[App] Auth initialization failed", e);
     }
-  });
-
-  onCleanup(() => {
-    setPredictiveBackEnabled(false).catch((e) =>
-      console.warn("[App] Failed to disable predictive back on unmount", e),
-    );
   });
 
   return (
@@ -322,7 +286,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
               </div>
             }
           >
-            <PredictiveBackContainer>{props.children}</PredictiveBackContainer>
+            {props.children}
           </Suspense>
         </ErrorBoundary>
       </Show>

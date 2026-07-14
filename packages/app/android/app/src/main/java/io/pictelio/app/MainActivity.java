@@ -9,8 +9,6 @@ import android.webkit.WebViewClient;
 
 import com.getcapacitor.BridgeActivity;
 
-import io.pictelio.app.PredictiveBackPlugin;
-
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -40,7 +38,6 @@ public class MainActivity extends BridgeActivity {
             return;
         }
 
-        registerPlugin(PredictiveBackPlugin.class);
         registerPlugin(PictelioHttpPlugin.class);
         registerPlugin(ImageCachePlugin.class);
         registerPlugin(AuthPlugin.class);

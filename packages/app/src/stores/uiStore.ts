@@ -1,10 +1,6 @@
 import { createSignal } from "solid-js";
 import { createStore, produce } from "solid-js/store";
-import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
-import { App } from "@capacitor/app";
-import { Device } from "@capacitor/device";
-import { setPredictiveBackEnabled } from "../services/predictiveBack";
 
 type Tab = "recommended" | "follow" | "bookmarks" | "me";
 export type { Tab };
@@ -23,7 +19,6 @@ export const MODE_COLUMNS: Record<LayoutMode, number> = {
 
 const PREF_KEY_THEME = "theme";
 const PREF_KEY_LAYOUT_MODE = "layout_mode";
-const PREF_KEY_USE_PREDICTIVE_BACK = "use_predictive_back";
 const PREF_KEY_AUTO_HIDE_NAV_BAR = "auto_hide_nav_bar";
 const PREF_KEY_SHOW_R18 = "show_r18";
 const PREF_KEY_SHOW_R18G = "show_r18g";
@@ -39,7 +34,6 @@ const PREF_KEY_IMAGE_CACHE_BROWSER = "image_cache_browser";
 const PREF_KEY_IMAGE_CACHE_PREFETCH = "image_cache_prefetch";
 const PREF_KEY_IMAGE_CACHE_DISK_SIZE = "image_cache_disk_size";
 const PREF_KEY_DISMISSED_UPDATE_VERSION = "dismissed_update_version";
-const ANDROID_16_API_LEVEL = 36;
 
 // ── 主题辅助函数 ──
 
@@ -97,10 +91,6 @@ const initialState = () => {
     imageCacheBrowser: true, // B: 浏览器缓存头
     imageCachePrefetch: true, // C: JS 预取
     imageCacheDiskSize: 300, // 单位 MB，范围 50～1000
-
-    // 预测返回手势
-    usePredictiveBack: false,
-    isPredictiveBackSupported: false,
 
     // 更新检测
     autoCheckUpdate: false,
@@ -252,82 +242,6 @@ export async function loadImageCachePrefs(): Promise<void> {
   } catch (e) {
     console.warn("[uiStore] Failed to load image cache prefs", e);
   }
-}
-
-export const usePredictiveBack = () => state.usePredictiveBack;
-export const isPredictiveBackSupported = () => state.isPredictiveBackSupported;
-
-// ── 预测返回手势 ──
-
-async function applyPredictiveBackState(enabled: boolean): Promise<void> {
-  try {
-    await App.toggleBackButtonHandler({ enabled: !enabled });
-  } catch (e) {
-    console.warn("[uiStore] Failed to toggle back button handler", e);
-  }
-  try {
-    await setPredictiveBackEnabled(enabled);
-  } catch (e) {
-    console.warn("[uiStore] Failed to set predictive back enabled state", e);
-  }
-}
-
-export async function setUsePredictiveBack(enabled: boolean): Promise<void> {
-  // 非 Android 平台不调用原生返回处理，避免 unimplemented warning
-  if (Capacitor.getPlatform() !== "android") return;
-
-  const previous = state.usePredictiveBack;
-  setState("usePredictiveBack", enabled);
-
-  try {
-    await Preferences.set({ key: PREF_KEY_USE_PREDICTIVE_BACK, value: String(enabled) });
-    await applyPredictiveBackState(enabled);
-  } catch (e) {
-    console.warn("[uiStore] Failed to apply predictive back state, reverting UI toggle", e);
-    setState("usePredictiveBack", previous);
-    try {
-      await applyPredictiveBackState(previous);
-    } catch (rollbackErr) {
-      console.warn("[uiStore] Failed to rollback predictive back native state", rollbackErr);
-    }
-  }
-}
-
-export async function loadPredictiveBackPreference(): Promise<void> {
-  const platform = Capacitor.getPlatform();
-  if (platform !== "android") {
-    setState(
-      produce((s) => {
-        s.usePredictiveBack = false;
-        s.isPredictiveBackSupported = false;
-      }),
-    );
-    return;
-  }
-
-  try {
-    const { androidSDKVersion } = await Device.getInfo();
-    const supported = androidSDKVersion != null && androidSDKVersion >= ANDROID_16_API_LEVEL;
-    setState("isPredictiveBackSupported", supported);
-
-    const { value } = await Preferences.get({ key: PREF_KEY_USE_PREDICTIVE_BACK });
-    if (value !== null) {
-      setState("usePredictiveBack", value === "true");
-    } else {
-      setState("usePredictiveBack", supported);
-      await Preferences.set({ key: PREF_KEY_USE_PREDICTIVE_BACK, value: String(supported) });
-    }
-  } catch (e) {
-    console.warn("[uiStore] Failed to load predictive back preference", e);
-    setState(
-      produce((s) => {
-        s.usePredictiveBack = false;
-        s.isPredictiveBackSupported = false;
-      }),
-    );
-  }
-
-  await applyPredictiveBackState(state.usePredictiveBack);
 }
 
 // ── 自动隐藏导航 ──
@@ -633,11 +547,6 @@ export async function resetUiStore(): Promise<void> {
   await setAgeConfirmation(false, false);
   await setAutoCheckUpdate(false);
   await setLastDismissedVersion("");
-  if (Capacitor.getPlatform() === "android") {
-    await setUsePredictiveBack(state.isPredictiveBackSupported);
-  } else {
-    setState("usePredictiveBack", false);
-  }
 }
 
 // ── 模块级副作用（仅在浏览器环境下执行）──

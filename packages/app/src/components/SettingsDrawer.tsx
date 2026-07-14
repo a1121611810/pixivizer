@@ -15,9 +15,6 @@ import {
   detailQuality,
   setDetailQuality,
   type ImageQuality,
-  usePredictiveBack,
-  setUsePredictiveBack,
-  isPredictiveBackSupported,
   autoHideNavBar,
   setAutoHideNavBar,
   showR18,
@@ -634,39 +631,6 @@ const SettingsDrawer: Component = () => {
               checked={autoHideNavBar()}
               on:change={() => setAutoHideNavBar(!autoHideNavBar())}
               aria-label="自动隐藏导航栏"
-            />
-          </div>
-
-          {/* 预测性返回手势开关行 */}
-          <div class="flex items-center justify-between py-3">
-            <div class="flex items-center gap-3">
-              <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path
-                    d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm3.78 5.22a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0l-2-2a.75.75 0 0 1 1.06-1.06l1.47 1.47 3.72-3.72a.75.75 0 0 1 1.06 0z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                  预测性返回手势
-                </p>
-                <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                  {isPredictiveBackSupported()
-                    ? "使用 Android 16 系统级侧滑返回预览"
-                    : "仅 Android 16 及以上系统可用"}
-                </p>
-              </div>
-            </div>
-
-            <fluent-switch
-              checked={usePredictiveBack()}
-              on:change={() =>
-                isPredictiveBackSupported() && setUsePredictiveBack(!usePredictiveBack())
-              }
-              disabled={!isPredictiveBackSupported()}
-              aria-label="预测性返回手势"
             />
           </div>
         </div>

@@ -37,7 +37,6 @@ import { loadNovelImageDimensions, type NovelImageDimensions } from "../utils/no
 import ReaderSettingsSheet from "../components/ReaderSettingsSheet";
 import SeriesSheet from "../components/SeriesSheet";
 import PageTransition from "../components/PageTransition";
-import { getRouteStackDepth } from "../services/predictiveBack";
 import CommentOverlay from "../components/CommentOverlay";
 
 // ── Scroll-driven hide/show constants ──
@@ -200,10 +199,10 @@ const NovelDetail: Component = () => {
   const navigate = useNavigate();
 
   function handleBack() {
-    if (getRouteStackDepth() > 1) {
+    if (typeof window !== "undefined" && window.history.length > 1) {
       navigate(-1);
     } else {
-      navigate("/recommended");
+      navigate("/recommended", { scroll: false });
     }
   }
 

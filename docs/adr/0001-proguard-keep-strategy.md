@@ -1,6 +1,6 @@
 # ADR-0001: ProGuard Keep Strategy — 精确注解 keep
 
-Release 构建启用 `minifyEnabled true`，使用 R8 全优化模式。原生代码仅 3 个 Capactor 插件类（MainActivity、PictelioHttpPlugin、PredictiveBackPlugin），由 Capactor 框架通过 `@CapacitorPlugin` 注解反射发现。
+Release 构建启用 `minifyEnabled true`，使用 R8 全优化模式。原生代码仅 2 个 Capactor 插件类（MainActivity、PictelioHttpPlugin），由 Capactor 框架通过 `@CapacitorPlugin` 注解反射发现。
 
 ## 决定
 

@@ -3,7 +3,6 @@ import type { Component } from "solid-js";
 import JSZip from "jszip";
 import { loadUgoiraMetadata } from "../api/illust";
 import PixivImage from "./PixivImage";
-import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 
 interface Props {
   illustId: number;
@@ -21,7 +20,6 @@ const UgoiraViewer: Component<Props> = (props) => {
   const [currentFrame, setCurrentFrame] = createSignal(0);
   const [status, setStatus] = createSignal<"loading" | "playing" | "paused">("loading");
   const [error, setError] = createSignal<string | null>(null);
-  const pbStyle = usePredictiveBackOverlayStyle();
   let timer: ReturnType<typeof setTimeout> | null = null;
   let blobUrls: string[] = [];
 
@@ -94,7 +92,7 @@ const UgoiraViewer: Component<Props> = (props) => {
   return (
     <div
       class="fixed inset-0 z-50 touch-none select-none flex items-start justify-center"
-      style={{ "background-color": "var(--colorOverlayBackground)", ...pbStyle() }}
+      style={{ "background-color": "var(--colorOverlayBackground)" }}
       onClick={togglePause}
     >
       {/* Close button */}

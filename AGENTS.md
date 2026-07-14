@@ -127,7 +127,7 @@ packages/app/src/
 ├── stores/             # SolidJS 响应式状态（createSignal + createStore 导出）
 │   ├── authStore.ts    # 登录状态（isLoggedIn、user、token、自动恢复、onUnauthorized 处理器）
 │   ├── feedStore.ts    # Feed 数据（illusts、分页、按 Tab 缓存、滚动位置）
-│   ├── uiStore.ts      # UI 状态（当前 Tab、主题、布局模式、R18 开关、预测返回手势开关、设置面板、自动检查更新等）
+│   ├── uiStore.ts      # UI 状态（当前 Tab、主题、布局模式、R18 开关、设置面板、自动检查更新等）
 │   ├── bookmarkStore.ts# 收藏状态管理
 │   ├── userStore.ts    # 用户状态
 │   ├── userIllustsStore.ts # 用户作品列表状态
@@ -163,8 +163,6 @@ packages/app/src/
 │   ├── ReportSheet.tsx          # 举报面板
 │   ├── BlocklistSheet.tsx       # 屏蔽列表面板
 │   ├── AgeGate.tsx              # 年龄门槛组件
-│   ├── PredictiveBackContainer.tsx  # Android 预测返回手势：路由级动画容器
-│   ├── RoutePreview.tsx         # Android 预测返回手势：目标页预览渲染
 │   ├── SkeletonCard.tsx         # 骨架屏占位卡片
 │   ├── PullIndicator.tsx        # 下拉刷新指示器
 │   ├── LoadingSpinner.tsx       # 加载动画
@@ -191,12 +189,8 @@ packages/app/src/
 │   ├── useContainerWidth.ts     # 容器宽度响应式 Hook
 │   ├── useViewportLazy.ts       # 视口可见性 Hook
 │   └── types.ts                 # 布局类型定义
-├── native/             # 自定义 Capacitor 插件 JS 定义
-│   └── PredictiveBack.ts  # PredictiveBackPlugin 类型定义与 registerPlugin
 ├── services/           # 服务封装
 │   ├── pixiv.ts            # PixivClient 单例（@book000/pixivts，辅助用途）
-│   ├── predictiveBack.ts   # Android 预测返回手势：导航栈、目标判定、事件状态机、合成动画
-│   ├── predictiveBack.test.ts # 预测返回手势完整单元测试
 │   └── updateService.ts   # 应用更新检查服务
 └── utils/              # 工具函数
     ├── imageLoader.ts        # 图片加载与缓存（LRU、预加载、CDN URL 构建）
@@ -217,12 +211,9 @@ packages/app/src/
 
 ### Android 原生增强
 
-- **预测返回手势**: 自定义 Capacitor 插件 `PredictiveBackPlugin.java`，通过 Android 16+ `OnBackInvokedCallback` 实现系统级预测返回动画。
-  - 状态机由 `services/predictiveBack.ts` 管理，支持 start/progress/end/cancel 四种事件
-  - 合成动画 fallback：部分 OEM 系统（如 vivo OriginOS）不提供有效的 progress 值，此时启用 `requestAnimationFrame` 合成进度
-  - 退出逻辑：根路径双击返回退出应用；非根路径执行导航返回或关闭 Viewer/Settings
+- **返回键处理**: Android 返回键通过 `@capacitor/app` 的 `CapApp.addListener("backButton", ...)` 统一处理：关闭查看器/设置、非根路径执行 `navigate(-1)`、根路径双击退出应用。
 - **图片代理**: `MainActivity.java` 中 `shouldInterceptRequest` 拦截所有 `/pixiv-img/` 请求，代理到 `i.pximg.net` 并注入正确的 Referer 和 User-Agent 头。
-- **插件注册**: 自定义插件在 `MainActivity.java` 的 `onCreate` 中通过 `registerPlugin(PredictiveBackPlugin.class)` 注册，**必须在 `super.onCreate(savedInstanceState)` 之前**。
+- **插件注册**: 自定义插件在 `MainActivity.java` 的 `onCreate` 中通过 `registerPlugin()` 注册，**必须在 `super.onCreate(savedInstanceState)` 之前**。
 
 ### 安全存储
 
@@ -349,7 +340,6 @@ packages/app/src/
 - **环境**: `node`（配置在 `vitest.config.ts`）
 - **测试文件位置**: `src/**/__tests__/*.test.ts`、`src/**/*.test.ts`
 - **现有测试**:
-  - `predictiveBack.test.ts` — 预测返回手势完整单元测试（路由栈、目标判定、状态机、启用/禁用生命周期、失败回滚）
   - `uiStore.test.ts` — UI 状态管理测试
   - `feedStore.test.ts` — Feed 数据状态测试
   - `reportStore.test.ts` — 举报状态测试

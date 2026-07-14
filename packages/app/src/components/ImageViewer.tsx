@@ -1,6 +1,5 @@
 import { createSignal, createEffect, onMount, Show, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
-import { usePredictiveBackOverlayStyle } from "../services/predictiveBack";
 import { checkImageCache, loadImageWithProgress } from "../utils/imageLoader";
 
 interface Props {
@@ -17,7 +16,6 @@ const ImageViewer: Component<Props> = (props) => {
   const initialPage = props.initialPage ?? 0;
   const [currentPage, setCurrentPage] = createSignal(initialPage);
   const [animating, setAnimating] = createSignal(false);
-  const pbStyle = usePredictiveBackOverlayStyle();
 
   // ── 加载状态管理 ──
   // 初始页立即设为 0%，不等 createEffect，消除感知延迟
@@ -145,7 +143,7 @@ const ImageViewer: Component<Props> = (props) => {
   return (
     <div
       class="fixed inset-0 z-50 touch-none select-none"
-      style={{ "background-color": "var(--colorOverlayBackground)", ...pbStyle() }}
+      style={{ "background-color": "var(--colorOverlayBackground)" }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
