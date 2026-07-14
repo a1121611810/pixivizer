@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup, Show, For } from "solid-js";
+import { type Component, onCleanup, Show, For } from "solid-js";
 import { useNavigate, useParams, useRouter } from "@tanstack/solid-router";
 import { resolveImageUrl } from "../utils/imageLoader";
 import NavBar from "../components/NavBar";
@@ -10,7 +10,6 @@ import {
   users,
   loading,
   error,
-  loadList,
   loadMore,
   reset,
   toggleFollow,
@@ -51,11 +50,7 @@ const FollowListPage: Component<Props> = (props) => {
   const params = useParams({ strict: false });
   const userId = () => Number(params().id);
 
-  onMount(() => {
-    reset();
-    loadList(props.mode, userId());
-  });
-
+  // 初始数据由路由 loader 加载；组件卸载时重置列表。
   onCleanup(() => {
     reset();
   });

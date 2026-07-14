@@ -8,6 +8,7 @@ import {
 import RootLayout from "@/routes/__root";
 import { loadDetail } from "@/api/illust";
 import type { PixivIllust } from "@/api/types";
+import { loadList as loadFollowList, reset as resetFollowList } from "@/stores/followListStore";
 
 /** 将普通 Solid 组件/懒加载组件断言为 TanStack RouteComponent，避免每处重复转换。 */
 function asRoute(component: Component): RouteComponent {
@@ -128,12 +129,22 @@ const userIllustsRoute = createRoute({
 const userFollowingRoute = createRoute({
   getParentRoute: () => userRoute,
   path: "following",
+  loader: async ({ params }) => {
+    resetFollowList();
+    await loadFollowList("following", Number(params.id));
+    return {};
+  },
   component: () => <FollowListPage mode="following" />,
 });
 
 const userFollowersRoute = createRoute({
   getParentRoute: () => userRoute,
   path: "followers",
+  loader: async ({ params }) => {
+    resetFollowList();
+    await loadFollowList("followers", Number(params.id));
+    return {};
+  },
   component: () => <FollowListPage mode="followers" />,
 });
 
