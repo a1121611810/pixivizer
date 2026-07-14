@@ -1,5 +1,5 @@
 import { type Component, createSignal, Show, For, createEffect } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@/router-adapter";
 import {
   imageHostState,
   setMasterEnabled,

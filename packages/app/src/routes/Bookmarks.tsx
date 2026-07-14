@@ -1,5 +1,5 @@
 import { type Component, onMount, Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@/router-adapter";
 import { user, isLoggedIn } from "../stores/authStore";
 import UserAvatar from "../components/UserAvatar";
 import { setCurrentTab, contentType } from "../stores/uiStore";

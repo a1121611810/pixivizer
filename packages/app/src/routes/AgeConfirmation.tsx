@@ -1,5 +1,5 @@
 import { type Component } from "solid-js";
-import { useNavigate, useSearchParams } from "@solidjs/router";
+import { useNavigate, useSearchParams } from "@/router-adapter";
 import { setAgeConfirmation } from "../stores/uiStore";
 import { initializeAuth, isLoggedIn } from "../stores/authStore";
 

@@ -7,7 +7,7 @@ import {
   createEffect,
   createMemo,
 } from "solid-js";
-import { useParams, useNavigate } from "@solidjs/router";
+import { useParams, useNavigate } from "@/router-adapter";
 import { loadDetail, addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import type { PixivIllust } from "../api/types";
 import ImageViewer from "../components/ImageViewer";

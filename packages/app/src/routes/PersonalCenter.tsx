@@ -1,5 +1,5 @@
 import { type Component, onMount, onCleanup, createSignal, createEffect, Show } from "solid-js";
-import { useNavigate, useParams } from "@solidjs/router";
+import { useNavigate, useParams } from "@/router-adapter";
 import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
 import { resolveImageUrl } from "../utils/imageLoader";

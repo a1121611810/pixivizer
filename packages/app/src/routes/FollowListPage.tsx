@@ -1,5 +1,5 @@
 import { type Component, onMount, onCleanup, Show, For } from "solid-js";
-import { useNavigate, useParams } from "@solidjs/router";
+import { useNavigate, useParams } from "@/router-adapter";
 import { resolveImageUrl } from "../utils/imageLoader";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";

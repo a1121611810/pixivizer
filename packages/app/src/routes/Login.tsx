@@ -1,5 +1,5 @@
 import { type Component, createSignal, onMount } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@/router-adapter";
 import { loginWithToken, isLoggedIn } from "../stores/authStore";
 
 const S = {

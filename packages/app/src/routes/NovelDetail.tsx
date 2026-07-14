@@ -10,7 +10,7 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
-import { useParams, useNavigate } from "@solidjs/router";
+import { useParams, useNavigate } from "@/router-adapter";
 import { resolveImageUrl } from "../utils/imageLoader";
 import PixivImage from "../components/PixivImage";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -298,6 +298,7 @@ const NovelDetail: Component = () => {
     const layout = virtualLayout.layoutResult();
     const h: Record<number, number> = {};
     for (const p of layout.paragraphs) h[p.index] = p.height;
+    // oxlint-disable-next-line no-map-spread -- blocks are immutable; we need shallow copies to trigger <For> re-render
     return blocks().map((b) => ({
       ...b,
       ph: b.type === "text" ? h[(b as TextBlock).index] : undefined,

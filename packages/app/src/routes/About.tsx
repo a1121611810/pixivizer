@@ -1,5 +1,5 @@
 import { type Component } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@/router-adapter";
 import PageTransition from "../components/PageTransition";
 import FluentIcon from "../components/ui/FluentIcon";
 

@@ -1,5 +1,13 @@
-import { type Component, Show, For, createSignal, createEffect, createMemo, onCleanup } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import {
+  type Component,
+  Show,
+  For,
+  createSignal,
+  createEffect,
+  createMemo,
+  onCleanup,
+} from "solid-js";
+import { useNavigate } from "@/router-adapter";
 import type { PixivComment } from "../api/types";
 import { user } from "../stores/authStore";
 import { resolveImageUrl } from "../utils/imageLoader";

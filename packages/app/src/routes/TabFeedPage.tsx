@@ -1,5 +1,5 @@
 import { type Component, onMount, onCleanup, Show, createMemo, createSignal } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@/router-adapter";
 import {
   illusts,
   nextUrl,

@@ -1,6 +1,6 @@
 import { type Component, createEffect, createSignal, onMount, onCleanup } from "solid-js";
 import { currentTab, setCurrentTab, autoHideNavBar } from "../stores/uiStore";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@/router-adapter";
 import FluentIcon, { type FluentIconName } from "./ui/FluentIcon";
 
 // ── Tab definition ──

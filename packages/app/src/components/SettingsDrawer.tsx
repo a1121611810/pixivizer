@@ -1,5 +1,5 @@
 import { type Component, Show, createSignal, createEffect, onCleanup } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@/router-adapter";
 import { Preferences } from "@capacitor/preferences";
 import { Capacitor } from "@capacitor/core";
 import FluentIcon from "./ui/FluentIcon";
