@@ -6,6 +6,8 @@ import {
   createEffect,
   createMemo,
   Show,
+  Switch,
+  Match,
   For,
   onCleanup,
   onMount,
@@ -14,6 +16,7 @@ import {
 import { useParams, useNavigate, useRouter, getRouteApi } from "@tanstack/solid-router";
 import { resolveImageUrl } from "../utils/imageLoader";
 import PixivImage from "../components/PixivImage";
+import ImageViewer from "@/components/ImageViewer";
 import LoadingSpinner from "../components/LoadingSpinner";
 import FluentIcon from "../components/ui/FluentIcon";
 import NovelSearchBar from "../components/NovelSearchBar";
@@ -64,6 +67,13 @@ interface NovelImageBlockProps {
 
 const NovelImageBlock: Component<NovelImageBlockProps> = (props) => {
   const dim = createMemo(() => props.dimensions()[props.block.imageId]);
+  const aspectRatio = createMemo(() => {
+    const d = dim();
+    if (d && d.width > 0 && d.height > 0) {
+      return `${d.width} / ${d.height}`;
+    }
+    return "16 / 9";
+  });
 
   function handleClick() {
     if (dim()) props.onClick();
@@ -73,12 +83,7 @@ const NovelImageBlock: Component<NovelImageBlockProps> = (props) => {
     <figure
       class="novel-image-block overflow-hidden m-0"
       classList={{ "cursor-pointer": dim() !== null && dim() !== undefined }}
-      style={{
-        "aspect-ratio":
-          dim() && dim().width > 0 && dim().height > 0
-            ? `${dim().width} / ${dim().height}`
-            : "16 / 9",
-      }}
+      style={{ "aspect-ratio": aspectRatio() }}
       onClick={handleClick}
     >
       <Switch>
@@ -130,17 +135,19 @@ function parseProgress(raw: string | null): NovelProgress | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const p = parsed as Record<string, unknown>;
     if (
-      typeof parsed === "object" &&
-      parsed !== null &&
-      "paragraphIndex" in parsed &&
-      "charIndex" in parsed &&
-      Number.isInteger(parsed.paragraphIndex) &&
-      Number.isInteger(parsed.charIndex) &&
-      parsed.paragraphIndex >= 0 &&
-      parsed.charIndex >= 0
+      Number.isInteger(p.paragraphIndex) &&
+      Number.isInteger(p.charIndex) &&
+      (p.paragraphIndex as number) >= 0 &&
+      (p.charIndex as number) >= 0
     ) {
-      return parsed as NovelProgress;
+      return {
+        paragraphIndex: p.paragraphIndex as number,
+        charIndex: p.charIndex as number,
+        progress: typeof p.progress === "number" ? p.progress : 0,
+      };
     }
   } catch {
     /* ignore */
@@ -176,7 +183,7 @@ const NovelContentBlock: Component<NovelContentBlockProps> = (props) => {
       <p
         class="novel-text-paragraph"
         style={{
-          textIndent: `${props.fontSize() * 2}px`,
+          "text-indent": `${props.fontSize() * 2}px`,
           ...(minH != null ? { "min-height": `${minH}px` } : {}),
         }}
       >
@@ -611,16 +618,17 @@ const NovelDetail: Component = () => {
       <div class="min-h-screen bg-[var(--colorNeutralBackground2)]">
         {/* ── Top navigation bar ── */}
         <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-2">
-          <fluent-button
-            appearance="subtle"
+          <button
+            type="button"
             aria-label="返回"
             on:click={() => handleBack()}
+            class="flex items-center justify-center rounded-[var(--borderRadiusSmall)] bg-transparent border-none cursor-pointer text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all"
             style="min-width:32px;width:32px;height:32px;padding:0"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor" />
             </svg>
-          </fluent-button>
+          </button>
           <Show
             when={searchOpen()}
             fallback={
@@ -807,7 +815,7 @@ const NovelDetail: Component = () => {
               <div
                 class="fixed bottom-0 left-0 right-0 surface-appbar border-t border-[var(--colorNeutralStroke2)] px-4 py-2"
                 style={{
-                  zIndex: 20,
+                  "z-index": 20,
                   transform: footerHidden()
                     ? "translateY(calc(100% + 8px + env(safe-area-inset-bottom, 0px)))"
                     : "translateY(0)",
@@ -815,7 +823,7 @@ const NovelDetail: Component = () => {
                 }}
               >
                 <div class="max-w-2xl mx-auto flex items-center justify-center gap-1 overflow-x-auto">
-                  <Show when={novel().series?.id && novelNav()?.prevNovel}>
+                  <Show when={novel().series?.id ? novelNav()?.prevNovel : undefined}>
                     {(prev) => (
                       <button
                         class="flex-shrink-0 whitespace-nowrap px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
@@ -844,7 +852,7 @@ const NovelDetail: Component = () => {
                     </span>
                     显示设置
                   </button>
-                  <Show when={novel().series?.id && novelNav()?.nextNovel}>
+                  <Show when={novel().series?.id ? novelNav()?.nextNovel : undefined}>
                     {(next) => (
                       <button
                         class="flex-shrink-0 whitespace-nowrap px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase200)] font-medium hover:opacity-90 active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
