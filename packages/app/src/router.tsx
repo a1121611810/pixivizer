@@ -4,7 +4,6 @@ import {
   createRoute,
   createRouter,
   type RouteComponent,
-  type LoaderFnContext,
 } from "@tanstack/solid-router";
 import RootLayout from "@/routes/__root";
 import { loadDetail } from "@/api/illust";
@@ -30,7 +29,7 @@ type FeedTab = "recommended" | "follow";
 
 /** 构造 Feed 路由的 loader，仅 tab 不同。 */
 function makeFeedLoader(tab: FeedTab) {
-  return async ({ abortController }: LoaderFnContext) => {
+  return async ({ abortController }: { abortController: AbortController }) => {
     setCurrentTab(tab);
     await ensureLoaded(abortController.signal);
     return {};
@@ -39,7 +38,7 @@ function makeFeedLoader(tab: FeedTab) {
 
 /** 构造用户关注/粉丝列表路由的 loader，仅 mode 不同。 */
 function makeFollowLoader(mode: FollowMode) {
-  return async ({ params }: LoaderFnContext) => {
+  return async ({ params }: { params: { id: string } }) => {
     resetFollowList();
     await loadFollowList(mode, Number(params.id));
     return {};
@@ -118,7 +117,7 @@ const novelRoute = createRoute({
         text: entry.text,
         nav: entry.nav,
         images: entry.images,
-        error: null as string | null,
+        error: null,
       };
     } catch (e) {
       return {
