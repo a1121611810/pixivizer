@@ -7,8 +7,8 @@ import {
   createEffect,
   createMemo,
 } from "solid-js";
-import { useParams, useNavigate, useRouter } from "@tanstack/solid-router";
-import { loadDetail, addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
+import { useNavigate, useRouter, getRouteApi } from "@tanstack/solid-router";
+import { addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import type { PixivIllust } from "../api/types";
 import ImageViewer from "../components/ImageViewer";
 import UgoiraViewer from "../components/UgoiraViewer";
@@ -24,13 +24,10 @@ import ReportSheet from "../components/ReportSheet";
 import IllustTags from "../components/IllustTags";
 import CommentOverlay from "../components/CommentOverlay";
 
-interface IllustDetailProps {
-  illustId?: string;
-}
+const routeApi = getRouteApi("/illust/$id");
 
-const IllustDetail: Component<IllustDetailProps> = (props) => {
-  const params = useParams({ strict: false });
-  const illustId = () => props.illustId ?? params().id;
+const IllustDetail: Component = () => {
+  const data = routeApi.useLoaderData();
   const navigate = useNavigate();
   const router = useRouter();
   const [illust, setIllust] = createSignal<PixivIllust | null>(null);
@@ -244,18 +241,21 @@ const IllustDetail: Component<IllustDetailProps> = (props) => {
     });
   });
 
-  onMount(async () => {
-    try {
-      const data = await loadDetail(Number(illustId()));
-      setIllust(data.illust);
-      setIsFollowed(data.illust.user.is_followed ?? false);
+  // 由路由 loader 提供初始数据；params 变化时自动重新进入该路由并重新加载。
+  createEffect(() => {
+    const d = data();
+    if (d.error) {
+      setError(d.error);
+      setLoading(false);
+      return;
+    }
+    if (d.illust) {
+      setIllust(d.illust);
+      setIsFollowed(d.illust.user.is_followed ?? false);
       // Multi-page: start observing page visibility for staircase after DOM renders
-      if (data.illust.page_count > 1) {
+      if (d.illust.page_count > 1) {
         requestAnimationFrame(() => connectPageObserver());
       }
-    } catch (e) {
-      setError((e as { message?: string }).message ?? "加载失败");
-    } finally {
       setLoading(false);
     }
   });

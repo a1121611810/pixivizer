@@ -6,6 +6,8 @@ import {
   type RouteComponent,
 } from "@tanstack/solid-router";
 import RootLayout from "@/routes/__root";
+import { loadDetail } from "@/api/illust";
+import type { PixivIllust } from "@/api/types";
 
 /** 将普通 Solid 组件/懒加载组件断言为 TanStack RouteComponent，避免每处重复转换。 */
 function asRoute(component: Component): RouteComponent {
@@ -49,6 +51,17 @@ const followingRoute = createRoute({
 const illustRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "illust/$id",
+  loader: async ({ params }) => {
+    try {
+      const data = await loadDetail(Number(params.id));
+      return { illust: data.illust, error: null as string | null };
+    } catch (e) {
+      return {
+        illust: null as PixivIllust | null,
+        error: (e as { message?: string }).message ?? "加载失败",
+      };
+    }
+  },
   component: asRoute(IllustDetail),
 });
 
