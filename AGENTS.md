@@ -332,7 +332,7 @@ packages/app/src/
 - **代码探索**：使用 CodeGraph 作为默认代码理解工具，普通搜索工具仅作 fallback
 - **代理配置**：开发时自动读取 `https_proxy` / `HTTPS_PROXY` / `http_proxy` / `HTTP_PROXY` 环境变量，回退到 `http://127.0.0.1:10808`
 - **PWA**: 通过 `vite-plugin-pwa` 生成 Service Worker，缓存策略: Pixiv 图片 CacheFirst（30 天/500 条），其余默认 Precaching
-- **Node 版本**: 18+，包管理器 pnpm 11.9.0（`devEngines` 强制校验）
+- **Node 版本**: 20.19+，包管理器 pnpm 11.9.0（`devEngines` 强制校验）
 
 ## 测试
 
