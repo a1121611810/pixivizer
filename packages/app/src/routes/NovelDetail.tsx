@@ -44,6 +44,7 @@ import ReaderSettingsSheet from "../components/ReaderSettingsSheet";
 import SeriesSheet from "../components/SeriesSheet";
 import PageTransition from "../components/PageTransition";
 import CommentOverlay from "../components/CommentOverlay";
+import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 
 const routeApi = getRouteApi("/novel/$id");
 
@@ -504,24 +505,37 @@ const NovelDetail: Component = () => {
     onCleanup(() => ro.disconnect());
   }
 
-  // 同步 sheet 状态到全局返回手势标志，使系统侧滑优先关闭 sheet
+  // 将阅读设置面板状态注册到 overlay 栈
   createEffect(() => {
-    if (settingsOpen() || seriesOpen()) {
-      window.__settingsOpen = true;
-    } else {
-      window.__settingsOpen = false;
+    if (settingsOpen()) {
+      pushOverlay("readerSettingsSheet", () => setSettingsOpen(false));
+      onCleanup(() => {
+        popOverlay("readerSettingsSheet");
+      });
+    }
+  });
+
+  // 将系列目录面板状态注册到 overlay 栈
+  createEffect(() => {
+    if (seriesOpen()) {
+      pushOverlay("seriesSheet", () => setSeriesOpen(false));
+      onCleanup(() => {
+        popOverlay("seriesSheet");
+      });
+    }
+  });
+
+  // 将评论面板状态注册到 overlay 栈
+  createEffect(() => {
+    if (showComments()) {
+      pushOverlay("commentSheet", () => setShowComments(false));
+      onCleanup(() => {
+        popOverlay("commentSheet");
+      });
     }
   });
 
   onMount(() => {
-    // ── Close-settings event listener ──
-    const onCloseSettings = () => {
-      setSettingsOpen(false);
-      setSeriesOpen(false);
-    };
-    window.addEventListener("closeSettings", onCloseSettings);
-    onCleanup(() => window.removeEventListener("closeSettings", onCloseSettings));
-
     // ── Scroll-driven bottom toolbar hide/show ──
     lastScrollY = window.scrollY;
     accumulatedDelta = 0;
@@ -597,6 +611,16 @@ const NovelDetail: Component = () => {
   const [titleEl, setTitleEl] = createSignal<HTMLHeadingElement | undefined>();
   const [imageViewerOpen, setImageViewerOpen] = createSignal(false);
   const [imageViewerIndex, setImageViewerIndex] = createSignal(0);
+
+  // 将图片查看器状态注册到 overlay 栈
+  createEffect(() => {
+    if (imageViewerOpen()) {
+      pushOverlay("viewer", () => setImageViewerOpen(false));
+      onCleanup(() => {
+        popOverlay("viewer");
+      });
+    }
+  });
 
   const imageBlockList = createMemo(() => getImageBlocks(blocks()));
   const imageViewerUrls = createMemo(() => imageBlockList().map((block) => block.urls.original));
