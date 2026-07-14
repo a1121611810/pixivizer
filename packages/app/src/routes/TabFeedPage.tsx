@@ -1,5 +1,5 @@
 import { type Component, onMount, onCleanup, Show, createMemo, createSignal } from "solid-js";
-import { useNavigate } from "@/router-adapter";
+import { useNavigate } from "@tanstack/solid-router";
 import {
   illusts,
   nextUrl,
@@ -223,7 +223,7 @@ const TabFeedPage: Component<Props> = (props) => {
               loading={loading() || refreshing()}
               error={error()}
               hasMore={nextUrl() !== null}
-              onIllustClick={(id) => navigate(`/illust/${id}`)}
+              onIllustClick={(id) => void navigate({ to: `/illust/${id}` })}
               onLoadMore={() => fetchMore(abortController?.signal)}
               onRefresh={() => refresh(abortController?.signal)}
               skipAnimation={cached}

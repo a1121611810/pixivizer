@@ -7,7 +7,7 @@ import {
   createMemo,
   onCleanup,
 } from "solid-js";
-import { useNavigate } from "@/router-adapter";
+import { useNavigate } from "@tanstack/solid-router";
 import type { PixivComment } from "../api/types";
 import { user } from "../stores/authStore";
 import { resolveImageUrl } from "../utils/imageLoader";
@@ -141,7 +141,7 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
 
   function goToUser(userId: number) {
     props.onClose();
-    navigate(`/user/${userId}`);
+    void navigate({ to: `/user/${userId}` });
   }
 
   function cancelReply() {

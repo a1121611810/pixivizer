@@ -1,6 +1,6 @@
 import { type Component, createEffect, createSignal, onMount, onCleanup } from "solid-js";
 import { currentTab, setCurrentTab, autoHideNavBar } from "../stores/uiStore";
-import { useNavigate } from "@/router-adapter";
+import { useNavigate } from "@tanstack/solid-router";
 import FluentIcon, { type FluentIconName } from "./ui/FluentIcon";
 
 // ── Tab definition ──
@@ -150,11 +150,11 @@ const NavBar: Component = () => {
               onClick={() => {
                 setCurrentTab(tab.key);
                 if (tab.key === "bookmarks") {
-                  navigate("/bookmarks");
+                  void navigate({ to: "/bookmarks" });
                 } else if (tab.key === "follow") {
-                  navigate("/following");
+                  void navigate({ to: "/following" });
                 } else {
-                  navigate("/recommended");
+                  void navigate({ to: "/recommended" });
                 }
               }}
               aria-current={isActive() ? "page" : undefined}

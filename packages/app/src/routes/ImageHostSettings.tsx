@@ -1,5 +1,5 @@
 import { type Component, createSignal, Show, For, createEffect } from "solid-js";
-import { useNavigate } from "@/router-adapter";
+import { useRouter } from "@tanstack/solid-router";
 import {
   imageHostState,
   setMasterEnabled,
@@ -13,7 +13,7 @@ import {
 import { validateHostInput, hasDuplicateBaseUrl, probeHosts } from "../services/imageHostService";
 
 const ImageHostSettings: Component = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
   const [, setPendingEnable] = createSignal(false);
 
@@ -173,7 +173,7 @@ const ImageHostSettings: Component = () => {
         <fluent-button
           appearance="subtle"
           aria-label="返回"
-          on:click={() => navigate(-1)}
+          on:click={() => router.history.back()}
           style="min-width:32px;width:32px;height:32px;padding:0"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">

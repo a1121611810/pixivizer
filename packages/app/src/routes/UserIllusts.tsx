@@ -1,5 +1,5 @@
 import { type Component, createEffect, onMount, onCleanup } from "solid-js";
-import { useNavigate, useParams } from "@/router-adapter";
+import { useNavigate, useParams, useRouter } from "@tanstack/solid-router";
 import { user } from "../stores/authStore";
 import {
   illusts,
@@ -22,8 +22,9 @@ import { layoutMode } from "../stores/uiStore";
 
 const UserIllusts: Component = () => {
   const navigate = useNavigate();
-  const params = useParams<{ id: string }>();
-  const userId = () => Number(params.id);
+  const router = useRouter();
+  const params = useParams({ strict: false });
+  const userId = () => Number(params().id);
 
   let prevUserId = 0;
   createEffect(() => {
@@ -59,7 +60,7 @@ const UserIllusts: Component = () => {
             <fluent-button
               appearance="subtle"
               aria-label="返回"
-              on:click={() => navigate(-1)}
+              on:click={() => router.history.back()}
               style="min-width:32px;width:32px;height:32px;padding:0"
             >
               ←
@@ -109,8 +110,8 @@ const UserIllusts: Component = () => {
             loading={loading()}
             error={error()}
             hasMore={nextUrl() !== null}
-            onIllustClick={(id) => navigate(`/illust/${id}`)}
-            onNovelClick={(id) => navigate(`/novel/${id}`)}
+            onIllustClick={(id) => void navigate({ to: `/illust/${id}` })}
+            onNovelClick={(id) => void navigate({ to: `/novel/${id}` })}
             onLoadMore={loadMore}
             onRefresh={async () => {
               const uid = userId();

@@ -1,5 +1,5 @@
 import { type Component, createEffect, onMount, onCleanup, Show } from "solid-js";
-import { useNavigate } from "@/router-adapter";
+import { useNavigate } from "@tanstack/solid-router";
 import {
   novels,
   nextUrl,
@@ -107,8 +107,8 @@ const NovelBookmarks: Component = () => {
         loading={loading()}
         error={error()}
         hasMore={nextUrl() !== null}
-        onNovelClick={(id) => navigate(`/novel/${id}`)}
-        onAuthorClick={(id) => navigate(`/user/${id}`)}
+        onNovelClick={(id) => void navigate({ to: `/novel/${id}` })}
+        onAuthorClick={(id) => void navigate({ to: `/user/${id}` })}
         onLoadMore={fetchMore}
         onRefresh={refresh}
         restoreScrollTop={cached ? getFeedScrollY("bookmarks") : undefined}

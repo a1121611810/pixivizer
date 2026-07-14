@@ -1,5 +1,5 @@
 import { type Component } from "solid-js";
-import { useNavigate, useSearchParams } from "@/router-adapter";
+import { useNavigate, useSearch } from "@tanstack/solid-router";
 import { setAgeConfirmation } from "../stores/uiStore";
 import { initializeAuth, isLoggedIn } from "../stores/authStore";
 
@@ -20,25 +20,26 @@ const shieldIcon = {
  */
 const AgeConfirmation: Component = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const isReconfirm = searchParams.reconfirm === "true";
+  const searchParams = useSearch({ strict: false });
+  const isReconfirm = () =>
+    (searchParams() as Record<string, string | undefined>).reconfirm === "true";
 
   async function confirmAdult() {
     await setAgeConfirmation(true, true);
 
-    if (isReconfirm) {
-      navigate("/recommended", { replace: true });
+    if (isReconfirm()) {
+      void navigate({ to: "/recommended", replace: true });
     } else {
       try {
         await initializeAuth();
         if (isLoggedIn()) {
-          navigate("/recommended", { replace: true });
+          void navigate({ to: "/recommended", replace: true });
         } else {
-          navigate("/login", { replace: true });
+          void navigate({ to: "/login", replace: true });
         }
       } catch (e) {
         console.error("[AgeConfirmation] Auth initialization failed", e);
-        navigate("/login", { replace: true });
+        void navigate({ to: "/login", replace: true });
       }
     }
   }
@@ -46,19 +47,19 @@ const AgeConfirmation: Component = () => {
   async function confirmMinor() {
     await setAgeConfirmation(true, false);
 
-    if (isReconfirm) {
-      navigate("/recommended", { replace: true });
+    if (isReconfirm()) {
+      void navigate({ to: "/recommended", replace: true });
     } else {
       try {
         await initializeAuth();
         if (isLoggedIn()) {
-          navigate("/recommended", { replace: true });
+          void navigate({ to: "/recommended", replace: true });
         } else {
-          navigate("/login", { replace: true });
+          void navigate({ to: "/login", replace: true });
         }
       } catch (e) {
         console.error("[AgeConfirmation] Auth initialization failed", e);
-        navigate("/login", { replace: true });
+        void navigate({ to: "/login", replace: true });
       }
     }
   }

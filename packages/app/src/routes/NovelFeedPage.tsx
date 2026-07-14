@@ -1,5 +1,5 @@
 import { type Component, createSignal, onMount, onCleanup, Show, For } from "solid-js";
-import { useNavigate } from "@/router-adapter";
+import { useNavigate } from "@tanstack/solid-router";
 import {
   novels,
   nextUrl,
@@ -108,8 +108,8 @@ const NovelFeedPage: Component<Props> = (props) => {
             loading={loading() || refreshing()}
             error={error()}
             hasMore={nextUrl() !== null}
-            onNovelClick={(id) => navigate(`/novel/${id}`)}
-            onAuthorClick={(id) => navigate(`/user/${id}`)}
+            onNovelClick={(id) => void navigate({ to: `/novel/${id}` })}
+            onAuthorClick={(id) => void navigate({ to: `/user/${id}` })}
             onLoadMore={fetchMore}
             onRefresh={refresh}
             restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
@@ -125,7 +125,7 @@ const NovelFeedPage: Component<Props> = (props) => {
                 authorId={s().authorId}
                 isOpen={sheetOpen()}
                 onClose={() => setSheetOpen(false)}
-                onNovelSelect={(id) => navigate(`/novel/${id}`)}
+                onNovelSelect={(id) => void navigate({ to: `/novel/${id}` })}
               />
             )}
           </Show>

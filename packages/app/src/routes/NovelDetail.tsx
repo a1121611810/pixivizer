@@ -10,7 +10,7 @@ import {
   onCleanup,
   onMount,
 } from "solid-js";
-import { useParams, useNavigate } from "@/router-adapter";
+import { useParams, useNavigate, useRouter } from "@tanstack/solid-router";
 import { resolveImageUrl } from "../utils/imageLoader";
 import PixivImage from "../components/PixivImage";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -195,14 +195,15 @@ const NovelContentBlock: Component<NovelContentBlockProps> = (props) => {
 };
 
 const NovelDetail: Component = () => {
-  const params = useParams<{ id: string }>();
+  const params = useParams({ strict: false });
   const navigate = useNavigate();
+  const router = useRouter();
 
   function handleBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {
-      navigate(-1);
+      router.history.back();
     } else {
-      navigate("/recommended", { scroll: false });
+      void navigate({ to: "/recommended", resetScroll: false });
     }
   }
 
@@ -210,7 +211,7 @@ const NovelDetail: Component = () => {
   // 入口 URL 对应的 params.id 作为初始值，后续章节/目录跳转都通过这里。
   let skipRestoreProgress = false;
 
-  const [currentNovelId, setCurrentNovelId] = createSignal(Number(params.id));
+  const [currentNovelId, setCurrentNovelId] = createSignal(Number(params().id));
   const novelId = currentNovelId;
 
   function switchNovel(id: number) {
@@ -618,7 +619,7 @@ const NovelDetail: Component = () => {
                   </h1>
                   <button
                     class="[font-size:var(--fontSizeBase200)] text-[var(--colorBrandForeground1)] hover:underline bg-transparent border-none p-0 cursor-pointer"
-                    onClick={() => navigate(`/user/${novel().user.id}`)}
+                    onClick={() => void navigate({ to: `/user/${novel().user.id}` })}
                   >
                     @{novel().user.name}
                   </button>
@@ -786,7 +787,7 @@ const NovelDetail: Component = () => {
                   isOpen={seriesOpen()}
                   onClose={() => setSeriesOpen(false)}
                   onNovelSelect={(id) => switchNovel(id)}
-                  onAuthorClick={() => navigate(`/user/${novel().user.id}`)}
+                  onAuthorClick={() => void navigate({ to: `/user/${novel().user.id}` })}
                   activeNovelId={currentNovelId()}
                 />
               </Show>

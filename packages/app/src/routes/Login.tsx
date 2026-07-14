@@ -1,5 +1,5 @@
 import { type Component, createSignal, onMount } from "solid-js";
-import { useNavigate } from "@/router-adapter";
+import { useNavigate } from "@tanstack/solid-router";
 import { loginWithToken, isLoggedIn } from "../stores/authStore";
 
 const S = {
@@ -29,7 +29,7 @@ const Login: Component = () => {
   const [error, setError] = createSignal<string | null>(null);
 
   onMount(() => {
-    if (isLoggedIn()) navigate("/recommended", { replace: true });
+    if (isLoggedIn()) void navigate({ to: "/recommended", replace: true });
   });
 
   const handleSubmit = async (e: Event) => {
@@ -38,7 +38,7 @@ const Login: Component = () => {
     setError(null);
     try {
       await loginWithToken(tokenInput().trim());
-      navigate("/recommended", { replace: true });
+      void navigate({ to: "/recommended", replace: true });
     } catch (err) {
       setError((err as { message?: string }).message ?? "登录失败");
     } finally {

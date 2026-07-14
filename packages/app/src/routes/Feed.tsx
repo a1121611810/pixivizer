@@ -1,5 +1,5 @@
 import { type Component, createEffect, onMount, onCleanup, untrack } from "solid-js";
-import { useNavigate } from "@/router-adapter";
+import { useNavigate } from "@tanstack/solid-router";
 import {
   illusts,
   nextUrl,
@@ -78,7 +78,7 @@ const Feed: Component = () => {
             loading={loading() || refreshing()}
             error={error()}
             hasMore={nextUrl() !== null}
-            onIllustClick={(id) => navigate(`/illust/${id}`)}
+            onIllustClick={(id) => void navigate({ to: `/illust/${id}` })}
             onLoadMore={fetchMore}
             onRefresh={refresh}
             skipAnimation={cached}

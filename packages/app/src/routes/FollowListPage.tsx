@@ -1,5 +1,5 @@
 import { type Component, onMount, onCleanup, Show, For } from "solid-js";
-import { useNavigate, useParams } from "@/router-adapter";
+import { useNavigate, useParams, useRouter } from "@tanstack/solid-router";
 import { resolveImageUrl } from "../utils/imageLoader";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
@@ -47,8 +47,9 @@ function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: stri
 
 const FollowListPage: Component<Props> = (props) => {
   const navigate = useNavigate();
-  const params = useParams<{ id: string }>();
-  const userId = () => Number(params.id);
+  const router = useRouter();
+  const params = useParams({ strict: false });
+  const userId = () => Number(params().id);
 
   onMount(() => {
     reset();
@@ -74,7 +75,7 @@ const FollowListPage: Component<Props> = (props) => {
             <fluent-button
               appearance="subtle"
               aria-label="返回"
-              on:click={() => navigate(-1)}
+              on:click={() => router.history.back()}
               style="min-width:32px;width:32px;height:32px;padding:0"
             >
               ←
@@ -96,7 +97,7 @@ const FollowListPage: Component<Props> = (props) => {
               {(preview, index) => (
                 <div
                   class="surface-card rounded-[var(--borderRadiusMedium)] p-3 transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none"
-                  onClick={() => navigate(`/user/${preview.user.id}`)}
+                  onClick={() => void navigate({ to: `/user/${preview.user.id}` })}
                 >
                   <div class="flex items-center gap-3">
                     <div class="relative w-10 h-10 flex-shrink-0">
