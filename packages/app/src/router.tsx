@@ -7,13 +7,15 @@ import {
 } from "@tanstack/solid-router";
 import RootLayout from "@/routes/__root";
 import { loadDetail } from "@/api/illust";
-import { loadDetail as loadNovelDetail, fetchNovelData } from "@/api/novel";
-import type { PixivIllust, PixivNovel, SeriesNavigation } from "@/api/types";
-import type { NovelImagesMap } from "@/api/novel";
+import type { PixivIllust } from "@/api/types";
 import { user } from "@/stores/authStore";
 import { ensureLoaded } from "@/stores/feedStore";
-import { loadList as loadFollowList, reset as resetFollowList } from "@/stores/followListStore";
-import { setEntry } from "@/stores/novelCache";
+import {
+  loadList as loadFollowList,
+  reset as resetFollowList,
+  type FollowMode,
+} from "@/stores/followListStore";
+import { loadNovelEntry } from "@/stores/novelCache";
 import { setCurrentTab } from "@/stores/uiStore";
 import { load as loadUserIllusts, contentType } from "@/stores/userIllustsStore";
 import { loadProfile, loadFollowing } from "@/stores/userStore";
@@ -21,6 +23,27 @@ import { loadProfile, loadFollowing } from "@/stores/userStore";
 /** 将普通 Solid 组件/懒加载组件断言为 TanStack RouteComponent，避免每处重复转换。 */
 function asRoute(component: Component): RouteComponent {
   return component as unknown as RouteComponent;
+}
+
+/** Feed 页签类型。 */
+type FeedTab = "recommended" | "follow";
+
+/** 构造 Feed 路由的 loader，仅 tab 不同。 */
+function makeFeedLoader(tab: FeedTab) {
+  return async ({ abortController }: { abortController: AbortController }) => {
+    setCurrentTab(tab);
+    await ensureLoaded(abortController.signal);
+    return {};
+  };
+}
+
+/** 构造用户关注/粉丝列表路由的 loader，仅 mode 不同。 */
+function makeFollowLoader(mode: FollowMode) {
+  return async ({ params }: { params: { id: string } }) => {
+    resetFollowList();
+    await loadFollowList(mode, Number(params.id));
+    return {};
+  };
 }
 
 const Login = lazy(() => import("@/routes/Login"));
@@ -48,22 +71,14 @@ const loginRoute = createRoute({
 const recommendedRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "recommended",
-  loader: async ({ abortController }) => {
-    setCurrentTab("recommended");
-    await ensureLoaded(abortController.signal);
-    return {};
-  },
+  loader: makeFeedLoader("recommended"),
   component: () => <TabFeedPage tab="recommended" />,
 });
 
 const followingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "following",
-  loader: async ({ abortController }) => {
-    setCurrentTab("follow");
-    await ensureLoaded(abortController.signal);
-    return {};
-  },
+  loader: makeFeedLoader("follow"),
   component: () => <TabFeedPage tab="follow" />,
 });
 
@@ -96,30 +111,21 @@ const novelRoute = createRoute({
   loader: async ({ params }) => {
     try {
       const id = Number(params.id);
-      const [{ novel }, novelData] = await Promise.all([
-        loadNovelDetail(id),
-        fetchNovelData(id).catch(() => ({ text: "", navigation: {}, images: {} })),
-      ]);
-      await setEntry(id, {
-        detail: novel,
-        text: novelData.text,
-        nav: novelData.navigation,
-        images: novelData.images ?? {},
-      });
-      await loadProfile(novel.user.id);
+      const entry = await loadNovelEntry(id);
+      await loadProfile(entry.detail.user.id);
       return {
-        novel,
-        text: novelData.text,
-        nav: novelData.navigation,
-        images: novelData.images ?? {},
+        novel: entry.detail,
+        text: entry.text,
+        nav: entry.nav,
+        images: entry.images,
         error: null as string | null,
       };
     } catch (e) {
       return {
-        novel: null as PixivNovel | null,
+        novel: null,
         text: "",
-        nav: {} as SeriesNavigation,
-        images: {} as NovelImagesMap,
+        nav: {} as import("@/api/types").SeriesNavigation,
+        images: {} as import("@/api/novel").NovelImagesMap,
         error: (e as { message?: string }).message ?? "加载失败",
       };
     }
@@ -200,22 +206,14 @@ const userIllustsRoute = createRoute({
 const userFollowingRoute = createRoute({
   getParentRoute: () => userRoute,
   path: "following",
-  loader: async ({ params }) => {
-    resetFollowList();
-    await loadFollowList("following", Number(params.id));
-    return {};
-  },
+  loader: makeFollowLoader("following"),
   component: () => <FollowListPage mode="following" />,
 });
 
 const userFollowersRoute = createRoute({
   getParentRoute: () => userRoute,
   path: "followers",
-  loader: async ({ params }) => {
-    resetFollowList();
-    await loadFollowList("followers", Number(params.id));
-    return {};
-  },
+  loader: makeFollowLoader("followers"),
   component: () => <FollowListPage mode="followers" />,
 });
 

@@ -12,7 +12,12 @@
 
 import { createIDBStore, type IDBStore } from "./db";
 import type { PixivNovel, SeriesNavigation } from "@/api/types";
-import type { NovelImagesMap, NovelSeriesDetailResponse } from "@/api/novel";
+import {
+  loadDetail,
+  fetchNovelData,
+  type NovelImagesMap,
+  type NovelSeriesDetailResponse,
+} from "@/api/novel";
 
 // ─── Constants ───
 
@@ -35,6 +40,9 @@ export interface SeriesCacheEntry {
   novels: PixivNovel[];
   nextUrl: string | null;
 }
+
+/** 小说缓存条目的外部别名（用于 loader 等场景）。 */
+export type NovelCacheEntry = CacheEntry;
 
 // ─── Store (production: IndexedDB; test: injected) ───
 
@@ -183,6 +191,30 @@ export async function setEntry(id: number, data: CacheEntry): Promise<void> {
     console.warn("[novelCache] Failed to persist entry", id, e);
   }
   setHotNovel(id, data);
+}
+
+/**
+ * 加载小说详情与正文，并写入缓存。
+ *
+ * 这是 `/novel/$id` 路由 loader 与系列内章节切换的统一入口。
+ */
+export async function loadNovelEntry(id: number): Promise<NovelCacheEntry> {
+  const [{ novel }, novelData] = await Promise.all([
+    loadDetail(id),
+    fetchNovelData(id).catch(() => ({
+      text: "",
+      navigation: {} as SeriesNavigation,
+      images: {} as NovelImagesMap,
+    })),
+  ]);
+  const entry: NovelCacheEntry = {
+    detail: novel,
+    text: novelData.text,
+    nav: novelData.navigation,
+    images: novelData.images ?? {},
+  };
+  await setEntry(id, entry);
+  return entry;
 }
 
 /** 写入系列缓存。 */

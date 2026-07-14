@@ -19,9 +19,9 @@ import FluentIcon from "../components/ui/FluentIcon";
 import NovelSearchBar from "../components/NovelSearchBar";
 import { createNovelSearch } from "../primitives/createNovelSearch";
 import { createNovelVirtualLayout } from "../primitives/createNovelVirtualLayout";
-import { loadDetail, fetchNovelData, type NovelImagesMap } from "@/api/novel";
 import type { PixivNovel, SeriesNavigation } from "@/api/types";
-import { getEntry, peekEntry, setEntry, type CacheEntry } from "@/stores/novelCache";
+import type { NovelImagesMap } from "@/api/novel";
+import { getEntry, peekEntry, loadNovelEntry, type NovelCacheEntry } from "@/stores/novelCache";
 import {
   readerStyle,
   fontSize,
@@ -241,7 +241,7 @@ const NovelDetail: Component = () => {
   const [detailLoading, setDetailLoading] = createSignal(false);
   const [detailError, setDetailError] = createSignal<string | null>(null);
 
-  function applyEntry(entry: CacheEntry) {
+  function applyEntry(entry: NovelCacheEntry) {
     batch(() => {
       setNovelData(entry.detail);
       setNovelHtml(entry.text);
@@ -254,35 +254,21 @@ const NovelDetail: Component = () => {
 
   async function loadNovelById(id: number) {
     if (!id) return;
-    const hot = peekEntry(id);
-    if (hot) {
-      applyEntry(hot);
+    const cached = peekEntry(id);
+    if (cached) {
+      applyEntry(cached);
       return;
     }
     setDetailLoading(true);
     setDetailError(null);
     try {
-      const cached = await getEntry(id);
-      if (cached) {
-        applyEntry(cached);
+      const dbEntry = await getEntry(id);
+      if (dbEntry) {
+        applyEntry(dbEntry);
         return;
       }
-      const [{ novel }, novelResult] = await Promise.all([
-        loadDetail(id),
-        fetchNovelData(id).catch(() => ({
-          text: "",
-          navigation: {} as SeriesNavigation,
-          images: {},
-        })),
-      ]);
-      const entry: CacheEntry = {
-        detail: novel,
-        text: novelResult.text,
-        nav: novelResult.navigation,
-        images: novelResult.images ?? {},
-      };
+      const entry = await loadNovelEntry(id);
       applyEntry(entry);
-      if (entry.text) await setEntry(id, entry);
     } catch (e) {
       setDetailError((e as { message?: string }).message ?? "加载失败");
       setDetailLoading(false);
