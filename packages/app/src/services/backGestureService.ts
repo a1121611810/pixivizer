@@ -1,63 +1,36 @@
-import { createSignal } from "solid-js";
 import { App as CapApp } from "@capacitor/app";
+import {
+  closeTopOverlay,
+  type OverlayType,
+  popOverlay,
+  pushOverlay,
+} from "@/stores/backGestureStore";
 
-export type OverlayType =
-  | "viewer"
-  | "settingsDrawer"
-  | "seriesSheet"
-  | "readerSettingsSheet"
-  | "commentSheet";
+export type { OverlayType };
+export { closeTopOverlay, popOverlay, pushOverlay };
 
-interface OverlayEntry {
-  type: OverlayType;
-  close: () => void;
+/** 返回手势依赖的上下文，由调用方（App.tsx）注入，避免服务依赖具体路由实现。 */
+export interface BackGestureContext {
+  /** 获取当前路径名，用于判断是否在根路径。 */
+  getPathname: () => string;
+  /** 执行路由返回。调用方应使用类型安全的导航 API。 */
+  navigateBack: () => void;
+  /** 触发“再按一次退出”提示。 */
+  dispatchExitHint: () => void;
 }
-
-interface RouterLike {
-  state: { location: { pathname: string } };
-  history: { back: () => void };
-}
-
-const [stack, setStack] = createSignal<OverlayEntry[]>([]);
 
 const rootPaths = new Set(["/recommended", "/following", "/bookmarks", "/login"]);
 
-/** Time window (ms) within which two back presses at root exit the app. */
+/** 根路径下两次返回间隔小于此值（毫秒）时退出应用。 */
 const EXIT_DOUBLE_TAP_MS = 2000;
 
-export function pushOverlay(type: OverlayType, close: () => void): void {
-  setStack((prev) => [...prev, { type, close }]);
-}
-
-export function popOverlay(type: OverlayType): boolean {
-  let removed = false;
-  setStack((prev) => {
-    const idx = prev.findLastIndex((entry) => entry.type === type);
-    if (idx === -1) return prev;
-    removed = true;
-    const entry = prev[idx];
-    entry.close();
-    return prev.slice(0, idx).concat(prev.slice(idx + 1));
-  });
-  return removed;
-}
-
-export function closeTopOverlay(): boolean {
-  const top = stack()[stack().length - 1];
-  if (!top) return false;
-  top.close();
-  setStack((prev) => prev.slice(0, -1));
-  return true;
-}
-
-export async function registerBackGesture(router: RouterLike): Promise<() => void> {
+export async function registerBackGesture(ctx: BackGestureContext): Promise<() => void> {
   let lastBackTime = 0;
   const listener = await CapApp.addListener("backButton", () => {
     if (closeTopOverlay()) return;
 
-    const pathname = router.state.location.pathname;
-    if (!rootPaths.has(pathname)) {
-      router.history.back();
+    if (!rootPaths.has(ctx.getPathname())) {
+      ctx.navigateBack();
       return;
     }
 
@@ -65,7 +38,7 @@ export async function registerBackGesture(router: RouterLike): Promise<() => voi
       void CapApp.exitApp();
     } else {
       lastBackTime = Date.now();
-      window.dispatchEvent(new CustomEvent("exitHint"));
+      ctx.dispatchExitHint();
     }
   });
 
