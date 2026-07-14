@@ -66,6 +66,28 @@ describe("backGestureService", () => {
     });
   });
 
+  describe("clearOverlays", () => {
+    it("empties the stack without invoking close callbacks", async () => {
+      const { pushOverlay, clearOverlays, closeTopOverlay } = await loadService();
+      const closeA = vi.fn();
+      const closeB = vi.fn();
+
+      pushOverlay("viewer", closeA);
+      pushOverlay("settingsDrawer", closeB);
+      clearOverlays();
+
+      expect(closeA).not.toHaveBeenCalled();
+      expect(closeB).not.toHaveBeenCalled();
+      expect(closeTopOverlay()).toBe(false);
+    });
+
+    it("leaves closeTopOverlay returning false when the stack is empty", async () => {
+      const { clearOverlays, closeTopOverlay } = await loadService();
+      clearOverlays();
+      expect(closeTopOverlay()).toBe(false);
+    });
+  });
+
   describe("popOverlay", () => {
     it("closes the top overlay when its type matches and returns true", async () => {
       const { pushOverlay, popOverlay } = await loadService();
