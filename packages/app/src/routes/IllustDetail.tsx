@@ -19,6 +19,7 @@ import PageTransition from "../components/PageTransition";
 import HeartBurstEffect from "../components/HeartBurstEffect";
 import { detailQuality, showDetailStairs } from "../stores/uiStore";
 import { blockUser, isBlocked } from "../stores/blockStore";
+import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import { sanitizeHtml } from "../utils/html";
 import ReportSheet from "../components/ReportSheet";
 import IllustTags from "../components/IllustTags";
@@ -167,7 +168,7 @@ const IllustDetail: Component = () => {
   let savedScrollBeforeViewer = 0;
   let viewerMaskRemover: (() => void) | null = null;
 
-  // Open/close viewer with global flag for Capacitor back-button handling
+  // Open/close viewer; registered with overlay stack for back-button handling
   function openViewer(startPage = 0) {
     savedScrollBeforeViewer = window.scrollY;
 
@@ -197,13 +198,11 @@ const IllustDetail: Component = () => {
     document.body.appendChild(mask);
     viewerMaskRemover = () => mask.remove();
 
-    (window as any).__viewerOpen = true;
     setViewerStartPage(startPage);
     setViewerOpen(true);
   }
 
   function closeViewer() {
-    (window as any).__viewerOpen = false;
     setViewerOpen(false);
   }
 
@@ -227,18 +226,41 @@ const IllustDetail: Component = () => {
   });
 
   onMount(() => {
-    // Listen for system back when viewer is open
-    const onCloseViewer = () => {
-      (window as any).__viewerOpen = false;
-      setViewerOpen(false);
-    };
-    window.addEventListener("closeViewer", onCloseViewer);
     onCleanup(() => {
-      window.removeEventListener("closeViewer", onCloseViewer);
       // 组件卸载时确保过渡遮罩被移除
       viewerMaskRemover?.();
       viewerMaskRemover = null;
     });
+  });
+
+  // 将查看器状态注册到 overlay 栈，供系统返回手势统一处理
+  createEffect(() => {
+    if (viewerOpen()) {
+      pushOverlay("viewer", closeViewer);
+      onCleanup(() => {
+        popOverlay("viewer");
+      });
+    }
+  });
+
+  // 将评论面板状态注册到 overlay 栈
+  createEffect(() => {
+    if (showComments()) {
+      pushOverlay("commentSheet", () => setShowComments(false));
+      onCleanup(() => {
+        popOverlay("commentSheet");
+      });
+    }
+  });
+
+  // 将举报面板状态注册到 overlay 栈
+  createEffect(() => {
+    if (showReportSheet()) {
+      pushOverlay("reportSheet", () => setShowReportSheet(false));
+      onCleanup(() => {
+        popOverlay("reportSheet");
+      });
+    }
   });
 
   // 由路由 loader 提供初始数据；params 变化时自动重新进入该路由并重新加载。
