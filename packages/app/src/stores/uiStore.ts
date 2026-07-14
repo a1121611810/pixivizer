@@ -34,8 +34,6 @@ const PREF_KEY_AUTO_CHECK_UPDATE = "auto_check_update";
 const PREF_KEY_USE_DNS_OVERRIDE = "use_dns_override";
 const PREF_KEY_CONTENT_TYPE = "content_type";
 const PREF_KEY_NOVEL_LAYOUT_MODE = "novel_layout_mode";
-const PREF_KEY_NOVEL_CACHE_ENABLED = "novel_cache_enabled";
-const PREF_KEY_NOVEL_CACHE_SIZE = "novel_cache_size";
 const PREF_KEY_IMAGE_CACHE_DISK = "image_cache_disk";
 const PREF_KEY_IMAGE_CACHE_BROWSER = "image_cache_browser";
 const PREF_KEY_IMAGE_CACHE_PREFETCH = "image_cache_prefetch";
@@ -71,8 +69,6 @@ const initialState = () => {
 
     // 内容类型
     contentType: "illust" as ContentType,
-    novelCacheEnabled: true,
-    novelCacheSize: 10,
 
     // 主题
     theme: initialTheme,
@@ -97,10 +93,10 @@ const initialState = () => {
     detailQuality: "medium" as ImageQuality,
 
     // 图片缓存三层开关（ADR-0003）
-    imageCacheDisk: true,      // A: Java 磁盘缓存
-    imageCacheBrowser: true,   // B: 浏览器缓存头
-    imageCachePrefetch: true,  // C: JS 预取
-    imageCacheDiskSize: 300,  // 单位 MB，范围 50～1000
+    imageCacheDisk: true, // A: Java 磁盘缓存
+    imageCacheBrowser: true, // B: 浏览器缓存头
+    imageCachePrefetch: true, // C: JS 预取
+    imageCacheDiskSize: 300, // 单位 MB，范围 50～1000
 
     // 预测返回手势
     usePredictiveBack: false,
@@ -143,27 +139,6 @@ export async function setContentType(type: ContentType): Promise<void> {
     setState("contentType", prev);
   }
   window.dispatchEvent(new CustomEvent("contentTypeChanged"));
-}
-
-export const novelCacheEnabled = () => state.novelCacheEnabled;
-export const novelCacheSize = () => state.novelCacheSize;
-
-export async function setNovelCacheEnabled(v: boolean): Promise<void> {
-  setState("novelCacheEnabled", v);
-  try {
-    await Preferences.set({ key: PREF_KEY_NOVEL_CACHE_ENABLED, value: String(v) });
-  } catch (e) {
-    console.warn("[uiStore] Failed to persist novelCacheEnabled", e);
-  }
-}
-
-export async function setNovelCacheSize(v: number): Promise<void> {
-  setState("novelCacheSize", v);
-  try {
-    await Preferences.set({ key: PREF_KEY_NOVEL_CACHE_SIZE, value: String(v) });
-  } catch (e) {
-    console.warn("[uiStore] Failed to persist novelCacheSize", e);
-  }
 }
 
 export const theme = () => state.theme;
@@ -222,7 +197,6 @@ export const setListQuality = (q: ImageQuality) => setState("listQuality", q);
 
 export const detailQuality = () => state.detailQuality;
 export const setDetailQuality = (q: ImageQuality) => setState("detailQuality", q);
-
 
 // 图片缓存三层开关（ADR-0003）
 export const imageCacheDisk = () => state.imageCacheDisk;
@@ -582,21 +556,6 @@ export async function setUseDnsOverride(enabled: boolean): Promise<void> {
   }
 }
 
-export async function loadNovelCachePreference(): Promise<void> {
-  try {
-    const { value: enabled } = await Preferences.get({ key: PREF_KEY_NOVEL_CACHE_ENABLED });
-    if (enabled === "true") setState("novelCacheEnabled", true);
-    if (enabled === "false") setState("novelCacheEnabled", false);
-    const { value: size } = await Preferences.get({ key: PREF_KEY_NOVEL_CACHE_SIZE });
-    if (size) {
-      const n = Number.parseInt(size, 10);
-      if (n >= 1 && n <= 20) setState("novelCacheSize", n);
-    }
-  } catch (e) {
-    console.warn("[uiStore] Failed to load novel cache preference", e);
-  }
-}
-
 export async function loadUseDnsOverridePreference(): Promise<void> {
   try {
     const { value } = await Preferences.get({ key: PREF_KEY_USE_DNS_OVERRIDE });
@@ -694,4 +653,3 @@ try {
 } catch {
   // 测试环境或 SSR 中 window.matchMedia 不可用，静默跳过
 }
-

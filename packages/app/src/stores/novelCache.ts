@@ -1,162 +1,208 @@
-import type { PixivNovel, SeriesNavigation } from "../api/types";
-import type { NovelImagesMap, NovelSeriesDetailResponse } from "../api/novel";
+/**
+ * 小说缓存模块。
+ *
+ * 分层：
+ *   L1 — 热缓存（同步 Map，≤10 篇） — 用于系列切章同帧渲染
+ *   L2 — IndexedDB（持久化，≤200 篇） — 冷启动后无需网络请求
+ *
+ * 系列目录（series）独立，同样策略，≤10 热 / ≤100 持久。
+ *
+ * 测试通过 _useStore(createMemoryStore()) 注入内存存储。
+ */
 
-// ─── Entry ───
+import { createIDBStore, type IDBStore } from "./db";
+import type { PixivNovel, SeriesNavigation } from "@/api/types";
+import type { NovelImagesMap, NovelSeriesDetailResponse } from "@/api/novel";
 
-interface CacheEntry<T> {
-  data: T;
-  time: number;
+// ─── Constants ───
+
+const HOT_NOVELS_MAX = 10;
+const HOT_SERIES_MAX = 10;
+const MAX_NOVELS = 200;
+const MAX_SERIES = 100;
+
+// ─── Types ───
+
+export interface CacheEntry {
+  detail: PixivNovel;
+  text: string;
+  nav: SeriesNavigation;
+  images: NovelImagesMap;
 }
 
-// ─── Detail cache ───
-
-const detailCache = new Map<number, CacheEntry<PixivNovel>>();
-let detailMax = 100;
-
-// ─── Text cache ───
-
-const textCache = new Map<number, CacheEntry<string>>();
-let textMax = 10;
-
-// ─── Nav cache ───
-
-const navCache = new Map<number, CacheEntry<SeriesNavigation>>();
-let navMax = 50;
-
-// ─── Images cache ───
-
-const imagesCache = new Map<number, CacheEntry<NovelImagesMap>>();
-let imagesMax = 20;
-
-// ─── Series cache ───
-
-const seriesCache = new Map<number, CacheEntry<NovelSeriesDetailResponse>>();
-let seriesMax = 20;
-
-// ─── LRU helpers ───
-
-function lruGet<T>(cache: Map<number, CacheEntry<T>>, id: number): T | undefined {
-  const entry = cache.get(id);
-  if (!entry) return undefined;
-  entry.time = Date.now();
-  return entry.data;
+export interface SeriesCacheEntry {
+  detail: NovelSeriesDetailResponse["novel_series_detail"];
+  novels: PixivNovel[];
+  nextUrl: string | null;
 }
 
-function lruSet<T>(cache: Map<number, CacheEntry<T>>, id: number, data: T, max: number): void {
-  if (cache.has(id)) {
-    cache.get(id)!.data = data;
-    cache.get(id)!.time = Date.now();
+// ─── Store (production: IndexedDB; test: injected) ───
+
+let store: IDBStore | null = null;
+
+function getStore(): IDBStore {
+  if (!store) store = createIDBStore();
+  return store;
+}
+
+/** 仅供测试注入。用 createMemoryStore() 即可不同测试间隔离。 */
+/** @internal 仅供测试注入内存存储。 */
+export function setTestStore(s: IDBStore): void {
+  store = s;
+}
+
+// ─── Hot cache ───
+
+const hotNovels = new Map<number, CacheEntry>();
+const hotSeries = new Map<number, SeriesCacheEntry>();
+const hotNovelInsertOrder: number[] = [];
+const hotSeriesInsertOrder: number[] = [];
+
+function setHotNovel(id: number, entry: CacheEntry): void {
+  if (hotNovels.has(id)) {
+    // 更新时提升到 MRU 位置
+    const idx = hotNovelInsertOrder.indexOf(id);
+    if (idx !== -1) hotNovelInsertOrder.splice(idx, 1);
+    hotNovels.set(id, entry);
+    hotNovelInsertOrder.push(id);
     return;
   }
-  if (cache.size >= max) {
-    // Evict oldest
-    let oldestId = id;
-    let oldestTime = Infinity;
-    for (const [k, v] of cache) {
-      if (v.time < oldestTime) {
-        oldestTime = v.time;
-        oldestId = k;
-      }
-    }
-    cache.delete(oldestId);
+  if (hotNovels.size >= HOT_NOVELS_MAX) {
+    const evict = hotNovelInsertOrder.shift();
+    if (evict !== undefined) hotNovels.delete(evict);
   }
-  cache.set(id, { data, time: Date.now() });
+  hotNovels.set(id, entry);
+  hotNovelInsertOrder.push(id);
+}
+
+function setHotSeries(id: number, entry: SeriesCacheEntry): void {
+  if (hotSeries.has(id)) {
+    const idx = hotSeriesInsertOrder.indexOf(id);
+    if (idx !== -1) hotSeriesInsertOrder.splice(idx, 1);
+    hotSeries.set(id, entry);
+    hotSeriesInsertOrder.push(id);
+    return;
+  }
+  if (hotSeries.size >= HOT_SERIES_MAX) {
+    const evict = hotSeriesInsertOrder.shift();
+    if (evict !== undefined) hotSeries.delete(evict);
+  }
+  hotSeries.set(id, entry);
+  hotSeriesInsertOrder.push(id);
+}
+
+// ─── Cleanup helpers ───
+
+async function enforceLimits(storeName: "novels" | "series", max: number): Promise<void> {
+  const count = await getStore().count(storeName);
+  if (count <= max) return;
+  const all = await getStore().getAll<{ id: number; cachedAt: number }>(storeName);
+  all.sort((a, b) => a.cachedAt - b.cachedAt);
+  const toDelete = all.slice(0, all.length - max);
+  await Promise.all(toDelete.map((e) => getStore().delete(storeName, e.id)));
 }
 
 // ─── Public API ───
 
-export function getDetail(id: number): PixivNovel | undefined {
-  return lruGet(detailCache, id);
+/** 同步读热缓存（不触及 IndexedDB） */
+export function peekEntry(id: number): CacheEntry | undefined {
+  return hotNovels.get(id);
 }
 
-export function setDetail(id: number, data: PixivNovel): void {
-  lruSet(detailCache, id, data, detailMax);
-}
-
-export function getText(id: number): string | undefined {
-  return lruGet(textCache, id);
-}
-
-export function setText(id: number, data: string): void {
-  lruSet(textCache, id, data, textMax);
-}
-
-export function getNav(id: number): SeriesNavigation | undefined {
-  return lruGet(navCache, id);
-}
-
-export function setNav(id: number, data: SeriesNavigation): void {
-  lruSet(navCache, id, data, navMax);
-}
-
-export function getImages(id: number): NovelImagesMap | undefined {
-  return lruGet(imagesCache, id);
-}
-
-export function setImages(id: number, data: NovelImagesMap): void {
-  lruSet(imagesCache, id, data, imagesMax);
-}
-
-export function getSeries(id: number): NovelSeriesDetailResponse | undefined {
-  return lruGet(seriesCache, id);
-}
-
-export function setSeries(id: number, data: NovelSeriesDetailResponse): void {
-  lruSet(seriesCache, id, data, seriesMax);
+/** 同步读热缓存（系列） */
+export function peekSeries(id: number): SeriesCacheEntry | undefined {
+  return hotSeries.get(id);
 }
 
 /**
- * 更新缓存上限。滑块控制 textMax，detailMax = textMax * 10。
- * 若新上限低于当前容量，立刻淘汰最旧条目。
+ * 异步取小说缓存。
+ *
+ * 查找顺序：热缓存 → IndexedDB → undefined。
+ * 若从 IndexedDB 命中，自动灌入热缓存。
  */
-export function setNovelCacheLimits(textLimit: number): void {
-  textMax = textLimit;
-  detailMax = textLimit * 10;
+export async function getEntry(id: number): Promise<CacheEntry | undefined> {
+  const hot = hotNovels.get(id);
+  if (hot) return hot;
 
-  while (textCache.size > textMax) {
-    let oldestId = 0;
-    let oldestTime = Infinity;
-    for (const [k, v] of textCache) {
-      if (v.time < oldestTime) {
-        oldestTime = v.time;
-        oldestId = k;
-      }
-    }
-    if (oldestId) textCache.delete(oldestId);
-    else break;
+  const fromDB = await getStore().get<{
+    id: number;
+    detail: PixivNovel;
+    text: string;
+    nav: SeriesNavigation;
+    images: NovelImagesMap;
+    cachedAt: number;
+  }>("novels", id);
+
+  if (fromDB) {
+    const entry: CacheEntry = {
+      detail: fromDB.detail,
+      text: fromDB.text,
+      nav: fromDB.nav,
+      images: fromDB.images,
+    };
+    setHotNovel(id, entry);
+    return entry;
   }
 
-  while (detailCache.size > detailMax) {
-    let oldestId = 0;
-    let oldestTime = Infinity;
-    for (const [k, v] of detailCache) {
-      if (v.time < oldestTime) {
-        oldestTime = v.time;
-        oldestId = k;
-      }
-    }
-    if (oldestId) detailCache.delete(oldestId);
-    else break;
-  }
-
-  while (navCache.size > navMax) {
-    let oldestId = 0;
-    let oldestTime = Infinity;
-    for (const [k, v] of navCache) {
-      if (v.time < oldestTime) {
-        oldestTime = v.time;
-        oldestId = k;
-      }
-    }
-    if (oldestId) navCache.delete(oldestId);
-    else break;
-  }
+  return undefined;
 }
 
-export function clearNovelCache(): void {
-  detailCache.clear();
-  textCache.clear();
-  navCache.clear();
-  imagesCache.clear();
-  seriesCache.clear();
+/** 异步取系列缓存。 */
+export async function getSeries(id: number): Promise<SeriesCacheEntry | undefined> {
+  const hot = hotSeries.get(id);
+  if (hot) return hot;
+
+  const fromDB = await getStore().get<{
+    id: number;
+    detail: SeriesCacheEntry["detail"];
+    novels: PixivNovel[];
+    nextUrl: string | null;
+    cachedAt: number;
+  }>("series", id);
+
+  if (fromDB) {
+    const entry: SeriesCacheEntry = {
+      detail: fromDB.detail,
+      novels: fromDB.novels,
+      nextUrl: fromDB.nextUrl,
+    };
+    setHotSeries(id, entry);
+    return entry;
+  }
+
+  return undefined;
+}
+
+/** 写入缓存（IndexedDB + 热缓存）。写入后自动清理超限条目。 */
+export async function setEntry(id: number, data: CacheEntry): Promise<void> {
+  const now = Date.now();
+  try {
+    await getStore().put("novels", { id, ...data, cachedAt: now });
+    await enforceLimits("novels", MAX_NOVELS);
+  } catch (e) {
+    console.warn("[novelCache] Failed to persist entry", id, e);
+  }
+  setHotNovel(id, data);
+}
+
+/** 写入系列缓存。 */
+export async function setSeries(id: number, data: SeriesCacheEntry): Promise<void> {
+  const now = Date.now();
+  try {
+    await getStore().put("series", { id, ...data, cachedAt: now });
+    await enforceLimits("series", MAX_SERIES);
+  } catch (e) {
+    console.warn("[novelCache] Failed to persist series", id, e);
+  }
+  setHotSeries(id, data);
+}
+
+/** 清空所有缓存（IndexedDB + 热缓存）。 */
+export async function clearAll(): Promise<void> {
+  hotNovels.clear();
+  hotSeries.clear();
+  hotNovelInsertOrder.length = 0;
+  hotSeriesInsertOrder.length = 0;
+  await getStore().clear("novels");
+  await getStore().clear("series");
 }

@@ -90,9 +90,16 @@ const SeriesSheet: Component<Props> = (props) => {
   }
 
   async function loadInitial() {
-    const cached = getSeries(props.seriesId);
+    const cached = await getSeries(props.seriesId);
     if (cached) {
-      applyResult(cached, false);
+      applyResult(
+        {
+          novel_series_detail: cached.detail,
+          novels: cached.novels,
+          next_url: cached.nextUrl,
+        } as NovelSeriesDetailResponse,
+        false,
+      );
     }
 
     abortController?.abort();
@@ -105,7 +112,11 @@ const SeriesSheet: Component<Props> = (props) => {
       const result = await loadSeries(props.seriesId);
       if (!abortController.signal.aborted) {
         applyResult(result, false);
-        setSeries(props.seriesId, result);
+        await setSeries(props.seriesId, {
+          detail: result.novel_series_detail,
+          novels: result.novels,
+          nextUrl: result.next_url,
+        });
       }
     } catch (e) {
       if (!abortController.signal.aborted) {
@@ -148,7 +159,11 @@ const SeriesSheet: Component<Props> = (props) => {
       .then((result) => {
         if (!abortController?.signal.aborted) {
           applyResult(result, false);
-          setSeries(props.seriesId, result);
+          void setSeries(props.seriesId, {
+            detail: result.novel_series_detail,
+            novels: result.novels,
+            nextUrl: result.next_url,
+          });
         }
       })
       .catch((e) => {

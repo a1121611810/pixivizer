@@ -4,7 +4,6 @@ import { render, screen, cleanup } from "@solidjs/testing-library";
 
 const mockLoadDetail = vi.fn();
 const mockFetchNovelData = vi.fn();
-const mockNovelCacheEnabled = vi.fn().mockReturnValue(false);
 
 vi.mock("@solidjs/router", () => ({
   useParams: () => ({ id: "42" }),
@@ -18,8 +17,10 @@ vi.mock("@/api/novel", () => ({
   fetchNovelData: (...args: unknown[]) => mockFetchNovelData(...args),
 }));
 
-vi.mock("@/stores/uiStore", () => ({
-  novelCacheEnabled: () => mockNovelCacheEnabled(),
+vi.mock("@/stores/novelCache", () => ({
+  peekEntry: () => undefined,
+  getEntry: () => Promise.resolve(undefined),
+  setEntry: () => Promise.resolve(),
 }));
 
 vi.mock("@/components/PixivImage", () => ({
@@ -74,7 +75,6 @@ describe("NovelDetail content rendering", () => {
   beforeEach(() => {
     cleanup();
     vi.clearAllMocks();
-    mockNovelCacheEnabled.mockReturnValue(false);
     Object.defineProperty(HTMLElement.prototype, "clientWidth", {
       configurable: true,
       value: 1000,

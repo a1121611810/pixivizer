@@ -26,7 +26,6 @@ import {
   loadAutoCheckUpdatePreference,
   loadUseDnsOverridePreference,
   loadContentTypePreference,
-  loadNovelCachePreference,
   loadImageCachePrefs,
   loadNovelLayoutModePreference,
   loadLastDismissedVersionPreference,
@@ -127,7 +126,6 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
       loadLastDismissedVersionPreference(),
       loadUseDnsOverridePreference(),
       loadContentTypePreference(),
-      loadNovelCachePreference(),
       loadImageCachePrefs(),
       loadNovelLayoutModePreference(),
     ]);
