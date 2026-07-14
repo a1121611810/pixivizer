@@ -1,6 +1,5 @@
-import { Capacitor, CapacitorHttp } from "@capacitor/core";
-import type { ImageCachePlugin } from "../native/ImageCache";
-import { PIXIV_USER_AGENT } from "../api/userAgent";
+import { Capacitor } from "@capacitor/core";
+import { ImageCache, type ImageCachePlugin } from "../native/ImageCache";
 import { isImageHostEnabled } from "../stores/imageHostStore";
 import { getEffectiveImageUrl, getRaceCandidateUrls } from "../services/imageHostService";
 
@@ -9,15 +8,9 @@ const isNative = Capacitor.isNativePlatform();
 // ─── 惰性加载 ImageCache 插件（避免在测试/Web 环境下误注册） ───
 let imageCacheImpl: ImageCachePlugin | null = null;
 
-async function getImageCache(): Promise<ImageCachePlugin | null> {
+function getImageCache(): ImageCachePlugin | null {
   if (!imageCacheImpl) {
-    try {
-      const { ImageCache } = await import("../native/ImageCache");
-      imageCacheImpl = ImageCache;
-    } catch {
-      // 插件不可用（Web/测试环境），返回 null，调用方自行降级
-      return null;
-    }
+    imageCacheImpl = ImageCache;
   }
   return imageCacheImpl;
 }
@@ -223,9 +216,9 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
 
     if (isNative) {
       // 1) 先检查 Android 文件缓存（异常时降级到网络，不阻塞加载路径）
+      const imageCache = getImageCache();
       try {
-        const cache = await getImageCache();
-        const cached = await cache.getImage({ key: originalUrl });
+        const cached = await imageCache.getImage({ key: originalUrl });
         if (cached?.base64) {
           const decoded = await base64ToBlob(cached.base64);
           cacheSet(originalUrl, decoded);
@@ -241,7 +234,7 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
       // 3) 后台保存到磁盘缓存（异常不影响主加载路径）
       try {
         const base64 = await blobToBase64(blob);
-        cache
+        imageCache
           .saveImage({ key: originalUrl, base64 })
           .catch((e) => console.warn("[ImageCache] Failed to save to disk", e));
       } catch (e) {
@@ -327,14 +320,9 @@ export async function loadImageWithProgress(
     // 2. 解析目标 URL（图床代理 / 原生 URL）
     const targetUrl = isImageHostEnabled() ? getEffectiveImageUrl(originalUrl) : originalUrl;
 
-    // 3. 带进度下载
-    let blob: Blob;
-    if (isNative) {
-      blob = await loadWithProgressNative(targetUrl, onProgress);
-    } else {
-      const proxyUrl = toWebProxyUrl(targetUrl);
-      blob = await loadWithProgressWeb(proxyUrl, onProgress);
-    }
+    // 3. 带进度下载（统一走 WebView 代理）
+    const proxyUrl = toWebProxyUrl(targetUrl);
+    const blob = await loadWithProgressWeb(proxyUrl, onProgress);
 
     // 4. 存入缓存
     cacheSet(originalUrl, blob);
@@ -382,38 +370,6 @@ async function loadWithProgressWeb(
   return new Blob(chunks, { type: contentType });
 }
 
-/** Native 模式：XMLHttpRequest + onprogress 事件报告进度 */
-function loadWithProgressNative(url: string, onProgress: (p: LoadProgress) => void): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.responseType = "blob";
-    xhr.setRequestHeader("Referer", "https://app-api.pixiv.net/");
-    xhr.setRequestHeader("User-Agent", PIXIV_USER_AGENT);
-
-    xhr.addEventListener("progress", (e) => {
-      if (e.lengthComputable) {
-        const percent = Math.round((e.loaded / e.total) * 100);
-        onProgress({ loaded: e.loaded, total: e.total, percent });
-      } else {
-        onProgress({ loaded: e.loaded, total: null, percent: -1 });
-      }
-    });
-
-    xhr.addEventListener("load", () => {
-      if (xhr.status === 200) {
-        resolve(xhr.response as Blob);
-      } else {
-        reject(new Error(`HTTP ${xhr.status}`));
-      }
-    });
-
-    xhr.addEventListener("error", () => reject(new Error("Network error")));
-    xhr.addEventListener("timeout", () => reject(new Error("Timeout")));
-    xhr.send();
-  });
-}
-
 /** Web 模式：通过 Vite 代理或图床代理获取图片 */
 async function fetchWeb(targetUrl: string, originalUrl: string): Promise<Blob> {
   const urls = getRaceCandidateUrls(targetUrl);
@@ -435,41 +391,16 @@ async function fetchSingleWeb(url: string): Promise<Blob> {
   return blob;
 }
 
-/** Native 模式：通过 CapacitorHttp 获取图片 */
+/** Native 模式：通过 WebView 代理获取图片（同 Web 模式一致，绕过 CapacitorHttp） */
 async function fetchNative(targetUrl: string, originalUrl: string): Promise<Blob> {
   const urls = getRaceCandidateUrls(targetUrl);
 
   if (urls.length > 1) {
-    return raceFetch(urls, (url) => fetchSingleNative(url), originalUrl);
+    const proxyUrls = urls.map(toWebProxyUrl);
+    return raceFetch(proxyUrls, fetchSingleWeb, toWebProxyUrl(originalUrl));
   }
 
-  return fetchSingleNative(targetUrl);
-}
-
-async function fetchSingleNative(url: string): Promise<Blob> {
-  const resp = await CapacitorHttp.request({
-    method: "GET",
-    url,
-    headers: {
-      Referer: "https://app-api.pixiv.net/",
-      "User-Agent": PIXIV_USER_AGENT,
-    },
-    responseType: "arraybuffer",
-  } as any);
-
-  if (resp.status !== 200) throw new Error(`HTTP ${resp.status}`);
-
-  const contentType =
-    resp.headers?.["Content-Type"] || resp.headers?.["content-type"] || "image/jpeg";
-
-  // Capacitor 将 arraybuffer 响应编码为 base64 字符串返回，无 data: 前缀
-  // 同步解码：atob → Uint8Array → Blob，避免 data: URL + fetch 在 Network 面板产生额外条目
-  const binaryStr = atob(resp.data);
-  const bytes = new Uint8Array(binaryStr.length);
-  for (let i = 0; i < binaryStr.length; i++) {
-    bytes[i] = binaryStr.charCodeAt(i);
-  }
-  return new Blob([bytes], { type: contentType });
+  return fetchSingleWeb(toWebProxyUrl(targetUrl));
 }
 
 /**
@@ -541,7 +472,7 @@ export async function warmCacheFromDisk(): Promise<void> {
   if (!isNative) return;
 
   try {
-    const cache = await getImageCache();
+    const cache = getImageCache();
     const { keys } = await cache.getCachedKeys();
     if (!keys || keys.length === 0) return;
 

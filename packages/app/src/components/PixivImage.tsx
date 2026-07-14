@@ -1,5 +1,5 @@
-import { type Component, createSignal, onMount, onCleanup } from "solid-js";
-import { loadImage, checkImageCache } from "../utils/imageLoader";
+import { type Component, createSignal } from "solid-js";
+import { checkImageCache, resolveImageUrl } from "../utils/imageLoader";
 
 interface PixivImageProps {
   src: string;
@@ -24,40 +24,13 @@ const PixivImage: Component<PixivImageProps> = (props) => {
     }
   }
 
-  const [displayUrl, setDisplayUrl] = createSignal(syncBlobUrl || "");
+  const [displayUrl, setDisplayUrl] = createSignal(
+    syncBlobUrl || (props.src ? resolveImageUrl(props.src) : "")
+  );
   const [failed, setFailed] = createSignal(false);
-  let cleanupFn: (() => void) | null = null;
 
   // Compute aspect ratio from width/height to prevent layout shift (CLS)
   const aspectRatio = props.width && props.height ? `${props.width} / ${props.height}` : undefined;
-
-  onMount(() => {
-    // 同步缓存命中：已显示持久 Blob URL，跳过异步加载
-    if (syncBlobUrl) {
-      cleanupFn = () => {}; // 持久 URL 由缓存管理，无需 revoke
-      return;
-    }
-    if (!props.src) return;
-    load();
-  });
-
-  onCleanup(() => {
-    if (cleanupFn) {
-      cleanupFn();
-      cleanupFn = null;
-    }
-  });
-
-  async function load() {
-    try {
-      const result = await loadImage(props.src);
-      cleanupFn = result.cleanup;
-      setDisplayUrl(result.url);
-    } catch (e) {
-      console.error(`[PixivImage] Failed: ${props.src}`, e);
-      setFailed(true);
-    }
-  }
 
   function handleError(e: Event) {
     const img = e.target as HTMLImageElement;
