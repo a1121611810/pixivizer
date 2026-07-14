@@ -1,4 +1,12 @@
-import { type Component, createSignal, onMount, onCleanup, Show, For } from "solid-js";
+import {
+  type Component,
+  createSignal,
+  createEffect,
+  onMount,
+  onCleanup,
+  Show,
+  For,
+} from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import {
   novels,
@@ -19,6 +27,7 @@ import { setCurrentTab, novelLayoutMode } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import NovelVirtualFeed from "../components/NovelVirtualFeed";
 import SeriesSheet from "../components/SeriesSheet";
+import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 
 interface Props {
   tab: Tab;
@@ -53,6 +62,16 @@ const NovelFeedPage: Component<Props> = (props) => {
     });
     setSheetOpen(true);
   }
+
+  // 将系列目录面板状态注册到 overlay 栈
+  createEffect(() => {
+    if (sheetOpen()) {
+      pushOverlay("seriesSheet", () => setSheetOpen(false));
+      onCleanup(() => {
+        popOverlay("seriesSheet");
+      });
+    }
+  });
 
   onMount(() => {
     setCurrentTab(props.tab);

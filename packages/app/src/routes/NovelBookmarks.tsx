@@ -18,6 +18,7 @@ import { user } from "../stores/authStore";
 import NovelVirtualFeed from "../components/NovelVirtualFeed";
 import SeriesSheet from "../components/SeriesSheet";
 import { novelLayoutMode } from "../stores/uiStore";
+import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import { createSignal } from "solid-js";
 
 const r18Handler = () => refresh();
@@ -45,6 +46,16 @@ const NovelBookmarks: Component = () => {
     });
     setSheetOpen(true);
   }
+
+  // 将系列目录面板状态注册到 overlay 栈
+  createEffect(() => {
+    if (sheetOpen()) {
+      pushOverlay("seriesSheet", () => setSheetOpen(false));
+      onCleanup(() => {
+        popOverlay("seriesSheet");
+      });
+    }
+  });
 
   onMount(() => {
     // 返回小说收藏页时静默刷新
