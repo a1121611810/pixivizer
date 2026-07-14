@@ -15,6 +15,15 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 
+import android.util.Base64;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Pictelio Android 客户端 — 拦截 /pixiv-img/ 请求并代理到 i.pximg.net（注入 Referer 头）。
  */
@@ -22,6 +31,7 @@ public class MainActivity extends BridgeActivity {
 
     /** WebView 最低主版本号要求（低于此版本拦截启动并提示用户升级）。 */
     private static final int MIN_WEBVIEW_MAJOR_VERSION = 70;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +119,24 @@ public class MainActivity extends BridgeActivity {
             String path = url.substring(url.indexOf("/pixiv-img/") + "/pixiv-img/".length());
             String pixivUrl = new URI("https://i.pximg.net/" + path).normalize().toString();
 
+            // 读取 JS 侧持久化的缓存开关（Capacitor Preferences 存储在默认 SharedPreferences 中）
+            android.content.SharedPreferences prefs = getApplicationContext().getSharedPreferences("CapacitorStorage", android.content.Context.MODE_PRIVATE);
+            boolean diskCacheEnabled = "true".equals(prefs.getString("image_cache_disk", "true"));
+            boolean browserCacheEnabled = "true".equals(prefs.getString("image_cache_browser", "true"));
+
+            // ── A: 磁盘缓存检查 ────────────────────────────────────
+            if (diskCacheEnabled) {
+                String filename = Base64.encodeToString(url.getBytes(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+                File cacheFile = new File(getCacheDir() + "/pictelio-images/", filename);
+                if (cacheFile.exists()) {
+                    String mime = "image/jpeg";
+                    if (path.endsWith(".png")) mime = "image/png";
+                    else if (path.endsWith(".gif")) mime = "image/gif";
+                    else if (path.endsWith(".webp")) mime = "image/webp";
+                    return new WebResourceResponse(mime, null, 200, "OK", null, new FileInputStream(cacheFile));
+                }
+            }
+
             HttpURLConnection conn = (HttpURLConnection) new URL(pixivUrl).openConnection();
             conn.setRequestProperty("Referer", "https://app-api.pixiv.net/");
             // 与 JS 侧 src/api/userAgent.ts 的 PIXIV_USER_AGENT 保持一致
@@ -119,11 +147,14 @@ public class MainActivity extends BridgeActivity {
             String mime = conn.getContentType();
             if (mime == null) mime = "image/jpeg";
 
-            return new WebResourceResponse(
-                    mime,
-                    conn.getContentEncoding(),
-                    conn.getInputStream()
-            );
+            // ── B: Cache-Control immutable 头 ──────────────────────
+            Map<String, String> headers = new HashMap<>();
+            if (browserCacheEnabled) {
+                headers.put("Cache-Control", "public, max-age=31536000, immutable");
+            }
+
+            // 磁盘缓存由 JS 侧 ImageCachePlugin.saveImage() 负责写入，Java 侧不做重复写入
+            return new WebResourceResponse(mime, conn.getContentEncoding(), 200, "OK", headers, conn.getInputStream());
         } catch (Exception e) {
             e.printStackTrace();
             return null;

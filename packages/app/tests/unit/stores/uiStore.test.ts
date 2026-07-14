@@ -303,7 +303,9 @@ describe("resetUiStore", () => {
       showDetailStairs,
       ageConfirmed,
       isAdult,
-      cacheSize,
+      imageCacheDisk,
+      imageCacheBrowser,
+      imageCachePrefetch,
     } = await loadStore();
 
     await setTheme("dark");
@@ -324,7 +326,9 @@ describe("resetUiStore", () => {
     expect(showDetailStairs()).toBe(false);
     expect(ageConfirmed()).toBe(false);
     expect(isAdult()).toBe(false);
-    expect(cacheSize()).toBe(600);
+    expect(imageCacheDisk()).toBe(true);
+    expect(imageCacheBrowser()).toBe(true);
+    expect(imageCachePrefetch()).toBe(true);
     expect(Preferences.set).toHaveBeenCalledWith({
       key: "show_r18",
       value: "false",

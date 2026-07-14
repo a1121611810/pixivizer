@@ -27,6 +27,7 @@ import {
   loadUseDnsOverridePreference,
   loadContentTypePreference,
   loadNovelCachePreference,
+  loadImageCachePrefs,
   loadNovelLayoutModePreference,
   loadLastDismissedVersionPreference,
   setHasUpdate,
@@ -61,6 +62,7 @@ const PersonalCenter = lazy(() => import("./routes/PersonalCenter"));
 const UserIllusts = lazy(() => import("./routes/UserIllusts"));
 const About = lazy(() => import("./routes/About"));
 const ImageHostSettings = lazy(() => import("./routes/ImageHostSettings"));
+const ImageCacheSettings = lazy(() => import("./routes/ImageCacheSettings"));
 const FollowListPage = lazy(() => import("./routes/FollowListPage"));
 const NovelDetail = lazy(() => import("./routes/NovelDetail"));
 const PredictiveBackContainer = lazy(() => import("./components/PredictiveBackContainer"));
@@ -126,6 +128,7 @@ const RootLayout: Component<RouteSectionProps> = (props) => {
       loadUseDnsOverridePreference(),
       loadContentTypePreference(),
       loadNovelCachePreference(),
+      loadImageCachePrefs(),
       loadNovelLayoutModePreference(),
     ]);
 
@@ -355,6 +358,7 @@ const App: Component = () => {
       <Route path="/user/:id" component={PersonalCenter} />
       <Route path="/about" component={About} />
       <Route path="/image-host" component={ImageHostSettings} />
+      <Route path="/image-cache" component={ImageCacheSettings} />
       <Route path="/age-confirmation" component={AgeConfirmation} />
       <Route path="*" component={Login} />
     </Router>

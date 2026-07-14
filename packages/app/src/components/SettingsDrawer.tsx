@@ -15,8 +15,6 @@ import {
   detailQuality,
   setDetailQuality,
   type ImageQuality,
-  cacheSize,
-  setCacheSize,
   usePredictiveBack,
   setUsePredictiveBack,
   isPredictiveBackSupported,
@@ -880,44 +878,33 @@ const SettingsDrawer: Component = () => {
             </div>
           </div>
 
-          {/* Image cache size */}
-          <div class="py-3">
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center gap-3">
-                <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
-                  <FluentIcon name="server" size={24} />
-                </div>
-                <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                  图片缓存限制
-                </p>
-              </div>
-              <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorCompoundBrandForeground1)]">
-                {cacheSize()}
-              </span>
-            </div>
+          {/* Image cache management entry */}
+          <div
+            class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
+            onClick={() => {
+              closeSettingsDrawer();
+              navigate("/image-cache");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                closeSettingsDrawer();
+                navigate("/image-cache");
+              }
+            }}
+            role="button"
+            tabindex="0"
+            aria-label="图片缓存"
+          >
             <div class="flex items-center gap-3">
-              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">
-                100
-              </span>
-              <input
-                type="range"
-                min="100"
-                max="1000"
-                step="100"
-                value={cacheSize()}
-                onInput={(e) => setCacheSize(Number(e.currentTarget.value))}
-                class="flex-1 h-1 rounded-[var(--borderRadiusCircular)] cursor-pointer"
-                style={{
-                  "accent-color": "var(--colorCompoundBrandBackground)",
-                }}
-              />
-              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0">
-                1000
-              </span>
+              <div class="relative w-6 h-6 flex-shrink-0 text-[var(--colorNeutralForeground2)]">
+                <FluentIcon name="server" size={24} />
+              </div>
+              <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
+                图片缓存
+              </p>
             </div>
-            <p class="mt-2 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-              设置同时限制缓存条目数和总内存上限（约 200MB），超出时优先淘汰大图。推荐 400~600。
-            </p>
+            <span class="text-[var(--colorNeutralForeground3)] ml-2">→</span>
           </div>
 
           {/* ── Novel cache ── */}

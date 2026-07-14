@@ -25,7 +25,6 @@ interface CacheEntry {
   byteSize: number;
 }
 
-let maxCacheSize = 600;
 /** 最大缓存字节数（约 200MB） */
 const MAX_CACHE_BYTES = 200 * 1024 * 1024;
 let totalBytes = 0;
@@ -61,17 +60,9 @@ export function checkImageCache(originalUrl: string): string | undefined {
   return undefined;
 }
 
-/** Update the cache size limit. If lowered, evict oldest entries immediately. */
-export function setMaxCacheSize(n: number): void {
-  maxCacheSize = n;
-  while (cache.size > maxCacheSize || totalBytes > MAX_CACHE_BYTES) {
-    evictOldest();
-  }
-}
-
 /** 存入缓存，创建持久 Blob URL；超出容量或字节预算时淘汰并释放最旧条目 */
 function cacheSet(key: string, blob: Blob) {
-  while (cache.size >= maxCacheSize || totalBytes + blob.size > MAX_CACHE_BYTES) {
+  while (totalBytes + blob.size > MAX_CACHE_BYTES) {
     evictOldest();
   }
   const blobUrl = URL.createObjectURL(blob);

@@ -1,10 +1,9 @@
-import { createEffect, createRoot, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { App } from "@capacitor/app";
 import { Device } from "@capacitor/device";
-import { setMaxCacheSize } from "../utils/imageLoader";
 import { setPredictiveBackEnabled } from "../services/predictiveBack";
 
 type Tab = "recommended" | "follow" | "bookmarks" | "me";
@@ -12,7 +11,6 @@ export type { Tab };
 export type ContentType = "illust" | "novel";
 export type Theme = "light" | "dark" | "system";
 export type ImageQuality = "medium" | "large" | "original";
-export type CacheSize = number;
 export type LayoutMode = "waterfall" | "single" | "grid";
 export type NovelLayoutMode = "list" | "coverWall" | "textList";
 
@@ -38,6 +36,9 @@ const PREF_KEY_CONTENT_TYPE = "content_type";
 const PREF_KEY_NOVEL_LAYOUT_MODE = "novel_layout_mode";
 const PREF_KEY_NOVEL_CACHE_ENABLED = "novel_cache_enabled";
 const PREF_KEY_NOVEL_CACHE_SIZE = "novel_cache_size";
+const PREF_KEY_IMAGE_CACHE_DISK = "image_cache_disk";
+const PREF_KEY_IMAGE_CACHE_BROWSER = "image_cache_browser";
+const PREF_KEY_IMAGE_CACHE_PREFETCH = "image_cache_prefetch";
 const PREF_KEY_DISMISSED_UPDATE_VERSION = "dismissed_update_version";
 const ANDROID_16_API_LEVEL = 36;
 
@@ -93,7 +94,11 @@ const initialState = () => {
     // 图片质量
     listQuality: "medium" as ImageQuality,
     detailQuality: "medium" as ImageQuality,
-    cacheSize: 600 as CacheSize,
+
+    // 图片缓存三层开关（ADR-0003）
+    imageCacheDisk: true,      // A: Java 磁盘缓存
+    imageCacheBrowser: true,   // B: 浏览器缓存头
+    imageCachePrefetch: true,  // C: JS 预取
 
     // 预测返回手势
     usePredictiveBack: false,
@@ -216,8 +221,48 @@ export const setListQuality = (q: ImageQuality) => setState("listQuality", q);
 export const detailQuality = () => state.detailQuality;
 export const setDetailQuality = (q: ImageQuality) => setState("detailQuality", q);
 
-export const cacheSize = () => state.cacheSize;
-export const setCacheSize = (s: CacheSize) => setState("cacheSize", s);
+
+// 图片缓存三层开关（ADR-0003）
+export const imageCacheDisk = () => state.imageCacheDisk;
+export const setImageCacheDisk = async (v: boolean): Promise<void> => {
+  setState("imageCacheDisk", v);
+  try {
+    await Preferences.set({ key: PREF_KEY_IMAGE_CACHE_DISK, value: String(v) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist imageCacheDisk", e);
+  }
+};
+export const imageCacheBrowser = () => state.imageCacheBrowser;
+export const setImageCacheBrowser = async (v: boolean): Promise<void> => {
+  setState("imageCacheBrowser", v);
+  try {
+    await Preferences.set({ key: PREF_KEY_IMAGE_CACHE_BROWSER, value: String(v) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist imageCacheBrowser", e);
+  }
+};
+export const imageCachePrefetch = () => state.imageCachePrefetch;
+export const setImageCachePrefetch = async (v: boolean): Promise<void> => {
+  setState("imageCachePrefetch", v);
+  try {
+    await Preferences.set({ key: PREF_KEY_IMAGE_CACHE_PREFETCH, value: String(v) });
+  } catch (e) {
+    console.warn("[uiStore] Failed to persist imageCachePrefetch", e);
+  }
+};
+
+export async function loadImageCachePrefs(): Promise<void> {
+  try {
+    const disk = await Preferences.get({ key: PREF_KEY_IMAGE_CACHE_DISK });
+    if (disk.value !== null) setState("imageCacheDisk", disk.value === "true");
+    const browser = await Preferences.get({ key: PREF_KEY_IMAGE_CACHE_BROWSER });
+    if (browser.value !== null) setState("imageCacheBrowser", browser.value === "true");
+    const prefetch = await Preferences.get({ key: PREF_KEY_IMAGE_CACHE_PREFETCH });
+    if (prefetch.value !== null) setState("imageCachePrefetch", prefetch.value === "true");
+  } catch (e) {
+    console.warn("[uiStore] Failed to load image cache prefs", e);
+  }
+}
 
 export const usePredictiveBack = () => state.usePredictiveBack;
 export const isPredictiveBackSupported = () => state.isPredictiveBackSupported;
@@ -600,8 +645,10 @@ export async function resetUiStore(): Promise<void> {
   await setThemePersisted("system");
   setState("listQuality", "medium");
   setState("detailQuality", "medium");
-  setState("cacheSize", 600);
   await setAutoHideNavBar(true);
+  await setImageCacheDisk(true);
+  await setImageCacheBrowser(true);
+  await setImageCachePrefetch(true);
   await setShowR18(false);
   await setShowR18G(false);
   await setLayoutMode("waterfall");
@@ -631,9 +678,3 @@ try {
   // 测试环境或 SSR 中 window.matchMedia 不可用，静默跳过
 }
 
-// Sync cache size limit to imageLoader whenever it changes
-createRoot(() => {
-  createEffect(() => {
-    setMaxCacheSize(state.cacheSize);
-  });
-});
