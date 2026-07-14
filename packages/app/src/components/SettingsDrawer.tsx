@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/solid-router";
 import { Preferences } from "@capacitor/preferences";
 import { Capacitor } from "@capacitor/core";
 import FluentIcon from "./ui/FluentIcon";
+import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import {
   showSettingsDrawer,
   closeSettingsDrawer,
@@ -176,18 +177,26 @@ const SettingsDrawer: Component = () => {
     action();
   }
 
-  // Reset animation state and register back-button listener each time opened
+  // SettingsDrawer 打开时压入 overlay 栈，关闭时弹出；同步关闭嵌套的 BlocklistSheet
   createEffect(() => {
     if (showSettingsDrawer()) {
       setProfileError(false);
       loadProfile().catch(() => setProfileError(true)); // 利用缓存，几乎零成本
-      (window as any).__settingsOpen = true;
-
-      window.addEventListener("closeSettings", closeSettingsDrawer);
+      pushOverlay("settingsDrawer", closeSettingsDrawer);
 
       onCleanup(() => {
-        (window as any).__settingsOpen = false;
-        window.removeEventListener("closeSettings", closeSettingsDrawer);
+        setShowBlocklist(false);
+        popOverlay("settingsDrawer");
+      });
+    }
+  });
+
+  // BlocklistSheet 打开时压入 overlay 栈，确保返回键先关闭子面板
+  createEffect(() => {
+    if (showBlocklist()) {
+      pushOverlay("blocklistSheet", () => setShowBlocklist(false));
+      onCleanup(() => {
+        popOverlay("blocklistSheet");
       });
     }
   });

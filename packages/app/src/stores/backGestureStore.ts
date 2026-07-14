@@ -4,6 +4,7 @@ import { createSignal } from "solid-js";
 export type OverlayType =
   | "viewer"
   | "settingsDrawer"
+  | "blocklistSheet"
   | "seriesSheet"
   | "readerSettingsSheet"
   | "commentSheet"
