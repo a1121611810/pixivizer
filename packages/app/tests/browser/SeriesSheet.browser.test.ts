@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
  * SeriesSheet 组件浏览器测试。
  *
  * 当前限制：浏览器模式的 vi.mock 不支持多层依赖链（组件 import
- * 会触发 @capacitor/core、@solidjs/router 等模块加载），因此无法
+ * 会触发 @capacitor/core、@tanstack/solid-router 等模块加载），因此无法
  * 使用 @solidjs/testing-library 渲染组件。
  *
  * 安装 @solidjs/testing-library 后如需添加组件渲染测试，需先解决

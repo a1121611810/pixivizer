@@ -4,10 +4,20 @@ import { describe, it, expect, vi } from "vitest";
 
 const mockNavigate = vi.fn();
 
-vi.mock("@solidjs/router", () => ({
+vi.mock("@tanstack/solid-router", () => ({
   useNavigate: () => mockNavigate,
-  useLocation: () => ({ pathname: "/novel/1" }),
-  useParams: () => ({ id: "1" }),
+  useLocation: () => () => ({ pathname: "/novel/1" }),
+  useParams: () => () => ({ id: "1" }),
+  useRouter: () => ({ history: { back: vi.fn() } }),
+  getRouteApi: () => ({
+    useLoaderData: () => () => ({
+      error: null,
+      novel: mockNovel.novel,
+      text: generateText(50),
+      nav: {},
+      images: {},
+    }),
+  }),
   useBeforeLeave: (fn: unknown) => fn as any,
 }));
 

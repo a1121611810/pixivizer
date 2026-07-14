@@ -226,9 +226,6 @@ importers:
       '@fluentui/web-components':
         specifier: 3.0.0-rc.31
         version: 3.0.0-rc.31(@microsoft/fast-element@3.0.0)(@microsoft/focusgroup-polyfill@1.5.0)
-      '@solidjs/router':
-        specifier: ^0.16.1
-        version: 0.16.1(solid-js@1.9.13)
       '@tanstack/solid-router':
         specifier: 1.170.17
         version: 1.170.17(solid-js@1.9.13)
@@ -4579,6 +4576,7 @@ snapshots:
   '@solidjs/router@0.16.1(solid-js@1.9.13)':
     dependencies:
       solid-js: 1.9.13
+    optional: true
 
   '@solidjs/testing-library@0.8.10(@solidjs/router@0.16.1(solid-js@1.9.13))(solid-js@1.9.13)':
     dependencies:
@@ -6595,7 +6593,6 @@ time:
   '@fluentui/web-components@3.0.0-rc.31': '2026-06-29T04:08:36.340Z'
   '@playwright/test@1.61.1': '2026-06-23T19:49:12.825Z'
   '@resvg/resvg-js@2.6.2': '2024-03-26T13:43:37.598Z'
-  '@solidjs/router@0.16.1': '2026-03-17T23:16:42.276Z'
   '@solidjs/testing-library@0.8.10': '2024-09-25T13:24:08.486Z'
   '@tanstack/solid-router@1.170.17': '2026-07-01T21:37:42.831Z'
   '@types/node@26.0.1': '2026-06-24T20:33:01.352Z'

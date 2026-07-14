@@ -71,7 +71,7 @@
 | 类别             | 技术                                                                  |   版本 |
 | :--------------- | :-------------------------------------------------------------------- | -----: |
 | **框架**         | [SolidJS](https://www.solidjs.com/)                                   | 1.9.13 |
-| **路由**         | [@solidjs/router](https://github.com/solidjs/solid-router)            | 0.16.1 |
+| **路由**         | [@tanstack/solid-router](https://github.com/TanStack/router)            | 1.170.17 |
 | **构建工具**     | [vite-plus](https://github.com/asonkeri/vite-plus)（封装 Vite）       |  0.2.1 |
 | **打包工具**     | [Vite](https://vite.dev/)                                             |  8.1.0 |
 | **样式引擎**     | [UnoCSS](https://unocss.dev/)                                         | 66.7.3 |
@@ -247,7 +247,7 @@ pnpm dev
 | Category            | Technology                                                            |  Version |
 | :------------------ | :-------------------------------------------------------------------- | -------: |
 | **Framework**       | [SolidJS](https://www.solidjs.com/)                                   |   1.9.13 |
-| **Routing**         | [@solidjs/router](https://github.com/solidjs/solid-router)            |   0.16.1 |
+| **Routing**         | [@tanstack/solid-router](https://github.com/TanStack/router)            |   1.170.17 |
 | **Build Tool**      | [vite-plus](https://github.com/asonkeri/vite-plus) (wraps Vite)       |    0.2.1 |
 | **Bundler**         | [Vite](https://vite.dev/)                                             |    8.1.0 |
 | **Styling Engine**  | [UnoCSS](https://unocss.dev/)                                         |   66.7.3 |

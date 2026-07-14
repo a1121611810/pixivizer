@@ -47,7 +47,7 @@ import { SeriesSheet } from "@/components/SeriesSheet";
 
 // 需要 mock 依赖
 vi.mock("@capacitor/core", () => ({ ... }));
-vi.mock("@solidjs/router", () => ({ useNavigate: () => vi.fn() }));
+vi.mock("@tanstack/solid-router", () => ({ useNavigate: () => vi.fn() }));
 
 it("renders when open", () => {
   render(() => <SeriesSheet isOpen={true} ... />);

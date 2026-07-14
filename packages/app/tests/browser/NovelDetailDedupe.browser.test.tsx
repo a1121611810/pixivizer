@@ -6,10 +6,12 @@ const mockLoadDetail = vi.fn();
 const mockFetchNovelData = vi.fn();
 const mockNovelCacheEnabled = vi.fn().mockReturnValue(false);
 
-vi.mock("@solidjs/router", () => ({
-  useParams: () => ({ id: "42" }),
+vi.mock("@tanstack/solid-router", () => ({
+  useParams: () => () => ({ id: "42" }),
   useNavigate: () => vi.fn(),
-  useLocation: () => ({ pathname: "/novel/42" }),
+  useLocation: () => () => ({ pathname: "/novel/42" }),
+  useRouter: () => ({ history: { back: vi.fn() } }),
+  getRouteApi: () => ({ useLoaderData: () => () => undefined }),
   useBeforeLeave: () => {},
 }));
 
@@ -20,6 +22,7 @@ vi.mock("@/api/novel", () => ({
 
 vi.mock("@/stores/uiStore", () => ({
   novelCacheEnabled: () => mockNovelCacheEnabled(),
+  useDnsOverride: () => false,
 }));
 
 vi.mock("@/components/PixivImage", () => ({

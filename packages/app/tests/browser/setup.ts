@@ -32,10 +32,12 @@ vi.mock("@capacitor/device", () => ({
   Device: { getInfo: () => Promise.resolve({ androidSDKVersion: 30 }) },
 }));
 
-// ── SolidJS Router ──
-vi.mock("@solidjs/router", () => ({
+// ── TanStack Router ──
+vi.mock("@tanstack/solid-router", () => ({
   useNavigate: () => vi.fn(),
-  useLocation: () => ({ pathname: "/" }),
-  useParams: () => ({}),
+  useLocation: () => () => ({ pathname: "/" }),
+  useParams: () => () => ({}),
+  useRouter: () => ({ history: { back: vi.fn() } }),
+  getRouteApi: () => ({ useLoaderData: () => () => undefined }),
   useBeforeLeave: (fn: unknown) => fn as any,
 }));
