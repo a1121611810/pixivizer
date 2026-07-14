@@ -7,11 +7,24 @@ import type { SeriesNavigation } from "../../src/api/types";
 
 const mockNavigate = vi.fn();
 
+const mockLoaderData = () => {
+  const { novel } = makeMockNovel();
+  return {
+    error: null,
+    novel,
+    text: "正文内容\n\n第二段",
+    nav: currentNavigation,
+    images: {},
+  };
+};
+
 // Override router mock from setup.ts — provide novel ID in params
-vi.mock("@solidjs/router", () => ({
+vi.mock("@tanstack/solid-router", () => ({
   useNavigate: () => mockNavigate,
-  useLocation: () => ({ pathname: `/novel/${currentNovelId}` }),
-  useParams: () => ({ id: String(currentNovelId) }),
+  useLocation: () => () => ({ pathname: `/novel/${currentNovelId}` }),
+  useParams: () => () => ({ id: String(currentNovelId) }),
+  useRouter: () => ({ history: { back: mockNavigate } }),
+  getRouteApi: () => ({ useLoaderData: () => () => mockLoaderData() }),
   useBeforeLeave: (fn: unknown) => fn as any,
 }));
 

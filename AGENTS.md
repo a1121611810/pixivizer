@@ -6,8 +6,8 @@
 
 - **技术栈**: SolidJS 1.9 + TypeScript 6.0 (strict) + Vite 8.0 + UnoCSS 66.7 + Capacitor 8.4；小说正文布局使用 `@chenglou/pretext`
 - **Monorepo**: pnpm workspace，含两个子包：`pictelio-app`（SPA 主体）和 `pictelio-website`（VitePress 落地页）
-- **入口**: `packages/app/src/main.tsx` → `packages/app/src/App.tsx`（Solid Router）
-- **路由**: `/recommended` `/following` `/illust/:id` `/novel/:id` `/novel/bookmarks` `/bookmarks` `/me` `/user/:id` `/user/:id/illusts` `/login` `/age-confirmation` `/about` `/debug`
+- **入口**: `packages/app/src/main.tsx` → `packages/app/src/App.tsx`（TanStack Router）
+- **路由**: `/login` `/recommended` `/following` `/illust/$id` `/novel/$id` `/bookmarks` `/me` `/user/$id` `/user/$id/illusts` `/user/$id/following` `/user/$id/followers` `/about` `/image-host` `/image-cache` `/age-confirmation` `/debug`
 - **设计系统**: **强制** Microsoft Fluent Design System 2 — 所有视觉和交互决策基于 Fluent 令牌和规范（详见「Fluent Design 规范」章节）
 - **Pixiv API**: 自建 HTTP 客户端 (`src/api/client.ts`)，双模式（Web: fetch + Vite 代理 / Native: CapacitorHttp 直连），iOS OAuth 凭证策略（Android 已弃用），401 自动刷新 + 防死循环
 - **CSS 架构**: 分层加载 `reset.css` → `tokens.css` → `base.css` → `virtual:uno.css`；PostCSS `postcss-pxtorem` 自动转换字号为 rem；Fluent Web Components 主题同步
@@ -332,13 +332,13 @@ packages/app/src/
 - **代码探索**：使用 CodeGraph 作为默认代码理解工具，普通搜索工具仅作 fallback
 - **代理配置**：开发时自动读取 `https_proxy` / `HTTPS_PROXY` / `http_proxy` / `HTTP_PROXY` 环境变量，回退到 `http://127.0.0.1:10808`
 - **PWA**: 通过 `vite-plugin-pwa` 生成 Service Worker，缓存策略: Pixiv 图片 CacheFirst（30 天/500 条），其余默认 Precaching
-- **Node 版本**: 18+，包管理器 pnpm 11.9.0（`devEngines` 强制校验）
+- **Node 版本**: 20.19+，包管理器 pnpm 11.9.0（`devEngines` 强制校验）
 
 ## 测试
 
 - **框架**: Vitest 4.1，通过 `vite-plus` 的 `vp test` 运行
 - **环境**: `node`（配置在 `vitest.config.ts`）
-- **测试文件位置**: `src/**/__tests__/*.test.ts`、`src/**/*.test.ts`
+- **测试文件位置**: `tests/unit/**/*.test.{ts,tsx}`（配置在 `vitest.config.ts`），辅助函数/内部模块的就近测试可放在 `src/**/*.test.ts`
 - **现有测试**:
   - `uiStore.test.ts` — UI 状态管理测试
   - `feedStore.test.ts` — Feed 数据状态测试
@@ -362,7 +362,7 @@ packages/app/src/
 
 - **代码智能规范**：涉及代码理解、调用链追踪、影响分析时，默认优先使用 CodeGraph，详见上方「代码智能规范」章节。
 - **Web API / 浏览器兼容性查询优先用 MCP MDN**：需要查 HTML、CSS、JS 标准 API 语法或浏览器兼容性时，优先使用 `mcp__mdn__*` 系列工具（`get-doc` / `search` / `get-compat`），这是 MDN 官方提供的 MCP 接口。
-- **SolidJS Suspense 规则**：路由组件（位于 `<Suspense>` 嵌套树内的组件）**禁止**使用 `createResource`。改用 `createSignal` + `createEffect` + 手动 fetch（带 AbortController）。`createResource` 仅限叶子组件或独立子树中使用。App.tsx 的 `<Suspense>` 包裹了整个路由树，任何路由级组件使用 `createResource` 都会触发整页切换为 fallback。
+- **路由数据规则**：路由级异步数据统一通过 `@tanstack/solid-router` 的 `loader` 获取；组件内局部异步仍使用 `createSignal` + `createEffect` + 手动 fetch（带 AbortController）。`createResource` 不用于路由组件。
 
 ## 任务完成前自检
 

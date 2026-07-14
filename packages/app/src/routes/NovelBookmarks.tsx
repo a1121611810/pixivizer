@@ -1,5 +1,5 @@
 import { type Component, createEffect, onMount, onCleanup, Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@tanstack/solid-router";
 import {
   novels,
   nextUrl,
@@ -18,6 +18,7 @@ import { user } from "../stores/authStore";
 import NovelVirtualFeed from "../components/NovelVirtualFeed";
 import SeriesSheet from "../components/SeriesSheet";
 import { novelLayoutMode } from "../stores/uiStore";
+import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import { createSignal } from "solid-js";
 
 const r18Handler = () => refresh();
@@ -45,6 +46,16 @@ const NovelBookmarks: Component = () => {
     });
     setSheetOpen(true);
   }
+
+  // 将系列目录面板状态注册到 overlay 栈
+  createEffect(() => {
+    if (sheetOpen()) {
+      pushOverlay("seriesSheet", () => setSheetOpen(false));
+      onCleanup(() => {
+        popOverlay("seriesSheet");
+      });
+    }
+  });
 
   onMount(() => {
     // 返回小说收藏页时静默刷新
@@ -107,8 +118,8 @@ const NovelBookmarks: Component = () => {
         loading={loading()}
         error={error()}
         hasMore={nextUrl() !== null}
-        onNovelClick={(id) => navigate(`/novel/${id}`)}
-        onAuthorClick={(id) => navigate(`/user/${id}`)}
+        onNovelClick={(id) => void navigate({ to: `/novel/${id}` })}
+        onAuthorClick={(id) => void navigate({ to: `/user/${id}` })}
         onLoadMore={fetchMore}
         onRefresh={refresh}
         restoreScrollTop={cached ? getFeedScrollY("bookmarks") : undefined}

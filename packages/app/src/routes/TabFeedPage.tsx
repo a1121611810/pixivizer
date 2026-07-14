@@ -1,5 +1,5 @@
 import { type Component, onMount, onCleanup, Show, createMemo, createSignal } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@tanstack/solid-router";
 import {
   illusts,
   nextUrl,
@@ -18,13 +18,7 @@ import {
   setRecommendSubTab,
   type RecommendSubTab,
 } from "../stores/feedStore";
-import {
-  setCurrentTab,
-  openSettingsDrawer,
-  layoutMode,
-  contentType,
-  setContentType,
-} from "../stores/uiStore";
+import { openSettingsDrawer, layoutMode, contentType, setContentType } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import type { PixivIllust } from "../api/types";
 import { user, isLoggedIn } from "../stores/authStore";
@@ -59,11 +53,9 @@ const TabFeedPage: Component<Props> = (props) => {
     return illusts(); // feedStore.computeFollowIllusts() already handles follow tab filtering
   });
 
-  // Set current tab on mount so feedStore knows which data to fetch
+  // Initialize abort controller for subsequent feed operations
   onMount(() => {
-    setCurrentTab(props.tab);
     abortController = new AbortController();
-    void ensureLoaded(abortController.signal);
   });
 
   // Save scroll + abort pending requests on unmount
@@ -223,7 +215,7 @@ const TabFeedPage: Component<Props> = (props) => {
               loading={loading() || refreshing()}
               error={error()}
               hasMore={nextUrl() !== null}
-              onIllustClick={(id) => navigate(`/illust/${id}`)}
+              onIllustClick={(id) => void navigate({ to: `/illust/${id}` })}
               onLoadMore={() => fetchMore(abortController?.signal)}
               onRefresh={() => refresh(abortController?.signal)}
               skipAnimation={cached}

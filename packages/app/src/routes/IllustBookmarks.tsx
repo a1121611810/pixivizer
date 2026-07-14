@@ -1,5 +1,5 @@
 import { type Component, createEffect, onMount, onCleanup } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@tanstack/solid-router";
 import {
   illusts,
   nextUrl,
@@ -85,7 +85,7 @@ const IllustBookmarks: Component = () => {
         loading={loading()}
         error={error()}
         hasMore={nextUrl() !== null}
-        onIllustClick={(id) => navigate(`/illust/${id}`)}
+        onIllustClick={(id) => void navigate({ to: `/illust/${id}` })}
         onLoadMore={fetchMore}
         onRefresh={refresh}
         emptyText={restrict() === "public" ? "公开收藏夹为空" : "非公开收藏夹为空"}

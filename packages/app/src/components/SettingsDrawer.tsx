@@ -1,8 +1,9 @@
 import { type Component, Show, createSignal, createEffect, onCleanup } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@tanstack/solid-router";
 import { Preferences } from "@capacitor/preferences";
 import { Capacitor } from "@capacitor/core";
 import FluentIcon from "./ui/FluentIcon";
+import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import {
   showSettingsDrawer,
   closeSettingsDrawer,
@@ -119,7 +120,7 @@ const SettingsDrawer: Component = () => {
 
   function reconfirmAge() {
     setAgeConfirmation(false, false);
-    navigate("/age-confirmation?reconfirm=true");
+    void navigate({ to: "/age-confirmation", search: { reconfirm: "true" } });
   }
 
   // Auto-hide the age gate hint toast
@@ -142,7 +143,7 @@ const SettingsDrawer: Component = () => {
     try {
       await logout();
       closeSettingsDrawer();
-      navigate("/login", { replace: true });
+      void navigate({ to: "/login", replace: true });
       setActionToast("已退出登录");
     } catch {
       setActionToast("退出登录失败");
@@ -159,7 +160,7 @@ const SettingsDrawer: Component = () => {
       await Preferences.clear();
       await resetUiStore();
       closeSettingsDrawer();
-      navigate("/login", { replace: true });
+      void navigate({ to: "/login", replace: true });
       setActionToast("本地数据已清除");
     } catch {
       setActionToast("清除失败，请重试");
@@ -176,18 +177,26 @@ const SettingsDrawer: Component = () => {
     action();
   }
 
-  // Reset animation state and register back-button listener each time opened
+  // SettingsDrawer 打开时压入 overlay 栈，关闭时弹出；同步关闭嵌套的 BlocklistSheet
   createEffect(() => {
     if (showSettingsDrawer()) {
       setProfileError(false);
       loadProfile().catch(() => setProfileError(true)); // 利用缓存，几乎零成本
-      (window as any).__settingsOpen = true;
-
-      window.addEventListener("closeSettings", closeSettingsDrawer);
+      pushOverlay("settingsDrawer", closeSettingsDrawer);
 
       onCleanup(() => {
-        (window as any).__settingsOpen = false;
-        window.removeEventListener("closeSettings", closeSettingsDrawer);
+        setShowBlocklist(false);
+        popOverlay("settingsDrawer");
+      });
+    }
+  });
+
+  // BlocklistSheet 打开时压入 overlay 栈，确保返回键先关闭子面板
+  createEffect(() => {
+    if (showBlocklist()) {
+      pushOverlay("blocklistSheet", () => setShowBlocklist(false));
+      onCleanup(() => {
+        popOverlay("blocklistSheet");
       });
     }
   });
@@ -301,7 +310,7 @@ const SettingsDrawer: Component = () => {
                   class="flex-1 text-center cursor-pointer rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
                   onClick={() => {
                     closeSettingsDrawer();
-                    navigate(`/user/${user()!.id}/illusts`);
+                    void navigate({ to: `/user/${user()!.id}/illusts` });
                   }}
                   role="button"
                   tabindex="0"
@@ -323,7 +332,7 @@ const SettingsDrawer: Component = () => {
                   class="flex-1 text-center cursor-pointer rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
                   onClick={() => {
                     closeSettingsDrawer();
-                    navigate(`/user/${user()!.id}/following`);
+                    void navigate({ to: `/user/${user()!.id}/following` });
                   }}
                   role="button"
                   tabindex="0"
@@ -341,7 +350,7 @@ const SettingsDrawer: Component = () => {
                   class="flex-1 text-center cursor-pointer rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
                   onClick={() => {
                     closeSettingsDrawer();
-                    navigate(`/user/${user()!.id}/followers`);
+                    void navigate({ to: `/user/${user()!.id}/followers` });
                   }}
                   role="button"
                   tabindex="0"
@@ -843,13 +852,13 @@ const SettingsDrawer: Component = () => {
             class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
             onClick={() => {
               closeSettingsDrawer();
-              navigate("/image-cache");
+              void navigate({ to: "/image-cache" });
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 closeSettingsDrawer();
-                navigate("/image-cache");
+                void navigate({ to: "/image-cache" });
               }
             }}
             role="button"
@@ -872,13 +881,13 @@ const SettingsDrawer: Component = () => {
             class="flex items-center justify-between py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)] -mx-2 px-2"
             onClick={() => {
               closeSettingsDrawer();
-              navigate("/image-host");
+              void navigate({ to: "/image-host" });
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 closeSettingsDrawer();
-                navigate("/image-host");
+                void navigate({ to: "/image-host" });
               }
             }}
             role="button"
@@ -906,7 +915,7 @@ const SettingsDrawer: Component = () => {
                 on:change={() => {
                   if (!imageHostState().masterEnabled) {
                     closeSettingsDrawer();
-                    navigate("/image-host");
+                    void navigate({ to: "/image-host" });
                   } else {
                     setMasterEnabled(false);
                   }
@@ -1160,13 +1169,13 @@ const SettingsDrawer: Component = () => {
             class="flex items-center justify-between mx-0 mb-4 px-1 py-3 cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] transition-transform duration-[var(--durationFast)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] rounded-[var(--borderRadiusMedium)]"
             onClick={() => {
               closeSettingsDrawer();
-              navigate("/about");
+              void navigate({ to: "/about" });
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 closeSettingsDrawer();
-                navigate("/about");
+                void navigate({ to: "/about" });
               }
             }}
             role="button"

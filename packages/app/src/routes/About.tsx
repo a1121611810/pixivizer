@@ -1,5 +1,5 @@
 import { type Component } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useRouter } from "@tanstack/solid-router";
 import PageTransition from "../components/PageTransition";
 import FluentIcon from "../components/ui/FluentIcon";
 
@@ -94,7 +94,7 @@ const sections: AboutSection[] = [
 
 // ── Component ──
 const About: Component = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <PageTransition>
@@ -104,7 +104,7 @@ const About: Component = () => {
           <fluent-button
             appearance="subtle"
             aria-label="返回"
-            on:click={() => navigate(-1)}
+            on:click={() => router.history.back()}
             style="min-width:32px;width:32px;height:32px;padding:0"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">

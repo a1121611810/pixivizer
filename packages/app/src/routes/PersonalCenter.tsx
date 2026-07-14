@@ -1,5 +1,5 @@
-import { type Component, onMount, onCleanup, createSignal, createEffect, Show } from "solid-js";
-import { useNavigate, useParams } from "@solidjs/router";
+import { type Component, onMount, onCleanup, createSignal, Show } from "solid-js";
+import { useNavigate, useParams, useRouter } from "@tanstack/solid-router";
 import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
 import { resolveImageUrl } from "../utils/imageLoader";
@@ -55,7 +55,6 @@ import {
   loadMoreFollowers,
   toggleUserFollow,
   switchTab,
-  resetData,
 } from "../stores/userStore";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
@@ -76,8 +75,9 @@ const list = () => (activeTab() === "following" ? followingList() : followersLis
 
 const PersonalCenter: Component<Props> = (props) => {
   const navigate = useNavigate();
-  const params = useParams<{ id: string }>();
-  const targetUserId = () => Number(props.userId || params.id || user()?.id || 0);
+  const router = useRouter();
+  const params = useParams({ strict: false });
+  const targetUserId = () => Number(props.userId || params().id || user()?.id || 0);
   const isSelf = () => targetUserId() === Number(user()?.id ?? 0);
   const displayUser = () => (isSelf() ? user() : viewedUser());
   const [collapsed, setCollapsed] = createSignal(false);
@@ -102,18 +102,6 @@ const PersonalCenter: Component<Props> = (props) => {
     }
     window.addEventListener("scroll", onScrollRaf, { passive: true });
     onCleanup(() => window.removeEventListener("scroll", onScrollRaf));
-  });
-
-  // 用户切换时加载，缓存命中则跳过请求
-  let prevUid = 0;
-  createEffect(() => {
-    const uid = targetUserId();
-    if (uid === prevUid) return;
-    prevUid = uid;
-    resetData();
-    loadProfile(uid);
-    loadFollowing(uid);
-    window.scrollTo(0, 0);
   });
 
   const { attach: sentinelAttach } = createSentinelPaginator({
@@ -144,7 +132,7 @@ const PersonalCenter: Component<Props> = (props) => {
             <fluent-button
               appearance="subtle"
               aria-label="返回"
-              on:click={() => navigate(-1)}
+              on:click={() => router.history.back()}
               style="min-width:32px;width:32px;height:32px;padding:0"
             >
               ←
@@ -258,7 +246,7 @@ const PersonalCenter: Component<Props> = (props) => {
               <div class="surface-card rounded-[var(--borderRadiusMedium)] px-4 py-3 flex">
                 <div
                   class="flex-1 text-center cursor-pointer rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
-                  onClick={() => navigate(`/user/${targetUserId()}/illusts`)}
+                  onClick={() => void navigate({ to: `/user/${targetUserId()}/illusts` })}
                   role="button"
                   tabindex="0"
                   aria-label="查看作品"
@@ -329,7 +317,7 @@ const PersonalCenter: Component<Props> = (props) => {
             {list().map((preview) => (
               <div
                 class="surface-card rounded-[var(--borderRadiusMedium)] p-3 transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none"
-                onClick={() => navigate(`/user/${preview.user.id}`)}
+                onClick={() => void navigate({ to: `/user/${preview.user.id}` })}
               >
                 <div class="flex items-center gap-3">
                   <div class="relative w-10 h-10 flex-shrink-0">

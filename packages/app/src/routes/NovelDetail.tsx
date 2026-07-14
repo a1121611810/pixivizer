@@ -6,19 +6,25 @@ import {
   createEffect,
   createMemo,
   Show,
+  Switch,
+  Match,
   For,
   onCleanup,
   onMount,
+  batch,
 } from "solid-js";
-import { useParams, useNavigate } from "@solidjs/router";
+import { useParams, useNavigate, useRouter, getRouteApi } from "@tanstack/solid-router";
 import { resolveImageUrl } from "../utils/imageLoader";
 import PixivImage from "../components/PixivImage";
+import ImageViewer from "@/components/ImageViewer";
 import LoadingSpinner from "../components/LoadingSpinner";
 import FluentIcon from "../components/ui/FluentIcon";
 import NovelSearchBar from "../components/NovelSearchBar";
 import { createNovelSearch } from "../primitives/createNovelSearch";
 import { createNovelVirtualLayout } from "../primitives/createNovelVirtualLayout";
-import { createNovelLoader } from "../primitives/createNovelLoader";
+import type { PixivNovel, SeriesNavigation } from "@/api/types";
+import type { NovelImagesMap } from "@/api/novel";
+import { getEntry, peekEntry, loadNovelEntry, type NovelCacheEntry } from "@/stores/novelCache";
 import {
   readerStyle,
   fontSize,
@@ -38,6 +44,9 @@ import ReaderSettingsSheet from "../components/ReaderSettingsSheet";
 import SeriesSheet from "../components/SeriesSheet";
 import PageTransition from "../components/PageTransition";
 import CommentOverlay from "../components/CommentOverlay";
+import { pushOverlay, popOverlay } from "../stores/backGestureStore";
+
+const routeApi = getRouteApi("/novel/$id");
 
 // ── Scroll-driven hide/show constants ──
 const HIDE_THRESHOLD = 30;
@@ -59,6 +68,13 @@ interface NovelImageBlockProps {
 
 const NovelImageBlock: Component<NovelImageBlockProps> = (props) => {
   const dim = createMemo(() => props.dimensions()[props.block.imageId]);
+  const aspectRatio = createMemo(() => {
+    const d = dim();
+    if (d && d.width > 0 && d.height > 0) {
+      return `${d.width} / ${d.height}`;
+    }
+    return "16 / 9";
+  });
 
   function handleClick() {
     if (dim()) props.onClick();
@@ -68,12 +84,7 @@ const NovelImageBlock: Component<NovelImageBlockProps> = (props) => {
     <figure
       class="novel-image-block overflow-hidden m-0"
       classList={{ "cursor-pointer": dim() !== null && dim() !== undefined }}
-      style={{
-        "aspect-ratio":
-          dim() && dim().width > 0 && dim().height > 0
-            ? `${dim().width} / ${dim().height}`
-            : "16 / 9",
-      }}
+      style={{ "aspect-ratio": aspectRatio() }}
       onClick={handleClick}
     >
       <Switch>
@@ -125,17 +136,19 @@ function parseProgress(raw: string | null): NovelProgress | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const p = parsed as Record<string, unknown>;
     if (
-      typeof parsed === "object" &&
-      parsed !== null &&
-      "paragraphIndex" in parsed &&
-      "charIndex" in parsed &&
-      Number.isInteger(parsed.paragraphIndex) &&
-      Number.isInteger(parsed.charIndex) &&
-      parsed.paragraphIndex >= 0 &&
-      parsed.charIndex >= 0
+      Number.isInteger(p.paragraphIndex) &&
+      Number.isInteger(p.charIndex) &&
+      (p.paragraphIndex as number) >= 0 &&
+      (p.charIndex as number) >= 0
     ) {
-      return parsed as NovelProgress;
+      return {
+        paragraphIndex: p.paragraphIndex as number,
+        charIndex: p.charIndex as number,
+        progress: typeof p.progress === "number" ? p.progress : 0,
+      };
     }
   } catch {
     /* ignore */
@@ -171,7 +184,7 @@ const NovelContentBlock: Component<NovelContentBlockProps> = (props) => {
       <p
         class="novel-text-paragraph"
         style={{
-          textIndent: `${props.fontSize() * 2}px`,
+          "text-indent": `${props.fontSize() * 2}px`,
           ...(minH != null ? { "min-height": `${minH}px` } : {}),
         }}
       >
@@ -195,14 +208,15 @@ const NovelContentBlock: Component<NovelContentBlockProps> = (props) => {
 };
 
 const NovelDetail: Component = () => {
-  const params = useParams<{ id: string }>();
+  const params = useParams({ strict: false });
   const navigate = useNavigate();
+  const router = useRouter();
 
   function handleBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {
-      navigate(-1);
+      router.history.back();
     } else {
-      navigate("/recommended", { scroll: false });
+      void navigate({ to: "/recommended", resetScroll: false });
     }
   }
 
@@ -210,7 +224,7 @@ const NovelDetail: Component = () => {
   // 入口 URL 对应的 params.id 作为初始值，后续章节/目录跳转都通过这里。
   let skipRestoreProgress = false;
 
-  const [currentNovelId, setCurrentNovelId] = createSignal(Number(params.id));
+  const [currentNovelId, setCurrentNovelId] = createSignal(Number(params().id));
   const novelId = currentNovelId;
 
   function switchNovel(id: number) {
@@ -218,8 +232,84 @@ const NovelDetail: Component = () => {
     setCurrentNovelId(id);
   }
 
-  const loader = createNovelLoader(novelId);
-  const { novelData, novelHtml, novelImages, novelNav, detailLoading, detailError } = loader;
+  const data = routeApi.useLoaderData();
+
+  // URL 参数变化时同步内部小说 ID（外部链接/前进后退），系列内切换不触发此效果。
+  createEffect(() => {
+    const paramId = Number(params().id);
+    if (paramId && paramId !== currentNovelId()) {
+      setCurrentNovelId(paramId);
+    }
+  });
+
+  const [novelData, setNovelData] = createSignal<PixivNovel | null>(null);
+  const [novelHtml, setNovelHtml] = createSignal<string | null>(null);
+  const [novelImages, setNovelImages] = createSignal<NovelImagesMap>({});
+  const [novelNav, setNovelNav] = createSignal<SeriesNavigation | null>(null);
+  const [detailLoading, setDetailLoading] = createSignal(false);
+  const [detailError, setDetailError] = createSignal<string | null>(null);
+
+  function applyEntry(entry: NovelCacheEntry) {
+    batch(() => {
+      setNovelData(entry.detail);
+      setNovelHtml(entry.text);
+      setNovelImages(entry.images ?? {});
+      setNovelNav(entry.nav);
+      setDetailLoading(false);
+      setDetailError(null);
+    });
+  }
+
+  async function loadNovelById(id: number) {
+    if (!id) return;
+    const cached = peekEntry(id);
+    if (cached) {
+      applyEntry(cached);
+      return;
+    }
+    setDetailLoading(true);
+    setDetailError(null);
+    try {
+      const dbEntry = await getEntry(id);
+      if (dbEntry) {
+        applyEntry(dbEntry);
+        return;
+      }
+      const entry = await loadNovelEntry(id);
+      applyEntry(entry);
+    } catch (e) {
+      setDetailError((e as { message?: string }).message ?? "加载失败");
+      setDetailLoading(false);
+    }
+  }
+
+  // Hydrate initial data from route loader
+  createEffect(() => {
+    const d = data();
+    if (d.error) {
+      setDetailError(d.error);
+      setDetailLoading(false);
+      return;
+    }
+    if (d.novel) {
+      applyEntry({
+        detail: d.novel,
+        text: d.text ?? "",
+        nav: d.nav ?? {},
+        images: d.images ?? {},
+      });
+    }
+  });
+
+  // 系列内切换时手动加载；URL 变化导致的 ID 变化由路由 loader 提供数据，避免重复请求。
+  createEffect(() => {
+    const id = currentNovelId();
+    if (!id) return;
+    const d = data();
+    if (id === d.novel?.id && d.error === null) return;
+    if (id === Number(params().id)) return;
+    void loadNovelById(id);
+  });
 
   const [imageDimensions, setImageDimensions] = createSignal<NovelImageDimensions>({});
   const [footerHidden, setFooterHidden] = createSignal(false);
@@ -298,6 +388,7 @@ const NovelDetail: Component = () => {
     const layout = virtualLayout.layoutResult();
     const h: Record<number, number> = {};
     for (const p of layout.paragraphs) h[p.index] = p.height;
+    // oxlint-disable-next-line no-map-spread -- blocks are immutable; we need shallow copies to trigger <For> re-render
     return blocks().map((b) => ({
       ...b,
       ph: b.type === "text" ? h[(b as TextBlock).index] : undefined,
@@ -414,24 +505,37 @@ const NovelDetail: Component = () => {
     onCleanup(() => ro.disconnect());
   }
 
-  // 同步 sheet 状态到全局返回手势标志，使系统侧滑优先关闭 sheet
+  // 将阅读设置面板状态注册到 overlay 栈
   createEffect(() => {
-    if (settingsOpen() || seriesOpen()) {
-      window.__settingsOpen = true;
-    } else {
-      window.__settingsOpen = false;
+    if (settingsOpen()) {
+      pushOverlay("readerSettingsSheet", () => setSettingsOpen(false));
+      onCleanup(() => {
+        popOverlay("readerSettingsSheet");
+      });
+    }
+  });
+
+  // 将系列目录面板状态注册到 overlay 栈
+  createEffect(() => {
+    if (seriesOpen()) {
+      pushOverlay("seriesSheet", () => setSeriesOpen(false));
+      onCleanup(() => {
+        popOverlay("seriesSheet");
+      });
+    }
+  });
+
+  // 将评论面板状态注册到 overlay 栈
+  createEffect(() => {
+    if (showComments()) {
+      pushOverlay("commentSheet", () => setShowComments(false));
+      onCleanup(() => {
+        popOverlay("commentSheet");
+      });
     }
   });
 
   onMount(() => {
-    // ── Close-settings event listener ──
-    const onCloseSettings = () => {
-      setSettingsOpen(false);
-      setSeriesOpen(false);
-    };
-    window.addEventListener("closeSettings", onCloseSettings);
-    onCleanup(() => window.removeEventListener("closeSettings", onCloseSettings));
-
     // ── Scroll-driven bottom toolbar hide/show ──
     lastScrollY = window.scrollY;
     accumulatedDelta = 0;
@@ -508,6 +612,16 @@ const NovelDetail: Component = () => {
   const [imageViewerOpen, setImageViewerOpen] = createSignal(false);
   const [imageViewerIndex, setImageViewerIndex] = createSignal(0);
 
+  // 将图片查看器状态注册到 overlay 栈
+  createEffect(() => {
+    if (imageViewerOpen()) {
+      pushOverlay("viewer", () => setImageViewerOpen(false));
+      onCleanup(() => {
+        popOverlay("viewer");
+      });
+    }
+  });
+
   const imageBlockList = createMemo(() => getImageBlocks(blocks()));
   const imageViewerUrls = createMemo(() => imageBlockList().map((block) => block.urls.original));
 
@@ -528,16 +642,17 @@ const NovelDetail: Component = () => {
       <div class="min-h-screen bg-[var(--colorNeutralBackground2)]">
         {/* ── Top navigation bar ── */}
         <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-2">
-          <fluent-button
-            appearance="subtle"
+          <button
+            type="button"
             aria-label="返回"
             on:click={() => handleBack()}
+            class="flex items-center justify-center rounded-[var(--borderRadiusSmall)] bg-transparent border-none cursor-pointer text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all"
             style="min-width:32px;width:32px;height:32px;padding:0"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor" />
             </svg>
-          </fluent-button>
+          </button>
           <Show
             when={searchOpen()}
             fallback={
@@ -617,7 +732,7 @@ const NovelDetail: Component = () => {
                   </h1>
                   <button
                     class="[font-size:var(--fontSizeBase200)] text-[var(--colorBrandForeground1)] hover:underline bg-transparent border-none p-0 cursor-pointer"
-                    onClick={() => navigate(`/user/${novel().user.id}`)}
+                    onClick={() => void navigate({ to: `/user/${novel().user.id}` })}
                   >
                     @{novel().user.name}
                   </button>
@@ -724,7 +839,7 @@ const NovelDetail: Component = () => {
               <div
                 class="fixed bottom-0 left-0 right-0 surface-appbar border-t border-[var(--colorNeutralStroke2)] px-4 py-2"
                 style={{
-                  zIndex: 20,
+                  "z-index": 20,
                   transform: footerHidden()
                     ? "translateY(calc(100% + 8px + env(safe-area-inset-bottom, 0px)))"
                     : "translateY(0)",
@@ -732,7 +847,7 @@ const NovelDetail: Component = () => {
                 }}
               >
                 <div class="max-w-2xl mx-auto flex items-center justify-center gap-1 overflow-x-auto">
-                  <Show when={novel().series?.id && novelNav()?.prevNovel}>
+                  <Show when={novel().series?.id ? novelNav()?.prevNovel : undefined}>
                     {(prev) => (
                       <button
                         class="flex-shrink-0 whitespace-nowrap px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
@@ -761,7 +876,7 @@ const NovelDetail: Component = () => {
                     </span>
                     显示设置
                   </button>
-                  <Show when={novel().series?.id && novelNav()?.nextNovel}>
+                  <Show when={novel().series?.id ? novelNav()?.nextNovel : undefined}>
                     {(next) => (
                       <button
                         class="flex-shrink-0 whitespace-nowrap px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase200)] font-medium hover:opacity-90 active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-1"
@@ -785,7 +900,7 @@ const NovelDetail: Component = () => {
                   isOpen={seriesOpen()}
                   onClose={() => setSeriesOpen(false)}
                   onNovelSelect={(id) => switchNovel(id)}
-                  onAuthorClick={() => navigate(`/user/${novel().user.id}`)}
+                  onAuthorClick={() => void navigate({ to: `/user/${novel().user.id}` })}
                   activeNovelId={currentNovelId()}
                 />
               </Show>

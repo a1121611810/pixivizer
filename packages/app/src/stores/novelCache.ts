@@ -12,7 +12,12 @@
 
 import { createIDBStore, type IDBStore } from "./db";
 import type { PixivNovel, SeriesNavigation } from "@/api/types";
-import type { NovelImagesMap, NovelSeriesDetailResponse } from "@/api/novel";
+import {
+  loadDetail,
+  fetchNovelData,
+  type NovelImagesMap,
+  type NovelSeriesDetailResponse,
+} from "@/api/novel";
 
 // ─── Constants ───
 
@@ -35,6 +40,9 @@ export interface SeriesCacheEntry {
   novels: PixivNovel[];
   nextUrl: string | null;
 }
+
+/** 小说缓存条目的外部别名（用于 loader 等场景）。 */
+export type NovelCacheEntry = CacheEntry;
 
 // ─── Store (production: IndexedDB; test: injected) ───
 
@@ -183,6 +191,36 @@ export async function setEntry(id: number, data: CacheEntry): Promise<void> {
     console.warn("[novelCache] Failed to persist entry", id, e);
   }
   setHotNovel(id, data);
+}
+
+/**
+ * 加载小说详情与正文。
+ *
+ * 这是 `/novel/$id` 路由 loader 与系列内章节切换的统一入口。
+ *
+ * 详情与正文并行请求；正文提取失败会被静默吞掉，返回空 text、空 navigation、
+ * 空 images 的条目，调用方仍可正常渲染详情页。为避免把无效结果固化到缓存，
+ * 只有在 text 非空时才写入 IndexedDB / 热缓存。
+ */
+export async function loadNovelEntry(id: number): Promise<NovelCacheEntry> {
+  const [{ novel }, novelData] = await Promise.all([
+    loadDetail(id),
+    fetchNovelData(id).catch(() => ({
+      text: "",
+      navigation: {} as SeriesNavigation,
+      images: {} as NovelImagesMap,
+    })),
+  ]);
+  const entry: NovelCacheEntry = {
+    detail: novel,
+    text: novelData.text,
+    nav: novelData.navigation,
+    images: novelData.images ?? {},
+  };
+  if (entry.text) {
+    await setEntry(id, entry);
+  }
+  return entry;
 }
 
 /** 写入系列缓存。 */

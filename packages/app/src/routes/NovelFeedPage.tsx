@@ -1,5 +1,13 @@
-import { type Component, createSignal, onMount, onCleanup, Show, For } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import {
+  type Component,
+  createSignal,
+  createEffect,
+  onMount,
+  onCleanup,
+  Show,
+  For,
+} from "solid-js";
+import { useNavigate } from "@tanstack/solid-router";
 import {
   novels,
   nextUrl,
@@ -19,6 +27,7 @@ import { setCurrentTab, novelLayoutMode } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import NovelVirtualFeed from "../components/NovelVirtualFeed";
 import SeriesSheet from "../components/SeriesSheet";
+import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 
 interface Props {
   tab: Tab;
@@ -53,6 +62,16 @@ const NovelFeedPage: Component<Props> = (props) => {
     });
     setSheetOpen(true);
   }
+
+  // 将系列目录面板状态注册到 overlay 栈
+  createEffect(() => {
+    if (sheetOpen()) {
+      pushOverlay("seriesSheet", () => setSheetOpen(false));
+      onCleanup(() => {
+        popOverlay("seriesSheet");
+      });
+    }
+  });
 
   onMount(() => {
     setCurrentTab(props.tab);
@@ -108,8 +127,8 @@ const NovelFeedPage: Component<Props> = (props) => {
             loading={loading() || refreshing()}
             error={error()}
             hasMore={nextUrl() !== null}
-            onNovelClick={(id) => navigate(`/novel/${id}`)}
-            onAuthorClick={(id) => navigate(`/user/${id}`)}
+            onNovelClick={(id) => void navigate({ to: `/novel/${id}` })}
+            onAuthorClick={(id) => void navigate({ to: `/user/${id}` })}
             onLoadMore={fetchMore}
             onRefresh={refresh}
             restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
@@ -125,7 +144,7 @@ const NovelFeedPage: Component<Props> = (props) => {
                 authorId={s().authorId}
                 isOpen={sheetOpen()}
                 onClose={() => setSheetOpen(false)}
-                onNovelSelect={(id) => navigate(`/novel/${id}`)}
+                onNovelSelect={(id) => void navigate({ to: `/novel/${id}` })}
               />
             )}
           </Show>

@@ -1,5 +1,5 @@
 import { type Component, onMount, Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate } from "@tanstack/solid-router";
 import { user, isLoggedIn } from "../stores/authStore";
 import UserAvatar from "../components/UserAvatar";
 import { setCurrentTab, contentType } from "../stores/uiStore";
@@ -27,7 +27,7 @@ const Bookmarks: Component = () => {
             <h1
               class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0"
               classList={{ "cursor-pointer": isLoggedIn() }}
-              onClick={() => isLoggedIn() && navigate("/me")}
+              onClick={() => isLoggedIn() && void navigate({ to: "/me" })}
             >
               <Show when={isLoggedIn() && user()} fallback={<>Pictelio</>}>
                 <UserAvatar />

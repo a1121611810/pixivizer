@@ -175,8 +175,6 @@ export default defineConfig({
       "no-unassigned-vars": "off",
       // 允许 _ 前缀的未使用变量，保持解构/回调参数可读性
       "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
-      // 允许全局状态标志上的双下划线命名（Capacitor 返回键处理）
-      "no-underscore-dangle": ["error", { allow: ["__viewerOpen", "__settingsOpen"] }],
     },
     overrides: [
       {

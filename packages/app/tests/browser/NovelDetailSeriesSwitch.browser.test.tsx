@@ -5,10 +5,20 @@ import type { SeriesNavigation } from "../../src/api/types";
 
 const mockNavigate = vi.fn();
 
-vi.mock("@solidjs/router", () => ({
+vi.mock("@tanstack/solid-router", () => ({
   useNavigate: () => mockNavigate,
-  useLocation: () => ({ pathname: "/novel/1" }),
-  useParams: () => ({ id: "1" }),
+  useLocation: () => () => ({ pathname: "/novel/1" }),
+  useParams: () => () => ({ id: "1" }),
+  useRouter: () => ({ history: { back: vi.fn() } }),
+  getRouteApi: () => ({
+    useLoaderData: () => () => ({
+      error: null,
+      novel: makeMockNovel(1).novel,
+      text: generateText(50),
+      nav: { nextNovel } as SeriesNavigation,
+      images: {},
+    }),
+  }),
   useBeforeLeave: (fn: unknown) => fn as any,
 }));
 

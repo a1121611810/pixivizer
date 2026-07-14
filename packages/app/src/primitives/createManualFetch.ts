@@ -4,8 +4,9 @@ import { createSignal, onCleanup } from "solid-js";
  * 手动 fetch 封装，替代 createResource 用于路由级组件。
  *
  * 为什么不用 createResource：
- *   App.tsx 的 <Suspense> 包裹了整棵路由树，createResource 会触发
- *   Suspense fallback，导致整页白屏。
+ *   路由级异步数据统一由 @tanstack/solid-router 的 loader 提供；
+ *   路由组件内部仍使用 createResource 会绕过 loader 的缓存/重试机制，
+ *   并可能与 TanStack Router 的并发加载产生冲突。
  *
  * 用法：
  *   const fetcher = useManualFetch((signal) => loadSeries(seriesId));
