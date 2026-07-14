@@ -1,0 +1,176 @@
+import { describe, it, expect, vi, type Mock } from "vitest";
+
+async function loadService() {
+  vi.resetModules();
+  const mod = await import("@/services/backGestureService");
+  return mod;
+}
+
+function installWindowMock() {
+  const listeners = new Map<string, Set<(event: Event) => void>>();
+  (globalThis as unknown as { window: Window }).window = {
+    addEventListener: (type: string, handler: (event: Event) => void) => {
+      if (!listeners.has(type)) listeners.set(type, new Set());
+      listeners.get(type)!.add(handler);
+    },
+    removeEventListener: (type: string, handler: (event: Event) => void) => {
+      listeners.get(type)?.delete(handler);
+    },
+    dispatchEvent: (event: Event) => {
+      listeners.get(event.type)?.forEach((handler) => handler(event));
+      return true;
+    },
+  } as unknown as Window;
+  return { listeners };
+}
+
+interface MockRouter {
+  state: { location: { pathname: string } };
+  history: { back: Mock };
+}
+
+function mockCapacitorApp() {
+  const addListener = vi.fn().mockResolvedValue({ remove: vi.fn() });
+  const exitApp = vi.fn();
+  vi.doMock("@capacitor/app", () => ({
+    App: { addListener, exitApp },
+  }));
+  return { addListener, exitApp };
+}
+
+function getHandler(addListener: Mock) {
+  expect(addListener).toHaveBeenCalledWith("backButton", expect.any(Function));
+  return addListener.mock.calls[0][1] as () => void;
+}
+
+describe("backGestureService", () => {
+  describe("pushOverlay / closeTopOverlay", () => {
+    it("invokes the most recently pushed close function", async () => {
+      const { pushOverlay, closeTopOverlay } = await loadService();
+      const closeA = vi.fn();
+      const closeB = vi.fn();
+
+      pushOverlay("viewer", closeA);
+      pushOverlay("settingsDrawer", closeB);
+      const result = closeTopOverlay();
+
+      expect(result).toBe(true);
+      expect(closeB).toHaveBeenCalledTimes(1);
+      expect(closeA).not.toHaveBeenCalled();
+    });
+
+    it("returns false when the stack is empty", async () => {
+      const { closeTopOverlay } = await loadService();
+      expect(closeTopOverlay()).toBe(false);
+    });
+
+    it("closes overlays in LIFO order", async () => {
+      const { pushOverlay, closeTopOverlay } = await loadService();
+      const order: string[] = [];
+
+      pushOverlay("viewer", () => order.push("viewer"));
+      pushOverlay("settingsDrawer", () => order.push("settingsDrawer"));
+      pushOverlay("seriesSheet", () => order.push("seriesSheet"));
+
+      closeTopOverlay();
+      closeTopOverlay();
+      closeTopOverlay();
+
+      expect(order).toEqual(["seriesSheet", "settingsDrawer", "viewer"]);
+    });
+  });
+
+  describe("popOverlay", () => {
+    it("closes the most recent overlay of the given type and returns true", async () => {
+      const { pushOverlay, popOverlay } = await loadService();
+      const closeViewer = vi.fn();
+      const closeSettings = vi.fn();
+
+      pushOverlay("viewer", closeViewer);
+      pushOverlay("settingsDrawer", closeSettings);
+      pushOverlay("viewer", closeViewer);
+
+      const result = popOverlay("viewer");
+
+      expect(result).toBe(true);
+      expect(closeViewer).toHaveBeenCalledTimes(1);
+      expect(closeSettings).not.toHaveBeenCalled();
+    });
+
+    it("returns false when the type is not in the stack", async () => {
+      const { pushOverlay, popOverlay } = await loadService();
+      pushOverlay("viewer", vi.fn());
+      expect(popOverlay("settingsDrawer")).toBe(false);
+    });
+  });
+
+  describe("registerBackGesture", () => {
+    it("navigates back when no overlay is open and path is not root", async () => {
+      const { addListener, exitApp } = mockCapacitorApp();
+      const historyBack = vi.fn();
+      const { registerBackGesture } = await loadService();
+      const router: MockRouter = {
+        state: { location: { pathname: "/illust/123" } },
+        history: { back: historyBack },
+      };
+
+      const remove = await registerBackGesture(router);
+      const handler = getHandler(addListener);
+      handler();
+      remove();
+
+      expect(historyBack).toHaveBeenCalledTimes(1);
+      expect(exitApp).not.toHaveBeenCalled();
+    });
+
+    it("closes the top overlay instead of navigating back", async () => {
+      const { addListener, exitApp } = mockCapacitorApp();
+      const historyBack = vi.fn();
+      const { pushOverlay, registerBackGesture } = await loadService();
+      const closeViewer = vi.fn();
+      pushOverlay("viewer", closeViewer);
+
+      const router: MockRouter = {
+        state: { location: { pathname: "/illust/123" } },
+        history: { back: historyBack },
+      };
+
+      const remove = await registerBackGesture(router);
+      const handler = getHandler(addListener);
+      handler();
+      remove();
+
+      expect(closeViewer).toHaveBeenCalledTimes(1);
+      expect(historyBack).not.toHaveBeenCalled();
+      expect(exitApp).not.toHaveBeenCalled();
+    });
+
+    it("dispatches exitHint on first back at root path and exits app on second back within 2 seconds", async () => {
+      installWindowMock();
+      const { addListener, exitApp } = mockCapacitorApp();
+      const historyBack = vi.fn();
+      const onExitHint = vi.fn();
+      window.addEventListener("exitHint", onExitHint);
+
+      const { registerBackGesture } = await loadService();
+      const router: MockRouter = {
+        state: { location: { pathname: "/recommended" } },
+        history: { back: historyBack },
+      };
+
+      const remove = await registerBackGesture(router);
+      const handler = getHandler(addListener);
+
+      handler();
+      expect(onExitHint).toHaveBeenCalledTimes(1);
+      expect(exitApp).not.toHaveBeenCalled();
+
+      handler();
+      expect(exitApp).toHaveBeenCalledTimes(1);
+      expect(historyBack).not.toHaveBeenCalled();
+
+      remove();
+      window.removeEventListener("exitHint", onExitHint);
+    });
+  });
+});

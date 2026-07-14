@@ -338,7 +338,7 @@ packages/app/src/
 
 - **框架**: Vitest 4.1，通过 `vite-plus` 的 `vp test` 运行
 - **环境**: `node`（配置在 `vitest.config.ts`）
-- **测试文件位置**: `src/**/__tests__/*.test.ts`、`src/**/*.test.ts`
+- **测试文件位置**: `tests/unit/**/*.test.{ts,tsx}`（配置在 `vitest.config.ts`），辅助函数/内部模块的就近测试可放在 `src/**/*.test.ts`
 - **现有测试**:
   - `uiStore.test.ts` — UI 状态管理测试
   - `feedStore.test.ts` — Feed 数据状态测试
