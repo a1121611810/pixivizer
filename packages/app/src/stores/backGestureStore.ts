@@ -45,3 +45,11 @@ export function popOverlay(type: OverlayType): boolean {
 export function closeTopOverlay(): boolean {
   return popTop() !== undefined;
 }
+
+/**
+ * 清空整个 overlay 栈，不调用任何 close 回调。
+ * 用于路由切换等场景：组件即将卸载，由路由本身负责清理 UI。
+ */
+export function clearOverlays(): void {
+  setOverlayStack([]);
+}

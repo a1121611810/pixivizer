@@ -3,6 +3,7 @@ import {
   onMount,
   Show,
   createSignal,
+  createEffect,
   onCleanup,
   lazy,
   ErrorBoundary,
@@ -35,7 +36,7 @@ import {
   lastDismissedVersion,
 } from "@/stores/uiStore";
 import { checkForUpdate } from "@/services/updateService";
-import { registerBackGesture } from "@/services/backGestureService";
+import { clearOverlays, registerBackGesture } from "@/services/backGestureService";
 import { warmCacheFromDisk } from "@/utils/imageLoader";
 import { loadReportedIds } from "@/stores/reportStore";
 import { loadBlockedIds } from "@/stores/blockStore";
@@ -49,6 +50,13 @@ const RootLayout: Component = () => {
   const router = useRouter();
   const [showExitHint, setShowExitHint] = createSignal(false);
   let exitHintTimer: ReturnType<typeof setTimeout>;
+
+  // 路由切换时清空 overlay 栈，避免旧路由未关闭的 overlay 阻塞新路由的返回手势。
+  createEffect(() => {
+    // 依赖 location 变化
+    void location().pathname;
+    clearOverlays();
+  });
 
   onMount(async () => {
     // Disable browser native scroll restoration — we manage scroll ourselves via stores + restoreScrollTop.

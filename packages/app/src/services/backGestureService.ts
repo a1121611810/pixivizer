@@ -1,5 +1,6 @@
 import { App as CapApp } from "@capacitor/app";
 import {
+  clearOverlays,
   closeTopOverlay,
   type OverlayType,
   popOverlay,
@@ -7,7 +8,7 @@ import {
 } from "@/stores/backGestureStore";
 
 export type { OverlayType };
-export { closeTopOverlay, popOverlay, pushOverlay };
+export { clearOverlays, closeTopOverlay, popOverlay, pushOverlay };
 
 /** 返回手势依赖的上下文，由调用方（App.tsx）注入，避免服务依赖具体路由实现。 */
 export interface BackGestureContext {
