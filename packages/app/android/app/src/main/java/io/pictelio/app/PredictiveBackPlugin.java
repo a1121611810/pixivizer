@@ -2,13 +2,9 @@ package io.pictelio.app;
 
 import android.app.Activity;
 import android.os.Build;
-import android.util.Log;
-import android.window.BackEvent;
-import android.window.OnBackAnimationCallback;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.getcapacitor.JSObject;
@@ -57,7 +53,7 @@ public class PredictiveBackPlugin extends Plugin {
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-                backCallback = createAnimationCallback();
+                backCallback = PredictiveBackAnimator.createCallback(this);
             } else {
                 backCallback = createFallbackCallback();
             }
@@ -147,46 +143,9 @@ public class PredictiveBackPlugin extends Plugin {
         return () -> notifyListeners("predictiveBackEnd", new JSObject());
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.VANILLA_ICE_CREAM)
-    private OnBackAnimationCallback createAnimationCallback() {
-        return new OnBackAnimationCallback() {
-            @Override
-            public void onBackStarted(@NonNull BackEvent backEvent) {
-                Log.d("PredictiveBackPlugin", "onBackStarted edge=" + backEvent.getSwipeEdge()
-                        + " touchY=" + backEvent.getTouchY()
-                        + " progress=" + backEvent.getProgress());
-                notifyListeners("predictiveBackStart", buildBackEventPayload(backEvent));
-            }
-
-            @Override
-            public void onBackProgressed(@NonNull BackEvent backEvent) {
-                Log.d("PredictiveBackPlugin", "onBackProgressed progress=" + backEvent.getProgress()
-                        + " edge=" + backEvent.getSwipeEdge()
-                        + " touchY=" + backEvent.getTouchY());
-                JSObject payload = buildBackEventPayload(backEvent);
-                payload.put("progress", backEvent.getProgress());
-                notifyListeners("predictiveBackProgress", payload);
-            }
-
-            @Override
-            public void onBackInvoked() {
-                Log.d("PredictiveBackPlugin", "onBackInvoked");
-                notifyListeners("predictiveBackEnd", new JSObject());
-            }
-
-            @Override
-            public void onBackCancelled() {
-                Log.d("PredictiveBackPlugin", "onBackCancelled");
-                notifyListeners("predictiveBackCancel", new JSObject());
-            }
-        };
+    /** 包级访问桥 — PredictivBackAnimator 通过此方法调用 protected notifyListeners。 */
+    void notifyBackListeners(String eventName, JSObject data) {
+        notifyListeners(eventName, data);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.VANILLA_ICE_CREAM)
-    private JSObject buildBackEventPayload(@NonNull BackEvent backEvent) {
-        JSObject payload = new JSObject();
-        payload.put("edge", backEvent.getSwipeEdge() == BackEvent.EDGE_LEFT ? "left" : "right");
-        payload.put("touchY", backEvent.getTouchY());
-        return payload;
-    }
 }

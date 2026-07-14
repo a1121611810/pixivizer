@@ -21,7 +21,7 @@ import java.net.URL;
 public class MainActivity extends BridgeActivity {
 
     /** WebView 最低主版本号要求（低于此版本拦截启动并提示用户升级）。 */
-    private static final int MIN_WEBVIEW_MAJOR_VERSION = 85;
+    private static final int MIN_WEBVIEW_MAJOR_VERSION = 70;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
