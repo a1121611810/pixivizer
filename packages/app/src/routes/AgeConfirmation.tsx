@@ -1,7 +1,7 @@
 import { type Component } from "solid-js";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
 import { setAgeConfirmation } from "../stores/uiStore";
-import { initializeAuth, isLoggedIn } from "../stores/authStore";
+import { initializeAuth, isLoggedIn, setIsLoading } from "../stores/authStore";
 
 // ── Fluent UI System Icon: ShieldCheckmark (24px) ──
 // Sourced from microsoft/fluentui-system-icons
@@ -24,8 +24,8 @@ const AgeConfirmation: Component = () => {
   const isReconfirm = () =>
     (searchParams() as Record<string, string | undefined>).reconfirm === "true";
 
-  async function confirmAdult() {
-    await setAgeConfirmation(true, true);
+  async function handleConfirm(isAdult: boolean) {
+    await setAgeConfirmation(true, isAdult);
 
     if (isReconfirm()) {
       void navigate({ to: "/recommended", replace: true });
@@ -33,35 +33,29 @@ const AgeConfirmation: Component = () => {
       try {
         await initializeAuth();
         if (isLoggedIn()) {
-          void navigate({ to: "/recommended", replace: true });
+          await navigate({ to: "/recommended", replace: true });
         } else {
-          void navigate({ to: "/login", replace: true });
+          await navigate({ to: "/login", replace: true });
         }
       } catch (e) {
         console.error("[AgeConfirmation] Auth initialization failed", e);
-        void navigate({ to: "/login", replace: true });
+        try {
+          await navigate({ to: "/login", replace: true });
+        } catch {
+          // 导航异常不影响 loading 状态释放
+        }
+      } finally {
+        setIsLoading(false);
       }
     }
   }
 
-  async function confirmMinor() {
-    await setAgeConfirmation(true, false);
+  async function confirmAdult() {
+    await handleConfirm(true);
+  }
 
-    if (isReconfirm()) {
-      void navigate({ to: "/recommended", replace: true });
-    } else {
-      try {
-        await initializeAuth();
-        if (isLoggedIn()) {
-          void navigate({ to: "/recommended", replace: true });
-        } else {
-          void navigate({ to: "/login", replace: true });
-        }
-      } catch (e) {
-        console.error("[AgeConfirmation] Auth initialization failed", e);
-        void navigate({ to: "/login", replace: true });
-      }
-    }
+  async function confirmMinor() {
+    await handleConfirm(false);
   }
 
   return (

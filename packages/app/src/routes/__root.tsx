@@ -142,19 +142,25 @@ const RootLayout: Component = () => {
     try {
       // 如果尚未确认年龄，先导航到年龄确认页面，不进行登录判断
       if (!ageConfirmed()) {
-        setIsLoading(false);
-        void navigate({ to: "/age-confirmation", replace: true });
+        await navigate({ to: "/age-confirmation", replace: true });
         return;
       }
 
       await initializeAuth();
       if (isLoggedIn()) {
-        void navigate({ to: "/recommended", replace: true });
+        await navigate({ to: "/recommended", replace: true });
       } else {
-        void navigate({ to: "/login", replace: true });
+        await navigate({ to: "/login", replace: true });
       }
     } catch (e) {
       console.error("[App] Auth initialization failed", e);
+      try {
+        await navigate({ to: "/login", replace: true });
+      } catch {
+        // 导航异常不影响 loading 状态释放
+      }
+    } finally {
+      setIsLoading(false);
     }
   });
 

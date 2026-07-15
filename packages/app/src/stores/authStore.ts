@@ -61,7 +61,6 @@ export async function initializeAuth() {
     setupUnauthorizedHandler();
     await performRefresh(token);
   }
-  setIsLoading(false);
 }
 
 async function performRefresh(token: string) {
