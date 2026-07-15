@@ -5,6 +5,8 @@ import { createStore, produce } from "solid-js/store";
 import { createEffect, createRoot, batch } from "solid-js";
 import { loadRecommended, loadBookmarks, loadNext, loadFollow } from "../api/novel";
 import type { PixivNovel, RestrictType } from "../api/types";
+import { ApiErrorType, type ApiError } from "../api/types";
+import { toApiError, pickBestErrorType } from "../api/client";
 import { filterNovels } from "../utils/r18Filter";
 import { currentTab } from "./uiStore";
 import { user } from "./authStore";
@@ -25,7 +27,7 @@ const [state, setState] = createStore({
   nextUrl: null as string | null,
   loading: false,
   refreshing: false,
-  error: null as string | null,
+  error: null as ApiError | null,
   followTab: "all" as "all" | "public" | "private",
   bookmarkRestrict: "public" as RestrictType,
 });
@@ -171,7 +173,7 @@ export async function ensureLoaded(): Promise<void> {
     } else if (tab === "bookmarks") {
       const u = user();
       if (!u) {
-        setState("error", "未登录");
+        setState("error", { type: ApiErrorType.UNAUTHORIZED, message: "未登录" });
         return;
       }
       const data = await loadBookmarks(u.id, state.bookmarkRestrict);
@@ -184,7 +186,7 @@ export async function ensureLoaded(): Promise<void> {
     }
     tabLoaded[sourceKey] = true;
   } catch (e) {
-    setState("error", (e as { message?: string }).message ?? "加载失败");
+    setState("error", toApiError(e));
   } finally {
     setState("loading", false);
   }
@@ -209,20 +211,20 @@ async function fetchFollow(): Promise<void> {
       loadFollow("private"),
     ]);
 
-    const errors: string[] = [];
+    const errors: ApiError[] = [];
 
     if (publicResult.status === "fulfilled") {
       tabNovels["novel_follow_public"] = publicResult.value.novels;
       tabNextUrl["novel_follow_public"] = publicResult.value.next_url;
     } else {
-      errors.push((publicResult.reason as { message?: string }).message ?? "公开关注加载失败");
+      errors.push(toApiError(publicResult.reason, "公开关注加载失败"));
     }
 
     if (privateResult.status === "fulfilled") {
       tabNovels["novel_follow_private"] = privateResult.value.novels;
       tabNextUrl["novel_follow_private"] = privateResult.value.next_url;
     } else {
-      errors.push((privateResult.reason as { message?: string }).message ?? "非公开关注加载失败");
+      errors.push(toApiError(privateResult.reason, "非公开关注加载失败"));
     }
 
     if (currentTab() === "follow") {
@@ -241,9 +243,13 @@ async function fetchFollow(): Promise<void> {
 
     if (errors.length > 0) {
       if (errors.length === 2) {
-        setState("error", errors.join("; "));
+        const bestType = pickBestErrorType(...errors);
+        setState("error", {
+          type: bestType,
+          message: errors.map((e) => e.message).join("; "),
+        });
       } else {
-        console.warn("fetchFollow: partial failure —", errors.join("; "));
+        console.warn("fetchFollow: partial failure —", errors.map((e) => e.message).join("; "));
       }
     }
   } finally {
@@ -378,7 +384,7 @@ export async function fetchMore(): Promise<void> {
         }
       }
     } catch (e) {
-      setState("error", (e as { message?: string }).message ?? "加载失败");
+      setState("error", toApiError(e));
     } finally {
       setState("loading", false);
     }
@@ -403,7 +409,7 @@ export async function fetchMore(): Promise<void> {
       );
     });
   } catch (e) {
-    setState("error", (e as { message?: string }).message ?? "加载失败");
+    setState("error", toApiError(e));
   } finally {
     setState("loading", false);
   }

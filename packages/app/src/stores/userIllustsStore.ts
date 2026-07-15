@@ -2,6 +2,7 @@ import { createSignal, createResource } from "solid-js";
 import { createStore } from "solid-js/store";
 import { loadUserIllusts, loadNext as loadIllustNext } from "../api/illust";
 import { loadUserNovels, loadNext as loadNovelNext } from "../api/novel";
+import { ApiErrorType, type ApiError } from "../api/types";
 import type { PixivIllust, PixivNovel, ContentType } from "../api/types";
 import { filterFeedIllusts, filterNovels } from "../utils/r18Filter";
 
@@ -85,10 +86,13 @@ export const nextUrl = () => {
 export const loading = () =>
   contentType() === "novel" ? novelResource.loading : illustResource.loading;
 
-export const error = () => {
+export const error = (): ApiError | null => {
   const err = contentType() === "novel" ? novelResource.error : illustResource.error;
   if (!err) return null;
-  return (err as { message?: string }).message ?? "加载失败";
+  // If it's already an ApiError (from client.ts), return it directly
+  if ((err as ApiError).type) return err as ApiError;
+  // Fallback for unexpected error shapes
+  return { type: ApiErrorType.UNKNOWN, message: (err as { message?: string }).message ?? "加载失败" };
 };
 
 export { contentType, scrollPositions };

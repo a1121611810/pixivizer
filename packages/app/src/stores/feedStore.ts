@@ -1,9 +1,11 @@
 import { createStore, produce } from "solid-js/store";
 import { batch, createEffect, createRoot } from "solid-js";
 import { loadRecommended, loadFollow, loadNext } from "../api/illust";
-import type { PixivIllust, ContentType } from "../api/types";
+import type { PixivIllust, ContentType, ApiError } from "../api/types";
+import { ApiErrorType } from "../api/types";
 import { currentTab } from "./uiStore";
 import { filterFeedIllusts } from "../utils/r18Filter";
+import { toApiError, pickBestErrorType } from "../api/client";
 
 export type RecommendSubTab = "mixed" | "illust" | "manga";
 
@@ -41,7 +43,7 @@ const [state, setState] = createStore({
   nextUrl: null as string | null,
   loading: false,
   refreshing: false,
-  error: null as string | null,
+  error: null as ApiError | null,
   followTab: "all" as "all" | "public" | "private",
   recommendSubTab: "mixed" as RecommendSubTab,
 });
@@ -400,7 +402,7 @@ export async function fetchRecommended(contentType: ContentType = "illust", sign
       });
     }
   } catch (e) {
-    setState("error", (e as { message?: string }).message ?? "加载失败");
+    setState("error", toApiError(e));
   } finally {
     setState("loading", false);
   }
@@ -413,7 +415,7 @@ export async function fetchManga(signal?: AbortSignal) {
 export async function fetchMixed(signal?: AbortSignal) {
   setState("loading", true);
   setState("error", null);
-  const errors: string[] = [];
+  const errors: ApiError[] = [];
 
   try {
     const [illustResult, mangaResult] = await Promise.allSettled([
@@ -425,14 +427,14 @@ export async function fetchMixed(signal?: AbortSignal) {
       tabIllusts["recommended_illust"] = illustResult.value.illusts;
       tabNextUrl["recommended_illust"] = illustResult.value.next_url;
     } else {
-      errors.push((illustResult.reason as { message?: string }).message ?? "插画推荐加载失败");
+      errors.push(toApiError(illustResult.reason, "插画推荐加载失败"));
     }
 
     if (mangaResult.status === "fulfilled") {
       tabIllusts["recommended_manga"] = mangaResult.value.illusts;
       tabNextUrl["recommended_manga"] = mangaResult.value.next_url;
     } else {
-      errors.push((mangaResult.reason as { message?: string }).message ?? "漫画推荐加载失败");
+      errors.push(toApiError(mangaResult.reason, "漫画推荐加载失败"));
     }
 
     if (currentTab() === "recommended" && recommendSubTab() === "mixed") {
@@ -447,9 +449,10 @@ export async function fetchMixed(signal?: AbortSignal) {
 
     if (errors.length > 0) {
       if (errors.length === 2) {
-        setState("error", errors.join("; "));
+        const bestType = pickBestErrorType(...errors);
+        setState("error", { type: bestType, message: errors.map((e) => e.message).join("; ") });
       } else {
-        console.warn("fetchMixed: partial failure —", errors.join("; "));
+        console.warn("fetchMixed: partial failure —", errors.map((e) => e.message).join("; "));
       }
     }
   } finally {
@@ -462,57 +465,60 @@ export async function fetchMoreMixed(signal?: AbortSignal) {
   setState("loading", true);
   setState("error", null);
 
-  const illustsArr = tabIllusts["recommended_illust"] ?? [];
-  const mangaArr = tabIllusts["recommended_manga"] ?? [];
+  try {
+    const illustsArr = tabIllusts["recommended_illust"] ?? [];
+    const mangaArr = tabIllusts["recommended_manga"] ?? [];
 
-  const illustOldest = illustsArr.length > 0 ? illustsArr[illustsArr.length - 1].create_date : null;
-  const mangaOldest = mangaArr.length > 0 ? mangaArr[mangaArr.length - 1].create_date : null;
+    const illustOldest = illustsArr.length > 0 ? illustsArr[illustsArr.length - 1].create_date : null;
+    const mangaOldest = mangaArr.length > 0 ? mangaArr[mangaArr.length - 1].create_date : null;
 
-  const errors: string[] = [];
+    const errors: ApiError[] = [];
 
-  const loadSource = async (key: "recommended_illust" | "recommended_manga"): Promise<boolean> => {
-    const next = tabNextUrl[key];
-    if (!next) return false;
-    try {
-      const data = await loadNext(next, signal);
-      tabIllusts[key] = [...(tabIllusts[key] || []), ...data.illusts];
-      tabNextUrl[key] = data.next_url;
-      return true;
-    } catch (e) {
-      errors.push((e as { message?: string }).message ?? "加载失败");
-      return false;
+    const loadSource = async (key: "recommended_illust" | "recommended_manga"): Promise<boolean> => {
+      const next = tabNextUrl[key];
+      if (!next) return false;
+      try {
+        const data = await loadNext(next, signal);
+        tabIllusts[key] = [...(tabIllusts[key] || []), ...data.illusts];
+        tabNextUrl[key] = data.next_url;
+        return true;
+      } catch (e) {
+        errors.push(toApiError(e));
+        return false;
+      }
+    };
+
+    // 优先加载当前合并列表尾部时间较早的那一路
+    const preferIllust =
+      mangaOldest === null || (illustOldest !== null && illustOldest <= mangaOldest);
+
+    const loaded = preferIllust
+      ? (await loadSource("recommended_illust")) || (await loadSource("recommended_manga"))
+      : (await loadSource("recommended_manga")) || (await loadSource("recommended_illust"));
+
+    if (loaded && currentTab() === "recommended" && recommendSubTab() === "mixed") {
+      batch(() => {
+        setState("illusts", computeMixedIllusts());
+        setState(
+          "nextUrl",
+          tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
+        );
+      });
     }
-  };
 
-  // 优先加载当前合并列表尾部时间较早的那一路
-  const preferIllust =
-    mangaOldest === null || (illustOldest !== null && illustOldest <= mangaOldest);
-
-  const loaded = preferIllust
-    ? (await loadSource("recommended_illust")) || (await loadSource("recommended_manga"))
-    : (await loadSource("recommended_manga")) || (await loadSource("recommended_illust"));
-
-  if (loaded && currentTab() === "recommended" && recommendSubTab() === "mixed") {
-    batch(() => {
-      setState("illusts", computeMixedIllusts());
-      setState(
-        "nextUrl",
-        tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
-      );
-    });
+    if (errors.length > 0 && !loaded) {
+      const bestType = pickBestErrorType(...errors);
+      setState("error", { type: bestType, message: errors.map((e) => e.message).join("; ") });
+    }
+  } finally {
+    setState("loading", false);
   }
-
-  if (errors.length > 0 && !loaded) {
-    setState("error", errors.join("; "));
-  }
-
-  setState("loading", false);
 }
 
 export async function fetchFollow(signal?: AbortSignal) {
   setState("loading", true);
   setState("error", null);
-  let errors: string[] = [];
+  let errors: ApiError[] = [];
   try {
     const [publicResult, privateResult] = await Promise.allSettled([
       loadFollow("public", signal),
@@ -523,14 +529,14 @@ export async function fetchFollow(signal?: AbortSignal) {
       tabIllusts["follow_public"] = publicResult.value.illusts;
       tabNextUrl["follow_public"] = publicResult.value.next_url;
     } else {
-      errors.push((publicResult.reason as { message?: string }).message ?? "公开关注加载失败");
+      errors.push(toApiError(publicResult.reason, "公开关注加载失败"));
     }
     // Process private result
     if (privateResult.status === "fulfilled") {
       tabIllusts["follow_private"] = privateResult.value.illusts;
       tabNextUrl["follow_private"] = privateResult.value.next_url;
     } else {
-      errors.push((privateResult.reason as { message?: string }).message ?? "非公开关注加载失败");
+      errors.push(toApiError(privateResult.reason, "非公开关注加载失败"));
     }
     // Update display if current tab is follow (even if only one succeeded)
     if (currentTab() === "follow") {
@@ -549,9 +555,10 @@ export async function fetchFollow(signal?: AbortSignal) {
     // Set error only when both failed; partial failure is a warning
     if (errors.length > 0) {
       if (errors.length === 2) {
-        setState("error", errors.join("; "));
+        const bestType = pickBestErrorType(...errors);
+        setState("error", { type: bestType, message: errors.map((e) => e.message).join("; ") });
       } else {
-        console.warn("fetchFollow: partial failure —", errors.join("; "));
+        console.warn("fetchFollow: partial failure —", errors.map((e) => e.message).join("; "));
       }
     }
   } finally {
@@ -574,6 +581,7 @@ export async function fetchMore(signal?: AbortSignal) {
         : tab;
     if (!state.nextUrl) return;
     setState("loading", true);
+    setState("error", null);
     try {
       const data = await loadNext(state.nextUrl, signal);
       tabIllusts[sourceKey] = [...(tabIllusts[sourceKey] || []), ...data.illusts];
@@ -587,7 +595,7 @@ export async function fetchMore(signal?: AbortSignal) {
         );
       });
     } catch (e) {
-      setState("error", (e as { message?: string }).message ?? "加载失败");
+      setState("error", toApiError(e));
     } finally {
       setState("loading", false);
     }
@@ -596,6 +604,7 @@ export async function fetchMore(signal?: AbortSignal) {
 
   // Follow tab — per-source pagination
   setState("loading", true);
+  setState("error", null);
   try {
     const fTab = state.followTab;
     if (fTab === "public") {
@@ -674,7 +683,7 @@ export async function fetchMore(signal?: AbortSignal) {
       }
     }
   } catch (e) {
-    setState("error", (e as { message?: string }).message ?? "加载失败");
+    setState("error", toApiError(e));
   } finally {
     setState("loading", false);
   }

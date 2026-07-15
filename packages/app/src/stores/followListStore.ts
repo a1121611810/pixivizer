@@ -1,15 +1,16 @@
-// packages/app/src/stores/followListStore.ts
 import { createSignal } from "solid-js";
 import { getUserFollowing, getUserFollowers } from "../api/user";
 import { followUser, unfollowUser } from "../api/illust";
 import { filterUserPreviews } from "../utils/r18Filter";
 import type { PixivUserPreview } from "../api/types";
+import { type ApiError } from "../api/types";
+import { toApiError } from "../api/client";
 
 export type FollowMode = "following" | "followers";
 
 const [users, setUsers] = createSignal<PixivUserPreview[]>([]);
 const [loading, setLoading] = createSignal(false);
-const [error, setError] = createSignal<string | null>(null);
+const [error, setError] = createSignal<ApiError | null>(null);
 const [nextUrl, setNextUrl] = createSignal<string | null>(null);
 
 export { users, loading, error, nextUrl };
@@ -28,7 +29,7 @@ export async function loadList(mode: FollowMode, userId: number): Promise<void> 
     setUsers(data.user_previews);
     setNextUrl(data.next_url);
   } catch (e) {
-    setError((e as { message?: string }).message ?? "加载失败");
+    setError(toApiError(e));
   } finally {
     setLoading(false);
   }
@@ -48,7 +49,7 @@ export async function loadMore(mode: FollowMode, userId: number): Promise<void> 
     setUsers((prev) => [...prev, ...data.user_previews]);
     setNextUrl(data.next_url);
   } catch (e) {
-    setError((e as { message?: string }).message ?? "加载更多失败");
+    setError(toApiError(e, "加载更多失败"));
   } finally {
     setLoading(false);
   }

@@ -1,9 +1,10 @@
 import { createSignal } from "solid-js";
 import { getUserDetail, getUserFollowing, getUserFollowers } from "../api/user";
 import { followUser, unfollowUser } from "../api/illust";
-import type { PixivProfile, PixivUserPreview, PixivUser } from "../api/types";
+import { ApiErrorType, type ApiError, type PixivProfile, type PixivUserPreview, type PixivUser } from "../api/types";
 import { user } from "./authStore";
 import { filterUserPreviews } from "../utils/r18Filter";
+import { toApiError } from "../api/client";
 
 const [profile, setProfile] = createSignal<PixivProfile | null>(null);
 const [viewedUser, setViewedUser] = createSignal<PixivUser | null>(null);
@@ -12,7 +13,7 @@ const [followersList, setFollowersList] = createSignal<PixivUserPreview[]>([]);
 const [followingNextUrl, setFollowingNextUrl] = createSignal<string | null>(null);
 const [followersNextUrl, setFollowersNextUrl] = createSignal<string | null>(null);
 const [loading, setLoading] = createSignal(false);
-const [error, setError] = createSignal<string | null>(null);
+const [error, setError] = createSignal<ApiError | null>(null);
 const [activeTab, setActiveTab] = createSignal<"following" | "followers">("following");
 
 // 缓存已加载的用户数据，避免返回时重复请求
@@ -73,7 +74,7 @@ export async function loadFollowing(userId?: number) {
       nextUrl: data.next_url,
     });
   } catch (e) {
-    setError((e as { message?: string }).message ?? "加载失败");
+    setError(toApiError(e));
   } finally {
     setLoading(false);
   }
@@ -89,7 +90,7 @@ export async function loadFollowers() {
     setFollowersList(data.user_previews);
     setFollowersNextUrl(data.next_url);
   } catch (e) {
-    setError((e as { message?: string }).message ?? "加载失败");
+    setError(toApiError(e));
   } finally {
     setLoading(false);
   }
@@ -104,7 +105,7 @@ export async function loadMoreFollowing() {
     setFollowingList((prev) => [...prev, ...data.user_previews]);
     setFollowingNextUrl(data.next_url);
   } catch (e) {
-    setError((e as { message?: string }).message ?? "加载失败");
+    setError(toApiError(e));
   } finally {
     setLoading(false);
   }
@@ -119,7 +120,7 @@ export async function loadMoreFollowers() {
     setFollowersList((prev) => [...prev, ...data.user_previews]);
     setFollowersNextUrl(data.next_url);
   } catch (e) {
-    setError((e as { message?: string }).message ?? "加载失败");
+    setError(toApiError(e));
   } finally {
     setLoading(false);
   }

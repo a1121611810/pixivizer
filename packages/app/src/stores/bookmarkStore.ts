@@ -1,7 +1,8 @@
 import { createSignal, createResource } from "solid-js";
 import { loadBookmarks, loadNext } from "../api/illust";
 import { user } from "./authStore";
-import type { PixivIllust, RestrictType } from "../api/types";
+import type { PixivIllust, RestrictType, ApiError } from "../api/types";
+import { ApiErrorType } from "../api/types";
 import { filterFeedIllusts } from "../utils/r18Filter";
 
 // ── Restrict signal (user-controlled filter) ──
@@ -41,14 +42,18 @@ export const loading = () => bookmarkResource.loading;
  * Normalized error message.
  * Maps known Pixiv API errors to user-friendly Chinese messages.
  */
-export const error = () => {
+export const error = (): ApiError | null => {
   const err = bookmarkResource.error;
   if (!err) return null;
-  const msg = (err as { message?: string }).message ?? String(err);
-  if (msg.includes("401") || msg.includes("UNAUTHORIZED")) return "登录已过期，请重新登录";
-  if (msg.includes("429") || msg.includes("频繁")) return "请求太频繁，3 秒后自动重试...";
-  if (msg.includes("NETWORK") || msg.includes("网络")) return "网络连接失败，请检查网络后重试";
-  return `加载收藏列表失败: ${msg}`;
+  // 如果来自 client.ts，已经是 ApiError 对象
+  if ((err as ApiError).type) {
+    return err as ApiError;
+  }
+  // 兜底：转换为 UNKNOWN 类型
+  return {
+    type: ApiErrorType.UNKNOWN,
+    message: `加载收藏列表失败: ${(err as { message?: string }).message ?? String(err)}`,
+  };
 };
 
 export { restrict };
