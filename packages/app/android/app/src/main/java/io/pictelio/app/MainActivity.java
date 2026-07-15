@@ -9,6 +9,8 @@ import android.webkit.WebViewClient;
 
 import com.getcapacitor.BridgeActivity;
 
+import androidx.core.splashscreen.SplashScreen; // SplashScreen API
+
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -33,6 +35,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SplashScreen.installSplashScreen(this);
         if (!isWebViewVersionOk()) {
             showWebViewUpgradeError();
             return;
