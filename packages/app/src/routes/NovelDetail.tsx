@@ -299,9 +299,7 @@ const NovelDetail: Component = () => {
     const d = data();
     if (d.error) {
       setDetailError(
-        typeof d.error === "string"
-          ? { type: ApiErrorType.UNKNOWN, message: d.error }
-          : d.error
+        typeof d.error === "string" ? { type: ApiErrorType.UNKNOWN, message: d.error } : d.error,
       );
       setDetailLoading(false);
       return;

@@ -37,7 +37,9 @@ test.describe("Cache-Control immutable 浏览器缓存测试", () => {
       if (req.url === "/test.png") {
         requestCount++;
         if (req.headers["if-none-match"] || req.headers["if-modified-since"]) {
-          res.writeHead(304, "Not Modified"); res.end(); return;
+          res.writeHead(304, "Not Modified");
+          res.end();
+          return;
         }
         res.writeHead(200, {
           "Content-Type": "image/png",
@@ -47,7 +49,8 @@ test.describe("Cache-Control immutable 浏览器缓存测试", () => {
         res.end(IMG_DATA);
         return;
       }
-      res.writeHead(404); res.end();
+      res.writeHead(404);
+      res.end();
     });
 
     await page.goto(`http://localhost:${port}/`);
@@ -86,7 +89,8 @@ test.describe("Cache-Control immutable 浏览器缓存测试", () => {
         res.end(IMG_DATA);
         return;
       }
-      res.writeHead(404); res.end();
+      res.writeHead(404);
+      res.end();
     });
 
     await page.goto(`http://localhost:${port}/`);

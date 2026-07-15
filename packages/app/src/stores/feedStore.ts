@@ -469,12 +469,15 @@ export async function fetchMoreMixed(signal?: AbortSignal) {
     const illustsArr = tabIllusts["recommended_illust"] ?? [];
     const mangaArr = tabIllusts["recommended_manga"] ?? [];
 
-    const illustOldest = illustsArr.length > 0 ? illustsArr[illustsArr.length - 1].create_date : null;
+    const illustOldest =
+      illustsArr.length > 0 ? illustsArr[illustsArr.length - 1].create_date : null;
     const mangaOldest = mangaArr.length > 0 ? mangaArr[mangaArr.length - 1].create_date : null;
 
     const errors: ApiError[] = [];
 
-    const loadSource = async (key: "recommended_illust" | "recommended_manga"): Promise<boolean> => {
+    const loadSource = async (
+      key: "recommended_illust" | "recommended_manga",
+    ): Promise<boolean> => {
       const next = tabNextUrl[key];
       if (!next) return false;
       try {

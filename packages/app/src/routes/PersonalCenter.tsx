@@ -314,7 +314,16 @@ const PersonalCenter: Component<Props> = (props) => {
 
           {/* User list */}
           <div class="px-4 flex flex-col" style={{ gap: "var(--spacingVerticalS)" }}>
-            {error() && <ErrorDisplay error={error()!} onRetry={() => { const uid = targetUserId(); loadFollowing(uid); loadFollowers(); }} />}
+            {error() && (
+              <ErrorDisplay
+                error={error()!}
+                onRetry={() => {
+                  const uid = targetUserId();
+                  loadFollowing(uid);
+                  loadFollowers();
+                }}
+              />
+            )}
 
             {list().map((preview) => (
               <div

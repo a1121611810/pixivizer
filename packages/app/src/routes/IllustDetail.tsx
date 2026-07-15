@@ -270,7 +270,7 @@ const IllustDetail: Component = () => {
   createEffect(() => {
     const d = data();
     if (d.error) {
-      if (d.error && typeof d.error === 'object' && 'type' in d.error) {
+      if (d.error && typeof d.error === "object" && "type" in d.error) {
         setError(d.error as ApiError);
       } else if (d.error) {
         setError({ type: ApiErrorType.UNKNOWN, message: d.error as string });

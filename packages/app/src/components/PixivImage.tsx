@@ -25,7 +25,7 @@ const PixivImage: Component<PixivImageProps> = (props) => {
   }
 
   const [displayUrl, setDisplayUrl] = createSignal(
-    syncBlobUrl || (props.src ? resolveImageUrl(props.src) : "")
+    syncBlobUrl || (props.src ? resolveImageUrl(props.src) : ""),
   );
   const [failed, setFailed] = createSignal(false);
 

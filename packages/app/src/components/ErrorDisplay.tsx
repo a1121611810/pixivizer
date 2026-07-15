@@ -133,7 +133,8 @@ const ErrorDisplay: Component<ErrorDisplayProps> = (props) => {
           style={S.button}
           onClick={handleAction}
           onMouseOver={(e) => {
-            (e.currentTarget as HTMLElement).style.backgroundColor = "var(--colorBrandBackgroundHover)";
+            (e.currentTarget as HTMLElement).style.backgroundColor =
+              "var(--colorBrandBackgroundHover)";
           }}
           onMouseOut={(e) => {
             (e.currentTarget as HTMLElement).style.backgroundColor = "var(--colorBrandBackground)";

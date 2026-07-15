@@ -1,7 +1,13 @@
 import { createSignal } from "solid-js";
 import { getUserDetail, getUserFollowing, getUserFollowers } from "../api/user";
 import { followUser, unfollowUser } from "../api/illust";
-import { ApiErrorType, type ApiError, type PixivProfile, type PixivUserPreview, type PixivUser } from "../api/types";
+import {
+  ApiErrorType,
+  type ApiError,
+  type PixivProfile,
+  type PixivUserPreview,
+  type PixivUser,
+} from "../api/types";
 import { user } from "./authStore";
 import { filterUserPreviews } from "../utils/r18Filter";
 import { toApiError } from "../api/client";

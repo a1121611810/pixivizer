@@ -44,9 +44,7 @@ const ImageCacheSettings: Component = () => {
             </h2>
             <fluent-switch
               checked={imageCacheDisk()}
-              onChange={(e: Event) =>
-                setImageCacheDisk((e.target as HTMLInputElement).checked)
-              }
+              onChange={(e: Event) => setImageCacheDisk((e.target as HTMLInputElement).checked)}
               aria-label="启用磁盘缓存"
             />
           </div>
@@ -64,9 +62,7 @@ const ImageCacheSettings: Component = () => {
             </h2>
             <fluent-switch
               checked={imageCacheBrowser()}
-              onChange={(e: Event) =>
-                setImageCacheBrowser((e.target as HTMLInputElement).checked)
-              }
+              onChange={(e: Event) => setImageCacheBrowser((e.target as HTMLInputElement).checked)}
               aria-label="启用浏览器缓存"
             />
           </div>
@@ -84,15 +80,12 @@ const ImageCacheSettings: Component = () => {
             </h2>
             <fluent-switch
               checked={imageCachePrefetch()}
-              onChange={(e: Event) =>
-                setImageCachePrefetch((e.target as HTMLInputElement).checked)
-              }
+              onChange={(e: Event) => setImageCachePrefetch((e.target as HTMLInputElement).checked)}
               aria-label="启用后台预取"
             />
           </div>
           <p class="text-[var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-            提前加载视口外的图片。开启后：滚动更流畅，但消耗更多流量。
-            流量敏感用户建议关闭。
+            提前加载视口外的图片。开启后：滚动更流畅，但消耗更多流量。 流量敏感用户建议关闭。
           </p>
         </div>
 
@@ -107,18 +100,25 @@ const ImageCacheSettings: Component = () => {
             </span>
           </div>
           <div class="flex items-center gap-3">
-            <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)]">50</span>
-            <input type="range" min="50" max="1000" step="50"
+            <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)]">
+              50
+            </span>
+            <input
+              type="range"
+              min="50"
+              max="1000"
+              step="50"
               value={imageCacheDiskSize()}
               onInput={(e) => setImageCacheDiskSize(Number(e.currentTarget.value))}
               class="flex-1 h-1 rounded-[var(--borderRadiusCircular)] cursor-pointer"
               style={{ "accent-color": "var(--colorCompoundBrandBackground)" }}
             />
-            <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)]">1000</span>
+            <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForegroundDisabled)]">
+              1000
+            </span>
           </div>
           <p class="text-[var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug mt-2">
-            当前最多缓存约 {imageCacheDiskSize()} MB。
-            修改后新写入的缓存文件按新上限淘汰。
+            当前最多缓存约 {imageCacheDiskSize()} MB。 修改后新写入的缓存文件按新上限淘汰。
           </p>
         </div>
 
