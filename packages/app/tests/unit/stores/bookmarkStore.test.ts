@@ -1,64 +1,59 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ApiErrorType, type PixivIllust, type ApiError } from "@/api/types";
 
-// Completely mock solid-js createResource for test control
-let mockResourceValue: { illusts: PixivIllust[]; nextUrl: string | null } = {
-  illusts: [],
-  nextUrl: null,
+// ── Mock TanStack Query ──
+// Mock the full @tanstack/solid-query module and replace createInfiniteQuery
+// with a controlled mock that returns plain-property objects mirroring the
+// Proxy-based result shape.
+
+type MockInfiniteData = {
+  pages: { illusts: PixivIllust[]; next_url: string | null }[];
+  pageParams: unknown[];
 };
-let mockResourceLoading = false;
-let mockResourceError: ApiError | Error | null = null;
-const mockMutate = vi.fn();
+
+let mockData: MockInfiniteData | undefined = {
+  pages: [{ illusts: [], next_url: null }],
+  pageParams: [undefined],
+};
+let mockIsFetching = false;
+let mockIsFetchingNextPage = false;
+let mockError: ApiError | Error | null = null;
+let mockHasNextPage = false;
+const mockFetchNextPage = vi.fn();
 const mockRefetch = vi.fn();
 
-vi.mock("solid-js", async (importOriginal) => {
+vi.mock("@tanstack/solid-query", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...(actual as Record<string, unknown>),
-    createResource: (..._args: unknown[]) => {
-      // Capture the fetcher for later use
-      const resourceFn = () => ({
-        illusts: mockResourceValue.illusts,
-        nextUrl: mockResourceValue.nextUrl,
-      });
-      // SolidJS resource signals have .loading, .error, .state as properties
-      resourceFn.loading = mockResourceLoading;
-      resourceFn.error = mockResourceError;
-      resourceFn.state = mockResourceError ? "errored" : "ready";
-      return [
-        resourceFn,
-        {
-          mutate: mockMutate.mockImplementation(
-            (
-              fn:
-                | ((prev: typeof mockResourceValue) => typeof mockResourceValue)
-                | typeof mockResourceValue,
-            ) => {
-              if (typeof fn === "function") {
-                mockResourceValue = fn(mockResourceValue);
-              } else {
-                mockResourceValue = fn;
-              }
-            },
-          ),
-          refetch: mockRefetch,
+    createInfiniteQuery: (...args: unknown[]) => {
+      const optsAccessor = args[0] as () => { enabled?: boolean };
+      return {
+        get data() {
+          const opts = optsAccessor();
+          // TQ returns undefined when query is disabled (e.g. user not logged in)
+          return opts.enabled !== false ? mockData : undefined;
         },
-      ];
+        isFetching: mockIsFetching,
+        isFetchingNextPage: mockIsFetchingNextPage,
+        error: mockError,
+        hasNextPage: mockHasNextPage,
+        fetchNextPage: mockFetchNextPage,
+        refetch: mockRefetch,
+      };
     },
   };
 });
 
-// Mock api/illust
+// Mock api/illust (only loadBookmarks is needed now; loadNext is internal to TQ)
 const mockLoadBookmarks = vi.fn();
-const mockLoadNext = vi.fn();
 
 vi.mock("@/api/illust", () => ({
   loadBookmarks: (...args: unknown[]) => mockLoadBookmarks(...args),
-  loadNext: (...args: unknown[]) => mockLoadNext(...args),
 }));
 
 // Mock authStore
-let mockUserId: string | null = "1";
+let mockUserId: number | null = 1;
 vi.mock("@/stores/authStore", () => ({
   get user() {
     return () => (mockUserId ? { id: mockUserId, name: "Test", account: "test" } : null);
@@ -99,10 +94,12 @@ async function loadStore() {
 describe("bookmarkStore", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUserId = "1";
-    mockResourceValue = { illusts: [], nextUrl: null };
-    mockResourceLoading = false;
-    mockResourceError = null;
+    mockUserId = 1;
+    mockData = { pages: [{ illusts: [], next_url: null }], pageParams: [undefined] };
+    mockIsFetching = false;
+    mockIsFetchingNextPage = false;
+    mockError = null;
+    mockHasNextPage = false;
   });
 
   describe("initial state", () => {
@@ -116,45 +113,48 @@ describe("bookmarkStore", () => {
   });
 
   describe("fetchMore", () => {
-    it("loads next page when nextUrl exists", async () => {
-      mockResourceValue = {
-        illusts: [makeIllust(1)],
-        nextUrl: "page2",
+    it("loads next page when hasNextPage is true", async () => {
+      mockData = {
+        pages: [{ illusts: [makeIllust(1)], next_url: "page2" }],
+        pageParams: [undefined],
       };
+      mockHasNextPage = true;
 
       const store = await loadStore();
       expect(store.nextUrl()).toBe("page2");
 
-      mockLoadNext.mockResolvedValue({
-        illusts: [makeIllust(2)],
-        next_url: null,
-      });
+      mockFetchNextPage.mockResolvedValue(undefined as never);
 
       await store.fetchMore();
 
-      expect(mockLoadNext).toHaveBeenCalledWith("page2");
-      // mutate should have been called
-      expect(mockMutate).toHaveBeenCalled();
+      expect(mockFetchNextPage).toHaveBeenCalled();
     });
 
-    it("does nothing when nextUrl is null", async () => {
+    it("does nothing when hasNextPage is false (no nextUrl)", async () => {
+      mockData = {
+        pages: [{ illusts: [], next_url: null }],
+        pageParams: [undefined],
+      };
+      mockHasNextPage = false;
+
       const store = await loadStore();
       expect(store.nextUrl()).toBeNull();
 
       await store.fetchMore();
-      expect(mockLoadNext).not.toHaveBeenCalled();
+      expect(mockFetchNextPage).not.toHaveBeenCalled();
     });
 
-    it("does nothing when loading", async () => {
-      mockResourceValue = {
-        illusts: [makeIllust(1)],
-        nextUrl: "page2",
+    it("does nothing when isFetchingNextPage is true", async () => {
+      mockData = {
+        pages: [{ illusts: [makeIllust(1)], next_url: "page2" }],
+        pageParams: [undefined],
       };
-      mockResourceLoading = true;
+      mockHasNextPage = true;
+      mockIsFetchingNextPage = true;
 
       const store = await loadStore();
       await store.fetchMore();
-      expect(mockLoadNext).not.toHaveBeenCalled();
+      expect(mockFetchNextPage).not.toHaveBeenCalled();
     });
   });
 
@@ -165,7 +165,7 @@ describe("bookmarkStore", () => {
     });
 
     it("returns ApiError with UNAUTHORIZED type for 401", async () => {
-      mockResourceError = { type: ApiErrorType.UNAUTHORIZED, message: "登录已过期 (HTTP 401)" };
+      mockError = { type: ApiErrorType.UNAUTHORIZED, message: "登录已过期 (HTTP 401)" };
       const { error } = await loadStore();
       expect(error()).not.toBeNull();
       expect(error()!.type).toBe(ApiErrorType.UNAUTHORIZED);
@@ -173,21 +173,21 @@ describe("bookmarkStore", () => {
     });
 
     it("returns ApiError with RATE_LIMIT type for 429", async () => {
-      mockResourceError = { type: ApiErrorType.RATE_LIMIT, message: "请求过于频繁，请稍后重试 (HTTP 429)" };
+      mockError = { type: ApiErrorType.RATE_LIMIT, message: "请求过于频繁，请稍后重试 (HTTP 429)" };
       const { error } = await loadStore();
       expect(error()).not.toBeNull();
       expect(error()!.type).toBe(ApiErrorType.RATE_LIMIT);
     });
 
     it("returns ApiError with NETWORK type for network errors", async () => {
-      mockResourceError = { type: ApiErrorType.NETWORK, message: "网络不可用，请检查连接" };
+      mockError = { type: ApiErrorType.NETWORK, message: "网络不可用，请检查连接" };
       const { error } = await loadStore();
       expect(error()).not.toBeNull();
       expect(error()!.type).toBe(ApiErrorType.NETWORK);
     });
 
     it("falls back to UNKNOWN for non-ApiError objects", async () => {
-      mockResourceError = new Error("Something went wrong");
+      mockError = new Error("Something went wrong");
       const { error } = await loadStore();
       expect(error()).not.toBeNull();
       expect(error()!.type).toBe(ApiErrorType.UNKNOWN);
@@ -219,11 +219,18 @@ describe("bookmarkStore", () => {
   });
 
   describe("ensureLoaded", () => {
-    it("calls refetch when errored", async () => {
-      mockResourceError = new Error("err");
+    it("is a no-op (TQ handles auto-fetching reactively)", async () => {
+      mockData = undefined;
       const { ensureLoaded } = await loadStore();
       ensureLoaded();
-      expect(mockRefetch).toHaveBeenCalled();
+      expect(mockRefetch).not.toHaveBeenCalled();
+    });
+
+    it("is a no-op on error (TQ handles retries)", async () => {
+      mockError = new Error("err");
+      const { ensureLoaded } = await loadStore();
+      ensureLoaded();
+      expect(mockRefetch).not.toHaveBeenCalled();
     });
   });
 });
