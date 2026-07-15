@@ -2,8 +2,26 @@
  * @vitest-environment happy-dom
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { AnyRoute } from "@tanstack/solid-router";
+
+// followListStore 和 userIllustsStore 在模块级别调用 createInfiniteQuery，
+// 需要 QueryClientProvider。该测试只验证路由结构，mock TQ 即可。
+vi.mock("@tanstack/solid-query", () => ({
+  QueryClient: class {
+    defaultQueryOptions = (opts: unknown) => opts;
+  } as never,
+  QueryClientProvider: (props: { children: unknown }) => props.children,
+  createInfiniteQuery: () => ({
+    data: undefined,
+    isFetching: false,
+    isFetchingNextPage: false,
+    error: null,
+    hasNextPage: false,
+    fetchNextPage: vi.fn(),
+    refetch: vi.fn(),
+  }),
+}));
 
 const { router } = await import("@/router");
 
