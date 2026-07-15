@@ -1,5 +1,46 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { PixivUserPreview } from "@/api/types";
 
+// ── Mock TanStack Query for followListStore ──
+type MockInfiniteData<T> = {
+  pages: T[];
+  pageParams: unknown[];
+};
+
+let mockData:
+  | MockInfiniteData<{ user_previews: PixivUserPreview[]; next_url: string | null }>
+  | undefined;
+let mockIsFetching = false;
+let mockIsFetchingNext = false;
+let mockError: Error | null = null;
+let mockHasNext = false;
+const mockFetchNext = vi.fn();
+const mockRefetch = vi.fn();
+
+vi.mock("@tanstack/solid-query", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...(actual as Record<string, unknown>),
+    createInfiniteQuery: (...args: unknown[]) => {
+      const optsAccessor = args[0] as () => { enabled?: boolean };
+      return {
+        get data() {
+          const opts = optsAccessor();
+          // TQ returns undefined when query is disabled
+          return opts.enabled !== false ? mockData : undefined;
+        },
+        isFetching: mockIsFetching,
+        isFetchingNextPage: mockIsFetchingNext,
+        error: mockError,
+        hasNextPage: mockHasNext,
+        fetchNextPage: mockFetchNext,
+        refetch: mockRefetch,
+      };
+    },
+  };
+});
+
+// Mock API
 const mockGetUserFollowing = vi.fn();
 const mockGetUserFollowers = vi.fn();
 const mockFollowUser = vi.fn();
@@ -16,7 +57,7 @@ vi.mock("@/api/illust", () => ({
 }));
 
 vi.mock("@/utils/r18Filter", () => ({
-  filterUserPreviews: (previews: unknown[]) => previews,
+  filterUserPreviews: (previews: PixivUserPreview[]) => previews,
 }));
 
 function createPreview(userId: number, followed = false) {
@@ -34,6 +75,11 @@ async function loadStore() {
 describe("followListStore", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockData = { pages: [{ user_previews: [], next_url: null }], pageParams: [undefined] };
+    mockIsFetching = false;
+    mockIsFetchingNext = false;
+    mockError = null;
+    mockHasNext = false;
   });
 
   describe("initial state", () => {
@@ -48,34 +94,33 @@ describe("followListStore", () => {
 
   describe("loadList", () => {
     it("loads following list", async () => {
-      mockGetUserFollowing.mockResolvedValue({
-        user_previews: [createPreview(1), createPreview(2)],
-        next_url: "next",
-      });
+      mockData = {
+        pages: [{ user_previews: [createPreview(1), createPreview(2)], next_url: "next" }],
+        pageParams: [undefined],
+      };
+      mockHasNext = true;
 
       const store = await loadStore();
       await store.loadList("following", 5);
 
       expect(store.users()).toHaveLength(2);
       expect(store.nextUrl()).toBe("next");
-      expect(mockGetUserFollowing).toHaveBeenCalledWith(5);
     });
 
     it("loads followers list", async () => {
-      mockGetUserFollowers.mockResolvedValue({
-        user_previews: [createPreview(3)],
-        next_url: null,
-      });
+      mockData = {
+        pages: [{ user_previews: [createPreview(3)], next_url: null }],
+        pageParams: [undefined],
+      };
 
       const store = await loadStore();
       await store.loadList("followers", 5);
 
       expect(store.users()).toHaveLength(1);
-      expect(mockGetUserFollowers).toHaveBeenCalledWith(5);
     });
 
     it("handles errors gracefully", async () => {
-      mockGetUserFollowing.mockRejectedValue(new Error("Failed"));
+      mockError = new Error("Failed");
 
       const store = await loadStore();
       await store.loadList("following", 5);
@@ -87,40 +132,37 @@ describe("followListStore", () => {
 
   describe("loadMore", () => {
     it("loads next page of following", async () => {
-      mockGetUserFollowing.mockResolvedValue({
-        user_previews: [createPreview(1)],
-        next_url: "next-following",
-      });
+      mockData = {
+        pages: [{ user_previews: [createPreview(1)], next_url: "next-following" }],
+        pageParams: [undefined],
+      };
+      mockHasNext = true;
 
       const store = await loadStore();
       await store.loadList("following", 5);
 
-      mockGetUserFollowing.mockResolvedValue({
-        user_previews: [createPreview(2)],
-        next_url: null,
-      });
+      mockFetchNext.mockResolvedValue(undefined as never);
 
-      await store.loadMore("following", 5);
+      await store.loadMore();
 
-      expect(store.users()).toHaveLength(2);
-      expect(mockGetUserFollowing).toHaveBeenCalledWith(5, "public", 1);
+      expect(mockFetchNext).toHaveBeenCalled();
     });
 
-    it("does nothing when already loading", async () => {
+    it("does nothing when no next page", async () => {
+      mockHasNext = false;
       const store = await loadStore();
-      // Simulate loading by calling loadMore without a prior list load
-      expect(store.nextUrl()).toBeNull();
-      await store.loadMore("following", 5);
-      expect(mockGetUserFollowing).not.toHaveBeenCalled();
+      // Load but no nextUrl
+      await store.loadMore();
+      expect(mockFetchNext).not.toHaveBeenCalled();
     });
   });
 
   describe("toggleFollow", () => {
     it("optimistically toggles follow state", async () => {
-      mockGetUserFollowing.mockResolvedValue({
-        user_previews: [createPreview(10, false)],
-        next_url: null,
-      });
+      mockData = {
+        pages: [{ user_previews: [createPreview(10, false)], next_url: null }],
+        pageParams: [undefined],
+      };
 
       const store = await loadStore();
       await store.loadList("following", 5);
@@ -133,10 +175,10 @@ describe("followListStore", () => {
 
     it("rolls back on API failure", async () => {
       mockFollowUser.mockRejectedValue(new Error("err"));
-      mockGetUserFollowing.mockResolvedValue({
-        user_previews: [createPreview(10, false)],
-        next_url: null,
-      });
+      mockData = {
+        pages: [{ user_previews: [createPreview(10, false)], next_url: null }],
+        pageParams: [undefined],
+      };
 
       const store = await loadStore();
       await store.loadList("following", 5);
@@ -154,10 +196,10 @@ describe("followListStore", () => {
 
   describe("reset", () => {
     it("resets all state", async () => {
-      mockGetUserFollowing.mockResolvedValue({
-        user_previews: [createPreview(1)],
-        next_url: "next",
-      });
+      mockData = {
+        pages: [{ user_previews: [createPreview(1)], next_url: "next" }],
+        pageParams: [undefined],
+      };
 
       const store = await loadStore();
       await store.loadList("following", 5);
