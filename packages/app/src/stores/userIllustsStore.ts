@@ -1,18 +1,14 @@
-import { createSignal, createResource } from "solid-js";
+import { createRoot, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
-import { loadUserIllusts, loadNext as loadIllustNext } from "../api/illust";
-import { loadUserNovels, loadNext as loadNovelNext } from "../api/novel";
-import { ApiErrorType, type ApiError } from "../api/types";
-import type { PixivIllust, PixivNovel, ContentType } from "../api/types";
+import { createInfiniteQuery } from "@tanstack/solid-query";
+import { loadUserIllusts } from "../api/illust";
+import { loadUserNovels } from "../api/novel";
+import { type ApiError, type PixivIllust, type PixivNovel, type ContentType } from "../api/types";
 import { filterFeedIllusts, filterNovels } from "../utils/r18Filter";
-
-// ── Per-type data caches ──
-// Avoid re-fetching when switching between types that have already been loaded.
-type IllustCacheEntry = { illusts: PixivIllust[]; nextUrl: string | null };
-type NovelCacheEntry = { novels: PixivNovel[]; nextUrl: string | null };
-
-let illustCache: Record<string, IllustCacheEntry | undefined> = {};
-let novelCache: NovelCacheEntry | undefined;
+import { queryKeys } from "../api/queryKeys";
+import { normalizeQueryError } from "../api/normalizeQueryError";
+import { apiClient } from "../api/client";
+import { queryClient } from "../api/queryClient";
 
 // ── Content type signal ──
 const [contentType, setContentType] = createSignal<ContentType>("illust");
@@ -22,39 +18,57 @@ const [fetchSource, setFetchSource] = createSignal<{ userId: number; type: Conte
   false,
 );
 
-// ── Resource 1: illust / manga ──
-const [illustResource, { mutate: mutateIllust }] = createResource(
-  () => {
-    const s = fetchSource();
-    if (!s || s.type === "novel") return false;
-    return s;
-  },
-  async ({ userId, type }) => {
-    const data = await loadUserIllusts(userId, type);
-    const entry: IllustCacheEntry = { illusts: data.illusts, nextUrl: data.next_url };
-    illustCache[type] = entry;
-    return entry;
-  },
-  { initialValue: { illusts: [] as PixivIllust[], nextUrl: null as string | null } },
+// ── TQ Infinite Query: illust / manga ──
+const illustQuery = createRoot(() =>
+  createInfiniteQuery(
+    () => {
+      const s = fetchSource();
+      const isActive = s && s.type !== "novel";
+      return {
+        queryKey: isActive
+          ? queryKeys.userIllusts(s!.userId, s!.type === "manga" ? "manga" : "illust")
+          : (["__disabled__", "illust", "userWorks", 0] as const),
+        queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
+          if (!s) return { illusts: [] as PixivIllust[], next_url: null as string | null };
+          if (pageParam)
+            return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(pageParam);
+          return loadUserIllusts(s.userId, s.type);
+        },
+        getNextPageParam: (lastPage: { next_url: string | null }) => lastPage.next_url ?? undefined,
+        initialPageParam: undefined as string | undefined,
+        enabled: !!isActive,
+      };
+    },
+    () => queryClient,
+  ),
 );
 
-// ── Resource 2: novel ──
-const [novelResource, { mutate: mutateNovel }] = createResource(
-  () => {
-    const s = fetchSource();
-    if (!s || s.type !== "novel") return false;
-    return s;
-  },
-  async ({ userId }) => {
-    const data = await loadUserNovels(userId);
-    const entry: NovelCacheEntry = { novels: data.novels, nextUrl: data.next_url };
-    novelCache = entry;
-    return entry;
-  },
-  { initialValue: { novels: [] as PixivNovel[], nextUrl: null as string | null } },
+// ── TQ Infinite Query: novel ──
+const novelQuery = createRoot(() =>
+  createInfiniteQuery(
+    () => {
+      const s = fetchSource();
+      const isActive = s && s.type === "novel";
+      return {
+        queryKey: isActive
+          ? queryKeys.userNovels(s!.userId)
+          : (["__disabled__", "novel", "userWorks", 0] as const),
+        queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
+          if (!s) return { novels: [] as PixivNovel[], next_url: null as string | null };
+          if (pageParam)
+            return apiClient.get<{ novels: PixivNovel[]; next_url: string | null }>(pageParam);
+          return loadUserNovels(s.userId);
+        },
+        getNextPageParam: (lastPage: { next_url: string | null }) => lastPage.next_url ?? undefined,
+        initialPageParam: undefined as string | undefined,
+        enabled: !!isActive,
+      };
+    },
+    () => queryClient,
+  ),
 );
 
-// ── Scroll positions per content type (S1) ──
+// ── Scroll positions per content type (unchanged) ──
 const [scrollPositions, setScrollPositions] = createStore<Record<ContentType, number>>({
   illust: 0,
   manga: 0,
@@ -65,35 +79,35 @@ const [scrollPositions, setScrollPositions] = createStore<Record<ContentType, nu
 
 /** Returns illusts (non-novel types) or empty array when current type is novel. */
 export const illusts = () => {
-  const data = illustResource();
-  return data ? filterFeedIllusts(data.illusts) : [];
+  const data = illustQuery.data;
+  if (!data) return [] as PixivIllust[];
+  return filterFeedIllusts(data.pages.flatMap((p) => p.illusts));
 };
 
 /** Returns novels (novel type only) or empty array otherwise. */
 export const novels = () => {
   if (contentType() !== "novel") return [] as PixivNovel[];
-  const data = novelResource();
-  return data ? filterNovels(data.novels) : [];
+  const data = novelQuery.data;
+  if (!data) return [] as PixivNovel[];
+  return filterNovels(data.pages.flatMap((p) => p.novels));
 };
 
-export const nextUrl = () => {
+export const nextUrl = (): string | null => {
   if (contentType() === "novel") {
-    return novelResource()?.nextUrl ?? null;
+    const data = novelQuery.data;
+    if (!data) return null;
+    return data.pages[data.pages.length - 1]?.next_url ?? null;
   }
-  return illustResource()?.nextUrl ?? null;
+  const data = illustQuery.data;
+  if (!data) return null;
+  return data.pages[data.pages.length - 1]?.next_url ?? null;
 };
 
 export const loading = () =>
-  contentType() === "novel" ? novelResource.loading : illustResource.loading;
+  contentType() === "novel" ? novelQuery.isFetching : illustQuery.isFetching;
 
-export const error = (): ApiError | null => {
-  const err = contentType() === "novel" ? novelResource.error : illustResource.error;
-  if (!err) return null;
-  // If it's already an ApiError (from client.ts), return it directly
-  if ((err as ApiError).type) return err as ApiError;
-  // Fallback for unexpected error shapes
-  return { type: ApiErrorType.UNKNOWN, message: (err as { message?: string }).message ?? "加载失败" };
-};
+export const error = (): ApiError | null =>
+  normalizeQueryError(contentType() === "novel" ? novelQuery.error : illustQuery.error);
 
 export { contentType, scrollPositions };
 
@@ -101,59 +115,33 @@ export { contentType, scrollPositions };
 
 /**
  * Load user works for a given userId and type.
- * Uses per-type cache: switching between already-loaded types is instant (no re-fetch).
- * Pass force=true to bypass cache (e.g. pull-to-refresh).
+ * TQ handles caching via staleTime/gcTime: switching to an already-loaded type
+ * returns cached data immediately without re-fetching.
+ * Pass force=true to invalidate cache and force re-fetch.
  */
 export function load(userId: number, type: ContentType = "illust", force = false) {
-  setContentType(type);
-
-  // Restore from cache when switching between already-loaded types
-  if (!force) {
-    if (type !== "novel") {
-      const cached = illustCache[type];
-      if (cached) {
-        mutateIllust(cached);
-        return;
-      }
+  if (force) {
+    if (type === "novel") {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userNovels(userId) });
     } else {
-      if (novelCache) {
-        mutateNovel(novelCache);
-        return;
-      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.userIllusts(userId, type) });
     }
   }
-
-  // No cache or force: fetch from API
+  setContentType(type);
   setFetchSource({ userId, type });
 }
 
 export async function loadMore() {
   if (contentType() === "novel") {
-    const current = novelResource();
-    if (!current?.nextUrl || novelResource.loading) return;
-    const data = await loadNovelNext(current.nextUrl);
-    const entry: NovelCacheEntry = {
-      novels: [...current.novels, ...data.novels],
-      nextUrl: data.next_url,
-    };
-    novelCache = entry;
-    mutateNovel(entry);
+    if (!novelQuery.hasNextPage || novelQuery.isFetchingNextPage) return;
+    await novelQuery.fetchNextPage();
     return;
   }
-
-  const current = illustResource();
-  if (!current?.nextUrl || illustResource.loading) return;
-  const data = await loadIllustNext(current.nextUrl);
-  const ct = contentType();
-  const entry: IllustCacheEntry = {
-    illusts: [...current.illusts, ...data.illusts],
-    nextUrl: data.next_url,
-  };
-  illustCache[ct] = entry;
-  mutateIllust(entry);
+  if (!illustQuery.hasNextPage || illustQuery.isFetchingNextPage) return;
+  await illustQuery.fetchNextPage();
 }
 
-/** Switch content type. Does not trigger load by itself. */
+/** Switch content type. Does not trigger fetch by itself. */
 export function switchType(type: ContentType) {
   setContentType(type);
 }

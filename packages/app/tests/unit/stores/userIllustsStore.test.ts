@@ -1,96 +1,77 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PixivIllust, PixivNovel } from "@/api/types";
 
-// ── Dual-resource mock state ──
-// Illust resource (first createResource call)
-let mockIllustValue: { illusts: PixivIllust[]; nextUrl: string | null } = {
-  illusts: [],
-  nextUrl: null,
+// ── Mock TanStack Query ──
+// Two createInfiniteQuery calls: illust (first) and novel (second)
+let callCount = 0;
+
+type MockInfiniteData<T> = {
+  pages: T[];
+  pageParams: unknown[];
 };
-let mockIllustLoading = false;
+
+// Shared mock state for illust query
+let mockIllustData:
+  | MockInfiniteData<{ illusts: PixivIllust[]; next_url: string | null }>
+  | undefined;
+let mockIllustFetching = false;
+let mockIllustFetchingNext = false;
 let mockIllustError: Error | null = null;
-const mockIllustMutate = vi.fn();
+let mockIllustHasNext = false;
+const mockIllustFetchNext = vi.fn();
+const mockIllustRefetch = vi.fn();
 
-// Novel resource (second createResource call)
-let mockNovelValue: { novels: PixivNovel[]; nextUrl: string | null } = {
-  novels: [],
-  nextUrl: null,
-};
-let mockNovelLoading = false;
+// Shared mock state for novel query
+let mockNovelData: MockInfiniteData<{ novels: PixivNovel[]; next_url: string | null }> | undefined;
+let mockNovelFetching = false;
+let mockNovelFetchingNext = false;
 let mockNovelError: Error | null = null;
-const mockNovelMutate = vi.fn();
+let mockNovelHasNext = false;
+const mockNovelFetchNext = vi.fn();
+const mockNovelRefetch = vi.fn();
 
-// Track which createResource call we're on
-let mockCreateResourceCount = 0;
-
-vi.mock("solid-js", async (importOriginal) => {
+vi.mock("@tanstack/solid-query", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...(actual as Record<string, unknown>),
-    createResource: () => {
-      const isIllust = mockCreateResourceCount === 0;
-      mockCreateResourceCount++;
+    createInfiniteQuery: (..._args: unknown[]) => {
+      const isIllust = callCount === 0;
+      callCount++;
       if (isIllust) {
-        const resourceFn = () => mockIllustValue;
-        resourceFn.loading = mockIllustLoading;
-        resourceFn.error = mockIllustError;
-        resourceFn.state = mockIllustError ? "errored" : "ready";
-        return [
-          resourceFn,
-          {
-            mutate: mockIllustMutate.mockImplementation(
-              (
-                fn:
-                  | ((prev: typeof mockIllustValue) => typeof mockIllustValue)
-                  | typeof mockIllustValue,
-              ) => {
-                if (typeof fn === "function") {
-                  mockIllustValue = fn(mockIllustValue);
-                } else {
-                  mockIllustValue = fn;
-                }
-              },
-            ),
-          },
-        ];
+        return {
+          data: mockIllustData,
+          isFetching: mockIllustFetching,
+          isFetchingNextPage: mockIllustFetchingNext,
+          error: mockIllustError,
+          hasNextPage: mockIllustHasNext,
+          fetchNextPage: mockIllustFetchNext,
+          refetch: mockIllustRefetch,
+        };
       }
-      const resourceFn = () => mockNovelValue;
-      resourceFn.loading = mockNovelLoading;
-      resourceFn.error = mockNovelError;
-      resourceFn.state = mockNovelError ? "errored" : "ready";
-      return [
-        resourceFn,
-        {
-          mutate: mockNovelMutate.mockImplementation(
-            (
-              fn: ((prev: typeof mockNovelValue) => typeof mockNovelValue) | typeof mockNovelValue,
-            ) => {
-              if (typeof fn === "function") {
-                mockNovelValue = fn(mockNovelValue);
-              } else {
-                mockNovelValue = fn;
-              }
-            },
-          ),
-        },
-      ];
+      return {
+        data: mockNovelData,
+        isFetching: mockNovelFetching,
+        isFetchingNextPage: mockNovelFetchingNext,
+        error: mockNovelError,
+        hasNextPage: mockNovelHasNext,
+        fetchNextPage: mockNovelFetchNext,
+        refetch: mockNovelRefetch,
+      };
     },
   };
 });
 
+// Mock API
 const mockLoadUserIllusts = vi.fn();
-const mockLoadUserNovels = vi.fn();
-const mockIllustLoadNext = vi.fn();
-const mockNovelLoadNext = vi.fn();
 
 vi.mock("@/api/illust", () => ({
   loadUserIllusts: (...args: unknown[]) => mockLoadUserIllusts(...args),
-  loadNext: (...args: unknown[]) => mockIllustLoadNext(...args),
 }));
+
+const mockLoadUserNovels = vi.fn();
 
 vi.mock("@/api/novel", () => ({
   loadUserNovels: (...args: unknown[]) => mockLoadUserNovels(...args),
-  loadNext: (...args: unknown[]) => mockNovelLoadNext(...args),
 }));
 
 vi.mock("@/utils/r18Filter", () => ({
@@ -142,13 +123,17 @@ async function loadStore() {
 describe("userIllustsStore", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockCreateResourceCount = 0;
-    mockIllustValue = { illusts: [], nextUrl: null };
-    mockIllustLoading = false;
+    callCount = 0;
+    mockIllustData = { pages: [{ illusts: [], next_url: null }], pageParams: [undefined] };
+    mockIllustFetching = false;
+    mockIllustFetchingNext = false;
     mockIllustError = null;
-    mockNovelValue = { novels: [], nextUrl: null };
-    mockNovelLoading = false;
+    mockIllustHasNext = false;
+    mockNovelData = { pages: [{ novels: [], next_url: null }], pageParams: [undefined] };
+    mockNovelFetching = false;
+    mockNovelFetchingNext = false;
     mockNovelError = null;
+    mockNovelHasNext = false;
   });
 
   describe("initial state", () => {
@@ -168,7 +153,10 @@ describe("userIllustsStore", () => {
 
   describe("novel data", () => {
     it("loads novels and exposes them via novels()", async () => {
-      mockNovelValue = { novels: [makeNovel(1), makeNovel(2)], nextUrl: null };
+      mockNovelData = {
+        pages: [{ novels: [makeNovel(1), makeNovel(2)], next_url: null }],
+        pageParams: [undefined],
+      };
       const store = await loadStore();
       store.load(42, "novel");
       expect(store.contentType()).toBe("novel");
@@ -178,14 +166,21 @@ describe("userIllustsStore", () => {
     });
 
     it("exposes nextUrl for novel", async () => {
-      mockNovelValue = { novels: [makeNovel(1)], nextUrl: "page2" };
+      mockNovelData = {
+        pages: [{ novels: [makeNovel(1)], next_url: "page2" }],
+        pageParams: [undefined],
+      };
+      mockNovelHasNext = true;
       const store = await loadStore();
       store.load(42, "novel");
       expect(store.nextUrl()).toBe("page2");
     });
 
     it("returns empty illusts when type is novel", async () => {
-      mockNovelValue = { novels: [makeNovel(1)], nextUrl: null };
+      mockNovelData = {
+        pages: [{ novels: [makeNovel(1)], next_url: null }],
+        pageParams: [undefined],
+      };
       const store = await loadStore();
       store.load(42, "novel");
       expect(store.illusts()).toEqual([]);
@@ -193,52 +188,51 @@ describe("userIllustsStore", () => {
   });
 
   describe("loadMore", () => {
-    it("does nothing when nextUrl is null (illust)", async () => {
+    it("does nothing when hasNextPage is false (illust)", async () => {
+      mockIllustHasNext = false;
       const store = await loadStore();
       await store.loadMore();
-      expect(mockIllustLoadNext).not.toHaveBeenCalled();
+      expect(mockIllustFetchNext).not.toHaveBeenCalled();
     });
 
-    it("loads next page when nextUrl exists (illust)", async () => {
-      mockIllustValue = { illusts: [makeIllust(1)], nextUrl: "page2" };
+    it("loads next page when hasNextPage is true (illust)", async () => {
+      mockIllustData = {
+        pages: [{ illusts: [makeIllust(1)], next_url: "page2" }],
+        pageParams: [undefined],
+      };
+      mockIllustHasNext = true;
       const store = await loadStore();
-      mockIllustLoadNext.mockResolvedValue({
-        illusts: [makeIllust(2)],
-        next_url: null,
-      });
+      mockIllustFetchNext.mockResolvedValue(undefined as never);
       await store.loadMore();
-      expect(mockIllustLoadNext).toHaveBeenCalledWith("page2");
-      expect(mockIllustMutate).toHaveBeenCalled();
+      expect(mockIllustFetchNext).toHaveBeenCalled();
     });
 
-    it("does nothing when loading (illust)", async () => {
-      mockIllustValue = { illusts: [makeIllust(1)], nextUrl: "page2" };
-      mockIllustLoading = true;
+    it("does nothing when isFetchingNextPage (illust)", async () => {
+      mockIllustFetchingNext = true;
       const store = await loadStore();
       await store.loadMore();
-      expect(mockIllustLoadNext).not.toHaveBeenCalled();
+      expect(mockIllustFetchNext).not.toHaveBeenCalled();
     });
 
-    it("loads next page for novel type via novel loadNext", async () => {
-      mockNovelValue = { novels: [makeNovel(1)], nextUrl: "novel-page2" };
+    it("loads next page for novel type", async () => {
+      mockNovelData = {
+        pages: [{ novels: [makeNovel(1)], next_url: "novel-page2" }],
+        pageParams: [undefined],
+      };
+      mockNovelHasNext = true;
       const store = await loadStore();
       store.load(42, "novel");
-      expect(store.nextUrl()).toBe("novel-page2");
-      mockNovelLoadNext.mockResolvedValue({
-        novels: [makeNovel(2)],
-        next_url: null,
-      });
+      mockNovelFetchNext.mockResolvedValue(undefined as never);
       await store.loadMore();
-      expect(mockNovelLoadNext).toHaveBeenCalledWith("novel-page2");
+      expect(mockNovelFetchNext).toHaveBeenCalled();
     });
 
-    it("does nothing for novel when loading", async () => {
-      mockNovelValue = { novels: [makeNovel(1)], nextUrl: "novel-page2" };
-      mockNovelLoading = true;
+    it("does nothing for novel when isFetchingNextPage", async () => {
+      mockNovelFetchingNext = true;
       const store = await loadStore();
       store.load(42, "novel");
       await store.loadMore();
-      expect(mockNovelLoadNext).not.toHaveBeenCalled();
+      expect(mockNovelFetchNext).not.toHaveBeenCalled();
     });
   });
 
