@@ -4,8 +4,9 @@ import NovelCard, { NovelCoverCard } from "./NovelCard";
 import NovelTextListCard from "./NovelTextListCard";
 import SkeletonCard from "./SkeletonCard";
 import LoadingSpinner from "./LoadingSpinner";
+import ErrorDisplay from "./ErrorDisplay";
 import PullIndicator from "./PullIndicator";
-import type { PixivNovel } from "../api/types";
+import type { PixivNovel, ApiError } from "../api/types";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createVirtualScroll } from "../primitives/createVirtualScroll";
 import { createScrollRestoration } from "../primitives/createScrollRestoration";
@@ -18,7 +19,7 @@ const GAP = 12;
 interface Props {
   novels: PixivNovel[];
   loading: boolean;
-  error: string | null;
+  error: ApiError | null;
   hasMore: boolean;
   onNovelClick: (id: number) => void;
   onLoadMore: () => void;
@@ -262,11 +263,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
         refreshThreshold={PULL_THRESHOLD}
       />
 
-      {props.error && (
-        <div class="text-center py-4 px-4 mb-3 rounded-[var(--borderRadiusMedium)] mx-3 bg-[var(--colorStatusDangerBackground2)] text-[var(--colorStatusDangerForeground1)]">
-          <p class="[font-size:var(--fontSizeBase200)] leading-relaxed">{props.error}</p>
-        </div>
-      )}
+      {props.error && <ErrorDisplay error={props.error} onRetry={() => props.onRefresh()} />}
 
       {props.loading &&
         props.novels.length === 0 &&

@@ -1,5 +1,5 @@
 import { type Component, createSignal, createEffect } from "solid-js";
-import type { PixivIllust, PixivNovel, ContentType } from "../api/types";
+import type { PixivIllust, PixivNovel, ApiError, ContentType } from "../api/types";
 import type { LayoutMode } from "../primitives/types";
 import VirtualFeed from "./VirtualFeed";
 import NovelVirtualFeed from "./NovelVirtualFeed";
@@ -9,7 +9,7 @@ interface Props {
   illusts: PixivIllust[];
   novels: PixivNovel[];
   loading: boolean;
-  error: string | null;
+  error: ApiError | null;
   hasMore: boolean;
   onIllustClick: (id: number) => void;
   onNovelClick: (id: number) => void;

@@ -6,7 +6,8 @@ import SkeletonCard from "./SkeletonCard";
 import GridCard from "./GridCard";
 import LoadingSpinner from "./LoadingSpinner";
 import PullIndicator from "./PullIndicator";
-import type { PixivIllust } from "../api/types";
+import ErrorDisplay from "./ErrorDisplay";
+import type { PixivIllust, ApiError } from "../api/types";
 import type { LayoutMode } from "../primitives/types";
 import type { ComputeMasonryInput } from "../primitives/computeMasonryLayout";
 import { computeMasonryLayout } from "../primitives/computeMasonryLayout";
@@ -21,7 +22,7 @@ import { imageCachePrefetch } from "../stores/uiStore";
 interface Props {
   illusts: PixivIllust[];
   loading: boolean;
-  error: string | null;
+  error: ApiError | null;
   hasMore: boolean;
   onIllustClick: (id: number) => void;
   onLoadMore: () => void;
@@ -215,11 +216,7 @@ const VirtualFeed: Component<Props> = (props) => {
         refreshThreshold={PULL_THRESHOLD}
       />
 
-      {props.error && (
-        <div class="text-center py-4 px-4 mb-3 rounded-[var(--borderRadiusMedium)] mx-3 bg-[var(--colorStatusDangerBackground2)] text-[var(--colorStatusDangerForeground1)]">
-          <p class="[font-size:var(--fontSizeBase200)] leading-relaxed">{props.error}</p>
-        </div>
-      )}
+      {props.error && <ErrorDisplay error={props.error} onRetry={() => props.onRefresh()} />}
 
       {props.loading && props.illusts.length === 0 && pullPhase() !== "refreshing" && (
         <div class="px-3">
