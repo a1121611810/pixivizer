@@ -59,6 +59,19 @@ export default defineConfig({
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
         },
         agent: proxyAgent,
+        configure: (proxy: any) => {
+          proxy.on("error", (_err: Error, _req: IncomingMessage, res: ServerResponse) => {
+            if (res && "headersSent" in res && !res.headersSent) {
+              res.writeHead(502, { "Content-Type": "application/json" });
+              res.end(
+                JSON.stringify({
+                  error: "proxy_error",
+                  message: "图片代理连接失败，请检查网络或代理状态",
+                }),
+              );
+            }
+          });
+        },
       },
       "/pixiv-re": {
         target: "https://i.pixiv.re",
@@ -69,6 +82,19 @@ export default defineConfig({
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
         },
         agent: proxyAgent,
+        configure: (proxy: any) => {
+          proxy.on("error", (_err: Error, _req: IncomingMessage, res: ServerResponse) => {
+            if (res && "headersSent" in res && !res.headersSent) {
+              res.writeHead(502, { "Content-Type": "application/json" });
+              res.end(
+                JSON.stringify({
+                  error: "proxy_error",
+                  message: "图片代理连接失败，请检查网络或代理状态",
+                }),
+              );
+            }
+          });
+        },
       },
       "/pixiv-nl": {
         target: "https://i.pixiv.nl",
@@ -79,6 +105,19 @@ export default defineConfig({
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
         },
         agent: proxyAgent,
+        configure: (proxy: any) => {
+          proxy.on("error", (_err: Error, _req: IncomingMessage, res: ServerResponse) => {
+            if (res && "headersSent" in res && !res.headersSent) {
+              res.writeHead(502, { "Content-Type": "application/json" });
+              res.end(
+                JSON.stringify({
+                  error: "proxy_error",
+                  message: "图片代理连接失败，请检查网络或代理状态",
+                }),
+              );
+            }
+          });
+        },
       },
       "/pixiv-api": {
         target: "https://app-api.pixiv.net",
@@ -111,6 +150,19 @@ export default defineConfig({
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
         },
         agent: proxyAgent,
+        configure: (proxy: any) => {
+          proxy.on("error", (_err: Error, _req: IncomingMessage, res: ServerResponse) => {
+            if (res && "headersSent" in res && !res.headersSent) {
+              res.writeHead(502, { "Content-Type": "application/json" });
+              res.end(
+                JSON.stringify({
+                  error: "proxy_error",
+                  message: "OAuth 代理连接失败，请检查网络或代理状态",
+                }),
+              );
+            }
+          });
+        },
       },
       // GitHub API — 不经过代理，直连（代理会拦截 GitHub 返回 403）
       "/github-api": {
