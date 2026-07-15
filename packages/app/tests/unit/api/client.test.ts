@@ -96,6 +96,31 @@ describe("classifyError", () => {
     const err = classifyError(403, null, { errors: { system: { message: "Forbidden" } } });
     expect(err.message).toContain("Forbidden");
   });
+
+  it("detects proxy_error response body and returns PROXY type", async () => {
+    const { classifyError } = await loadModule();
+    const err = classifyError(502, null, {
+      error: "proxy_error",
+      message: "代理连接失败，请检查网络或代理状态",
+    });
+    expect(err.type).toBe(ApiErrorType.PROXY);
+    expect(err.message).toContain("代理");
+    expect(err.message).toContain("127.0.0.1:10808");
+  });
+
+  it("returns PROXY type even when status suggests SERVER", async () => {
+    const { classifyError } = await loadModule();
+    // proxy_error with 5xx — ensure PROXY classification wins
+    const err = classifyError(503, null, { error: "proxy_error" });
+    expect(err.type).toBe(ApiErrorType.PROXY);
+  });
+
+  it("does not confuse non-proxy error with error field as proxy", async () => {
+    const { classifyError } = await loadModule();
+    // Pixiv API may return { error: "invalid_grant" } — must not match proxy_error
+    const err = classifyError(400, null, { error: "invalid_grant" });
+    expect(err.type).not.toBe(ApiErrorType.PROXY);
+  });
 });
 
 describe("rewriteUrl", () => {

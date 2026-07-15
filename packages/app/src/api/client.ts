@@ -62,7 +62,52 @@ export function extractPixivErrorMessage(data: unknown): string | null {
   return null;
 }
 
+/** 统一将任意错误值转换为 ApiError，已有 type 的保留原 type，否则创建 UNKNOWN */
+export function toApiError(e: unknown, fallbackMsg = "加载失败"): ApiError {
+  if (e && typeof e === "object" && "type" in e) {
+    return e as ApiError;
+  }
+  return {
+    type: ApiErrorType.UNKNOWN,
+    message: (e as { message?: string }).message ?? fallbackMsg,
+  };
+}
+
+/** 错误类型优先级（索引越小越具体/重要） */
+const ERROR_TYPE_PRIORITY: ApiErrorType[] = [
+  ApiErrorType.PROXY,
+  ApiErrorType.NETWORK,
+  ApiErrorType.UNAUTHORIZED,
+  ApiErrorType.RATE_LIMIT,
+  ApiErrorType.SERVER,
+  ApiErrorType.UNKNOWN,
+];
+
+/**
+ * 从一组 ApiError 中选出最具体的错误类型
+ * 优先级：PROXY > NETWORK > UNAUTHORIZED > RATE_LIMIT > SERVER > UNKNOWN
+ */
+export function pickBestErrorType(...errors: ApiError[]): ApiErrorType {
+  for (const t of ERROR_TYPE_PRIORITY) {
+    if (errors.some((e) => e.type === t)) return t;
+  }
+  return ApiErrorType.UNKNOWN;
+}
+
 export function classifyError(status: number, error: unknown, responseBody?: unknown): ApiError {
+  // 检测代理错误：Vite 代理层返回 { error: "proxy_error", message: "..." }
+  // 必须在状态码分类之前检测，因为 proxy_error 可能伴随任何 HTTP 状态码
+  if (
+    responseBody &&
+    typeof responseBody === "object" &&
+    (responseBody as Record<string, unknown>).error === "proxy_error"
+  ) {
+    return {
+      type: ApiErrorType.PROXY,
+      message: "本地代理连接失败（127.0.0.1:10808），请检查代理软件是否运行",
+    };
+  }
+
   if (!status && error instanceof TypeError) {
     return { type: ApiErrorType.NETWORK, message: "网络不可用，请检查连接" };
   }
