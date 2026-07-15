@@ -110,7 +110,7 @@ describe("userStore", () => {
       const store = await loadStore();
       await store.loadFollowing(5);
 
-      expect(store.error()).toContain("Network error");
+      expect(store.error()!.message).toContain("Network error");
       expect(store.loading()).toBe(false);
     });
   });

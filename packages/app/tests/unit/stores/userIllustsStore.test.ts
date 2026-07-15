@@ -269,14 +269,16 @@ describe("userIllustsStore", () => {
     it("maps error message", async () => {
       mockIllustError = new Error("Network failure");
       const { error } = await loadStore();
-      expect(error()).toContain("Network failure");
+      expect(error()).not.toBeNull();
+      expect(error()!.message).toContain("Network failure");
     });
 
     it("maps error message for novel type", async () => {
       mockNovelError = new Error("Novel failure");
       const store = await loadStore();
       store.load(42, "novel");
-      expect(store.error()).toContain("Novel failure");
+      expect(store.error()).not.toBeNull();
+      expect(store.error()!.message).toContain("Novel failure");
     });
   });
 

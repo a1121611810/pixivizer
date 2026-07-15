@@ -80,7 +80,7 @@ describe("followListStore", () => {
       const store = await loadStore();
       await store.loadList("following", 5);
 
-      expect(store.error()).toContain("Failed");
+      expect(store.error()!.message).toContain("Failed");
       expect(store.loading()).toBe(false);
     });
   });

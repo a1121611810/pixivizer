@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { loadRecommended, loadFollow, loadNext } from "@/api/illust";
-import { type PixivIllust } from "@/api/types";
+import { ApiErrorType, type PixivIllust } from "@/api/types";
 
 vi.mock("@capacitor/core", async () => {
   const actual = await vi.importActual<typeof import("@capacitor/core")>("@capacitor/core");
@@ -384,8 +384,8 @@ describe("fetchMoreMixed", () => {
     await fetchMixed();
 
     await fetchMoreMixed();
-    expect(error()).toContain("illust load failed");
-    expect(error()).toContain("manga load failed");
+    expect(error()!.message).toContain("illust load failed");
+    expect(error()!.message).toContain("manga load failed");
   });
 });
 
@@ -638,6 +638,50 @@ describe("recommended sub-tab regression fixes", () => {
     });
     await ensurePromise;
     expect(illusts().map((i) => i.id)).toEqual([1]);
+  });
+});
+
+describe("error returns ApiError object", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    mockCurrentTab = "recommended";
+    vi.mocked(loadRecommended).mockReset();
+  });
+
+  afterEach(() => {
+    (globalThis as any).window = undefined;
+  });
+
+  it("stores ApiError with type when fetch fails", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockRejectedValue({
+      type: ApiErrorType.PROXY,
+      message: "本地代理连接失败（127.0.0.1:10808），请检查代理软件是否运行",
+    });
+
+    const { setRecommendSubTab, fetchRecommended, error } = await import("@/stores/feedStore");
+    setRecommendSubTab("illust");
+    await fetchRecommended("illust");
+
+    const err = error();
+    expect(err).not.toBeNull();
+    expect(err!.type).toBe(ApiErrorType.PROXY);
+    expect(err!.message).toContain("127.0.0.1:10808");
+  });
+
+  it("clears error to null on successful fetch", async () => {
+    (globalThis as any).window = { scrollY: 0 };
+    vi.mocked(loadRecommended).mockResolvedValue({
+      illusts: [createIllust(1, "2026-07-01T12:00:00+09:00", "illust")],
+      next_url: null,
+    });
+
+    const { setRecommendSubTab, fetchRecommended, error } = await import("@/stores/feedStore");
+    setRecommendSubTab("illust");
+    expect(error()).toBeNull();
+
+    await fetchRecommended("illust");
+    expect(error()).toBeNull();
   });
 });
 

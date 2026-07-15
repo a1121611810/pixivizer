@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockRequest = vi.fn();
+const mockFetch = vi.fn();
 
 vi.mock("@capacitor/core", async () => {
   const actual = await vi.importActual<typeof import("@capacitor/core")>("@capacitor/core");
   return {
     ...actual,
     Capacitor: { isNativePlatform: vi.fn(() => true) },
-    CapacitorHttp: { request: mockRequest },
+    CapacitorHttp: { request: vi.fn() },
     registerPlugin: vi.fn(() => ({
       saveImage: vi.fn().mockResolvedValue({}),
       getImage: vi.fn().mockResolvedValue({}),
@@ -19,30 +19,24 @@ vi.mock("@capacitor/core", async () => {
 
 describe("loadImage on native platform", () => {
   beforeEach(() => {
-    mockRequest.mockReset();
+    mockFetch.mockReset();
+    // Native 平台使用 fetch() 走 Vite 代理，而非 CapacitorHttp
+    globalThis.fetch = mockFetch;
   });
 
-  it("requests image with responseType arraybuffer and decodes base64", async () => {
-    // Capacitor 将 arraybuffer 响应编码为 base64 字符串返回（无 data: 前缀）
-    const testBase64 = btoa("test-image-bytes");
-    mockRequest.mockResolvedValue({
-      status: 200,
-      data: testBase64,
-      headers: { "Content-Type": "image/jpeg" },
-    });
+  it("fetches image via proxy URL and returns proxy path", async () => {
+    const testBytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]); // JPEG magic bytes
+    const testBlob = new Blob([testBytes], { type: "image/jpeg" });
+    mockFetch.mockResolvedValue(new Response(testBlob));
 
     const { loadImage } = await import("@/utils/imageLoader");
     const result = await loadImage("https://i.pximg.net/img.jpg");
 
-    expect(mockRequest).toHaveBeenCalledTimes(1);
-    expect(mockRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        method: "GET",
-        url: "https://i.pximg.net/img.jpg",
-        responseType: "arraybuffer",
-      }),
-    );
-    // loadImage 返回代理 URL（不再产生 blob: 条目），浏览器 HTTP 缓存提供 0ms 显示
+    // Native 路径走 fetch() 到 Vite 代理，而非 CapacitorHttp
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledWith("/pixiv-img/img.jpg");
+
+    // loadImage 返回代理 URL（不走 blob: URL，避免 Network 面板条目 + 0.5ms 开销）
     expect(result.url).toMatch(/^\/pixiv-img\//);
   });
 });

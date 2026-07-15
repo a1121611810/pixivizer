@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { loadRecommended, loadBookmarks, loadNext, loadFollow } from "@/api/novel";
 import type { PixivNovel } from "@/api/types";
+import { ApiErrorType } from "@/api/types";
 
 vi.mock("@capacitor/core", async () => {
   const actual = await vi.importActual<typeof import("@capacitor/core")>("@capacitor/core");
@@ -107,7 +108,7 @@ describe("novelStore", () => {
       await store.ensureLoaded();
 
       expect(store.loading()).toBe(false);
-      expect(store.error()).toContain("Network error");
+      expect(store.error()!.message).toContain("Network error");
     });
 
     it("supports pagination via fetchMore", async () => {
@@ -212,7 +213,8 @@ describe("novelStore", () => {
       await store.ensureLoaded();
 
       expect(loadBookmarks).not.toHaveBeenCalled();
-      expect(store.error()).toBe("未登录");
+      expect(store.error()!.type).toBe(ApiErrorType.UNAUTHORIZED);
+      expect(store.error()!.message).toBe("未登录");
     });
   });
 
@@ -444,9 +446,9 @@ describe("novelStore", () => {
       setNovelFollowTab("public");
       await store.fetchMore();
 
-      expect(store.novels()).toHaveLength(3); // [pub=1, priv=2] + fetchMore adds 3
+      expect(store.novels()).toHaveLength(2); // after switching to "public", only public novel [1] is shown, then fetchMore adds [3]
       expect(loadNext).toHaveBeenCalledWith("https://app-api.pixiv.net/v1/novel/follow?offset=1");
-      expect(store.novels().map((n) => n.id)).toEqual([1, 2, 3]);
+      expect(store.novels().map((n) => n.id)).toEqual([1, 3]);
     });
 
     it("does not fetchMore when nextUrl is null for follow", async () => {

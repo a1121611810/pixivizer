@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { PixivIllust } from "@/api/types";
+import { ApiErrorType, type PixivIllust, type ApiError } from "@/api/types";
 
 // Completely mock solid-js createResource for test control
 let mockResourceValue: { illusts: PixivIllust[]; nextUrl: string | null } = {
@@ -7,7 +7,7 @@ let mockResourceValue: { illusts: PixivIllust[]; nextUrl: string | null } = {
   nextUrl: null,
 };
 let mockResourceLoading = false;
-let mockResourceError: Error | null = null;
+let mockResourceError: ApiError | Error | null = null;
 const mockMutate = vi.fn();
 const mockRefetch = vi.fn();
 
@@ -164,28 +164,34 @@ describe("bookmarkStore", () => {
       expect(error()).toBeNull();
     });
 
-    it("maps 401 to user-friendly message", async () => {
-      mockResourceError = new Error("401 Unauthorized");
+    it("returns ApiError with UNAUTHORIZED type for 401", async () => {
+      mockResourceError = { type: ApiErrorType.UNAUTHORIZED, message: "登录已过期 (HTTP 401)" };
       const { error } = await loadStore();
-      expect(error()).toContain("登录已过期");
+      expect(error()).not.toBeNull();
+      expect(error()!.type).toBe(ApiErrorType.UNAUTHORIZED);
+      expect(error()!.message).toContain("登录已过期");
     });
 
-    it("maps 429 to user-friendly message", async () => {
-      mockResourceError = new Error("429 Too Many Requests");
+    it("returns ApiError with RATE_LIMIT type for 429", async () => {
+      mockResourceError = { type: ApiErrorType.RATE_LIMIT, message: "请求过于频繁，请稍后重试 (HTTP 429)" };
       const { error } = await loadStore();
-      expect(error()).toContain("请求太频繁");
+      expect(error()).not.toBeNull();
+      expect(error()!.type).toBe(ApiErrorType.RATE_LIMIT);
     });
 
-    it("maps network errors to user-friendly message", async () => {
-      mockResourceError = new Error("NETWORK_ERROR");
+    it("returns ApiError with NETWORK type for network errors", async () => {
+      mockResourceError = { type: ApiErrorType.NETWORK, message: "网络不可用，请检查连接" };
       const { error } = await loadStore();
-      expect(error()).toContain("网络连接失败");
+      expect(error()).not.toBeNull();
+      expect(error()!.type).toBe(ApiErrorType.NETWORK);
     });
 
-    it("returns raw message for unknown errors", async () => {
+    it("falls back to UNKNOWN for non-ApiError objects", async () => {
       mockResourceError = new Error("Something went wrong");
       const { error } = await loadStore();
-      expect(error()).toContain("Something went wrong");
+      expect(error()).not.toBeNull();
+      expect(error()!.type).toBe(ApiErrorType.UNKNOWN);
+      expect(error()!.message).toContain("Something went wrong");
     });
   });
 
