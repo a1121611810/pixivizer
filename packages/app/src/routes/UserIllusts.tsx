@@ -11,7 +11,6 @@ import {
   load,
   loadMore,
   saveScrollPosition,
-  getScrollPosition,
 } from "../stores/userIllustsStore";
 import { viewedUser } from "../stores/userStore";
 import UserWorksFeed from "../components/UserWorksFeed";
@@ -116,7 +115,6 @@ const UserIllusts: Component = () => {
               if (uid) await load(uid, contentType(), true);
             }}
             layoutMode={layoutMode()}
-            restoreScrollTop={getScrollPosition(contentType())}
           />
         </div>
       </PageTransition>

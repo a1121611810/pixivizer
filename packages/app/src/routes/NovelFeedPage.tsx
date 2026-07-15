@@ -125,7 +125,7 @@ const NovelFeedPage: Component<Props> = (props) => {
             onAuthorClick={(id) => void navigate({ to: `/user/${id}` })}
             onLoadMore={fetchMore}
             onRefresh={refresh}
-            restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
+            scrollKey={cached ? props.tab : undefined}
             onSeriesClick={openSeriesSheet}
             layoutMode={novelLayoutMode()}
           />

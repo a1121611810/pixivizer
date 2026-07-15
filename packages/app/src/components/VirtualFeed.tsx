@@ -1,5 +1,12 @@
-import { createSignal, createEffect, For, createMemo } from "solid-js";
+import { createSignal, createEffect, For, createMemo, onCleanup, onMount } from "solid-js";
 import type { Component } from "solid-js";
+import {
+  Virtualizer,
+  observeWindowRect,
+  observeWindowOffset,
+  windowScroll,
+} from "@tanstack/solid-virtual";
+import type { VirtualItem } from "@tanstack/solid-virtual";
 import ImageCard from "./ImageCard";
 import LazyImageCard from "./LazyImageCard";
 import SkeletonCard from "./SkeletonCard";
@@ -9,15 +16,15 @@ import PullIndicator from "./PullIndicator";
 import ErrorDisplay from "./ErrorDisplay";
 import type { PixivIllust, ApiError } from "../api/types";
 import type { LayoutMode } from "../primitives/types";
-import type { ComputeMasonryInput } from "../primitives/computeMasonryLayout";
-import { computeMasonryLayout } from "../primitives/computeMasonryLayout";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
-import { createVirtualScroll } from "../primitives/createVirtualScroll";
-import { createScrollRestoration } from "../primitives/createScrollRestoration";
-import { createLayout } from "./LayoutEngine";
 import { loadImage, checkImageCache } from "../utils/imageLoader";
 import { isImageHostEnabled } from "../stores/imageHostStore";
 import { imageCachePrefetch } from "../stores/uiStore";
+import {
+  saveFeedScrollState,
+  getFeedScrollState,
+  type ScrollRestoreState,
+} from "../stores/feedStore";
 
 interface Props {
   illusts: PixivIllust[];
@@ -30,8 +37,9 @@ interface Props {
   emptyText?: string;
   skipAnimation?: boolean;
   layoutMode?: LayoutMode;
-  /** Scroll restoration offset (from feedStore.getFeedScrollY), applied on mount */
-  restoreScrollTop?: number;
+  scrollKey?: string;
+  initialScrollState?: ScrollRestoreState;
+  onScrollStateChange?: (state: ScrollRestoreState) => void;
 }
 
 const LAYOUT_COLUMNS: Record<LayoutMode, number> = {
@@ -40,8 +48,9 @@ const LAYOUT_COLUMNS: Record<LayoutMode, number> = {
   grid: 3,
 };
 
-const GAP = 12; // horizontal gap between columns
-const VERTICAL_GAP = 12; // vertical gap between cards (same as horizontal)
+const GAP = 12;
+const VERTICAL_GAP = 12;
+const CARD_INFO_HEIGHT = 80;
 
 const VirtualFeed: Component<Props> = (props) => {
   const { attach: sentinelAttach } = createSentinelPaginator({
@@ -116,29 +125,111 @@ const VirtualFeed: Component<Props> = (props) => {
     ro.observe(el);
   }
 
-  // ── Layout computation ──
+  // ── Layout config ──
   const layoutMode = createMemo(() => props.layoutMode ?? "waterfall");
   const columnCount = createMemo(() => LAYOUT_COLUMNS[layoutMode()]);
   const columnWidth = createMemo(() => {
     const cc = columnCount();
     const cw = containerWidth();
-    return cw > 0 ? (cw - GAP * (cc - 1)) / cc : 150; // fallback width
+    return cw > 0 ? (cw - GAP * (cc - 1)) / cc : 150;
   });
 
-  const layout = createLayout(
-    () => props.illusts,
-    columnWidth,
-    columnCount,
-    () => VERTICAL_GAP,
-    () => GAP,
-    layoutMode,
-  );
+  // ── estimateSize ──
+  const estimateSize = (index: number) => {
+    const ill = props.illusts[index];
+    if (!ill) return 200;
+    const mode = layoutMode();
+    if (mode === "grid") {
+      return 200 + CARD_INFO_HEIGHT;
+    }
+    const effH = ill.type === "ugoira" ? Math.round(ill.height * 0.75) : ill.height;
+    const aspectRatio = effH > 0 ? ill.width / effH : 1;
+    return columnWidth() / aspectRatio + CARD_INFO_HEIGHT;
+  };
 
-  // ── Virtual scroll (window scroll mode) ──
-  const vs = createVirtualScroll({
-    layout,
-    overscan: 400,
-    useWindowScroll: true,
+  // ── Scroll restoration ──
+  const savedState = createMemo(() => {
+    if (props.scrollKey) return getFeedScrollState(props.scrollKey);
+    return props.initialScrollState;
+  });
+
+  // ── TanStack Virtual: native Virtualizer + Solid reactive bindings ──
+  const [virtualItems, setVirtualItems] = createSignal<VirtualItem[]>([]);
+  const [totalSize, setTotalSize] = createSignal(0);
+
+  const instance = new Virtualizer<Window, HTMLElement>({
+    count: props.illusts.length,
+    estimateSize,
+    lanes: columnCount(),
+    overscan: 2,
+    gap: VERTICAL_GAP,
+    getItemKey: (i: number) => props.illusts[i]?.id ?? i,
+    getScrollElement: () => (typeof window !== "undefined" ? window : null),
+    observeElementRect: observeWindowRect,
+    observeElementOffset: observeWindowOffset,
+    scrollToFn: windowScroll,
+    initialOffset: savedState()?.offset,
+    initialMeasurementsCache: savedState()?.snapshot ?? [],
+  } as any);
+
+  createEffect(() => {
+    const count = props.illusts.length;
+    const cc = columnCount();
+    instance.setOptions({
+      count,
+      estimateSize,
+      lanes: cc,
+      overscan: 2,
+      gap: VERTICAL_GAP,
+      getItemKey: (i: number) => props.illusts[i]?.id ?? i,
+      getScrollElement: () => (typeof window !== "undefined" ? window : null),
+      observeElementRect: observeWindowRect,
+      observeElementOffset: observeWindowOffset,
+      scrollToFn: windowScroll,
+    } as any);
+    instance.measure();
+    setVirtualItems([...instance.getVirtualItems()] as any);
+    setTotalSize(instance.getTotalSize());
+  });
+
+  onMount(() => {
+    const cleanup = instance._didMount();
+    instance._willUpdate();
+    setVirtualItems([...instance.getVirtualItems()] as any);
+    setTotalSize(instance.getTotalSize());
+    onCleanup(() => cleanup?.());
+  });
+
+  createEffect(() => {
+    const onScroll = () => {
+      instance._willUpdate();
+      setVirtualItems([...instance.getVirtualItems()] as any);
+      setTotalSize(instance.getTotalSize());
+    };
+    const onResize = () => {
+      instance._willUpdate();
+      setVirtualItems([...instance.getVirtualItems()] as any);
+      setTotalSize(instance.getTotalSize());
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    onCleanup(() => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+    });
+  });
+
+  // ── 组件卸载时保存 scroll state ──
+  onCleanup(() => {
+    const snapshot = instance.takeSnapshot();
+    const offset = window.scrollY;
+    if (snapshot.length === 0 && offset <= 0) return;
+    const state: ScrollRestoreState = { snapshot, offset, version: 1 };
+    if (props.scrollKey) {
+      saveFeedScrollState(props.scrollKey, state);
+    } else {
+      props.onScrollStateChange?.(state);
+    }
   });
 
   // ── Skeleton layout for initial loading state ──
@@ -148,58 +239,40 @@ const VirtualFeed: Component<Props> = (props) => {
     const rows = Math.ceil(window.innerHeight / SKELETON_ITEM_HEIGHT) + 1;
     return cc * rows;
   });
-  const skeletonLayout = createMemo(() => {
+
+  function skeletonStyle(i: number) {
     const cc = columnCount();
     const cw = columnWidth();
-    const count = skeletonCount();
-    if (count === 0 || cw <= 0) {
-      return {
-        items: [],
-        totalHeight: 0,
-        columns: cc,
-        columnWidth: cw,
-        gap: VERTICAL_GAP,
-        columnGap: GAP,
-      };
-    }
-    const input: ComputeMasonryInput = {
-      items: Array.from({ length: count }, () => ({ width: 400, height: SKELETON_ITEM_HEIGHT })),
-      columnWidth: cw,
-      columnCount: cc,
-      gap: VERTICAL_GAP,
-      columnGap: GAP,
+    const col = i % cc;
+    const row = Math.floor(i / cc);
+    return {
+      position: "absolute" as const,
+      top: `${row * (SKELETON_ITEM_HEIGHT + VERTICAL_GAP)}px`,
+      left: `${col * (cw + GAP)}px`,
+      width: `${cw}px`,
+      height: `${SKELETON_ITEM_HEIGHT}px`,
     };
-    return computeMasonryLayout(input);
-  });
+  }
 
   // ── Scroll prediction: prefetch images just outside visible window ──
   createEffect(() => {
-    const range = vs.visibleRange();
-    if (range.endIndex < 0) return;
-    // 代理模式下预加载的请求不会被 SW 缓存，跳过以避免浪费带宽
+    const items = virtualItems();
+    if (items.length === 0) return;
     if (isImageHostEnabled()) return;
     if (!imageCachePrefetch()) return;
     const illustsList = props.illusts;
-    // Prefetch next 10 items beyond visible window
-    const preloadEnd = Math.min(range.endIndex + 10, illustsList.length);
-    for (let i = range.endIndex + 1; i < preloadEnd; i++) {
+    const lastIdx = items[items.length - 1].index;
+    const preloadEnd = Math.min(lastIdx + 10, illustsList.length);
+    for (let i = lastIdx + 1; i < preloadEnd; i++) {
       const ill = illustsList[i];
       if (!ill) break;
       const url = ill.image_urls.medium || ill.image_urls.large;
       if (url) {
-        // 仅在 LRU 缓存未命中时预取，避免重复网络请求和 Blob 创建
         if (!checkImageCache(url)) {
           loadImage(url).catch(() => {});
         }
       }
     }
-  });
-
-  // ── Scroll restoration ──
-  createScrollRestoration({
-    restoreScrollTop: () => props.restoreScrollTop,
-    layout,
-    containerWidth,
   });
 
   return (
@@ -224,20 +297,12 @@ const VirtualFeed: Component<Props> = (props) => {
             style={{
               position: "relative",
               width: "100%",
-              height: `${skeletonLayout().totalHeight || 1}px`,
+              height: `${skeletonCount() > 0 ? Math.ceil(skeletonCount() / columnCount()) * (SKELETON_ITEM_HEIGHT + VERTICAL_GAP) - VERTICAL_GAP : 1}px`,
             }}
           >
-            <For each={skeletonLayout().items}>
-              {(item) => (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: `${item.y}px`,
-                    left: `${item.x}px`,
-                    width: `${item.width}px`,
-                    height: `${item.height}px`,
-                  }}
-                >
+            <For each={Array.from({ length: skeletonCount() })}>
+              {(_item, i) => (
+                <div style={skeletonStyle(i())}>
                   <SkeletonCard width={400} height={SKELETON_ITEM_HEIGHT} />
                 </div>
               )}
@@ -246,36 +311,35 @@ const VirtualFeed: Component<Props> = (props) => {
         </div>
       )}
 
-      {/* Virtualized items container */}
       <div
         style={{
           position: "relative",
           width: "100%",
-          height: `${vs.totalHeight() || 1}px`,
+          height: `${totalSize() || 1}px`,
         }}
       >
-        <For
-          each={
-            vs.visibleRange().endIndex >= vs.visibleRange().startIndex
-              ? props.illusts.slice(vs.visibleRange().startIndex, vs.visibleRange().endIndex + 1)
-              : []
-          }
-        >
-          {(illust, i) => {
-            const baseIndex = vs.visibleRange().startIndex;
-            const realIndex = baseIndex + i();
+        <For each={virtualItems()}>
+          {(vItem) => {
+            const illust = props.illusts[vItem.index];
+            if (!illust) return null;
             return (
               <div
-                style={vs.getItemStyle(realIndex)}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: `${(vItem.lane ?? 0) * (columnWidth() + GAP)}px`,
+                  width: `${columnWidth()}px`,
+                  height: `${vItem.size}px`,
+                  transform: `translateY(${vItem.start}px)`,
+                }}
                 class="bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] shadow-[var(--elevation2)]"
                 classList={{
                   "overflow-hidden": layoutMode() === "grid",
-                  "h-full": layoutMode() === "grid",
                 }}
               >
                 {layoutMode() === "grid" ? (
                   <GridCard illust={illust} onClick={props.onIllustClick} />
-                ) : realIndex < 4 ? (
+                ) : vItem.index < 4 ? (
                   <ImageCard illust={illust} onClick={props.onIllustClick} />
                 ) : (
                   <LazyImageCard illust={illust} onClick={props.onIllustClick} />

@@ -1,6 +1,7 @@
 import { type Component, createSignal, createEffect } from "solid-js";
 import type { PixivIllust, PixivNovel, ApiError, ContentType } from "../api/types";
 import type { LayoutMode } from "../primitives/types";
+import type { ScrollRestoreState } from "../stores/feedStore";
 import VirtualFeed from "./VirtualFeed";
 import NovelVirtualFeed from "./NovelVirtualFeed";
 
@@ -16,7 +17,8 @@ interface Props {
   onLoadMore: () => void;
   onRefresh: () => Promise<void> | void;
   layoutMode?: LayoutMode;
-  restoreScrollTop?: number;
+  illustScrollState?: ScrollRestoreState;
+  onIllustScrollStateChange?: (state: ScrollRestoreState) => void;
 }
 
 const UserWorksFeed: Component<Props> = (props) => {
@@ -44,7 +46,8 @@ const UserWorksFeed: Component<Props> = (props) => {
           onLoadMore={props.onLoadMore}
           onRefresh={props.onRefresh}
           layoutMode={props.layoutMode}
-          restoreScrollTop={props.restoreScrollTop}
+          initialScrollState={props.illustScrollState}
+          onScrollStateChange={props.onIllustScrollStateChange}
         />
       </div>
 
@@ -62,7 +65,6 @@ const UserWorksFeed: Component<Props> = (props) => {
             onNovelClick={props.onNovelClick}
             onLoadMore={props.onLoadMore}
             onRefresh={props.onRefresh}
-            restoreScrollTop={props.restoreScrollTop}
           />
         )}
       </div>

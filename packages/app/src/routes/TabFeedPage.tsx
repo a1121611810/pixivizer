@@ -215,7 +215,7 @@ const TabFeedPage: Component<Props> = (props) => {
               onRefresh={() => refresh(abortController?.signal)}
               skipAnimation={cached}
               layoutMode={layoutMode()}
-              restoreScrollTop={cached ? getFeedScrollY(props.tab) : undefined}
+              scrollKey={props.tab}
             />
           </Show>
         </div>

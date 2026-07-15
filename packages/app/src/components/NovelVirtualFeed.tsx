@@ -1,5 +1,6 @@
-import { createSignal, createEffect, For, createMemo } from "solid-js";
+import { createSignal, createEffect, For, createMemo, onCleanup, onMount } from "solid-js";
 import type { Component } from "solid-js";
+import { Virtualizer } from "@tanstack/solid-virtual";
 import NovelCard, { NovelCoverCard } from "./NovelCard";
 import NovelTextListCard from "./NovelTextListCard";
 import SkeletonCard from "./SkeletonCard";
@@ -8,11 +9,11 @@ import ErrorDisplay from "./ErrorDisplay";
 import PullIndicator from "./PullIndicator";
 import type { PixivNovel, ApiError } from "../api/types";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
-import { createVirtualScroll } from "../primitives/createVirtualScroll";
-import { createScrollRestoration } from "../primitives/createScrollRestoration";
 import { createComputedTextCard } from "../primitives/createComputedTextCard";
-import type { MasonryLayout } from "../primitives/types";
 import type { NovelLayoutMode } from "../stores/uiStore";
+import { saveNovelScrollState, getNovelScrollState } from "../stores/novelStore";
+import { observeWindowRect, observeWindowOffset, windowScroll } from "@tanstack/solid-virtual";
+import type { VirtualItem } from "@tanstack/solid-virtual";
 
 const GAP = 12;
 
@@ -26,7 +27,7 @@ interface Props {
   onRefresh: () => Promise<void> | void;
   onSeriesClick?: (seriesId: number) => void;
   onAuthorClick?: (userId: number) => void;
-  restoreScrollTop?: number;
+  scrollKey?: string;
   layoutMode?: NovelLayoutMode;
 }
 
@@ -86,7 +87,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     }
   }
 
-  // ── Single-column layout ──
+  // ── Container width ──
   const [containerWidth, setContainerWidth] = createSignal(0);
   function onContainerRef(el: HTMLDivElement) {
     if (!el) return;
@@ -97,7 +98,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     ro.observe(el);
   }
 
-  // 单列布局：封面固定 128px + padding 20px，信息区高度由 createComputedTextCard 动态计算
+  // 单列布局
   const COVER_HEIGHT = 128;
   const listCardMetrics = createComputedTextCard({
     novels: () => props.novels,
@@ -119,31 +120,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     stylePreset: () => "list",
   });
 
-  const layout = createMemo((): MasonryLayout => {
-    const cw = containerWidth();
-    if (cw <= 0) {
-      return { items: [], totalHeight: 0, columns: 1, columnWidth: 0, gap: GAP, columnGap: 0 };
-    }
-    let y = 0;
-    const items = props.novels.map((novel, i) => {
-      const infoHeight = listCardMetrics.getInfoHeight(novel.id);
-      const height = Math.max(COVER_HEIGHT, infoHeight) + 20;
-      const item = { index: i, x: 0, y, width: cw, height, column: 0 };
-      y += height + GAP;
-      return item;
-    });
-    const totalHeight = items.length > 0 ? y - GAP : 0;
-    return {
-      items,
-      totalHeight,
-      columns: 1,
-      columnWidth: cw,
-      gap: GAP,
-      columnGap: 0,
-    };
-  });
-
-  // 文本列表布局：纯计算卡片信息区高度，无 ResizeObserver
+  // 文本列表布局
   const textListCardMetrics = createComputedTextCard({
     novels: () => props.novels,
     containerWidth,
@@ -163,24 +140,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     maxTagLines: 2,
   });
 
-  const textListLayout = createMemo((): MasonryLayout => {
-    const cw = containerWidth();
-    if (cw <= 0) {
-      return { items: [], totalHeight: 0, columns: 1, columnWidth: 0, gap: 20, columnGap: 0 };
-    }
-    const gap = 20;
-    let y = 0;
-    const items = props.novels.map((novel, index) => {
-      const height = textListCardMetrics.getInfoHeight(novel.id);
-      const item = { index, x: 0, y, width: cw, height, column: 0 };
-      y += height + gap;
-      return item;
-    });
-    const totalHeight = items.length > 0 ? y - gap : 0;
-    return { items, totalHeight, columns: 1, columnWidth: cw, gap, columnGap: 0 };
-  });
-
-  // 封面墙布局：2列瀑布流，信息区高度动态计算
+  // 封面墙布局
   const coverWallCardMetrics = createComputedTextCard({
     novels: () => props.novels,
     containerWidth: () => {
@@ -204,49 +164,155 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     stylePreset: () => "coverWall",
   });
 
-  const coverWallLayout = createMemo((): MasonryLayout => {
+  // ── Layout config ──
+  const columnCount = createMemo(() => (mode() === "coverWall" ? 2 : 1));
+  const columnWidth = createMemo(() => {
     const cw = containerWidth();
-    if (cw <= 0) {
-      return { items: [], totalHeight: 0, columns: 2, columnWidth: 0, gap: GAP, columnGap: GAP };
-    }
-    const columnWidth = (cw - GAP) / 2;
-    const nextY = [0, 0];
-    const items = props.novels.map((novel, i) => {
-      const col = nextY[0] <= nextY[1] ? 0 : 1;
-      const y = nextY[col];
-      const infoHeight = coverWallCardMetrics.getInfoHeight(novel.id);
-      const cardHeight = columnWidth + infoHeight;
-      nextY[col] = y + cardHeight + GAP;
-      return {
-        index: i,
-        x: col * (columnWidth + GAP),
-        y,
-        width: columnWidth,
-        height: cardHeight,
-        column: col,
-      };
-    });
-
-    const totalHeight = items.length > 0 ? Math.max(...nextY) - GAP : 0;
-    return { items, totalHeight, columns: 2, columnWidth, gap: GAP, columnGap: GAP };
+    const cc = columnCount();
+    return cw > 0 ? (cw - GAP * (cc - 1)) / cc : 150;
   });
 
-  const activeLayout = createMemo(() => {
+  // ── estimateSize ──
+  const estimateSize = (index: number): number => {
+    const novel = props.novels[index];
+    if (!novel) return 100;
     const m = mode();
-    if (m === "textList") return textListLayout();
-    return m === "coverWall" ? coverWallLayout() : layout();
-  });
-  const vs = createVirtualScroll({
-    layout: activeLayout,
-    overscan: 400,
-    useWindowScroll: true,
+    if (m === "textList") {
+      return textListCardMetrics.getInfoHeight(novel.id);
+    }
+    if (m === "coverWall") {
+      const cw = columnWidth();
+      return cw + coverWallCardMetrics.getInfoHeight(novel.id);
+    }
+    const infoHeight = listCardMetrics.getInfoHeight(novel.id);
+    return Math.max(COVER_HEIGHT, infoHeight) + 20;
+  };
+
+  // ── Scroll restoration (saved state from store) ──
+  const savedState = createMemo(() => {
+    if (!props.scrollKey) return undefined;
+    return getNovelScrollState(props.scrollKey);
   });
 
-  // ── Scroll restoration ──
-  createScrollRestoration({
-    restoreScrollTop: () => props.restoreScrollTop,
-    layout: activeLayout,
-    containerWidth,
+  // ── TanStack Virtual: native Virtualizer + Solid reactive bindings ──
+  const [virtualItems, setVirtualItems] = createSignal<VirtualItem[]>([]);
+  const [totalSize, setTotalSize] = createSignal(0);
+
+  const instance = new Virtualizer<Window, HTMLElement>({
+    count: props.novels.length,
+    estimateSize,
+    lanes: columnCount(),
+    overscan: 2,
+    gap: GAP,
+    getItemKey: (i: number) => props.novels[i]?.id ?? i,
+    getScrollElement: () => (typeof window !== "undefined" ? window : null),
+    observeElementRect: observeWindowRect,
+    observeElementOffset: observeWindowOffset,
+    scrollToFn: windowScroll,
+    initialOffset: savedState()?.offset,
+    initialMeasurementsCache: savedState()?.snapshot ?? [],
+  });
+
+  // Sync count/lanes changes back to the virtualizer
+  createEffect(() => {
+    const count = props.novels.length;
+    const cc = columnCount();
+    instance.setOptions({
+      count,
+      estimateSize,
+      lanes: cc,
+      overscan: 2,
+      gap: GAP,
+      getItemKey: (i: number) => props.novels[i]?.id ?? i,
+      getScrollElement: () => (typeof window !== "undefined" ? window : null),
+      observeElementRect: observeWindowRect,
+      observeElementOffset: observeWindowOffset,
+      scrollToFn: windowScroll,
+    } as any);
+    instance.measure();
+    setVirtualItems([...instance.getVirtualItems()] as any);
+    setTotalSize(instance.getTotalSize());
+  });
+
+  // Mount: start observing
+  onMount(() => {
+    const cleanup = instance._didMount();
+    instance._willUpdate();
+    setVirtualItems([...instance.getVirtualItems()] as any);
+    setTotalSize(instance.getTotalSize());
+    onCleanup(() => {
+      cleanup?.();
+    });
+  });
+
+  // Scroll listener + resize for window mode
+  createEffect(() => {
+    const onScroll = () => {
+      instance._willUpdate();
+      setVirtualItems([...instance.getVirtualItems()] as any);
+      setTotalSize(instance.getTotalSize());
+    };
+    const onResize = () => {
+      instance._willUpdate();
+      setVirtualItems([...instance.getVirtualItems()] as any);
+      setTotalSize(instance.getTotalSize());
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    onCleanup(() => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+    });
+  });
+
+  // Proxy to match old interface
+  const virtualizer = {
+    getVirtualItems: () => virtualItems(),
+    getTotalSize: () => totalSize(),
+    scrollToOffset: (offset: number) => {
+      window.scrollTo({ top: offset, behavior: "auto" });
+    },
+    get scrollOffset() {
+      return window.scrollY;
+    },
+    get scrollElement() {
+      return window;
+    },
+    takeSnapshot: () => {
+      instance._willUpdate();
+      return instance.takeSnapshot();
+    },
+    get isScrolling() {
+      return instance.isScrolling;
+    },
+    getDistanceFromEnd: () => instance.getDistanceFromEnd(),
+    isAtEnd: (threshold?: number) => instance.isAtEnd(threshold),
+    scrollToIndex: (
+      index: number,
+      opts?: { align?: "start" | "center" | "end" | "auto"; behavior?: "auto" | "smooth" },
+    ) => {
+      // Find the item's offset
+      const items = instance.getVirtualItems();
+      const target = items.find((v) => v.index === index);
+      const offset = target?.start ?? 0;
+      window.scrollTo({ top: offset, behavior: opts?.behavior ?? "auto" });
+    },
+    measureElement: instance.measureElement.bind(instance),
+  };
+
+  // ── 保存 scroll state ──
+  onCleanup(() => {
+    if (props.scrollKey) {
+      const snapshot = instance.takeSnapshot();
+      const offset = window.scrollY;
+      if (snapshot.length > 0 || offset > 0) {
+        saveNovelScrollState(props.scrollKey, {
+          snapshot,
+          offset,
+          version: 1,
+        });
+      }
+    }
   });
 
   return (
@@ -287,19 +353,28 @@ const NovelVirtualFeed: Component<Props> = (props) => {
           </div>
         )}
 
-      <div style={{ position: "relative", width: "100%", height: `${vs.totalHeight() || 1}px` }}>
-        <For
-          each={
-            vs.visibleRange().endIndex >= vs.visibleRange().startIndex
-              ? props.novels.slice(vs.visibleRange().startIndex, vs.visibleRange().endIndex + 1)
-              : []
-          }
-        >
-          {(novel, i) => {
-            const baseIndex = vs.visibleRange().startIndex;
-            const realIndex = baseIndex + i();
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          height: `${totalSize() || 1}px`,
+        }}
+      >
+        <For each={virtualItems()}>
+          {(vItem) => {
+            const novel = props.novels[vItem.index];
+            if (!novel) return null;
             return (
-              <div style={vs.getItemStyle(realIndex)}>
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: `${(vItem.lane ?? 0) * (columnWidth() + GAP)}px`,
+                  width: mode() === "coverWall" ? `${columnWidth()}px` : "100%",
+                  height: `${vItem.size}px`,
+                  transform: `translateY(${vItem.start}px)`,
+                }}
+              >
                 {mode() === "textList" ? (
                   <NovelTextListCard
                     novel={novel}

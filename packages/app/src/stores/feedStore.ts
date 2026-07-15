@@ -55,7 +55,20 @@ const [state, setState] = createStore({
 //   tabIllusts["follow_private"], tabNextUrl["follow_private"]
 // Recommended sub-tab keys:
 //   tabIllusts["recommended_mixed"], tabIllusts["recommended_illust"], tabIllusts["recommended_manga"]
+/** @deprecated 迁移到 tabScrollState */
 const tabScrollY: Record<string, number> = {};
+
+/**
+ * 滚动恢复状态（TanStack Virtual 格式）。
+ * 与旧的 tabScrollY（number）并存，迁移完成后移除旧格式。
+ */
+export interface ScrollRestoreState {
+  snapshot: import("@tanstack/solid-virtual").VirtualItem[];
+  offset: number;
+  version: number;
+}
+const tabScrollState: Record<string, ScrollRestoreState> = {};
+
 const tabIllusts: Record<string, PixivIllust[]> = {};
 const tabNextUrl: Record<string, string | null> = {};
 const tabLoaded: Record<string, boolean> = {};
@@ -379,6 +392,25 @@ export function getFeedScrollY(tab?: string) {
     return tabScrollY[`recommended_${recommendSubTab()}`] || 0;
   }
   return tabScrollY[t] || 0;
+}
+
+// ── TanStack Virtual 滚动状态 API ──
+
+/** 获取存储键名（与 tabScrollState 保持一致） */
+function getScrollStateKey(tab?: string): string {
+  const t = tab ?? currentTab();
+  if (t === "recommended") {
+    return `recommended_${recommendSubTab()}`;
+  }
+  return t;
+}
+
+export function saveFeedScrollState(tab: string, st: ScrollRestoreState) {
+  tabScrollState[getScrollStateKey(tab)] = st;
+}
+
+export function getFeedScrollState(tab?: string): ScrollRestoreState | null {
+  return tabScrollState[getScrollStateKey(tab)] ?? null;
 }
 
 // ── Internal fetch functions ──

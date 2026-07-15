@@ -16,7 +16,17 @@ import { user } from "./authStore";
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const tabNovels: Record<string, PixivNovel[]> = {};
 const tabNextUrl: Record<string, string | null> = {};
+/** @deprecated 迁移到 tabScrollState */
 const tabScrollY: Record<string, number> = {};
+
+/** 滚动恢复状态（TanStack Virtual 格式） */
+export interface ScrollRestoreState {
+  snapshot: import("@tanstack/solid-virtual").VirtualItem[];
+  offset: number;
+  version: number;
+}
+const tabScrollState: Record<string, ScrollRestoreState> = {};
+
 const tabLoaded: Record<string, boolean> = {};
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -435,6 +445,24 @@ export function getFeedScrollY(tab?: string): number {
     return tabScrollY[`novel_follow_${state.followTab}`] || 0;
   }
   return tabScrollY[getSourceKey(t)] || 0;
+}
+
+// ── TanStack Virtual 滚动状态 API ──
+
+function getScrollStateKey(tab?: string): string {
+  const t = tab ?? currentTab();
+  if (t === "follow") {
+    return `novel_follow_${state.followTab}`;
+  }
+  return getSourceKey(t);
+}
+
+export function saveNovelScrollState(tab: string, st: ScrollRestoreState) {
+  tabScrollState[getScrollStateKey(tab)] = st;
+}
+
+export function getNovelScrollState(tab?: string): ScrollRestoreState | null {
+  return tabScrollState[getScrollStateKey(tab)] ?? null;
 }
 
 export function isNovelCached(tab?: string): boolean {

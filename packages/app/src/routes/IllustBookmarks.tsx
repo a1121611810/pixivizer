@@ -11,7 +11,6 @@ import {
   refresh,
   setRestrict,
   saveBookmarkScroll,
-  getBookmarkScrollY,
 } from "../stores/bookmarkStore";
 import { user } from "../stores/authStore";
 import { layoutMode } from "../stores/uiStore";
@@ -91,7 +90,7 @@ const IllustBookmarks: Component = () => {
         emptyText={restrict() === "public" ? "公开收藏夹为空" : "非公开收藏夹为空"}
         skipAnimation={true}
         layoutMode={layoutMode()}
-        restoreScrollTop={getBookmarkScrollY()}
+        scrollKey="illust-bookmarks"
       />
     </>
   );

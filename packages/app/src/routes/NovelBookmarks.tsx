@@ -11,7 +11,6 @@ import {
   refresh,
   setBookmarkRestrict,
   saveTabScroll,
-  getFeedScrollY,
   isNovelCached,
 } from "../stores/novelStore";
 import { user } from "../stores/authStore";
@@ -122,7 +121,7 @@ const NovelBookmarks: Component = () => {
         onAuthorClick={(id) => void navigate({ to: `/user/${id}` })}
         onLoadMore={fetchMore}
         onRefresh={refresh}
-        restoreScrollTop={cached ? getFeedScrollY("bookmarks") : undefined}
+        scrollKey="bookmarks"
         onSeriesClick={openSeriesSheet}
         layoutMode={novelLayoutMode()}
       />

@@ -12,7 +12,6 @@ import {
   saveTabScroll,
   markFeedMounted,
   isFeedCached,
-  getFeedScrollY,
 } from "../stores/feedStore";
 import { currentTab, openSettingsDrawer, layoutMode } from "../stores/uiStore";
 import VirtualFeed from "../components/VirtualFeed";
@@ -23,19 +22,10 @@ const Feed: Component = () => {
   const navigate = useNavigate();
   const cached = isFeedCached();
   let prevTab = currentTab();
-  let scrollRestored = false;
 
-  // Mark feed mounted on first render
   onMount(() => {
     markFeedMounted();
   });
-
-  // Save scroll when leaving the feed page entirely
-  onCleanup(() => {
-    markFeedMounted();
-  });
-
-  onMount(() => {});
 
   // Tab change: save old tab's scroll, restore new tab's scroll, load data
   createEffect(() => {
@@ -43,7 +33,6 @@ const Feed: Component = () => {
     // Save scroll for the tab we're leaving
     if (tab !== prevTab && (prevTab === "recommended" || prevTab === "follow")) {
       saveTabScroll(prevTab);
-      scrollRestored = false; // reset flag for new tab
     }
     prevTab = tab;
     untrack(() => ensureLoaded());
@@ -83,7 +72,7 @@ const Feed: Component = () => {
             onRefresh={refresh}
             skipAnimation={cached}
             layoutMode={layoutMode()}
-            restoreScrollTop={!scrollRestored && cached ? getFeedScrollY() : undefined}
+            scrollKey={cached ? currentTab() : undefined}
           />
         </div>
       </PageTransition>

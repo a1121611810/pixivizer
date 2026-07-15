@@ -84,6 +84,83 @@ vi.mock("@/components/ui/FluentIcon", () => ({
   default: () => <span>icon</span>,
 }));
 
+vi.mock("@tanstack/solid-virtual", () => {
+  let getCount: () => number = () => 0;
+  let getSize: (i: number) => number = () => 100;
+  return {
+    createWindowVirtualizer: (opts: {
+      count?: () => number;
+      estimateSize?: (i: number) => number;
+    }) => {
+      getCount = opts.count ?? (() => 0);
+      getSize = opts.estimateSize ?? (() => 100);
+      return {
+        getVirtualItems: () => {
+          const count = getCount();
+          const items: Array<{
+            index: number;
+            key: number;
+            start: number;
+            size: number;
+            end: number;
+            lane: number;
+          }> = [];
+          let y = 0;
+          for (let i = 0; i < count; i++) {
+            const h = getSize(i);
+            items.push({ index: i, key: i, start: y, size: h, end: y + h, lane: 0 });
+            y += h;
+          }
+          return items;
+        },
+        getTotalSize: () => {
+          const items = [];
+          const count = getCount();
+          let y = 0;
+          for (let i = 0; i < count; i++) {
+            const h = getSize(i);
+            items.push({ start: y, size: h });
+            y += h;
+          }
+          return items.length > 0
+            ? items[items.length - 1].start + items[items.length - 1].size
+            : 0;
+        },
+        scrollToOffset: vi.fn(),
+        scrollToIndex: vi.fn(),
+        get scrollOffset() {
+          return 0;
+        },
+        takeSnapshot: () => {
+          const count = getCount();
+          return Array.from({ length: count }, (_, i) => ({
+            index: i,
+            key: i,
+            start: i * 100,
+            size: 100,
+            end: (i + 1) * 100,
+            lane: 0,
+          }));
+        },
+        getDistanceFromEnd: () => 0,
+        isAtEnd: () => true,
+        isScrolling: false,
+        measureElement: vi.fn(),
+      };
+    },
+    createVirtualizer: () => ({
+      getVirtualItems: () => [],
+      getTotalSize: () => 0,
+      scrollToOffset: vi.fn(),
+      get scrollOffset() {
+        return 0;
+      },
+      takeSnapshot: () => [],
+      isScrolling: false,
+    }),
+  };
+});
+
 vi.mock("@/components/LoadingSpinner", () => ({
   default: () => <div>Loading...</div>,
 }));
