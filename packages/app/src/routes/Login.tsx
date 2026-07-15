@@ -1,6 +1,9 @@
 import { type Component, createSignal, onMount } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import { loginWithToken, isLoggedIn } from "../stores/authStore";
+import { ApiErrorType, type ApiError } from "../api/types";
+import { toApiError } from "../api/client";
+import ErrorDisplay from "../components/ErrorDisplay";
 
 const S = {
   page: "min-height:100vh;display:flex;align-items:center;justify-content:center;padding:0 24px;background-color:var(--colorNeutralBackground3);color:var(--colorNeutralForeground1)",
@@ -15,8 +18,6 @@ const S = {
   textarea:
     "width:100%;padding:6px 10px;border-radius:var(--borderRadiusMedium);background-color:var(--colorNeutralBackground1);color:var(--colorNeutralForeground1);font-size:var(--fontSizeBase300);border:1px solid var(--colorNeutralStroke1);outline:none;resize:vertical;box-sizing:border-box;min-height:96px",
   btn: "width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-radius:var(--borderRadiusMedium);font-size:var(--fontSizeBase300);font-weight:600;background-color:var(--colorBrandBackground);color:var(--colorNeutralForegroundOnBrand);border:none;cursor:pointer",
-  error:
-    "color:var(--colorStatusDangerForeground1);font-size:var(--fontSizeBase200);text-align:center;background-color:var(--colorStatusDangerBackground2);padding:8px;border-radius:var(--borderRadiusMedium)",
   disclaimer:
     "font-size:var(--fontSizeBase100);color:var(--colorNeutralForeground3);line-height:1.5;text-align:center;padding:0 4px",
   fieldGroup: "display:flex;flex-direction:column;gap:var(--spacingVerticalL)",
@@ -26,7 +27,7 @@ const Login: Component = () => {
   const navigate = useNavigate();
   const [tokenInput, setTokenInput] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
-  const [error, setError] = createSignal<string | null>(null);
+  const [error, setError] = createSignal<ApiError | null>(null);
 
   onMount(() => {
     if (isLoggedIn()) void navigate({ to: "/recommended", replace: true });
@@ -40,7 +41,7 @@ const Login: Component = () => {
       await loginWithToken(tokenInput().trim());
       void navigate({ to: "/recommended", replace: true });
     } catch (err) {
-      setError((err as { message?: string }).message ?? "登录失败");
+      setError(toApiError(err, "登录失败"));
     } finally {
       setSubmitting(false);
     }
@@ -83,7 +84,9 @@ const Login: Component = () => {
           ></fluent-textarea>
         </div>
 
-        {error() && <div style={S.error}>{error()}</div>}
+        {error() && (
+          <ErrorDisplay error={error()!} onRetry={() => handleSubmit(new Event("submit"))} />
+        )}
 
         <fluent-button
           appearance="primary"

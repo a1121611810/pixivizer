@@ -44,8 +44,11 @@ import ReaderSettingsSheet from "../components/ReaderSettingsSheet";
 import SeriesSheet from "../components/SeriesSheet";
 import PageTransition from "../components/PageTransition";
 import CommentOverlay from "../components/CommentOverlay";
+import { ApiErrorType, type ApiError } from "../api/types";
+import ErrorDisplay from "../components/ErrorDisplay";
 import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import { scrollToTop } from "../utils/scrollToTop";
+import { toApiError } from "../api/client";
 
 const routeApi = getRouteApi("/novel/$id");
 
@@ -255,7 +258,7 @@ const NovelDetail: Component = () => {
   const [novelImages, setNovelImages] = createSignal<NovelImagesMap>({});
   const [novelNav, setNovelNav] = createSignal<SeriesNavigation | null>(null);
   const [detailLoading, setDetailLoading] = createSignal(false);
-  const [detailError, setDetailError] = createSignal<string | null>(null);
+  const [detailError, setDetailError] = createSignal<ApiError | null>(null);
 
   function applyEntry(entry: NovelCacheEntry) {
     batch(() => {
@@ -286,7 +289,7 @@ const NovelDetail: Component = () => {
       const entry = await loadNovelEntry(id);
       applyEntry(entry);
     } catch (e) {
-      setDetailError((e as { message?: string }).message ?? "加载失败");
+      setDetailError(toApiError(e));
       setDetailLoading(false);
     }
   }
@@ -295,7 +298,11 @@ const NovelDetail: Component = () => {
   createEffect(() => {
     const d = data();
     if (d.error) {
-      setDetailError(d.error);
+      setDetailError(
+        typeof d.error === "string"
+          ? { type: ApiErrorType.UNKNOWN, message: d.error }
+          : d.error
+      );
       setDetailLoading(false);
       return;
     }
@@ -716,9 +723,7 @@ const NovelDetail: Component = () => {
 
         {/* ── Error state ── */}
         <Show when={detailError()}>
-          <div class="text-center py-16 text-[var(--colorStatusDangerForeground1)]">
-            加载失败：{detailError()}
-          </div>
+          <ErrorDisplay error={detailError()!} onRetry={() => window.location.reload()} />
         </Show>
 
         {/* ── Content ── */}

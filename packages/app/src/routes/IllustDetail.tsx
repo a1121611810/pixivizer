@@ -9,7 +9,9 @@ import {
 } from "solid-js";
 import { useNavigate, useRouter, getRouteApi } from "@tanstack/solid-router";
 import { addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
+import { ApiErrorType, type ApiError } from "../api/types";
 import type { PixivIllust } from "../api/types";
+import ErrorDisplay from "../components/ErrorDisplay";
 import ImageViewer from "../components/ImageViewer";
 import UgoiraViewer from "../components/UgoiraViewer";
 import LazyDetailImage from "../components/LazyDetailImage";
@@ -38,7 +40,7 @@ const IllustDetail: Component = () => {
   const [currentVisiblePage, setCurrentVisiblePage] = createSignal(0);
   const [showBackToTop, setShowBackToTop] = createSignal(false);
   const [loading, setLoading] = createSignal(true);
-  const [error, setError] = createSignal<string | null>(null);
+  const [error, setError] = createSignal<ApiError | null>(null);
   const [bookmarking, setBookmarking] = createSignal(false);
   const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
   const [ugoiraCoverHeight, setUgoiraCoverHeight] = createSignal(0);
@@ -268,7 +270,11 @@ const IllustDetail: Component = () => {
   createEffect(() => {
     const d = data();
     if (d.error) {
-      setError(d.error);
+      if (d.error && typeof d.error === 'object' && 'type' in d.error) {
+        setError(d.error as ApiError);
+      } else if (d.error) {
+        setError({ type: ApiErrorType.UNKNOWN, message: d.error as string });
+      }
       setLoading(false);
       return;
     }
@@ -418,16 +424,7 @@ const IllustDetail: Component = () => {
       <div class="page">
         {loading() && <LoadingSpinner text="加载作品中..." />}
 
-        {error() && (
-          <div class="flex flex-col items-center justify-center h-screen gap-4 px-6">
-            <p class="text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase300)]">
-              {error()}
-            </p>
-            <fluent-button appearance="secondary" on:click={() => router.history.back()}>
-              返回
-            </fluent-button>
-          </div>
-        )}
+        {error() && <ErrorDisplay error={error()!} onRetry={() => window.location.reload()} />}
 
         {illust() && !viewerOpen() && isBlockedAuthor() && (
           <div class="flex flex-col items-center justify-center h-screen gap-4 px-6">

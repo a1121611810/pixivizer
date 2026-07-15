@@ -54,6 +54,7 @@ import {
   loadFollowing,
   loadMoreFollowing,
   loadMoreFollowers,
+  loadFollowers,
   toggleUserFollow,
   switchTab,
 } from "../stores/userStore";
@@ -61,6 +62,7 @@ import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
 import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorDisplay from "../components/ErrorDisplay";
 
 interface Props {
   userId?: string;
@@ -312,11 +314,7 @@ const PersonalCenter: Component<Props> = (props) => {
 
           {/* User list */}
           <div class="px-4 flex flex-col" style={{ gap: "var(--spacingVerticalS)" }}>
-            {error() && (
-              <div class="text-center py-4 px-4 rounded-[var(--borderRadiusMedium)] bg-[var(--colorStatusDangerBackground2)] text-[var(--colorStatusDangerForeground1)]">
-                <p class="[font-size:var(--fontSizeBase200)]">{error()}</p>
-              </div>
-            )}
+            {error() && <ErrorDisplay error={error()!} onRetry={() => { const uid = targetUserId(); loadFollowing(uid); loadFollowers(); }} />}
 
             {list().map((preview) => (
               <div
