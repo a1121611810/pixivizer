@@ -1,5 +1,5 @@
 import { type Component, onCleanup, Show, For } from "solid-js";
-import { useNavigate, useParams, useRouter } from "@tanstack/solid-router";
+import { useNavigate, useRouter } from "@tanstack/solid-router";
 import { resolveImageUrl } from "../utils/imageLoader";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
@@ -48,8 +48,6 @@ function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: stri
 const FollowListPage: Component<Props> = (props) => {
   const navigate = useNavigate();
   const router = useRouter();
-  const params = useParams({ strict: false });
-  const userId = () => Number(params().id);
 
   // 初始数据由路由 loader 加载；组件卸载时重置列表。
   onCleanup(() => {
@@ -59,7 +57,7 @@ const FollowListPage: Component<Props> = (props) => {
   const { attach: sentinelAttach } = createSentinelPaginator({
     rootMargin: "200px",
     enabled: () => !loading(),
-    onTrigger: () => loadMore(props.mode, userId()),
+    onTrigger: () => loadMore(),
   });
 
   return (

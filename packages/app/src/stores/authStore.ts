@@ -9,6 +9,7 @@ import {
   migrateRefreshTokenFromPreferences,
 } from "../utils/secureStorage";
 import { App } from "@capacitor/app";
+import { queryClient } from "../api/queryClient";
 
 const [accessTokenSig, setAccessTokenSig] = createSignal<string | null>(null);
 const [refreshTokenSig, setRefreshTokenSig] = createSignal<string | null>(null);
@@ -95,4 +96,6 @@ export async function logout() {
   setUser(null);
   setIsLoggedIn(false);
   await removeRefreshToken();
+  // 清空所有 TQ 缓存，防止退出登录后数据泄漏
+  queryClient.clear();
 }
