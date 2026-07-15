@@ -220,6 +220,7 @@ export enum ApiErrorType {
   FORBIDDEN = "FORBIDDEN",
   RATE_LIMIT = "RATE_LIMIT",
   SERVER = "SERVER",
+  PROXY = "PROXY",
   UNKNOWN = "UNKNOWN",
 }
 
