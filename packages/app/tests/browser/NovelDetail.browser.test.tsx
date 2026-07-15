@@ -7,12 +7,22 @@ import type { SeriesNavigation } from "../../src/api/types";
 
 const mockNavigate = vi.fn();
 
+function generateNovelText(): string {
+  const paragraphs = Array.from(
+    { length: 50 },
+    (_, i) => `第${i + 1}段测试内容，用于撑高文档以便测试滚动行为。`,
+  );
+  paragraphs[0] = "正文内容";
+  paragraphs[1] = "第二段";
+  return paragraphs.join("\n\n");
+}
+
 const mockLoaderData = () => {
   const { novel } = makeMockNovel();
   return {
     error: null,
     novel,
-    text: "正文内容\n\n第二段",
+    text: generateNovelText(),
     nav: currentNavigation,
     images: {},
   };
@@ -153,6 +163,27 @@ describe("NovelDetail scroll-header", () => {
       expect(textContainer!.textContent).toContain("正文内容");
     });
     expect(textContainer!.textContent).toContain("第二段");
+  });
+
+  it("double-clicking header scrolls page back to top", async () => {
+    const { container } = render(() => <NovelDetail />);
+    await screen.findAllByText("Scroll Header 测试标题");
+
+    const header = container.querySelector("header");
+    expect(header).not.toBeNull();
+
+    // Ensure the document is tall enough to scroll in the test viewport.
+    const originalMinHeight = document.documentElement.style.minHeight;
+    document.documentElement.style.minHeight = "2000px";
+    try {
+      window.scrollTo(0, 400);
+      expect(window.scrollY).toBeGreaterThan(0);
+
+      fireEvent.doubleClick(header!);
+      await waitFor(() => expect(window.scrollY).toBe(0));
+    } finally {
+      document.documentElement.style.minHeight = originalMinHeight;
+    }
   });
 
   it("hides series nav buttons when novel is not in a series", async () => {

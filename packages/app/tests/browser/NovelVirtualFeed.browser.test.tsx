@@ -1,6 +1,7 @@
 // @vitest-environment browser
 import { render, waitFor } from "@solidjs/testing-library";
 import { describe, it, expect, vi } from "vitest";
+import { createSignal } from "solid-js";
 import NovelVirtualFeed from "../../src/components/NovelVirtualFeed";
 import type { PixivNovel } from "../../src/api/types";
 
@@ -177,5 +178,50 @@ describe("NovelVirtualFeed", () => {
     });
     // The feed should render cover wall cards including the long-title one
     expect(container.textContent).toContain("a".repeat(200));
+  });
+
+  it("restores scroll only after layout is tall enough to contain the offset", async () => {
+    window.scrollTo(0, 0);
+    const scrollToSpy = vi.spyOn(window, "scrollTo");
+    try {
+      const novels = createNovels(20);
+      const [width, setWidth] = createSignal(0);
+      // Defer giving the feed container a real width until after the initial
+      // restoration frame would have fired. With the buggy code the scroll is
+      // applied while totalHeight is ~0 and is clamped to the top; the fix waits
+      // until the layout is tall enough before scrolling.
+      setTimeout(() => setWidth(800), 50);
+
+      render(() => (
+        <div style={{ width: `${width()}px` }}>
+          <NovelVirtualFeed
+            novels={novels}
+            loading={false}
+            error={null}
+            hasMore={false}
+            onNovelClick={vi.fn()}
+            onLoadMore={vi.fn()}
+            onRefresh={vi.fn()}
+            restoreScrollTop={500}
+          />
+        </div>
+      ));
+
+      // Give the buggy early restoration frame time to fire while width is still 0.
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      const earlyScrollTo500 = scrollToSpy.mock.calls.some(
+        (call) => call[0] === 0 && call[1] === 500,
+      );
+      expect(earlyScrollTo500).toBe(false);
+
+      await waitFor(
+        () => {
+          expect(window.scrollY).toBe(500);
+        },
+        { timeout: 3000 },
+      );
+    } finally {
+      scrollToSpy.mockRestore();
+    }
   });
 });
