@@ -12,6 +12,7 @@ import type { ComputeMasonryInput } from "../primitives/computeMasonryLayout";
 import { computeMasonryLayout } from "../primitives/computeMasonryLayout";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createVirtualScroll } from "../primitives/createVirtualScroll";
+import { createScrollRestoration } from "../primitives/createScrollRestoration";
 import { createLayout } from "./LayoutEngine";
 import { loadImage, checkImageCache } from "../utils/imageLoader";
 import { isImageHostEnabled } from "../stores/imageHostStore";
@@ -56,7 +57,6 @@ const VirtualFeed: Component<Props> = (props) => {
     "idle" | "pulling" | "refresh-ready" | "refreshing"
   >("idle");
   let touchStartY = 0;
-  let initialRestored = false;
 
   createEffect(() => {
     if (pullPhase() === "refreshing" && !props.loading) {
@@ -195,16 +195,10 @@ const VirtualFeed: Component<Props> = (props) => {
   });
 
   // ── Scroll restoration ──
-  createEffect(() => {
-    const restore = props.restoreScrollTop;
-    if (!initialRestored && restore && restore > 0) {
-      initialRestored = true;
-      requestAnimationFrame(() => {
-        window.scrollTo(0, restore);
-      });
-    } else if (!initialRestored && props.restoreScrollTop === undefined) {
-      initialRestored = true; // no restore needed
-    }
+  createScrollRestoration({
+    restoreScrollTop: () => props.restoreScrollTop,
+    layout,
+    containerWidth,
   });
 
   return (

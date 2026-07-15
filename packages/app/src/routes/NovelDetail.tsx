@@ -45,6 +45,7 @@ import SeriesSheet from "../components/SeriesSheet";
 import PageTransition from "../components/PageTransition";
 import CommentOverlay from "../components/CommentOverlay";
 import { pushOverlay, popOverlay } from "../stores/backGestureStore";
+import { scrollToTop } from "../utils/scrollToTop";
 
 const routeApi = getRouteApi("/novel/$id");
 
@@ -154,6 +155,13 @@ function parseProgress(raw: string | null): NovelProgress | null {
     /* ignore */
   }
   return null;
+}
+
+function resetNovelProgress(id: number) {
+  localStorage.setItem(
+    `novel_progress_${id}`,
+    JSON.stringify({ paragraphIndex: 0, charIndex: 0, progress: 0 }),
+  );
 }
 
 function isTextBlock(block: NovelBlock): block is TextBlock {
@@ -601,7 +609,7 @@ const NovelDetail: Component = () => {
   createEffect(() => {
     currentNovelId();
     closeSearch();
-    window.scrollTo({ top: 0, behavior: "auto" });
+    scrollToTop();
     setFooterHidden(false);
     accumulatedDelta = 0;
     lastScrollY = window.scrollY;
@@ -641,7 +649,13 @@ const NovelDetail: Component = () => {
     <PageTransition>
       <div class="min-h-screen bg-[var(--colorNeutralBackground2)]">
         {/* ── Top navigation bar ── */}
-        <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-2">
+        <header
+          class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-2"
+          onDblClick={() => {
+            resetNovelProgress(novelId());
+            scrollToTop();
+          }}
+        >
           <button
             type="button"
             aria-label="返回"
@@ -668,15 +682,17 @@ const NovelDetail: Component = () => {
               </h1>
             }
           >
-            <NovelSearchBar
-              query={search.query}
-              setQuery={search.setQuery}
-              matchCount={search.matchCount}
-              activeIndex={search.activeIndex}
-              onPrev={search.prevMatch}
-              onNext={search.nextMatch}
-              onClose={closeSearch}
-            />
+            <div onDblClick={(e) => e.stopPropagation()}>
+              <NovelSearchBar
+                query={search.query}
+                setQuery={search.setQuery}
+                matchCount={search.matchCount}
+                activeIndex={search.activeIndex}
+                onPrev={search.prevMatch}
+                onNext={search.nextMatch}
+                onClose={closeSearch}
+              />
+            </div>
           </Show>
           <Show when={!searchOpen()}>
             <button

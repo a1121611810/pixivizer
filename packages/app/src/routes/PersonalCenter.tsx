@@ -5,6 +5,7 @@ import { setCurrentTab } from "../stores/uiStore";
 import { resolveImageUrl } from "../utils/imageLoader";
 import { unfollowUser, followUser } from "../api/illust";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
+import { scrollToTop } from "../utils/scrollToTop";
 
 function AvatarFallback(props: { class?: string }) {
   return (
@@ -128,7 +129,10 @@ const PersonalCenter: Component<Props> = (props) => {
       <PageTransition>
         <div class="pb-16">
           {/* Header */}
-          <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3">
+          <header
+            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3"
+            onDblClick={scrollToTop}
+          >
             <fluent-button
               appearance="subtle"
               aria-label="返回"

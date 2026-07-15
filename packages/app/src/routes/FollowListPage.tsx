@@ -6,6 +6,7 @@ import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
+import { scrollToTop } from "../utils/scrollToTop";
 import {
   users,
   loading,
@@ -66,7 +67,10 @@ const FollowListPage: Component<Props> = (props) => {
       <PageTransition>
         <div class="pb-16">
           {/* Header */}
-          <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3">
+          <header
+            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3"
+            onDblClick={scrollToTop}
+          >
             <fluent-button
               appearance="subtle"
               aria-label="返回"

@@ -21,6 +21,7 @@ import { detailQuality, showDetailStairs } from "../stores/uiStore";
 import { blockUser, isBlocked } from "../stores/blockStore";
 import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import { sanitizeHtml } from "../utils/html";
+import { scrollToTop } from "../utils/scrollToTop";
 import ReportSheet from "../components/ReportSheet";
 import IllustTags from "../components/IllustTags";
 import CommentOverlay from "../components/CommentOverlay";
@@ -442,7 +443,10 @@ const IllustDetail: Component = () => {
         {illust() && !viewerOpen() && !isBlockedAuthor() && (
           <>
             {/* App bar header */}
-            <header class="relative flex items-center gap-3 px-4 py-3 surface-appbar sticky top-0 z-10">
+            <header
+              class="relative flex items-center gap-3 px-4 py-3 surface-appbar sticky top-0 z-10"
+              onDblClick={scrollToTop}
+            >
               <fluent-button
                 appearance="subtle"
                 aria-label="返回"
@@ -694,7 +698,7 @@ const IllustDetail: Component = () => {
                   setTimeout(() => {
                     ignorePageObserver = false;
                   }, 600);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  scrollToTop();
                 }}
                 aria-label="回顶"
               >

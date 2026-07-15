@@ -19,6 +19,7 @@ import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
 import { layoutMode } from "../stores/uiStore";
+import { scrollToTop } from "../utils/scrollToTop";
 
 const UserIllusts: Component = () => {
   const navigate = useNavigate();
@@ -42,11 +43,18 @@ const UserIllusts: Component = () => {
     load(userId(), type);
   }
 
+  onCleanup(() => {
+    saveScrollPosition(window.scrollY);
+  });
+
   return (
     <>
       <PageTransition>
         <div class="pb-16">
-          <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3">
+          <header
+            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3"
+            onDblClick={scrollToTop}
+          >
             <fluent-button
               appearance="subtle"
               aria-label="返回"

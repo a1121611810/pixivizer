@@ -28,18 +28,13 @@ import NavBar from "../components/NavBar";
 import NovelFeedPage from "./NovelFeedPage";
 import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
+import { scrollToTop } from "../utils/scrollToTop";
 
 interface Props {
   tab: Tab;
 }
 
 const r18Handler = () => refresh();
-
-function scrollToTop() {
-  window.scroll(0, 0);
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-}
 
 const TabFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
@@ -132,7 +127,7 @@ const TabFeedPage: Component<Props> = (props) => {
 
           {/* ── 关注页三层过滤 ── */}
           <Show when={props.tab === "follow" && contentType() === "illust"}>
-            <div class="sticky top-12 z-10 surface-appbar px-4 pb-2" onDblClick={scrollToTop}>
+            <div class="sticky top-12 z-10 surface-appbar px-4 pb-2">
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
                 {[
                   { key: "all" as const, label: "全部" },
@@ -162,7 +157,7 @@ const TabFeedPage: Component<Props> = (props) => {
 
           {/* ── 推荐页子标签 ── */}
           <Show when={props.tab === "recommended" && contentType() === "illust"}>
-            <div class="sticky top-12 z-10 surface-appbar px-4 pb-2" onDblClick={scrollToTop}>
+            <div class="sticky top-12 z-10 surface-appbar px-4 pb-2">
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
                 {[
                   { key: "mixed" as RecommendSubTab, label: "综合" },

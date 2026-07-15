@@ -8,6 +8,7 @@ import PullIndicator from "./PullIndicator";
 import type { PixivNovel } from "../api/types";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createVirtualScroll } from "../primitives/createVirtualScroll";
+import { createScrollRestoration } from "../primitives/createScrollRestoration";
 import { createComputedTextCard } from "../primitives/createComputedTextCard";
 import type { MasonryLayout } from "../primitives/types";
 import type { NovelLayoutMode } from "../stores/uiStore";
@@ -45,7 +46,6 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     "idle" | "pulling" | "refresh-ready" | "refreshing"
   >("idle");
   let touchStartY = 0;
-  let initialRestored = false;
 
   createEffect(() => {
     if (pullPhase() === "refreshing" && !props.loading) {
@@ -242,14 +242,10 @@ const NovelVirtualFeed: Component<Props> = (props) => {
   });
 
   // ── Scroll restoration ──
-  createEffect(() => {
-    const restore = props.restoreScrollTop;
-    if (!initialRestored && restore && restore > 0) {
-      initialRestored = true;
-      requestAnimationFrame(() => window.scrollTo(0, restore));
-    } else if (!initialRestored && props.restoreScrollTop === undefined) {
-      initialRestored = true;
-    }
+  createScrollRestoration({
+    restoreScrollTop: () => props.restoreScrollTop,
+    layout: activeLayout,
+    containerWidth,
   });
 
   return (

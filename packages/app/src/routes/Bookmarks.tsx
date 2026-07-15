@@ -8,6 +8,7 @@ import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
 import IllustBookmarks from "./IllustBookmarks";
 import NovelBookmarks from "./NovelBookmarks";
+import { scrollToTop } from "../utils/scrollToTop";
 
 const Bookmarks: Component = () => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const Bookmarks: Component = () => {
         <div class="pb-16">
           <header
             class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4"
-            onDblClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onDblClick={scrollToTop}
           >
             <h1
               class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0"
