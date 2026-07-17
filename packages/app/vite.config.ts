@@ -48,6 +48,8 @@ export default defineConfig({
   },
 
   server: {
+    host: "0.0.0.0",
+    allowedHosts: true,
     proxy: {
       // User-Agent 值保持与 src/api/userAgent.ts 的 PIXIV_USER_AGENT 一致
       "/pixiv-img": {
