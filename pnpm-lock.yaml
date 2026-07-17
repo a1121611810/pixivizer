@@ -226,6 +226,9 @@ importers:
       '@fluentui/web-components':
         specifier: 3.0.0-rc.31
         version: 3.0.0-rc.31(@microsoft/fast-element@3.0.0)(@microsoft/focusgroup-polyfill@1.5.0)
+      '@tanstack/solid-db':
+        specifier: ^0.2.28
+        version: 0.2.28(solid-js@1.9.13)(typescript@6.0.3)
       '@tanstack/solid-query':
         specifier: ^5.0.0
         version: 5.101.2(solid-js@1.9.13)
@@ -1627,13 +1630,28 @@ packages:
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
 
+  '@solid-primitives/map@0.7.4':
+    resolution: {integrity: sha512-zHWjQpcqxiXCuHb08GXJm3KnCTXOQNGMQu07CBOwtj9qCgjNUmwm5/UG+M2txQIPCbpY9rleAoOmEaQW4iaXMQ==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
   '@solid-primitives/refs@1.1.3':
     resolution: {integrity: sha512-aam02fjNKpBteewF/UliPSQCVJsIIGOLEWQOh+ll6R/QePzBOOBMcC4G+5jTaO75JuUS1d/14Q1YXT3X0Ow6iA==}
     peerDependencies:
       solid-js: ^1.6.12
 
+  '@solid-primitives/trigger@1.2.4':
+    resolution: {integrity: sha512-Ju0e+ZOD7hpOp7nptJimvDSZHWFvIvF9iBWMvuwt30smX7c5wmB8Kmc0AdDuv0wOTi06PQ1J5IrP1WJbH2yUBQ==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
   '@solid-primitives/utils@6.4.0':
     resolution: {integrity: sha512-AeGTBg8Wtkh/0s+evyLtP8piQoS4wyqqQaAFs2HJcFMMjYAtUgo+ZPduRXLjPlqKVc2ejeR544oeqpbn8Egn8A==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/utils@6.4.1':
+    resolution: {integrity: sha512-ISSB5QX1qP2ynrheIpYwc4oKR5Ny4siNuUyf1qZniy+Il+p/PtDB0QK1Dnle8noiHpwRD3gpPdubOC3qI/Zamg==}
     peerDependencies:
       solid-js: ^1.6.12
 
@@ -1663,9 +1681,23 @@ packages:
   '@swc/helpers@0.5.23':
     resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
 
+  '@tanstack/db-ivm@0.1.18':
+    resolution: {integrity: sha512-+pZJiRKdoKRM5Epq9T7otD9ZJl82pRFauo7LKuJGrarjVKQ7r+QQlPe3kGdN9LEKSnuNGIWjX9OOY4M8kH4eLw==}
+    peerDependencies:
+      typescript: '>=4.7'
+
+  '@tanstack/db@0.6.14':
+    resolution: {integrity: sha512-Kqma/PcWhn2e21iJPM/FMKwdMuJUYII9zkKPUsD42/ceEOYRtimbBSe+xll7EY805xE2HuQ3NGSSU8UiYXpHUw==}
+    peerDependencies:
+      typescript: '>=4.7'
+
   '@tanstack/history@1.162.0':
     resolution: {integrity: sha512-79pf/RkhteYZTRgcR4F9kbk84P2N8rugQJswxfIqovlbRiT3yI7eBE+5QorIrZaOKktsgzRlXh1l/du/xpl4iA==}
     engines: {node: '>=20.19'}
+
+  '@tanstack/pacer-lite@0.2.2':
+    resolution: {integrity: sha512-eQ1MyLKCHyXiH7NbdmB80W77OhiMgGBUb+qDx/8WMGbwg5Lf/NlfD0TfNYAqY77i8V3AxoDoYdICrQE5ADw4Yw==}
+    engines: {node: '>=18'}
 
   '@tanstack/query-core@5.101.2':
     resolution: {integrity: sha512-hH5MLoJhF7KaIGd7q3xTXGXvslI+GYlM1Z/35aSHHWaCJWB7XvTSHYuV3eM7tw+aE0mT/xMro4M4Q9rCGHT0lw==}
@@ -1673,6 +1705,11 @@ packages:
   '@tanstack/router-core@1.171.14':
     resolution: {integrity: sha512-Mo3hwx0qB0cJsVYGDjG0+Ouf7VV74h/vsoDMGztdlyzDanp4gBA2s7IVvm6hFrmQM6GpD9F0Z7SqD7OldfLE7g==}
     engines: {node: '>=20.19'}
+
+  '@tanstack/solid-db@0.2.28':
+    resolution: {integrity: sha512-RYwo1MUVVfOZs/ccClYWiEMZR24MBo4vDoFpHGZ7UBhnegp1UJd8rvP/mVKmCHCn6yfeU0UK1TCQUav6Xm52Dw==}
+    peerDependencies:
+      solid-js: '>=1.9.0'
 
   '@tanstack/solid-query@5.101.2':
     resolution: {integrity: sha512-IbCeM23gEbU0lW4wWFQhS4ELjgdmVXjhyCUh8pFemdMIuA5UswlkqEMryEE+lCMtxLS7m0oN1yWMocKi7vwXdw==}
@@ -2412,6 +2449,10 @@ packages:
   focus-trap@7.8.0:
     resolution: {integrity: sha512-/yNdlIkpWbM0ptxno3ONTuf+2g318kh2ez3KSeZN5dZ8YC6AAmgeWz+GasYYiBJPFaYcSAPeu4GfhUaChzIJXA==}
 
+  fractional-indexing@3.4.0:
+    resolution: {integrity: sha512-8J3glhz2rrpKG6KmI7wmJo3zH1VjeOpN+vTJSw1fOyO+Viqq3zX6/5NGh6oaZB2qIAYdOYuu5Dz9xp4faOO0Pg==}
+    engines: {node: ^14.13.1 || >=16.0.0}
+
   fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
 
@@ -3067,6 +3108,9 @@ packages:
     resolution: {integrity: sha512-F3aPsX6hVw9ttm5LYlth8Q15x6MlI/J3Dn+o3EQyRTtTxidepSTwAYdozt01/YA+7ObcciagGEyXIopGZzQtbA==}
     peerDependencies:
       solid-js: ^1.3
+
+  sorted-btree@1.8.1:
+    resolution: {integrity: sha512-395+XIP+wqNn3USkFSrNz7G3Ss/MXlZEqesxvzCRFwL14h6e8LukDHdLBePn5pwbm5OQ9vGu8mDyz2lLDIqamQ==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -4582,12 +4626,26 @@ snapshots:
 
   '@shikijs/vscode-textmate@10.0.2': {}
 
+  '@solid-primitives/map@0.7.4(solid-js@1.9.13)':
+    dependencies:
+      '@solid-primitives/trigger': 1.2.4(solid-js@1.9.13)
+      solid-js: 1.9.13
+
   '@solid-primitives/refs@1.1.3(solid-js@1.9.13)':
     dependencies:
       '@solid-primitives/utils': 6.4.0(solid-js@1.9.13)
       solid-js: 1.9.13
 
+  '@solid-primitives/trigger@1.2.4(solid-js@1.9.13)':
+    dependencies:
+      '@solid-primitives/utils': 6.4.1(solid-js@1.9.13)
+      solid-js: 1.9.13
+
   '@solid-primitives/utils@6.4.0(solid-js@1.9.13)':
+    dependencies:
+      solid-js: 1.9.13
+
+  '@solid-primitives/utils@6.4.1(solid-js@1.9.13)':
     dependencies:
       solid-js: 1.9.13
 
@@ -4613,7 +4671,22 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@tanstack/db-ivm@0.1.18(typescript@6.0.3)':
+    dependencies:
+      fractional-indexing: 3.4.0
+      sorted-btree: 1.8.1
+      typescript: 6.0.3
+
+  '@tanstack/db@0.6.14(typescript@6.0.3)':
+    dependencies:
+      '@standard-schema/spec': 1.1.0
+      '@tanstack/db-ivm': 0.1.18(typescript@6.0.3)
+      '@tanstack/pacer-lite': 0.2.2
+      typescript: 6.0.3
+
   '@tanstack/history@1.162.0': {}
+
+  '@tanstack/pacer-lite@0.2.2': {}
 
   '@tanstack/query-core@5.101.2': {}
 
@@ -4623,6 +4696,14 @@ snapshots:
       cookie-es: 3.1.1
       seroval: 1.5.4
       seroval-plugins: 1.5.4(seroval@1.5.4)
+
+  '@tanstack/solid-db@0.2.28(solid-js@1.9.13)(typescript@6.0.3)':
+    dependencies:
+      '@solid-primitives/map': 0.7.4(solid-js@1.9.13)
+      '@tanstack/db': 0.6.14(typescript@6.0.3)
+      solid-js: 1.9.13
+    transitivePeerDependencies:
+      - typescript
 
   '@tanstack/solid-query@5.101.2(solid-js@1.9.13)':
     dependencies:
@@ -5375,6 +5456,8 @@ snapshots:
   focus-trap@7.8.0:
     dependencies:
       tabbable: 6.5.0
+
+  fractional-indexing@3.4.0: {}
 
   fs-constants@1.0.0: {}
 
@@ -6129,6 +6212,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  sorted-btree@1.8.1: {}
+
   source-map-js@1.2.1: {}
 
   source-map-support@0.5.21:
@@ -6630,6 +6715,7 @@ time:
   '@playwright/test@1.61.1': '2026-06-23T19:49:12.825Z'
   '@resvg/resvg-js@2.6.2': '2024-03-26T13:43:37.598Z'
   '@solidjs/testing-library@0.8.10': '2024-09-25T13:24:08.486Z'
+  '@tanstack/solid-db@0.2.28': '2026-07-02T14:05:40.733Z'
   '@tanstack/solid-query@5.101.2': '2026-06-27T20:31:44.420Z'
   '@tanstack/solid-router@1.170.17': '2026-07-01T21:37:42.831Z'
   '@tanstack/solid-virtual@3.13.33': '2026-07-12T20:18:48.902Z'
