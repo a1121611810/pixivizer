@@ -5,6 +5,17 @@ import { defineConfig, presetUno, presetIcons } from "unocss";
 export default defineConfig({
   presets: [presetUno(), presetIcons()],
 
+  // safelist: 强制生成 NavBar 容器类（UnoCSS 提取器可能遗漏）
+  safelist: [
+    "floating-nav",
+    "floating-nav-capsule",
+    "floating-nav-capsule-compact",
+    "floating-nav-center",
+    "floating-nav-item",
+    "floating-nav-group",
+    "scroll-top-anim",
+  ],
+
   shortcuts: {
     // ── Page (full-height root surface) ──
     page: "min-h-screen bg-[var(--colorNeutralBackground3)] text-[var(--colorNeutralForeground1)]",
@@ -49,23 +60,23 @@ export default defineConfig({
     "segmented-item-inactive":
       "segmented-item bg-transparent text-[var(--colorNeutralForeground2)] hover:text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)]",
 
-    // ── Bottom Navigation Bar (Fluent 2 floating pill pattern) ──
-    "bottom-nav": "fixed bottom-0 left-0 right-0 z-30 flex justify-center px-4 select-none",
-    "bottom-nav-container":
-      "flex relative bg-[var(--colorNeutralBackgroundAlpha)] backdrop-blur-[30px] backdrop-saturate-[125%] rounded-[var(--borderRadius2XLarge)] border-t border-[var(--colorNeutralStroke2)] shadow-[var(--elevation8)]",
-    "bottom-nav-pill":
-      "absolute top-[var(--spacingVerticalS)] bottom-[var(--spacingVerticalS)] rounded-[var(--borderRadiusLarge)] bg-[var(--colorBrandStroke2)] opacity-0 transition-all duration-[var(--durationFast)] ease-[var(--curveDecelerateMid)]",
-    "bottom-nav-item":
-      "relative flex flex-col items-center justify-center gap-[var(--spacingHorizontalXXS)] min-w-20 h-12 px-[var(--spacingHorizontalL)] rounded-[var(--borderRadiusMedium)] text-[var(--fontSizeBase200)] font-medium leading-none border-none outline-none appearance-none cursor-pointer select-none transition-colors duration-[var(--durationFast)] ease-[var(--curveEasyEase)] focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]",
-    "bottom-nav-item-inactive":
-      "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground1Hover)] active:bg-[var(--colorNeutralBackground1Pressed)] active:scale-[0.96]",
-    "bottom-nav-item-active":
+    // ── Floating Navigation Bar (Fluent 2 floating capsule) ──
+    "floating-nav": "fixed bottom-6 left-0 right-0 z-30 flex justify-center pointer-events-none",
+    "floating-nav-capsule":
+      "pointer-events-auto flex items-center justify-center gap-1 bg-[var(--colorNeutralBackgroundAlpha)] backdrop-blur-[30px] backdrop-saturate-[125%] rounded-[var(--borderRadiusCircular)] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation8)] px-2 py-1.5 transition-all duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]",
+    "floating-nav-capsule-compact": "!px-0 !py-0 !gap-0 shadow-[var(--elevation4)]!",
+    "floating-nav-group":
+      "flex items-center gap-1 overflow-hidden transition-all duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]",
+    "floating-nav-group-hidden":
+      "max-w-0! min-w-0! w-0! opacity-0! invisible! px-0! py-0! m-0! pointer-events-none overflow-hidden!",
+    "floating-nav-group-visible": "max-w-40! opacity-100! visible!",
+    "floating-nav-item":
+      "flex flex-col items-center justify-center gap-[var(--spacingHorizontalXXS)] min-w-14 min-h-[44px] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusLarge)] text-[var(--fontSizeBase200)] font-medium leading-none border-none outline-none appearance-none cursor-pointer select-none transition-colors duration-[var(--durationFast)] ease-[var(--curveEasyEase)] text-[var(--colorNeutralForeground3)] hover:text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground1Hover)] active:bg-[var(--colorNeutralBackground1Pressed)] active:scale-[0.96] focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]",
+    "floating-nav-item-active":
       "text-[var(--colorCompoundBrandForeground1)] font-semibold active:scale-[0.97]",
-    // ── Nav icon crossfade helpers ──
-    "nav-icon-regular":
-      "absolute inset-0 transition-opacity duration-[var(--durationFast)] ease-[var(--curveEasyEase)]",
-    "nav-icon-filled":
-      "absolute inset-0 transition-opacity duration-[var(--durationFast)] ease-[var(--curveEasyEase)]",
+    "floating-nav-center":
+      "min-w-[52px] min-h-[52px] flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralBackground1)] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] cursor-pointer select-none [touch-action:manipulation] transition-[opacity,transform,box-shadow] duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:shadow-[var(--elevation8)] hover:scale-[1.05] active:scale-[0.95] active:bg-[var(--colorNeutralBackground1Pressed)] focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)] z-10",
+    "scroll-top-anim": "animate-[scroll-top-pulse_600ms_var(--curveEasyEase)]",
 
     // ── History page ──
     "history-entry-card":

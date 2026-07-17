@@ -52,11 +52,6 @@ body {
   color: var(--colorNeutralForeground1);
 }
 
-/* ── Safe-area bottom inset for notched devices ── */
-.nav-safe-bottom {
-  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
-}
-
 /* ═══════════════════════════════════════════════════════
    Fluent Design 2 — Animation Keyframes
    ═══════════════════════════════════════════════════════ */
@@ -195,6 +190,28 @@ body {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Scroll-to-top button pulse animation */
+@keyframes scroll-top-pulse {
+  0% {
+    box-shadow:
+      var(--elevation4),
+      0 0 0 0 var(--colorBrandStroke1);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      var(--elevation8),
+      0 0 0 8px color-mix(in srgb, var(--colorBrandStroke1) 25%, transparent);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow:
+      var(--elevation4),
+      0 0 0 0 color-mix(in srgb, var(--colorBrandStroke1) 0%, transparent);
+    transform: scale(1);
   }
 }
 

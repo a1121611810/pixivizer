@@ -3,174 +3,247 @@ import { currentTab, setCurrentTab, autoHideNavBar } from "../stores/uiStore";
 import { useNavigate } from "@tanstack/solid-router";
 import FluentIcon, { type FluentIconName } from "./ui/FluentIcon";
 
-// ── Tab definition ──
-const tabs: {
-  key: "recommended" | "follow" | "bookmarks" | "history";
+// ── Tab definitions ──
+type NavTab = "recommended" | "follow" | "bookmarks" | "history";
+
+interface TabDef {
+  key: NavTab;
   label: string;
   icon: FluentIconName;
-}[] = [
+}
+
+const leftTabs: TabDef[] = [
   { key: "recommended", label: "推荐", icon: "home" },
   { key: "follow", label: "关注", icon: "people" },
+];
+
+const rightTabs: TabDef[] = [
   { key: "bookmarks", label: "收藏", icon: "bookmark" },
   { key: "history", label: "历史", icon: "history" },
 ];
 
-// ── Sliding pill position ──
-const [pillLeft, setPillLeft] = createSignal(0);
-const [pillWidth, setPillWidth] = createSignal(0);
-const [pillVisible, setPillVisible] = createSignal(false);
+/** 路由路径映射 */
+const TAB_PATH: Record<NavTab, string> = {
+  recommended: "/recommended",
+  follow: "/following",
+  bookmarks: "/bookmarks",
+  history: "/history",
+};
+
+/** 类型守卫：判断 Tab 是否属于 NavTab */
+function toNavTab(tab: string): NavTab | null {
+  if (tab === "recommended" || tab === "follow" || tab === "bookmarks" || tab === "history") {
+    return tab;
+  }
+  return null;
+}
+
+const PictelioLogo: Component<{ size?: number }> = (props) => {
+  const s = () => props.size ?? 28;
+  return (
+    <svg width={s()} height={s()} viewBox="0 0 192 192" fill="none" aria-hidden="true">
+      <rect x="12" y="12" width="168" height="168" rx="44" fill="#ffffff" />
+      <svg x="36" y="36" width="120" height="120" viewBox="0 0 64 64">
+        <path
+          d="M18 12 C18 12 16 28 19 52 C19 52 22 54 24 50 C26 47 24 39 26 33 C26 33 37 35 45 27 C51 21 47 13 38 11 C31 9 24 12 18 12 Z"
+          fill="var(--colorBrandBackground, #2b579a)"
+        />
+        <path
+          d="M22 16 C22 16 21 28 23 46"
+          fill="none"
+          stroke="var(--colorBrandForeground1, #5a9fd4)"
+          stroke-width="3"
+          stroke-linecap="round"
+        />
+        <circle cx="42" cy="19" r="2" fill="var(--colorBrandForegroundLinkHover, #7ab8e8)" />
+        <circle cx="46" cy="25" r="1.5" fill="var(--colorBrandForegroundLinkHover, #7ab8e8)" />
+      </svg>
+    </svg>
+  );
+};
 
 const NavBar: Component = () => {
   const navigate = useNavigate();
-  let containerRef!: HTMLDivElement;
-  const tabEls: Record<string, HTMLButtonElement> = {};
 
-  const [hidden, setHidden] = createSignal(false);
+  // ── State ──
+  const [compact, setCompact] = createSignal(false);
+  const [activeTab, setActiveTab] = createSignal<NavTab>("recommended");
+
+  // Sync with currentTab from store
+  createEffect(() => {
+    const ct = toNavTab(currentTab());
+    if (ct) setActiveTab(ct);
+  });
+
+  // ── 触摸滑动手势标志（防止点击触发）──
+  let swiped = false;
+
+  // ── Scroll-driven compact/expand ──
   let lastScrollY = 0;
-  let accumulatedDelta = 0;
+  const HIDE_THRESHOLD = 20;
+  const TOP_ZONE = 100;
+  let scrollTicking = false;
 
-  // Measure and position the sliding pill whenever active tab changes
-  const updatePill = () => {
-    const tabKey = currentTab();
-    const el = tabEls[tabKey];
-    if (!el || !containerRef) return;
-    const containerRect = containerRef.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    setPillLeft(elRect.left - containerRect.left);
-    setPillWidth(elRect.width);
-    setPillVisible(true);
-  };
+  function onScroll() {
+    // 如果用户关闭了自动隐藏，始终展开
+    if (!autoHideNavBar()) {
+      if (compact()) setCompact(false);
+      return;
+    }
 
-  // Initial layout → measure pill position
-  onMount(() => {
-    requestAnimationFrame(updatePill);
+    const currentY = window.scrollY;
 
-    // ── Scroll-driven NavBar hide/show ──
-    lastScrollY = window.scrollY;
-    accumulatedDelta = 0;
-    const HIDE_THRESHOLD = 30;
-    const TOP_ZONE = 100;
-    let scrollTicking = false;
-
-    function onScroll() {
-      if (!autoHideNavBar()) {
-        setHidden(false);
-        return;
-      }
-
-      const currentY = window.scrollY;
-
-      // 顶部区域始终显示
-      if (currentY < TOP_ZONE) {
-        setHidden(false);
-        accumulatedDelta = 0;
-        lastScrollY = currentY;
-        return;
-      }
-
-      const delta = currentY - lastScrollY;
+    // TOP_ZONE 内始终展开
+    if (currentY < TOP_ZONE) {
+      if (compact()) setCompact(false);
       lastScrollY = currentY;
-
-      // 程序化滚动跳转（页面切换恢复位置等），重置跟踪状态，不触发显隐
-      if (Math.abs(delta) > 200) {
-        accumulatedDelta = 0;
-        return;
-      }
-
-      accumulatedDelta += delta;
-
-      if (accumulatedDelta > HIDE_THRESHOLD) {
-        setHidden(true);
-        accumulatedDelta = 0;
-      } else if (accumulatedDelta < -HIDE_THRESHOLD) {
-        setHidden(false);
-        accumulatedDelta = 0;
-      }
+      return;
     }
 
-    function onScrollRaf() {
-      if (!scrollTicking) {
-        scrollTicking = true;
-        requestAnimationFrame(() => {
-          onScroll();
-          scrollTicking = false;
-        });
-      }
+    const delta = currentY - lastScrollY;
+    lastScrollY = currentY;
+
+    // 程序化跳转（如页面切换恢复滚动位置）跳过
+    if (Math.abs(delta) > 200) {
+      return;
     }
+
+    // 直接根据滚动方向判断
+    if (delta >= HIDE_THRESHOLD && !compact()) {
+      setCompact(true);
+    } else if (delta <= -HIDE_THRESHOLD && compact()) {
+      setCompact(false);
+    }
+  }
+
+  function onScrollRaf() {
+    if (!scrollTicking) {
+      scrollTicking = true;
+      requestAnimationFrame(() => {
+        onScroll();
+        scrollTicking = false;
+      });
+    }
+  }
+
+  onMount(() => {
+    lastScrollY = window.scrollY;
 
     window.addEventListener("scroll", onScrollRaf, { passive: true });
-
-    onCleanup(() => {
-      window.removeEventListener("scroll", onScrollRaf);
-    });
   });
 
-  // Tab change → slide pill + reset scroll tracking
+  onCleanup(() => {
+    clearTimeout(animTimer);
+    window.removeEventListener("scroll", onScrollRaf);
+  });
+
+  // Tab 切换时重置滚动跟踪
   createEffect(() => {
-    // Track currentTab() to trigger re-measurement
     currentTab();
-    // Reset scroll tracking state on tab switch
     lastScrollY = window.scrollY;
-    accumulatedDelta = 0;
-    setHidden(false);
-    requestAnimationFrame(updatePill);
   });
+
+  // ── 中心按钮触摸滑动检测 ──
+  let touchStartY = 0;
+  const SWIPE_THRESHOLD = 30;
+  // 回顶动画状态
+  const [scrollToTopAnim, setScrollToTopAnim] = createSignal(false);
+  let animTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function handleTouchStart(e: TouchEvent) {
+    touchStartY = e.touches[0].clientY;
+    swiped = false;
+  }
+
+  function handleTouchEnd(e: TouchEvent) {
+    const dy = touchStartY - e.changedTouches[0].clientY;
+    if (dy > SWIPE_THRESHOLD) {
+      swiped = true;
+      // 触发动效
+      setScrollToTopAnim(true);
+      clearTimeout(animTimer);
+      animTimer = setTimeout(() => setScrollToTopAnim(false), 600);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  // ── 中心按钮点击：切换 compact 状态（滑动时不触发）──
+  function handleCenterClick() {
+    if (swiped) {
+      swiped = false;
+      return;
+    }
+    setCompact(!compact());
+  }
+
+  // ── Tab 导航 ──
+  function handleTabClick(key: NavTab) {
+    setCurrentTab(key);
+    void navigate({ to: TAB_PATH[key] });
+  }
 
   return (
-    <nav
-      class="bottom-nav select-none nav-safe-bottom"
-      aria-label="主导航"
-      style={{
-        transform: hidden()
-          ? "translateY(calc(100% + 12px + env(safe-area-inset-bottom, 0px)))"
-          : "translateY(0)",
-        transition: `transform var(--durationNormal) var(--curveEasyEase)`,
-      }}
-    >
-      <div ref={containerRef} class="bottom-nav-container relative">
-        {/* Sliding active pill indicator */}
+    <nav class="floating-nav" aria-label="主导航">
+      <div class="floating-nav-capsule" classList={{ "floating-nav-capsule-compact": compact() }}>
+        {/* 左侧按钮组：推荐 + 关注 */}
         <div
-          class="bottom-nav-pill absolute"
-          classList={{ "opacity-100": pillVisible() }}
-          style={{
-            left: `${pillLeft()}px`,
-            width: `${pillWidth()}px`,
+          class="floating-nav-group"
+          classList={{
+            "floating-nav-group-visible": !compact(),
+            "floating-nav-group-hidden": compact(),
           }}
-          aria-hidden="true"
-        />
-
-        {tabs.map((tab) => {
-          const isActive = () => currentTab() === tab.key;
-          return (
+          aria-hidden={compact()}
+        >
+          {leftTabs.map((tab) => (
             <button
-              ref={(el) => {
-                tabEls[tab.key] = el;
-              }}
-              class="bottom-nav-item relative"
-              classList={{
-                "bottom-nav-item-active": isActive(),
-                "bottom-nav-item-inactive": !isActive(),
-              }}
-              onClick={() => {
-                setCurrentTab(tab.key);
-                if (tab.key === "bookmarks") {
-                  void navigate({ to: "/bookmarks" });
-                } else if (tab.key === "follow") {
-                  void navigate({ to: "/following" });
-                } else if (tab.key === "history") {
-                  void navigate({ to: "/history" });
-                } else {
-                  void navigate({ to: "/recommended" });
-                }
-              }}
-              aria-current={isActive() ? "page" : undefined}
+              class="floating-nav-item"
+              classList={{ "floating-nav-item-active": activeTab() === tab.key }}
+              onClick={() => handleTabClick(tab.key)}
+              aria-current={activeTab() === tab.key ? "page" : undefined}
               aria-label={tab.label}
+              tabIndex={compact() ? -1 : 0}
             >
-              <FluentIcon name={tab.icon} active={isActive()} />
+              <FluentIcon name={tab.icon} active={activeTab() === tab.key} />
               <span>{tab.label}</span>
             </button>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* 中心大圆按钮（项目 Logo） */}
+        <button
+          class="floating-nav-center"
+          classList={{ "scroll-top-anim": scrollToTopAnim() }}
+          onClick={handleCenterClick}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          aria-label={compact() ? "展开导航" : "收起导航"}
+        >
+          <PictelioLogo size={36} />
+        </button>
+
+        {/* 右侧按钮组：收藏 + 历史 */}
+        <div
+          class="floating-nav-group"
+          classList={{
+            "floating-nav-group-visible": !compact(),
+            "floating-nav-group-hidden": compact(),
+          }}
+          aria-hidden={compact()}
+        >
+          {rightTabs.map((tab) => (
+            <button
+              class="floating-nav-item"
+              classList={{ "floating-nav-item-active": activeTab() === tab.key }}
+              onClick={() => handleTabClick(tab.key)}
+              aria-current={activeTab() === tab.key ? "page" : undefined}
+              aria-label={tab.label}
+              tabIndex={compact() ? -1 : 0}
+            >
+              <FluentIcon name={tab.icon} active={activeTab() === tab.key} />
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </nav>
   );
