@@ -4,11 +4,12 @@ import { useNavigate } from "@tanstack/solid-router";
 import FluentIcon, { type FluentIconName } from "./ui/FluentIcon";
 
 // ── Tab definition ──
-const tabs: { key: "recommended" | "follow" | "bookmarks"; label: string; icon: FluentIconName }[] =
+const tabs: { key: "recommended" | "follow" | "bookmarks" | "history"; label: string; icon: FluentIconName }[] =
   [
     { key: "recommended", label: "推荐", icon: "home" },
     { key: "follow", label: "关注", icon: "people" },
     { key: "bookmarks", label: "收藏", icon: "bookmark" },
+    { key: "history", label: "历史", icon: "history" },
   ];
 
 // ── Sliding pill position ──
@@ -153,6 +154,8 @@ const NavBar: Component = () => {
                   void navigate({ to: "/bookmarks" });
                 } else if (tab.key === "follow") {
                   void navigate({ to: "/following" });
+                } else if (tab.key === "history") {
+                  void navigate({ to: "/history" });
                 } else {
                   void navigate({ to: "/recommended" });
                 }

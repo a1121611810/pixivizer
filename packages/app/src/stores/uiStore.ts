@@ -2,7 +2,7 @@ import { createSignal } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { Preferences } from "@capacitor/preferences";
 
-type Tab = "recommended" | "follow" | "bookmarks" | "me";
+type Tab = "recommended" | "follow" | "bookmarks" | "me" | "history";
 export type { Tab };
 export type ContentType = "illust" | "novel";
 export type Theme = "light" | "dark" | "system";

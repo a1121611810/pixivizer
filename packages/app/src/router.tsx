@@ -60,6 +60,7 @@ const ImageHostSettings = lazy(() => import("@/routes/ImageHostSettings"));
 const ImageCacheSettings = lazy(() => import("@/routes/ImageCacheSettings"));
 const FollowListPage = lazy(() => import("@/routes/FollowListPage"));
 const NovelDetail = lazy(() => import("@/routes/NovelDetail"));
+const HistoryPage = lazy(() => import("@/routes/HistoryPage"));
 
 const rootRoute = createRootRoute({ component: RootLayout });
 
@@ -138,6 +139,12 @@ const bookmarksRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "bookmarks",
   component: asRoute(Bookmarks),
+});
+
+const historyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "history",
+  component: asRoute(HistoryPage),
 });
 
 const meRoute = createRoute({
@@ -232,6 +239,7 @@ const routeTree = rootRoute.addChildren([
   debugRoute,
   novelRoute,
   bookmarksRoute,
+  historyRoute,
   meRoute,
   aboutRoute,
   imageHostRoute,
