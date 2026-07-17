@@ -19,7 +19,7 @@ import { user } from "@/stores/authStore";
 
 export interface HistoryEntry {
   key: string;
-  userId: string;  // Pixiv API 返回的 id 实际为字符串
+  userId: string; // Pixiv API 返回的 id 实际为字符串
   type: "illust" | "novel";
   id: number;
   title: string;
@@ -51,10 +51,7 @@ export const historyVersion = createSignal(0);
 // ─── Public API ───
 
 /** 添加或更新浏览记录（去重）。从详情页数据加载成功时调用。 */
-export function recordVisit(
-  item: PixivIllust | PixivNovel,
-  type: "illust" | "novel",
-): void {
+export function recordVisit(item: PixivIllust | PixivNovel, type: "illust" | "novel"): void {
   const currentUser = user();
   if (!currentUser) return;
 
@@ -84,7 +81,7 @@ export function recordVisit(
   }
 
   // 触发响应式更新
-  historyVersion[1](v => v + 1);
+  historyVersion[1]((v) => v + 1);
 
   // 懒清除过期条目
   cleanupExpired();
@@ -93,7 +90,7 @@ export function recordVisit(
 /** 删除单条浏览记录。 */
 export function removeHistoryEntry(key: string): void {
   historyCollection.delete(key);
-  historyVersion[1](v => v + 1);
+  historyVersion[1]((v) => v + 1);
 }
 
 /** 清空当前用户的所有浏览记录。 */
@@ -108,7 +105,7 @@ export function clearAllHistory(): void {
       historyCollection.delete(entry.key);
     }
   }
-  historyVersion[1](v => v + 1);
+  historyVersion[1]((v) => v + 1);
 }
 
 /** 删除 30 天前的过期记录。 */

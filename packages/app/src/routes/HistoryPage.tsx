@@ -3,17 +3,17 @@
  *
  * 数据：TanStack DB `useLiveQuery` 从 `historyCollection` 查询当前用户记录。
  * 渲染：日期分组时间线，独立 surface-card 列表。
+ * 支持：按标题搜索（ilike，300ms 防抖）、日期范围筛选（gte/lte）、搜索高亮。
  */
 
-import { type Component, createMemo, createSignal, Show } from "solid-js";
+import { type Component, createMemo, createSignal, Show, createEffect, onCleanup } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
-import { useLiveQuery, eq } from "@tanstack/solid-db";
+import { useLiveQuery, eq, ilike, gte, lte, and } from "@tanstack/solid-db";
 import { historyCollection, removeHistoryEntry, clearAllHistory } from "@/stores/historyStore";
 import { user } from "@/stores/authStore";
 import { showR18, showR18G } from "@/stores/uiStore";
 import { resolveImageUrl } from "@/utils/imageLoader";
 import PageTransition from "@/components/PageTransition";
-import LoadingSpinner from "@/components/LoadingSpinner";
 import FluentIcon from "@/components/ui/FluentIcon";
 import NavBar from "@/components/NavBar";
 
@@ -37,7 +37,7 @@ function formatTime(ts: number): string {
 
 function buildTimeline(entries: import("@/stores/historyStore").HistoryEntry[]): TimelineItem[] {
   if (entries.length === 0) return [];
-  const sorted = [...entries].sort((a, b) => b.visitedAt - a.visitedAt);
+  const sorted = entries.toSorted((a, b) => b.visitedAt - a.visitedAt);
   const result: TimelineItem[] = [];
   let currentDate = "";
   for (const entry of sorted) {
@@ -51,6 +51,47 @@ function buildTimeline(entries: import("@/stores/historyStore").HistoryEntry[]):
   return result;
 }
 
+/** 将 "YYYY-MM-DD" 字符串转换为当天 00:00:00.000 的毫秒时间戳。 */
+function dateToStartTs(dateStr: string): number | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + "T00:00:00");
+  return isNaN(d.getTime()) ? null : d.getTime();
+}
+
+/** 将 "YYYY-MM-DD" 字符串转换为当天 23:59:59.999 的毫秒时间戳。 */
+function dateToEndTs(dateStr: string): number | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + "T23:59:59.999");
+  return isNaN(d.getTime()) ? null : d.getTime();
+}
+
+/**
+ * 将搜索关键词 `query` 对 `text` 做大小写不敏感匹配，返回 JSX 片段。
+ * 匹配部分用 `<mark>` 包裹并高亮，其余部分保持原样。
+ * 若无匹配或 query 为空，返回纯文本。
+ */
+function highlightText(text: string, query: string): string | ReturnType<typeof markHighlight> {
+  if (!query || !text) return text;
+  const lowerText = text.toLowerCase();
+  const lowerQuery = query.toLowerCase();
+  const idx = lowerText.indexOf(lowerQuery);
+  if (idx === -1) return text;
+  const before = text.slice(0, idx);
+  const match = text.slice(idx, idx + query.length);
+  const after = text.slice(idx + query.length);
+  return markHighlight(before, match, after);
+}
+
+function markHighlight(before: string, match: string, after: string) {
+  return (
+    <>
+      {before}
+      <mark class="history-search-highlight">{match}</mark>
+      {after}
+    </>
+  );
+}
+
 // ─── Component ───
 
 const HistoryPage: Component = () => {
@@ -58,13 +99,74 @@ const HistoryPage: Component = () => {
   const currentUser = user;
   const [confirmingClear, setConfirmingClear] = createSignal(false);
 
-  const query = useLiveQuery((q) =>
-    q
+  // ── Search state (with 300ms debounce) ──
+  const [searchInput, setSearchInput] = createSignal("");
+  const [searchQuery, setSearchQuery] = createSignal("");
+
+  createEffect(() => {
+    const value = searchInput();
+    const timer = setTimeout(() => setSearchQuery(value), 300);
+    onCleanup(() => clearTimeout(timer));
+  });
+
+  // ── Date range state ──
+  const [dateStartStr, setDateStartStr] = createSignal("");
+  const [dateEndStr, setDateEndStr] = createSignal("");
+
+  const startTimestamp = createMemo(() => dateToStartTs(dateStartStr()));
+  const endTimestamp = createMemo(() => dateToEndTs(dateEndStr()));
+
+  // ── Live query ──
+  const query = useLiveQuery((q) => {
+    const search = searchQuery();
+    const tsStart = startTimestamp();
+    const tsEnd = endTimestamp();
+    const uid = currentUser()?.id ?? "";
+
+    return q
       .from({ h: historyCollection })
-      .where(({ h }) => eq(h.userId, currentUser()?.id ?? ""))
-      .orderBy(({ h }) => h.visitedAt, "desc"),
+      .where(({ h }) => {
+        const conds = [eq(h.userId, uid)];
+        if (search) {
+          conds.push(ilike(h.title, `%${search}%`));
+        }
+        if (tsStart !== null) {
+          conds.push(gte(h.visitedAt, tsStart));
+        }
+        if (tsEnd !== null) {
+          conds.push(lte(h.visitedAt, tsEnd));
+        }
+        // 链式组合：and(a, b, c, ...)
+        let expr = conds[0];
+        for (let i = 1; i < conds.length; i++) {
+          expr = and(expr, conds[i]);
+        }
+        return expr;
+      })
+      .orderBy(({ h }) => h.visitedAt, "desc");
+  });
+
+  const hasActiveFilters = createMemo(
+    () =>
+      searchInput() !== "" || searchQuery() !== "" || dateStartStr() !== "" || dateEndStr() !== "",
   );
 
+  const activeFilterCount = createMemo(() => {
+    let count = 0;
+    if (searchQuery() !== "") count++;
+    if (dateStartStr() !== "") count++;
+    if (dateEndStr() !== "") count++;
+    return count;
+  });
+
+  function clearFilters() {
+    setSearchInput("");
+    setSearchQuery("");
+    setDateStartStr("");
+    setDateEndStr("");
+  }
+
+  // ── Timeline ──
   const items = createMemo<TimelineItem[]>(() => {
     const data = query() as import("@/stores/historyStore").HistoryEntry[] | undefined;
     if (!data || data.length === 0) return [];
@@ -84,7 +186,7 @@ const HistoryPage: Component = () => {
   return (
     <PageTransition>
       <div class="flex flex-col h-screen bg-[var(--colorNeutralBackground2)]">
-        {/* Header */}
+        {/* ── Header ── */}
         <header class="flex items-center justify-between px-4 pt-4 pb-2">
           <h1
             style={{
@@ -107,15 +209,92 @@ const HistoryPage: Component = () => {
           </Show>
         </header>
 
-        {/* Content */}
+        {/* ── Search & Filter bar ── */}
+        <div class="px-4 pb-1 flex flex-col gap-1">
+          {/* Search row */}
+          <div class="history-search-bar">
+            <FluentIcon name="search" size={18} />
+            <input
+              type="search"
+              value={searchInput()}
+              onInput={(e) => setSearchInput(e.currentTarget.value)}
+              placeholder="搜索标题..."
+              aria-label="搜索历史记录标题"
+              class="history-search-input"
+            />
+            <Show when={searchInput() !== ""}>
+              <button
+                onClick={() => {
+                  setSearchInput("");
+                }}
+                class="flex items-center justify-center min-w-10 min-h-10 appearance-none border-none outline-none cursor-pointer rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground2)] hover:text-[var(--colorNeutralForeground1)] active:scale-[0.95] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[2px] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)]"
+                aria-label="清除搜索"
+              >
+                <FluentIcon name="dismiss" size={16} />
+              </button>
+            </Show>
+          </div>
+
+          {/* Date range row */}
+          <div class="flex items-center gap-2 px-1 py-1.5">
+            <label class="flex items-center gap-1 text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase200)] whitespace-nowrap">
+              从
+              <input
+                type="date"
+                value={dateStartStr()}
+                onInput={(e) => setDateStartStr(e.currentTarget.value)}
+                class="history-date-input"
+                aria-label="开始日期"
+              />
+            </label>
+            <span class="text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase200)]">
+              —
+            </span>
+            <label class="flex items-center gap-1 text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase200)] whitespace-nowrap">
+              至
+              <input
+                type="date"
+                value={dateEndStr()}
+                onInput={(e) => setDateEndStr(e.currentTarget.value)}
+                class="history-date-input"
+                aria-label="结束日期"
+              />
+            </label>
+
+            {/* Clear filters button */}
+            <Show when={hasActiveFilters()}>
+              <button
+                onClick={clearFilters}
+                class="ml-auto text-[var(--colorBrandForeground1)] [font-size:var(--fontSizeBase200)] font-medium appearance-none border-none bg-transparent cursor-pointer hover:underline active:opacity-70 focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+                aria-label="清除筛选条件"
+              >
+                清除筛选
+              </button>
+            </Show>
+          </div>
+        </div>
+
+        {/* ── Content ── */}
         <Show
           when={!query.isLoading}
           fallback={
             <div class="flex-1 flex flex-col items-center justify-center gap-3">
               <div class="text-[var(--colorNeutralForeground3)] animate-spin">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" opacity="0.2" />
-                  <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    opacity="0.2"
+                  />
+                  <path
+                    d="M12 2a10 10 0 0 1 10 10"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
                 </svg>
               </div>
               <span
@@ -133,28 +312,62 @@ const HistoryPage: Component = () => {
             when={items().length > 0}
             fallback={
               <div class="flex-1 flex flex-col items-center justify-center gap-3">
-                <FluentIcon name="history" size={48} />
-                <div class="flex flex-col items-center gap-1">
-                  <span
-                    style={{
-                      "font-size": "var(--fontSizeBase300)",
-                      color: "var(--colorNeutralForeground2)",
-                    }}
-                  >
-                    暂无浏览记录
-                  </span>
-                  <span
-                    style={{
-                      "font-size": "var(--fontSizeBase200)",
-                      color: "var(--colorNeutralForeground3)",
-                    }}
-                  >
-                    浏览过的作品会出现在这里
-                  </span>
-                </div>
+                <Show when={hasActiveFilters()}>
+                  {/* Filtered empty state */}
+                  <FluentIcon name="search" size={48} />
+                  <div class="flex flex-col items-center gap-1">
+                    <span
+                      style={{
+                        "font-size": "var(--fontSizeBase300)",
+                        color: "var(--colorNeutralForeground2)",
+                      }}
+                    >
+                      未找到匹配的记录
+                    </span>
+                    <button
+                      onClick={clearFilters}
+                      class="text-[var(--colorBrandForeground1)] [font-size:var(--fontSizeBase200)] font-medium appearance-none border-none bg-transparent cursor-pointer hover:underline active:opacity-70 focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+                    >
+                      清除筛选条件
+                    </button>
+                  </div>
+                </Show>
+                <Show when={!hasActiveFilters()}>
+                  {/* No history at all */}
+                  <FluentIcon name="history" size={48} />
+                  <div class="flex flex-col items-center gap-1">
+                    <span
+                      style={{
+                        "font-size": "var(--fontSizeBase300)",
+                        color: "var(--colorNeutralForeground2)",
+                      }}
+                    >
+                      暂无浏览记录
+                    </span>
+                    <span
+                      style={{
+                        "font-size": "var(--fontSizeBase200)",
+                        color: "var(--colorNeutralForeground3)",
+                      }}
+                    >
+                      浏览过的作品会出现在这里
+                    </span>
+                  </div>
+                </Show>
               </div>
             }
           >
+            {/* Result count indicator */}
+            <div
+              class="px-4 pb-1"
+              style={{
+                "font-size": "var(--fontSizeBase200)",
+                color: "var(--colorNeutralForeground3)",
+              }}
+            >
+              <Show when={activeFilterCount() > 0}>共 {items().length} 条结果</Show>
+            </div>
+
             {/* Scrollable card list */}
             <div class="flex-1 overflow-auto px-4 pb-20">
               {items().map((item) => {
@@ -174,7 +387,8 @@ const HistoryPage: Component = () => {
                 }
 
                 const e = item.entry;
-                const hideByR18 = (e.xRestrict === 1 && !showR18()) || (e.xRestrict === 2 && !showR18G());
+                const hideByR18 =
+                  (e.xRestrict === 1 && !showR18()) || (e.xRestrict === 2 && !showR18G());
 
                 return (
                   <div
@@ -190,6 +404,7 @@ const HistoryPage: Component = () => {
                     tabIndex={0}
                     onKeyDown={(ev) => {
                       if (ev.key === "Enter" || ev.key === " ") {
+                        ev.preventDefault();
                         if (e.type === "illust") {
                           void navigate({ to: "/illust/$id", params: { id: String(e.id) } });
                         } else {
@@ -242,7 +457,7 @@ const HistoryPage: Component = () => {
                           color: "var(--colorNeutralForeground1)",
                         }}
                       >
-                        {e.title}
+                        {highlightText(e.title, searchQuery())}
                       </div>
                       <div
                         class="mt-0.5"

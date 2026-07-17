@@ -76,5 +76,15 @@ export default defineConfig({
       "px-2 py-1 rounded-[var(--borderRadiusSmall)] border-none bg-transparent text-[var(--fontSizeBase300)] text-[var(--colorNeutralForeground2)] cursor-pointer transition-colors duration-[var(--durationFast)] hover:text-[var(--colorDangerForeground)] hover:bg-[var(--colorDangerBackground)] font-[var(--fontWeightRegular)]",
     "history-clear-btn-confirm":
       "text-[var(--colorDangerForeground)] font-[var(--fontWeightSemibold)]",
+
+    // ── History search & filter ──
+    "history-search-bar":
+      "flex items-center gap-2 px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground1)]",
+    "history-search-input":
+      "flex-1 min-w-0 bg-transparent border-none outline-none text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase300)] placeholder:text-[var(--colorNeutralForeground3)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]",
+    "history-date-input":
+      "bg-[var(--colorNeutralBackground1)] border border-[var(--colorNeutralStroke1)] rounded-[var(--borderRadiusSmall)] px-2 py-1 text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] outline-none appearance-none focus-visible:border-[var(--colorBrandStroke1)] focus-visible:shadow-[0_0_0_1px_var(--colorBrandStroke1)] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100",
+    "history-search-highlight":
+      "bg-[var(--colorBrandStroke2)] text-[var(--colorBrandForeground1)] rounded-[var(--borderRadiusSmall)] px-0.5",
   },
 });
