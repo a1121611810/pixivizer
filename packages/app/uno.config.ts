@@ -66,5 +66,15 @@ export default defineConfig({
       "absolute inset-0 transition-opacity duration-[var(--durationFast)] ease-[var(--curveEasyEase)]",
     "nav-icon-filled":
       "absolute inset-0 transition-opacity duration-[var(--durationFast)] ease-[var(--curveEasyEase)]",
+
+    // ── History page ──
+    "history-entry-card":
+      "surface-card cursor-pointer transition-colors duration-[var(--durationFast)] hover:bg-[var(--colorNeutralBackground2)] active:scale-[0.985] focus-visible:outline-2 focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-offset-2",
+    "history-delete-btn":
+      "min-w-10 min-h-10 flex items-center justify-center flex-shrink-0 rounded-[var(--borderRadiusSmall)] bg-transparent border-none text-[var(--colorNeutralForeground4)] cursor-pointer transition-colors duration-[var(--durationFast)] hover:text-[var(--colorDangerForeground)] hover:bg-[var(--colorDangerBackground)] active:scale-90",
+    "history-clear-btn":
+      "px-2 py-1 rounded-[var(--borderRadiusSmall)] border-none bg-transparent text-[var(--fontSizeBase300)] text-[var(--colorNeutralForeground2)] cursor-pointer transition-colors duration-[var(--durationFast)] hover:text-[var(--colorDangerForeground)] hover:bg-[var(--colorDangerBackground)] font-[var(--fontWeightRegular)]",
+    "history-clear-btn-confirm":
+      "text-[var(--colorDangerForeground)] font-[var(--fontWeightSemibold)]",
   },
 });
