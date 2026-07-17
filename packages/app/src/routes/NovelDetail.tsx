@@ -49,6 +49,7 @@ import ErrorDisplay from "../components/ErrorDisplay";
 import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import { scrollToTop } from "../utils/scrollToTop";
 import { toApiError } from "../api/client";
+import { recordVisit } from "../stores/historyStore";
 
 const routeApi = getRouteApi("/novel/$id");
 
@@ -269,6 +270,7 @@ const NovelDetail: Component = () => {
       setDetailLoading(false);
       setDetailError(null);
     });
+    recordVisit(entry.detail, "novel");
   }
 
   async function loadNovelById(id: number) {

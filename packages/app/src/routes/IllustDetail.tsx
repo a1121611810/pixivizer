@@ -21,6 +21,7 @@ import PageTransition from "../components/PageTransition";
 import HeartBurstEffect from "../components/HeartBurstEffect";
 import { detailQuality, showDetailStairs } from "../stores/uiStore";
 import { blockUser, isBlocked } from "../stores/blockStore";
+import { recordVisit } from "../stores/historyStore";
 import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import { sanitizeHtml } from "../utils/html";
 import { scrollToTop } from "../utils/scrollToTop";
@@ -280,6 +281,7 @@ const IllustDetail: Component = () => {
     }
     if (d.illust) {
       setIllust(d.illust);
+      recordVisit(d.illust, "illust");
       setIsFollowed(d.illust.user.is_followed ?? false);
       // Multi-page: start observing page visibility for staircase after DOM renders
       if (d.illust.page_count > 1) {
