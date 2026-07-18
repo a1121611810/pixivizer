@@ -1,8 +1,9 @@
-import { type Component, onMount, onCleanup, createSignal, Show } from "solid-js";
+import { type Component, onMount, onCleanup, createSignal, Show, createEffect } from "solid-js";
 import { useNavigate, useParams, useRouter } from "@tanstack/solid-router";
 import { user } from "../stores/authStore";
 import { setCurrentTab } from "../stores/uiStore";
-import { resolveImageUrl } from "../utils/imageLoader";
+import { resolveImageUrl, loadImage } from "../utils/imageLoader";
+import { Capacitor } from "@capacitor/core";
 import { unfollowUser, followUser } from "../api/illust";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { scrollToTop } from "../utils/scrollToTop";
@@ -89,6 +90,30 @@ const PersonalCenter: Component<Props> = (props) => {
   const displayUser = () => (isSelf() ? user() : viewedUser());
   const [collapsed, setCollapsed] = createSignal(false);
   const COLLAPSE_THRESHOLD = 140;
+  const isNative = Capacitor.isNativePlatform();
+  const [avatarDisplayUrl, setAvatarDisplayUrl] = createSignal("");
+
+  createEffect(() => {
+    const u = displayUser();
+    if (!u) {
+      setAvatarDisplayUrl("");
+      return;
+    }
+    const src =
+      u.profile_image_urls.medium ||
+      u.profile_image_urls.px_170x170 ||
+      u.profile_image_urls.px_50x50 ||
+      "";
+    if (!src) {
+      setAvatarDisplayUrl("");
+      return;
+    }
+    if (isNative) {
+      loadImage(src).then((r) => setAvatarDisplayUrl(r.url));
+    } else {
+      setAvatarDisplayUrl(resolveImageUrl(src));
+    }
+  });
 
   onMount(() => {
     setCurrentTab("me");
@@ -165,7 +190,7 @@ const PersonalCenter: Component<Props> = (props) => {
                   <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
                   <Show when={displayUser()}>
                     <img
-                      src={avatarUrl(displayUser()!.profile_image_urls)}
+                      src={avatarDisplayUrl()}
                       alt={displayUser()!.name}
                       class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover"
                       onError={(e) => ((e.target as HTMLElement).style.display = "none")}
@@ -209,7 +234,7 @@ const PersonalCenter: Component<Props> = (props) => {
               <div class="relative w-20 h-20">
                 <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
                 <img
-                  src={avatarUrl(displayUser()!.profile_image_urls)}
+                  src={avatarDisplayUrl()}
                   alt={displayUser()!.name}
                   class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
                   onError={(e) => ((e.target as HTMLElement).style.display = "none")}
