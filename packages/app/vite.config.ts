@@ -279,5 +279,17 @@ export default defineConfig({
       ".worktrees/**",
       "pnpm-lock.yaml",
     ],
+    options: {
+      lineWidth: 100,
+      indentStyle: "space",
+      indentWidth: 2,
+      quoteStyle: "double",
+      jsxQuoteStyle: "double",
+      quoteProps: "as-needed",
+      semicolons: "always",
+      trailingComma: "all",
+      arrowParens: "always",
+      bracketSpacing: true,
+    },
   },
 } as any);
