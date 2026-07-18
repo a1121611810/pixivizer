@@ -1,5 +1,5 @@
 {
-  "version": "3.7.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.7.0",
-  "changelog": "📝 文档\n  docs: add TanStack Virtual migration ADR and implementation plan\n  docs(adr): add ADR-0006 TanStack Query adoption proposal\n  docs: update CONTEXT.md with error handling domain terms and updat"
+  "version": "3.8.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.8.0",
+  "changelog": "🔧 其他\n  build(tsconfig,vite): 移除废弃配置并添加代码格式化配置\n  build(app): add host and allowedHosts config for vite dev server\n  build(deps): add @tanstack/solid-db ^0.2.28\n✨ 新功能\n  feat: 启用 oxlint 全规则配置并修复 5000+ l"
 }
