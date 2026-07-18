@@ -1,5 +1,5 @@
 {
-  "version": "3.8.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.8.0",
-  "changelog": "🔧 其他\n  build(tsconfig,vite): 移除废弃配置并添加代码格式化配置\n  build(app): add host and allowedHosts config for vite dev server\n  build(deps): add @tanstack/solid-db ^0.2.28\n✨ 新功能\n  feat: 启用 oxlint 全规则配置并修复 5000+ l"
+  "version": "3.8.1",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.8.1",
+  "changelog": "🐛 修复\n  fix(avatar): 修复头像无法显示的三个根因\n  fix(settings-drawer): 使用 loadImage 加载头像确保显示\n  fix(personal-center): 使用 loadImage 加载头像确保显示\n  fix(router): 设置 defaultPendingMs=0 避免页面切换延迟\n  fix(history-page): 修复 use"
 }
