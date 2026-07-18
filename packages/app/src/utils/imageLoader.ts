@@ -192,12 +192,12 @@ export interface LoadedImage {
  */
 export function loadImage(originalUrl: string): Promise<LoadedImage> {
   if (!originalUrl) {
-    return { url: "", cleanup: () => {} };
+    return Promise.resolve({ url: "", cleanup: () => {} });
   }
 
   // 1. 检查缓存 — 无需异步操作，直接代理 URL 走浏览器缓存
   if (cache.has(originalUrl)) {
-    return { url: resolveImageUrl(originalUrl), cleanup: () => {} };
+    return Promise.resolve({ url: resolveImageUrl(originalUrl), cleanup: () => {} });
   }
 
   // 2. 检查是否已有相同 URL 正在加载中 — 复用 Promise，避免重复请求
