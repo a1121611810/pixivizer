@@ -19,7 +19,8 @@ import { user } from "@/stores/authStore";
 
 export interface HistoryEntry {
   key: string;
-  userId: string; // Pixiv API 返回的 id 实际为字符串
+  // Pixiv API 返回的 id 实际为字符串
+  userId: string;
   type: "illust" | "novel";
   id: number;
   title: string;
@@ -53,7 +54,9 @@ export const historyVersion = createSignal(0);
 /** 添加或更新浏览记录（去重）。从详情页数据加载成功时调用。 */
 export function recordVisit(item: PixivIllust | PixivNovel, type: "illust" | "novel"): void {
   const currentUser = user();
-  if (!currentUser) return;
+  if (!currentUser) {
+    return;
+  }
 
   const id = item.id;
   const key = `${currentUser.id}_${type}_${id}`;
@@ -96,7 +99,9 @@ export function removeHistoryEntry(key: string): void {
 /** 清空当前用户的所有浏览记录。 */
 export function clearAllHistory(): void {
   const currentUser = user();
-  if (!currentUser) return;
+  if (!currentUser) {
+    return;
+  }
 
   // TanStack DB 不支持按条件批量删除，遍历过滤
   const entries = historyCollection.toArray;

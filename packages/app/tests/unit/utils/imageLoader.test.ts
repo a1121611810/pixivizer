@@ -84,7 +84,7 @@ describe("toWebProxyUrl", () => {
   it("handles unknown hosts via resolveImageUrl fallback", async () => {
     const { toWebProxyUrl } = await load();
     const result = toWebProxyUrl("https://cdn.example.com/c/540x540_70/img.jpg");
-    expect(result).toMatch(/^\/pixiv-img\//);
+    expect(result).toMatch(/^\/pixiv-img\//u);
   });
 });
 
@@ -197,13 +197,13 @@ describe("loadImage", () => {
         expect(fetchMock).toHaveBeenCalledTimes(1);
       });
 
-      // fetch 失败
+      // Fetch 失败
       reject(new Error("Network error"));
 
       const results = await Promise.all(promises);
       results.forEach((r) => {
         // 降级为代理 URL（即 fallback 路径）
-        expect(r.url).toMatch(/^\/pixiv-img\//);
+        expect(r.url).toMatch(/^\/pixiv-img\//u);
         expect(typeof r.cleanup).toBe("function");
       });
 
@@ -220,14 +220,14 @@ describe("loadImage", () => {
       const { fetchMock, resolve } = createControlledFetch();
       vi.stubGlobal("fetch", fetchMock);
 
-      // loadImage 先行
+      // LoadImage 先行
       const p1 = loadImage("https://i.pximg.net/test/progress.jpg");
 
       await vi.waitFor(() => {
         expect(fetchMock).toHaveBeenCalledTimes(1);
       });
 
-      // loadImageWithProgress 随后 — 应交叉复用同一个 inflight 请求，不再发起新请求
+      // LoadImageWithProgress 随后 — 应交叉复用同一个 inflight 请求，不再发起新请求
       const progressSpy = vi.fn();
       const p2 = loadImageWithProgress("https://i.pximg.net/test/progress.jpg", progressSpy);
 
@@ -241,7 +241,7 @@ describe("loadImage", () => {
 
       expect(r1.url).toBeTruthy();
       expect(r2.url).toBeTruthy();
-      // progress 回调：从缓存中获取后立即 100%
+      // Progress 回调：从缓存中获取后立即 100%
       expect(progressSpy).toHaveBeenCalledWith(expect.objectContaining({ percent: 100 }));
 
       // 仍然只有 1 次 fetch
@@ -279,8 +279,8 @@ describe("loadImage", () => {
       // 加载后：缓存命中
       const cachedUrl = checkImageCache("https://i.pximg.net/test/cache.jpg");
       expect(cachedUrl).toBeTruthy();
-      // checkImageCache 现在返回代理 URL 而非 blob: URL（避免 Network 面板噪声）
-      expect(cachedUrl).toMatch(/^\/pixiv-img\//);
+      // CheckImageCache 现在返回代理 URL 而非 blob: URL（避免 Network 面板噪声）
+      expect(cachedUrl).toMatch(/^\/pixiv-img\//u);
 
       vi.unstubAllGlobals();
     });

@@ -1,7 +1,7 @@
 import type { RestrictType } from "./types";
 
 /**
- * createInfiniteQuery 的 queryKey 工厂。
+ * CreateInfiniteQuery 的 queryKey 工厂。
  *
  * 每个 key 以资源类型（"illust" / "novel" / "user"）开头，
  * 支持前缀级批量失效：

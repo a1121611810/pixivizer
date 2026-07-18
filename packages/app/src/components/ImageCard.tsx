@@ -8,9 +8,13 @@ import { resolveImageUrl } from "../utils/imageLoader";
 
 function resolveUrl(illust: PixivIllust): string {
   const q = listQuality();
-  if (q === "medium") return illust.image_urls.medium;
-  if (q === "large") return illust.image_urls.large;
-  // original: use original_image_url if available, otherwise fallback to large
+  if (q === "medium") {
+    return illust.image_urls.medium;
+  }
+  if (q === "large") {
+    return illust.image_urls.large;
+  }
+  // Original: use original_image_url if available, otherwise fallback to large
   return illust.meta_single_page?.original_image_url ?? illust.image_urls.large;
 }
 
@@ -34,7 +38,9 @@ const ImageCard: Component<Props> = (props) => {
 
   const toggleFollow = async (e: MouseEvent) => {
     e.stopPropagation();
-    if (following()) return;
+    if (following()) {
+      return;
+    }
     const prev = isFollowed();
     setIsFollowed(!prev);
     setFollowing(true);
@@ -70,16 +76,19 @@ const ImageCard: Component<Props> = (props) => {
         await addBookmark(props.illust.id, privateBookmark ? "private" : "public");
         setBookmarked(true);
         setBookmarkBurstTrigger((n) => n + 1);
-        if (privateBookmark) showPrivateToast();
+        if (privateBookmark) {
+          showPrivateToast();
+        }
       }
     } catch {
-      /* silently fail */
+      /* Silently fail */
     }
   };
 
   const onPointerDown = (e: PointerEvent) => {
     longPressTimer = setTimeout(() => {
-      toggleBookmark(e as any, true); // private
+      // Private
+      toggleBookmark(e as any, true);
       longPressTimer = 0 as any;
     }, 500);
   };
@@ -88,7 +97,8 @@ const ImageCard: Component<Props> = (props) => {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
       longPressTimer = 0 as any;
-      toggleBookmark(e as any, false); // public
+      // Public
+      toggleBookmark(e as any, false);
     }
   };
 

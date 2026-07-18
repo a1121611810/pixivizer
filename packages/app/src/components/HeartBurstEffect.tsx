@@ -12,8 +12,12 @@ const HeartBurstEffect: Component<Props> = (props) => {
   let containerRef: HTMLDivElement | undefined;
 
   function burst() {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (!containerRef) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    if (!containerRef) {
+      return;
+    }
     const s = size();
     const count = particleCount();
     const angleStep = (Math.PI * 2) / count;
@@ -60,12 +64,16 @@ const HeartBurstEffect: Component<Props> = (props) => {
 
   createEffect(() => {
     const count = props.trigger();
-    if (count === 0) return;
+    if (count === 0) {
+      return;
+    }
     burst();
   });
 
   onCleanup(() => {
-    if (containerRef) containerRef.innerHTML = "";
+    if (containerRef) {
+      containerRef.innerHTML = "";
+    }
   });
 
   return (

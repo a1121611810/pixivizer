@@ -3,7 +3,7 @@ import { ApiErrorType, type PixivIllust, type ApiError } from "@/api/types";
 
 // ── Mock TanStack Query ──
 // Mock the full @tanstack/solid-query module and replace createInfiniteQuery
-// with a controlled mock that returns plain-property objects mirroring the
+// With a controlled mock that returns plain-property objects mirroring the
 // Proxy-based result shape.
 
 type MockInfiniteData = {

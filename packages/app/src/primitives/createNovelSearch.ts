@@ -25,14 +25,18 @@ export function findMatches(
   caseSensitive = false,
   maxMatches = DEFAULT_MAX_MATCHES,
 ): NovelSearchMatch[] {
-  if (!query) return [];
+  if (!query) {
+    return [];
+  }
 
   const q = caseSensitive ? query : query.toLowerCase();
   const matches: NovelSearchMatch[] = [];
 
   for (let i = 0; i < paragraphs.length; i++) {
     const paragraph = paragraphs[i];
-    if (!paragraph) continue;
+    if (!paragraph) {
+      continue;
+    }
 
     const text = caseSensitive ? paragraph : paragraph.toLowerCase();
     let start = 0;
@@ -40,7 +44,9 @@ export function findMatches(
     while ((start = text.indexOf(q, start)) !== -1) {
       const end = start + q.length;
       matches.push({ paragraphIndex: i, start, end });
-      if (matches.length >= maxMatches) return matches;
+      if (matches.length >= maxMatches) {
+        return matches;
+      }
       start = end;
     }
   }
@@ -55,7 +61,9 @@ export function clearHighlights(container: HTMLElement): void {
   const marks = container.querySelectorAll("mark.novel-search-match");
   for (const mark of marks) {
     const parent = mark.parentNode;
-    if (!parent) continue;
+    if (!parent) {
+      continue;
+    }
     parent.insertBefore(document.createTextNode(mark.textContent ?? ""), mark);
     parent.removeChild(mark);
   }
@@ -74,7 +82,9 @@ export function applyHighlights(
 ): void {
   clearHighlights(container);
 
-  if (!matches.length) return;
+  if (!matches.length) {
+    return;
+  }
 
   const paragraphElements = Array.from(container.querySelectorAll(":scope > p"));
   const matchesByParagraph = new Map<number, NovelSearchMatch[]>();
@@ -91,7 +101,9 @@ export function applyHighlights(
   let globalIndex = 0;
   for (const [paragraphIndex, paragraphMatches] of matchesByParagraph) {
     const p = paragraphElements[paragraphIndex];
-    if (!p) continue;
+    if (!p) {
+      continue;
+    }
 
     const text = paragraphs[paragraphIndex] ?? "";
     p.textContent = "";
@@ -158,7 +170,9 @@ export function createNovelSearch(text: Accessor<string | null>, options: NovelS
 
   function setQuery(value: string) {
     setQuerySignal(value);
-    if (debounceTimer) clearTimeout(debounceTimer);
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
 
     if (debounceMs === 0) {
       setSearchTerm(value);
@@ -171,7 +185,9 @@ export function createNovelSearch(text: Accessor<string | null>, options: NovelS
     }
 
     onCleanup(() => {
-      if (debounceTimer) clearTimeout(debounceTimer);
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
     });
   }
 
@@ -181,18 +197,24 @@ export function createNovelSearch(text: Accessor<string | null>, options: NovelS
 
   function nextMatch() {
     const count = matches().length;
-    if (count === 0) return;
+    if (count === 0) {
+      return;
+    }
     setActiveIndex((prev) => (prev + 1) % count);
   }
 
   function prevMatch() {
     const count = matches().length;
-    if (count === 0) return;
+    if (count === 0) {
+      return;
+    }
     setActiveIndex((prev) => (prev - 1 + count) % count);
   }
 
   function clearSearch() {
-    if (debounceTimer) clearTimeout(debounceTimer);
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
     setQuerySignal("");
     setSearchTerm("");
     setMatches([]);

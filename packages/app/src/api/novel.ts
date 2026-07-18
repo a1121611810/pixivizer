@@ -32,12 +32,16 @@ export type NovelImagesMap = Record<string, NovelImageItem>;
  * 会跳过字符串内部的引号和转义字符，能处理任意层嵌套。
  */
 function extractBalancedObject(html: string, key: string): unknown {
-  const pattern = new RegExp(`"${key}"\\s*:\\s*\\{`);
+  const pattern = new RegExp(`"${key}"\\s*:\\s*\\{`, "u");
   const match = pattern.exec(html);
-  if (!match) return undefined;
+  if (!match) {
+    return undefined;
+  }
 
   const start = html.indexOf("{", match.index);
-  if (start === -1) return undefined;
+  if (start === -1) {
+    return undefined;
+  }
 
   let depth = 0;
   let inString = false;
@@ -80,13 +84,15 @@ function extractBalancedObject(html: string, key: string): unknown {
  */
 export function extractNovelTextFromHtml(html: string): string {
   // 匹配 window.pixiv = { ..., novel: { ..., "text": "...", ... }, ... }
-  const match = html.match(/"text"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-  if (!match) return "";
+  const match = html.match(/"text"\s*:\s*"((?:[^"\\]|\\.)*)"/u);
+  if (!match) {
+    return "";
+  }
   // 解义 JSON 转义序列
   try {
     return JSON.parse(`"${match[1]}"`) as string;
   } catch {
-    return match[1].replace(/\\n/g, "\n").replace(/\\r/g, "").replace(/\\t/g, " ");
+    return match[1].replace(/\\n/gu, "\n").replace(/\\r/gu, "").replace(/\\t/gu, " ");
   }
 }
 
@@ -97,7 +103,9 @@ export function extractNovelTextFromHtml(html: string): string {
 export async function fetchNovelText(novelId: number): Promise<string> {
   const html = await loadText(novelId);
   const text = extractNovelTextFromHtml(html);
-  if (!text) throw new Error("小说正文提取失败");
+  if (!text) {
+    throw new Error("小说正文提取失败");
+  }
   return text;
 }
 
@@ -114,7 +122,7 @@ export function extractNovelDataFromHtml(html: string): {
 
   // 单独提取 seriesNavigation（简单对象结构，用正则即可）
   let navigation: SeriesNavigation = {};
-  const navMatch = html.match(/"seriesNavigation"\s*:\s*(\{(?:[^{}]|\{[^{}]*\})*\})/);
+  const navMatch = html.match(/"seriesNavigation"\s*:\s*(\{(?:[^{}]|\{[^{}]*\})*\})/u);
   if (navMatch) {
     try {
       const parsed = JSON.parse(navMatch[1]);
@@ -123,7 +131,7 @@ export function extractNovelDataFromHtml(html: string): {
         prevNovel: parsed.prevNovel ?? null,
       };
     } catch {
-      /* ignore */
+      /* Ignore */
     }
   }
 
@@ -234,7 +242,9 @@ export function loadSeries(
   lastOrder?: number,
 ): Promise<NovelSeriesDetailResponse> {
   const params: Record<string, string> = { series_id: String(seriesId) };
-  if (lastOrder != null) params.last_order = String(lastOrder);
+  if (lastOrder != null) {
+    params.last_order = String(lastOrder);
+  }
   return apiClient.get<NovelSeriesDetailResponse>("/v2/novel/series", params);
 }
 

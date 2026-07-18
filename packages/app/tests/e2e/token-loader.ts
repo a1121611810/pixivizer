@@ -23,11 +23,13 @@ function extractTokenFromProfile(content: string): string | null {
   for (const line of content.split("\n")) {
     const trimmed = line.trim();
     // Skip comments
-    if (trimmed.startsWith("#")) continue;
+    if (trimmed.startsWith("#")) {
+      continue;
+    }
 
     // Match: export PIXIV_REFRESH_TOKEN="..." or ='...' or =...
     const match = trimmed.match(
-      /^(?:export\s+)?PIXIV_REFRESH_TOKEN\s*=\s*["']?([^"'\s]+)["']?\s*(?:#.*)?$/,
+      /^(?:export\s+)?PIXIV_REFRESH_TOKEN\s*=\s*["']?([^"'\s]+)["']?\s*(?:#.*)?$/u,
     );
     if (match) {
       return match[1];
@@ -45,7 +47,9 @@ function tryLoadDotEnv(): string | null {
   const searchPaths = [process.cwd()];
   // 如果项目是 monorepo 子包，尝试父级
   const parent = join(process.cwd(), "..");
-  if (parent !== process.cwd()) searchPaths.push(parent);
+  if (parent !== process.cwd()) {
+    searchPaths.push(parent);
+  }
   // 也尝试 monorepo 根目录
   searchPaths.push(join(process.cwd(), "..", ".."));
 
@@ -56,8 +60,10 @@ function tryLoadDotEnv(): string | null {
         const content = readFileSync(envPath, "utf-8");
         for (const line of content.split("\n")) {
           const trimmed = line.trim();
-          if (trimmed.startsWith("#")) continue;
-          const match = trimmed.match(/^PIXIV_REFRESH_TOKEN\s*=\s*"?([^"\s]+)"?\s*$/);
+          if (trimmed.startsWith("#")) {
+            continue;
+          }
+          const match = trimmed.match(/^PIXIV_REFRESH_TOKEN\s*=\s*"?([^"\s]+)"?\s*$/u);
           if (match) {
             console.log(`[E2E] Loaded PIXIV_REFRESH_TOKEN from ${envPath}`);
             return match[1];
@@ -83,7 +89,9 @@ export function getRefreshToken(): string | null {
 
   // 2. Try reading from .env file
   const fromDotEnv = tryLoadDotEnv();
-  if (fromDotEnv) return fromDotEnv;
+  if (fromDotEnv) {
+    return fromDotEnv;
+  }
 
   // 3. Try reading from shell profiles
   const home = homedir();

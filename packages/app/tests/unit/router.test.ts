@@ -5,7 +5,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AnyRoute } from "@tanstack/solid-router";
 
-// followListStore 和 userIllustsStore 在模块级别调用 createInfiniteQuery，
+// FollowListStore 和 userIllustsStore 在模块级别调用 createInfiniteQuery，
 // 需要 QueryClientProvider。该测试只验证路由结构，mock TQ 即可。
 vi.mock("@tanstack/solid-query", () => ({
   QueryClient: class {

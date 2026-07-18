@@ -9,7 +9,9 @@ const DebugImage: Component = () => {
 
   async function testFetch() {
     const url = testUrl();
-    if (!url) return;
+    if (!url) {
+      return;
+    }
 
     const proxyUrl = resolveImageUrl(url);
     setResult(`测试: ${url}\n代理: ${proxyUrl}\n请求中...`);
@@ -24,8 +26,8 @@ const DebugImage: Component = () => {
       } else {
         setResult(`❌ 失败: HTTP ${resp.status}, 大小: ${blob.size}`);
       }
-    } catch (e) {
-      setResult(`❌ 网络错误: ${(e as Error).message}`);
+    } catch (error) {
+      setResult(`❌ 网络错误: ${(error as Error).message}`);
     }
   }
 

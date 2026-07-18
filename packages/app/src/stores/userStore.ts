@@ -2,7 +2,6 @@ import { createSignal } from "solid-js";
 import { getUserDetail, getUserFollowing, getUserFollowers } from "../api/user";
 import { followUser, unfollowUser } from "../api/illust";
 import {
-  ApiErrorType,
   type ApiError,
   type PixivProfile,
   type PixivUserPreview,
@@ -40,7 +39,9 @@ export {
 
 export async function loadProfile(userId?: number) {
   const id = userId ?? user()?.id;
-  if (!id) return;
+  if (!id) {
+    return;
+  }
   // 命中缓存则直接恢复
   const cached = profileCache.get(Number(id));
   if (cached) {
@@ -53,14 +54,16 @@ export async function loadProfile(userId?: number) {
     setProfile(data.profile);
     setViewedUser(data.user);
     profileCache.set(Number(id), { profile: data.profile, user: data.user });
-  } catch (e) {
-    console.warn("[userStore] Failed to load profile", e);
+  } catch (error) {
+    console.warn("[userStore] Failed to load profile", error);
   }
 }
 
 export async function loadFollowing(userId?: number) {
   const id = userId ?? user()?.id;
-  if (!id) return;
+  if (!id) {
+    return;
+  }
   // 命中缓存则直接恢复
   const cached = followingCache.get(Number(id));
   if (cached) {
@@ -79,8 +82,8 @@ export async function loadFollowing(userId?: number) {
       list: filterUserPreviews(data.user_previews),
       nextUrl: data.next_url,
     });
-  } catch (e) {
-    setError(toApiError(e));
+  } catch (error) {
+    setError(toApiError(error));
   } finally {
     setLoading(false);
   }
@@ -88,15 +91,17 @@ export async function loadFollowing(userId?: number) {
 
 export async function loadFollowers() {
   const u = user();
-  if (!u) return;
+  if (!u) {
+    return;
+  }
   setLoading(true);
   setError(null);
   try {
     const data = await getUserFollowers(u.id);
     setFollowersList(data.user_previews);
     setFollowersNextUrl(data.next_url);
-  } catch (e) {
-    setError(toApiError(e));
+  } catch (error) {
+    setError(toApiError(error));
   } finally {
     setLoading(false);
   }
@@ -104,14 +109,16 @@ export async function loadFollowers() {
 
 export async function loadMoreFollowing() {
   const url = followingNextUrl();
-  if (!url || loading()) return;
+  if (!url || loading()) {
+    return;
+  }
   setLoading(true);
   try {
     const data = await getUserFollowing(user()!.id, "public", followingList().length);
     setFollowingList((prev) => [...prev, ...data.user_previews]);
     setFollowingNextUrl(data.next_url);
-  } catch (e) {
-    setError(toApiError(e));
+  } catch (error) {
+    setError(toApiError(error));
   } finally {
     setLoading(false);
   }
@@ -119,14 +126,16 @@ export async function loadMoreFollowing() {
 
 export async function loadMoreFollowers() {
   const url = followersNextUrl();
-  if (!url || loading()) return;
+  if (!url || loading()) {
+    return;
+  }
   setLoading(true);
   try {
     const data = await getUserFollowers(user()!.id, followersList().length);
     setFollowersList((prev) => [...prev, ...data.user_previews]);
     setFollowersNextUrl(data.next_url);
-  } catch (e) {
-    setError(toApiError(e));
+  } catch (error) {
+    setError(toApiError(error));
   } finally {
     setLoading(false);
   }

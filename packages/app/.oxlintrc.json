@@ -1,6 +1,18 @@
 {
   "rules": {
-    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "curly": ["warn"],
+    "capitalized-comments": ["warn"],
+    "require-unicode-regexp": ["warn"],
+    "require-await": ["warn"],
+    "catch-error-name": ["warn"],
+    "numeric-separators-style": ["warn"],
+    "no-inline-comments": ["warn"],
+    "no-underscore-dangle": [
+      "warn",
+      { "allow": ["_didMount", "_willUpdate", "__dirname", "__e2eServerProcess"] }
+    ],
+    "eqeqeq": ["warn", "always", { "null": "ignore" }]
   },
   "overrides": [
     {
@@ -10,6 +22,21 @@
           "error",
           { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_|^vi$|^beforeEach$|^afterEach$" }
         ],
+        "no-underscore-dangle": "off",
+        "require-unicode-regexp": "off",
+        "require-await": "off",
+        "no-inline-comments": "off"
+      }
+    },
+    {
+      "files": ["scripts/**/*.mjs"],
+      "rules": {
+        "no-inline-comments": "off"
+      }
+    },
+    {
+      "files": ["src/components/**/*.tsx", "src/primitives/**/*.ts"],
+      "rules": {
         "no-underscore-dangle": "off"
       }
     }

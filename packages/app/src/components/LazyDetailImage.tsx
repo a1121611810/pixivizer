@@ -27,7 +27,9 @@ const LazyDetailImage: Component<Props> = (props) => {
       props.visiblePage !== undefined ? props.pageIndex <= props.visiblePage + 1 : false,
     externalVisible: () => {
       const vp = props.visiblePage;
-      if (vp === undefined) return false;
+      if (vp === undefined) {
+        return false;
+      }
       return props.pageIndex <= vp + 1;
     },
     skipObserver: props.visiblePage !== undefined,

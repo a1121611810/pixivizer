@@ -47,7 +47,9 @@ const NovelFeedPage: Component<Props> = (props) => {
 
   function openSeriesSheet(seriesId: number) {
     const novel = novels().find((n) => n.series?.id === seriesId);
-    if (!novel?.series) return;
+    if (!novel?.series) {
+      return;
+    }
     setSheetSeries({
       id: seriesId,
       title: novel.series.title,
@@ -77,7 +79,7 @@ const NovelFeedPage: Component<Props> = (props) => {
   });
 
   // Key changes when sub-tab or main tab changes, forcing clean remount
-  // to prevent badge overlap from lingering absolutely-positioned cards
+  // To prevent badge overlap from lingering absolutely-positioned cards
   const feedKey = () => `novel-feed-${props.tab}-${novelFollowTab()}`;
 
   return (

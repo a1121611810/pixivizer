@@ -14,7 +14,9 @@ export function createDedupedRequest<K, T>(
 
   function request(key: K): Promise<T> {
     const existing = inflight.get(key);
-    if (existing) return existing;
+    if (existing) {
+      return existing;
+    }
 
     const promise = fetcher(key).finally(() => {
       inflight.delete(key);

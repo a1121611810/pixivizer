@@ -55,7 +55,7 @@ describe("URL 白名单一致性契约 (JS ↔ Java)", () => {
 
   it("http 协议不匹配白名单（白名单只要求 host，协议校验在 Java 层）", () => {
     const host = extractHost("http://app-api.pixiv.net/v1/");
-    // host 在白名单内，但协议是 http — Java 层的 isAllowedUrl 会拒绝
+    // Host 在白名单内，但协议是 http — Java 层的 isAllowedUrl 会拒绝
     expect(EXPECTED_ALLOWED_HOSTS).toContain(host);
   });
 });

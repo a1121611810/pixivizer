@@ -44,6 +44,6 @@ async function bootstrap() {
   }
 }
 
-bootstrap().catch((e) => {
-  console.error("[main] Bootstrap failed", e);
+bootstrap().catch((error) => {
+  console.error("[main] Bootstrap failed", error);
 });

@@ -58,7 +58,9 @@ export function setNovelFollowTab(t: "all" | "public" | "private") {
 }
 
 export function setBookmarkRestrict(r: RestrictType) {
-  if (state.bookmarkRestrict === r) return;
+  if (state.bookmarkRestrict === r) {
+    return;
+  }
   setState("bookmarkRestrict", r);
 }
 
@@ -67,17 +69,29 @@ const pendingRefreshKeys = new Set<string>();
 function getSourceKey(tab?: string, subTab?: string, restrict?: RestrictType): string {
   const t = tab ?? currentTab();
   const st = subTab ?? state.followTab;
-  if (t === "recommended") return "novel_recommended";
-  if (t === "bookmarks") return `novel_bookmarks_${restrict ?? state.bookmarkRestrict}`;
-  if (t === "follow") return `novel_follow_${st}`;
+  if (t === "recommended") {
+    return "novel_recommended";
+  }
+  if (t === "bookmarks") {
+    return `novel_bookmarks_${restrict ?? state.bookmarkRestrict}`;
+  }
+  if (t === "follow") {
+    return `novel_follow_${st}`;
+  }
   return `novel_${t}`;
 }
 
 function getTabLoadedKey(tab?: string): string {
   const t = tab ?? currentTab();
-  if (t === "follow") return "novel_follow";
-  if (t === "recommended") return "novel_recommended";
-  if (t === "bookmarks") return "novel_bookmarks";
+  if (t === "follow") {
+    return "novel_follow";
+  }
+  if (t === "recommended") {
+    return "novel_recommended";
+  }
+  if (t === "bookmarks") {
+    return "novel_bookmarks";
+  }
   return `novel_${t}`;
 }
 
@@ -98,12 +112,20 @@ function mergeAndSort(a: PixivNovel[], b: PixivNovel[]): PixivNovel[] {
 
 function computeFollowNovels(): PixivNovel[] {
   const st = state.followTab;
-  if (st === "public") return tabNovels["novel_follow_public"] ?? [];
-  if (st === "private") return tabNovels["novel_follow_private"] ?? [];
+  if (st === "public") {
+    return tabNovels["novel_follow_public"] ?? [];
+  }
+  if (st === "private") {
+    return tabNovels["novel_follow_private"] ?? [];
+  }
   const pub = tabNovels["novel_follow_public"] ?? [];
   const priv = tabNovels["novel_follow_private"] ?? [];
-  if (pub.length === 0) return priv;
-  if (priv.length === 0) return pub;
+  if (pub.length === 0) {
+    return priv;
+  }
+  if (priv.length === 0) {
+    return pub;
+  }
   return mergeAndSort(pub, priv);
 }
 
@@ -114,17 +136,21 @@ createRoot(() => {
   createEffect(() => {
     const tab = currentTab();
     if (tab === "follow") {
-      novelFollowTab(); // track changes
+      // Track changes
+      novelFollowTab();
       batch(() => {
         setState("novels", computeFollowNovels());
         const st = state.followTab;
-        if (st === "public") setState("nextUrl", tabNextUrl["novel_follow_public"] ?? null);
-        else if (st === "private") setState("nextUrl", tabNextUrl["novel_follow_private"] ?? null);
-        else
+        if (st === "public") {
+          setState("nextUrl", tabNextUrl["novel_follow_public"] ?? null);
+        } else if (st === "private") {
+          setState("nextUrl", tabNextUrl["novel_follow_private"] ?? null);
+        } else {
           setState(
             "nextUrl",
             tabNextUrl["novel_follow_public"] || tabNextUrl["novel_follow_private"] || null,
           );
+        }
       });
     }
   });
@@ -142,17 +168,22 @@ export async function ensureLoaded(): Promise<void> {
       batch(() => {
         setState("novels", computeFollowNovels());
         const st = state.followTab;
-        if (st === "public") setState("nextUrl", tabNextUrl["novel_follow_public"] ?? null);
-        else if (st === "private") setState("nextUrl", tabNextUrl["novel_follow_private"] ?? null);
-        else
+        if (st === "public") {
+          setState("nextUrl", tabNextUrl["novel_follow_public"] ?? null);
+        } else if (st === "private") {
+          setState("nextUrl", tabNextUrl["novel_follow_private"] ?? null);
+        } else {
           setState(
             "nextUrl",
             tabNextUrl["novel_follow_public"] || tabNextUrl["novel_follow_private"] || null,
           );
+        }
       });
     }
     if (!tabLoaded["novel_follow"]) {
-      if (!pubCached && !privCached) setState("novels", []);
+      if (!pubCached && !privCached) {
+        setState("novels", []);
+      }
       await fetchFollow();
       tabLoaded["novel_follow"] = true;
     }
@@ -167,7 +198,9 @@ export async function ensureLoaded(): Promise<void> {
     });
   }
 
-  if (tabLoaded[sourceKey]) return;
+  if (tabLoaded[sourceKey]) {
+    return;
+  }
   setState("loading", true);
   setState("error", null);
 
@@ -195,8 +228,8 @@ export async function ensureLoaded(): Promise<void> {
       });
     }
     tabLoaded[sourceKey] = true;
-  } catch (e) {
-    setState("error", toApiError(e));
+  } catch (error) {
+    setState("error", toApiError(error));
   } finally {
     setState("loading", false);
   }
@@ -209,7 +242,9 @@ async function fetchFollow(): Promise<void> {
 
   // 检查锁
   for (const key of sourceKeys) {
-    if (pendingRefreshKeys.has(key)) return;
+    if (pendingRefreshKeys.has(key)) {
+      return;
+    }
   }
   for (const key of sourceKeys) {
     pendingRefreshKeys.add(key);
@@ -241,13 +276,16 @@ async function fetchFollow(): Promise<void> {
       batch(() => {
         setState("novels", computeFollowNovels());
         const st = state.followTab;
-        if (st === "public") setState("nextUrl", tabNextUrl["novel_follow_public"] ?? null);
-        else if (st === "private") setState("nextUrl", tabNextUrl["novel_follow_private"] ?? null);
-        else
+        if (st === "public") {
+          setState("nextUrl", tabNextUrl["novel_follow_public"] ?? null);
+        } else if (st === "private") {
+          setState("nextUrl", tabNextUrl["novel_follow_private"] ?? null);
+        } else {
           setState(
             "nextUrl",
             tabNextUrl["novel_follow_public"] || tabNextUrl["novel_follow_private"] || null,
           );
+        }
       });
     }
 
@@ -279,7 +317,9 @@ export async function refresh(): Promise<void> {
 
     // 检查锁
     for (const key of sourceKeys) {
-      if (pendingRefreshKeys.has(key)) return;
+      if (pendingRefreshKeys.has(key)) {
+        return;
+      }
     }
 
     tabLoaded[sourceKey] = false;
@@ -313,7 +353,9 @@ export async function fetchMore(): Promise<void> {
 
   // ── Follow tab pagination ──
   if (tab === "follow") {
-    if (state.loading) return;
+    if (state.loading) {
+      return;
+    }
     setState("loading", true);
     try {
       const fTab = state.followTab;
@@ -371,7 +413,9 @@ export async function fetchMore(): Promise<void> {
           key: "novel_follow_public" | "novel_follow_private",
         ): Promise<boolean> => {
           const next = tabNextUrl[key];
-          if (!next) return false;
+          if (!next) {
+            return false;
+          }
           const data = await loadNext(next);
           tabNovels[key] = [...(tabNovels[key] || []), ...data.novels];
           tabNextUrl[key] = data.next_url;
@@ -393,15 +437,17 @@ export async function fetchMore(): Promise<void> {
           setState("loading", false);
         }
       }
-    } catch (e) {
-      setState("error", toApiError(e));
+    } catch (error) {
+      setState("error", toApiError(error));
     } finally {
       setState("loading", false);
     }
     return;
   }
 
-  if (state.loading || !state.nextUrl) return;
+  if (state.loading || !state.nextUrl) {
+    return;
+  }
   const sourceKey = getSourceKey();
   setState("loading", true);
   setState("error", null);
@@ -418,15 +464,17 @@ export async function fetchMore(): Promise<void> {
         }),
       );
     });
-  } catch (e) {
-    setState("error", toApiError(e));
+  } catch (error) {
+    setState("error", toApiError(error));
   } finally {
     setState("loading", false);
   }
 }
 
 function safeScrollY(): number {
-  if (typeof window !== "undefined") return window.scrollY;
+  if (typeof window !== "undefined") {
+    return window.scrollY;
+  }
   return 0;
 }
 

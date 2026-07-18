@@ -102,7 +102,9 @@ const ReaderSettingsSheet: Component<Props> = (props) => {
                   class="w-8 h-8 flex items-center justify-center rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer disabled:opacity-30"
                   onClick={() => {
                     const idx = FONT_SIZES.indexOf(fontSize());
-                    if (idx > 0) setReaderFontSize(FONT_SIZES[idx - 1]);
+                    if (idx > 0) {
+                      setReaderFontSize(FONT_SIZES[idx - 1]);
+                    }
                   }}
                   disabled={fontSize() <= FONT_SIZES[0]}
                   aria-label="减小字号"
@@ -129,7 +131,9 @@ const ReaderSettingsSheet: Component<Props> = (props) => {
                   class="w-8 h-8 flex items-center justify-center rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer disabled:opacity-30"
                   onClick={() => {
                     const idx = FONT_SIZES.indexOf(fontSize());
-                    if (idx < FONT_SIZES.length - 1) setReaderFontSize(FONT_SIZES[idx + 1]);
+                    if (idx < FONT_SIZES.length - 1) {
+                      setReaderFontSize(FONT_SIZES[idx + 1]);
+                    }
                   }}
                   disabled={fontSize() >= FONT_SIZES[FONT_SIZES.length - 1]}
                   aria-label="增大字号"

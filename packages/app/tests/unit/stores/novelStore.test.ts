@@ -94,10 +94,10 @@ describe("novelStore", () => {
       vi.mocked(loadRecommended).mockResolvedValue({ novels, next_url: null });
 
       const store = await loadStore();
-      await store.ensureLoaded(); // first fetch
-      await store.ensureLoaded(); // second call — should use cache
+      await store.ensureLoaded(); // First fetch
+      await store.ensureLoaded(); // Second call — should use cache
 
-      expect(loadRecommended).toHaveBeenCalledTimes(1); // not called again
+      expect(loadRecommended).toHaveBeenCalledTimes(1); // Not called again
       expect(store.novels()).toEqual(novels);
     });
 
@@ -161,8 +161,9 @@ describe("novelStore", () => {
       const publicNovels = [createNovel(1, "2026-01-01T00:00:00Z")];
       const privateNovels = [createNovel(2, "2026-01-02T00:00:00Z")];
       vi.mocked(loadBookmarks).mockImplementation((_, restrict) => {
-        if (restrict === "private")
+        if (restrict === "private") {
           return Promise.resolve({ novels: privateNovels, next_url: null });
+        }
         return Promise.resolve({ novels: publicNovels, next_url: null });
       });
 
@@ -182,8 +183,9 @@ describe("novelStore", () => {
       const publicNovels = [createNovel(1, "2026-01-01T00:00:00Z")];
       const privateNovels = [createNovel(2, "2026-01-02T00:00:00Z")];
       vi.mocked(loadBookmarks).mockImplementation((_, restrict) => {
-        if (restrict === "private")
+        if (restrict === "private") {
           return Promise.resolve({ novels: privateNovels, next_url: null });
+        }
         return Promise.resolve({ novels: publicNovels, next_url: null });
       });
 
@@ -321,8 +323,12 @@ describe("novelStore", () => {
       const pubNovels = [createNovel(1, "2026-02-01T00:00:00Z")];
       const privNovels = [createNovel(2, "2026-01-01T00:00:00Z")];
       vi.mocked(loadFollow).mockImplementation((restrict: string) => {
-        if (restrict === "public") return Promise.resolve({ novels: pubNovels, next_url: null });
-        if (restrict === "private") return Promise.resolve({ novels: privNovels, next_url: null });
+        if (restrict === "public") {
+          return Promise.resolve({ novels: pubNovels, next_url: null });
+        }
+        if (restrict === "private") {
+          return Promise.resolve({ novels: privNovels, next_url: null });
+        }
         return Promise.resolve({ novels: [], next_url: null });
       });
 
@@ -332,7 +338,7 @@ describe("novelStore", () => {
       expect(loadFollow).toHaveBeenCalledTimes(2);
       expect(loadFollow).toHaveBeenCalledWith("public");
       expect(loadFollow).toHaveBeenCalledWith("private");
-      // default followTab is "all", so should merge both
+      // Default followTab is "all", so should merge both
       expect(store.novels().map((n) => n.id)).toEqual([1, 2]);
       expect(store.loading()).toBe(false);
     });
@@ -344,7 +350,7 @@ describe("novelStore", () => {
       await store.ensureLoaded();
       await store.ensureLoaded();
 
-      expect(loadFollow).toHaveBeenCalledTimes(2); // only first call (public + private)
+      expect(loadFollow).toHaveBeenCalledTimes(2); // Only first call (public + private)
     });
 
     it("shows empty state when follow list is empty", async () => {
@@ -369,7 +375,9 @@ describe("novelStore", () => {
     it("gracefully degrades when only private fails", async () => {
       const pubNovels = [createNovel(1, "2026-02-01T00:00:00Z")];
       vi.mocked(loadFollow).mockImplementation((restrict: string) => {
-        if (restrict === "public") return Promise.resolve({ novels: pubNovels, next_url: null });
+        if (restrict === "public") {
+          return Promise.resolve({ novels: pubNovels, next_url: null });
+        }
         return Promise.reject(new Error("Private error"));
       });
 
@@ -378,7 +386,7 @@ describe("novelStore", () => {
 
       // Should still show public data
       expect(store.novels()).toEqual(pubNovels);
-      // error should be null (single failure is warning, not error)
+      // Error should be null (single failure is warning, not error)
       expect(store.error()).toBeNull();
     });
 
@@ -386,7 +394,9 @@ describe("novelStore", () => {
       const page1 = [createNovel(1, "2026-01-01T00:00:00Z")];
       const page2 = [createNovel(2, "2026-02-01T00:00:00Z")];
       vi.mocked(loadFollow).mockImplementation((restrict: string) => {
-        if (restrict === "public") return Promise.resolve({ novels: page1, next_url: null });
+        if (restrict === "public") {
+          return Promise.resolve({ novels: page1, next_url: null });
+        }
         return Promise.resolve({ novels: [], next_url: null });
       });
 
@@ -395,11 +405,13 @@ describe("novelStore", () => {
       expect(store.novels()).toEqual(page1);
 
       vi.mocked(loadFollow).mockImplementation((restrict: string) => {
-        if (restrict === "public") return Promise.resolve({ novels: page2, next_url: null });
+        if (restrict === "public") {
+          return Promise.resolve({ novels: page2, next_url: null });
+        }
         return Promise.resolve({ novels: [], next_url: null });
       });
       await store.refresh();
-      expect(loadFollow).toHaveBeenCalledTimes(4); // first load (2) + refresh (2)
+      expect(loadFollow).toHaveBeenCalledTimes(4); // First load (2) + refresh (2)
       expect(store.novels()).toEqual(page2);
     });
 
@@ -425,11 +437,12 @@ describe("novelStore", () => {
     it("fetchMore loads next page for follow public tab", async () => {
       mockCurrentTab = "follow";
       vi.mocked(loadFollow).mockImplementation((restrict: string) => {
-        if (restrict === "public")
+        if (restrict === "public") {
           return Promise.resolve({
             novels: [createNovel(1, "2026-02-01T00:00:00Z")],
             next_url: "https://app-api.pixiv.net/v1/novel/follow?offset=1",
           });
+        }
         return Promise.resolve({
           novels: [createNovel(2, "2026-01-01T00:00:00Z")],
           next_url: null,
@@ -446,7 +459,7 @@ describe("novelStore", () => {
       setNovelFollowTab("public");
       await store.fetchMore();
 
-      expect(store.novels()).toHaveLength(2); // after switching to "public", only public novel [1] is shown, then fetchMore adds [3]
+      expect(store.novels()).toHaveLength(2); // After switching to "public", only public novel [1] is shown, then fetchMore adds [3]
       expect(loadNext).toHaveBeenCalledWith("https://app-api.pixiv.net/v1/novel/follow?offset=1");
       expect(store.novels().map((n) => n.id)).toEqual([1, 3]);
     });

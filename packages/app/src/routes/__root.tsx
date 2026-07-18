@@ -106,8 +106,8 @@ const RootLayout: Component = () => {
 
     // Background update check on startup if toggle is enabled.
     // The result is stored in uiStore so StartupUpdateDialog can render it.
-    // isCheckingUpdate/checkCompleted are kept in sync so the Settings drawer
-    // can show the version indicator ("v3.5.1 ✅") after a startup check.
+    // IsCheckingUpdate/checkCompleted are kept in sync so the Settings drawer
+    // Can show the version indicator ("v3.5.1 ✅") after a startup check.
     if (autoCheckUpdate()) {
       setIsCheckingUpdate(true);
       try {
@@ -123,8 +123,8 @@ const RootLayout: Component = () => {
         ) {
           setShowUpdateDialog(true);
         }
-      } catch (e) {
-        console.warn("[App] Startup update check failed", e);
+      } catch (error) {
+        console.warn("[App] Startup update check failed", error);
       } finally {
         setIsCheckingUpdate(false);
         setCheckCompleted(true);
@@ -132,7 +132,7 @@ const RootLayout: Component = () => {
     }
 
     // Register native back gesture handler. Overlay closure is handled by backGestureStore
-    // once components push overlays in Phase 5; for now the service closes top overlay if any.
+    // Once components push overlays in Phase 5; for now the service closes top overlay if any.
     unregisterBackGesture = await registerBackGesture({
       getPathname: () => location().pathname,
       navigateBack: () => router.history.back(),
@@ -152,8 +152,8 @@ const RootLayout: Component = () => {
       } else {
         await navigate({ to: "/login", replace: true });
       }
-    } catch (e) {
-      console.error("[App] Auth initialization failed", e);
+    } catch (error) {
+      console.error("[App] Auth initialization failed", error);
       try {
         await navigate({ to: "/login", replace: true });
       } catch {

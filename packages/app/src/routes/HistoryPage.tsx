@@ -36,7 +36,9 @@ function formatTime(ts: number): string {
 }
 
 function buildTimeline(entries: import("@/stores/historyStore").HistoryEntry[]): TimelineItem[] {
-  if (entries.length === 0) return [];
+  if (entries.length === 0) {
+    return [];
+  }
   const sorted = entries.toSorted((a, b) => b.visitedAt - a.visitedAt);
   const result: TimelineItem[] = [];
   let currentDate = "";
@@ -53,14 +55,18 @@ function buildTimeline(entries: import("@/stores/historyStore").HistoryEntry[]):
 
 /** 将 "YYYY-MM-DD" 字符串转换为当天 00:00:00.000 的毫秒时间戳。 */
 function dateToStartTs(dateStr: string): number | null {
-  if (!dateStr) return null;
+  if (!dateStr) {
+    return null;
+  }
   const d = new Date(dateStr + "T00:00:00");
   return isNaN(d.getTime()) ? null : d.getTime();
 }
 
 /** 将 "YYYY-MM-DD" 字符串转换为当天 23:59:59.999 的毫秒时间戳。 */
 function dateToEndTs(dateStr: string): number | null {
-  if (!dateStr) return null;
+  if (!dateStr) {
+    return null;
+  }
   const d = new Date(dateStr + "T23:59:59.999");
   return isNaN(d.getTime()) ? null : d.getTime();
 }
@@ -71,11 +77,15 @@ function dateToEndTs(dateStr: string): number | null {
  * 若无匹配或 query 为空，返回纯文本。
  */
 function highlightText(text: string, query: string): string | ReturnType<typeof markHighlight> {
-  if (!query || !text) return text;
+  if (!query || !text) {
+    return text;
+  }
   const lowerText = text.toLowerCase();
   const lowerQuery = query.toLowerCase();
   const idx = lowerText.indexOf(lowerQuery);
-  if (idx === -1) return text;
+  if (idx === -1) {
+    return text;
+  }
   const before = text.slice(0, idx);
   const match = text.slice(idx, idx + query.length);
   const after = text.slice(idx + query.length);
@@ -153,9 +163,15 @@ const HistoryPage: Component = () => {
 
   const activeFilterCount = createMemo(() => {
     let count = 0;
-    if (searchQuery() !== "") count++;
-    if (dateStartStr() !== "") count++;
-    if (dateEndStr() !== "") count++;
+    if (searchQuery() !== "") {
+      count++;
+    }
+    if (dateStartStr() !== "") {
+      count++;
+    }
+    if (dateEndStr() !== "") {
+      count++;
+    }
     return count;
   });
 
@@ -169,7 +185,9 @@ const HistoryPage: Component = () => {
   // ── Timeline ──
   const items = createMemo<TimelineItem[]>(() => {
     const data = query() as import("@/stores/historyStore").HistoryEntry[] | undefined;
-    if (!data || data.length === 0) return [];
+    if (!data || data.length === 0) {
+      return [];
+    }
     return buildTimeline(data);
   });
 

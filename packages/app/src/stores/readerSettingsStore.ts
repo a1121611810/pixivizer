@@ -57,7 +57,7 @@ function loadSettings(): ReaderSettings {
       return { ...DEFAULTS, ...parsed };
     }
   } catch {
-    /* ignore */
+    /* Ignore */
   }
   return { ...DEFAULTS };
 }
@@ -66,7 +66,7 @@ function saveSettings(settings: ReaderSettings): void {
   try {
     localStorage.setItem(STORAGE_PREFIX + "settings", JSON.stringify(settings));
   } catch {
-    /* ignore */
+    /* Ignore */
   }
 }
 

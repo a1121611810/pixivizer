@@ -39,7 +39,9 @@ export function postIllustComment(
     illust_id: String(illustId),
     comment,
   };
-  if (parentCommentId != null) body.parent_comment_id = String(parentCommentId);
+  if (parentCommentId != null) {
+    body.parent_comment_id = String(parentCommentId);
+  }
   return apiClient.post("/v1/illust/comment/add", body);
 }
 
@@ -87,7 +89,9 @@ export function postNovelComment(
     novel_id: String(novelId),
     comment,
   };
-  if (parentCommentId != null) body.parent_comment_id = String(parentCommentId);
+  if (parentCommentId != null) {
+    body.parent_comment_id = String(parentCommentId);
+  }
   return apiClient.post("/v1/novel/comment/add", body);
 }
 

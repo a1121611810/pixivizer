@@ -7,8 +7,8 @@ export default defineConfig({
     environment: "node",
     globalSetup: "./tests/e2e/globalSetup.ts",
     globalTeardown: "./tests/e2e/globalTeardown.ts",
-    testTimeout: 30000,
-    hookTimeout: 30000,
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
   },
   resolve: {
     alias: {

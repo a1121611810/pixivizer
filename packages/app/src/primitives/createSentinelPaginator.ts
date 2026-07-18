@@ -60,13 +60,19 @@ export function createSentinelPaginator(
   let el: HTMLDivElement | undefined;
 
   onMount(() => {
-    if (!el) return;
+    if (!el) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry?.isIntersecting) return;
+        if (!entry?.isIntersecting) {
+          return;
+        }
         // 阀门检查：enabled 返回 false 时不触发
-        if (enabled && !enabled()) return;
+        if (enabled && !enabled()) {
+          return;
+        }
         onTrigger();
       },
       { rootMargin, root: root ? root() : undefined },

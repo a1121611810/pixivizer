@@ -58,7 +58,9 @@ const IllustDetail: Component = () => {
 
   async function toggleFollow() {
     const i = illust();
-    if (!i || following()) return;
+    if (!i || following()) {
+      return;
+    }
     const prev = isFollowed();
     setIsFollowed(!prev);
     setFollowing(true);
@@ -78,7 +80,9 @@ const IllustDetail: Component = () => {
 
   async function handleBlockAuthor() {
     const i = illust();
-    if (!i) return;
+    if (!i) {
+      return;
+    }
     setShowActionMenu(false);
     if (isBlocked(i.user.id)) {
       setToastMessage("该作者已被屏蔽");
@@ -106,12 +110,16 @@ const IllustDetail: Component = () => {
 
   function measureCoverContent(e: Event) {
     const img = e.target as HTMLImageElement;
-    if (img.naturalHeight === 0) return;
+    if (img.naturalHeight === 0) {
+      return;
+    }
     const canvas = document.createElement("canvas");
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
     ctx.drawImage(img, 0, 0);
     const midX = Math.floor(img.naturalWidth / 2);
     for (let y = img.naturalHeight - 1; y >= 0; y--) {
@@ -127,7 +135,9 @@ const IllustDetail: Component = () => {
 
   async function toggleBookmark(privateBookmark = false) {
     const i = illust();
-    if (!i || bookmarking()) return;
+    if (!i || bookmarking()) {
+      return;
+    }
     setBookmarking(true);
     try {
       if (i.is_bookmarked) {
@@ -144,8 +154,8 @@ const IllustDetail: Component = () => {
       if (!i.is_bookmarked) {
         setBookmarkBurstTrigger((n) => n + 1);
       }
-    } catch (e) {
-      console.error("Bookmark toggle failed:", e);
+    } catch (error) {
+      console.error("Bookmark toggle failed:", error);
     } finally {
       setBookmarking(false);
     }
@@ -153,7 +163,8 @@ const IllustDetail: Component = () => {
 
   function onBookmarkPointerDown(_e: PointerEvent) {
     longPressTimer = setTimeout(() => {
-      toggleBookmark(true); // private
+      // Private
+      toggleBookmark(true);
       longPressTimer = 0 as any;
     }, 500);
   }
@@ -162,7 +173,8 @@ const IllustDetail: Component = () => {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
       longPressTimer = 0 as any;
-      toggleBookmark(false); // public
+      // Public
+      toggleBookmark(false);
     }
   }
 
@@ -306,7 +318,9 @@ const IllustDetail: Component = () => {
             }
           }
         }
-        if (best && !ignorePageObserver) setCurrentVisiblePage(best.index);
+        if (best && !ignorePageObserver) {
+          setCurrentVisiblePage(best.index);
+        }
       },
       { threshold: [0, 0.25, 0.5, 0.75] },
     );
@@ -315,7 +329,9 @@ const IllustDetail: Component = () => {
 
   /** Start observing LazyDetailImage containers — call after data renders */
   function connectPageObserver() {
-    if (!pageObserver) return;
+    if (!pageObserver) {
+      return;
+    }
     requestAnimationFrame(() => {
       const containers = document.querySelectorAll("[data-page-index]");
       containers.forEach((el) => pageObserver!.observe(el));
@@ -336,33 +352,37 @@ const IllustDetail: Component = () => {
   /** Parse Pixiv internal caption links and navigate in-app */
   function handleCaptionClick(e: MouseEvent) {
     const target = e.target as HTMLElement;
-    if (target.tagName !== "A") return;
+    if (target.tagName !== "A") {
+      return;
+    }
     const href = target.getAttribute("href");
-    if (!href) return;
+    if (!href) {
+      return;
+    }
 
     // pixiv://users/123456 → /user/123456
-    const pixivProtocol = href.match(/^pixiv:\/\/users\/(\d+)/);
+    const pixivProtocol = href.match(/^pixiv:\/\/users\/(\d+)/u);
     if (pixivProtocol) {
       e.preventDefault();
       void navigate({ to: `/user/${pixivProtocol[1]}` });
       return;
     }
     // pixiv://illusts/12345678 → /illust/12345678
-    const illustProtocol = href.match(/^pixiv:\/\/illusts\/(\d+)/);
+    const illustProtocol = href.match(/^pixiv:\/\/illusts\/(\d+)/u);
     if (illustProtocol) {
       e.preventDefault();
       void navigate({ to: `/illust/${illustProtocol[1]}` });
       return;
     }
     // https://www.pixiv.net/(en/)?users/123456 → /user/123456
-    const webUser = href.match(/pixiv\.net\/(?:en\/)?users\/(\d+)/);
+    const webUser = href.match(/pixiv\.net\/(?:en\/)?users\/(\d+)/u);
     if (webUser) {
       e.preventDefault();
       void navigate({ to: `/user/${webUser[1]}` });
       return;
     }
     // https://www.pixiv.net/(en/)?artworks/12345678 → /illust/12345678
-    const webArtwork = href.match(/pixiv\.net\/(?:en\/)?artworks\/(\d+)/);
+    const webArtwork = href.match(/pixiv\.net\/(?:en\/)?artworks\/(\d+)/u);
     if (webArtwork) {
       e.preventDefault();
       void navigate({ to: `/illust/${webArtwork[1]}` });
@@ -373,17 +393,25 @@ const IllustDetail: Component = () => {
 
   function coverUrl(): string {
     const i = illust();
-    if (!i) return "";
+    if (!i) {
+      return "";
+    }
     const q = detailQuality();
-    if (q === "medium") return i.image_urls.medium;
-    if (q === "large") return i.image_urls.large;
-    // original: use original_image_url if available, fallback to large
+    if (q === "medium") {
+      return i.image_urls.medium;
+    }
+    if (q === "large") {
+      return i.image_urls.large;
+    }
+    // Original: use original_image_url if available, fallback to large
     return i.meta_single_page?.original_image_url ?? i.image_urls.large;
   }
 
   const imageUrls = () => {
     const i = illust();
-    if (!i) return [];
+    if (!i) {
+      return [];
+    }
     const q = detailQuality();
     if (i.page_count > 1) {
       // 多图：按用户设定质量取 URL，同时 api 返回的 meta_pages 还含 original
@@ -402,7 +430,9 @@ const IllustDetail: Component = () => {
   /** 原图 URL 列表，用于全屏查看器 */
   const originalImageUrls = () => {
     const i = illust();
-    if (!i) return [];
+    if (!i) {
+      return [];
+    }
     if (i.page_count > 1) {
       return i.meta_pages.map((p) => p.image_urls.original ?? p.image_urls.large);
     }
@@ -416,8 +446,8 @@ const IllustDetail: Component = () => {
       ignorePageObserver = false;
     }, 600);
     const el = document.querySelector(`[data-page-index="${index}"]`);
-    // block: "center" ensures the clicked page is centered in the viewport,
-    // which is more accurate than "start" when pages are shorter than screen height.
+    // Block: "center" ensures the clicked page is centered in the viewport,
+    // Which is more accurate than "start" when pages are shorter than screen height.
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 

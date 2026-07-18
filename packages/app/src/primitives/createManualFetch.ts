@@ -41,9 +41,9 @@ export function createManualFetch<T>(fetcher: (signal: AbortSignal) => Promise<T
       if (!signal.aborted) {
         setData(result);
       }
-    } catch (e) {
+    } catch (error) {
       if (!signal.aborted) {
-        setError((e as { message?: string }).message ?? String(e));
+        setError((error as { message?: string }).message ?? String(error));
       }
     } finally {
       if (!signal.aborted) {

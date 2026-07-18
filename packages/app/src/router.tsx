@@ -18,7 +18,6 @@ import { loadNovelEntry } from "@/stores/novelCache";
 import { setCurrentTab } from "@/stores/uiStore";
 import { load as loadUserIllusts, contentType } from "@/stores/userIllustsStore";
 import { loadProfile, loadFollowing } from "@/stores/userStore";
-import { ApiErrorType, type ApiError } from "./api/types";
 import { toApiError } from "./api/client";
 
 /** 将普通 Solid 组件/懒加载组件断言为 TanStack RouteComponent，避免每处重复转换。 */
@@ -91,10 +90,10 @@ const illustRoute = createRoute({
     try {
       const data = await loadDetail(Number(params.id));
       return { illust: data.illust, error: null };
-    } catch (e) {
+    } catch (error) {
       return {
         illust: null,
-        error: toApiError(e),
+        error: toApiError(error),
       };
     }
   },
@@ -122,13 +121,13 @@ const novelRoute = createRoute({
         images: entry.images,
         error: null,
       };
-    } catch (e) {
+    } catch (error) {
       return {
         novel: null,
         text: "",
         nav: {},
         images: {},
-        error: toApiError(e),
+        error: toApiError(error),
       };
     }
   },

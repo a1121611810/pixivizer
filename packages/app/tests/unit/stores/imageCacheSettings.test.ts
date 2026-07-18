@@ -8,7 +8,6 @@ import {
   setImageCachePrefetch,
   imageCacheDiskSize,
   setImageCacheDiskSize,
-  loadImageCachePrefs,
   resetUiStore,
 } from "@/stores/uiStore";
 
@@ -47,7 +46,9 @@ beforeAll(() => {
       delete store[key];
     }),
     clear: vi.fn(() => {
-      for (const k of Object.keys(store)) delete store[k];
+      for (const k of Object.keys(store)) {
+        delete store[k];
+      }
     }),
   });
 });
@@ -108,9 +109,15 @@ describe("imageCache A/B/C 开关", () => {
     // 模拟 Preferences.get 返回 false
     const { Preferences } = await import("@capacitor/preferences");
     vi.mocked(Preferences.get).mockImplementation(async ({ key }) => {
-      if (key === "image_cache_disk") return { value: "false" };
-      if (key === "image_cache_browser") return { value: "false" };
-      if (key === "image_cache_prefetch") return { value: "false" };
+      if (key === "image_cache_disk") {
+        return { value: "false" };
+      }
+      if (key === "image_cache_browser") {
+        return { value: "false" };
+      }
+      if (key === "image_cache_prefetch") {
+        return { value: "false" };
+      }
       return { value: null };
     });
     await mod.loadImageCachePrefs();

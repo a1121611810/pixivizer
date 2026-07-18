@@ -46,7 +46,7 @@ describe("createManualFetch", () => {
     expect(fetcher.data()).toBe("ok");
 
     const promise = fetcher.execute();
-    // data 会被重置为 null，因为 execute 清空了
+    // Data 会被重置为 null，因为 execute 清空了
     expect(fetcher.data()).toBeNull();
     expect(fetcher.loading()).toBe(true);
     await promise;
@@ -56,7 +56,7 @@ describe("createManualFetch", () => {
     const spy = vi.fn();
     const fetcher = createManualFetch((signal) => {
       signal.addEventListener("abort", spy);
-      return new Promise<string>(() => {}); // never resolves
+      return new Promise<string>(() => {}); // Never resolves
     });
     fetcher.execute().catch(() => {});
     fetcher.cancel();

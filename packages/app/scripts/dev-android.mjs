@@ -24,9 +24,13 @@ function getLocalIp() {
   const candidates = [];
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
-      if (iface.family !== "IPv4" || iface.internal) continue;
+      if (iface.family !== "IPv4" || iface.internal) {
+        continue;
+      }
       const addr = iface.address;
-      if (addr.startsWith("127.")) continue;
+      if (addr.startsWith("127.")) {
+        continue;
+      }
       // 优先返回常见内网网段
       if (addr.startsWith("192.168.") || addr.startsWith("10.")) {
         candidates.unshift({ name, address: addr });
@@ -47,7 +51,9 @@ async function waitForDevServer() {
   for (let i = 0; i < 60; i++) {
     try {
       const res = await fetch(`http://127.0.0.1:${PORT}/`);
-      if (res.ok || res.status === 404) return;
+      if (res.ok || res.status === 404) {
+        return;
+      }
     } catch {
       // 未就绪，继续等待
     }
@@ -65,8 +71,11 @@ function run(cmd, args, options = {}) {
       ...options,
     });
     proc.on("close", (code) => {
-      if (code === 0 || code === null) resolve();
-      else reject(new Error(`命令退出码 ${code}: ${cmd} ${args.join(" ")}`));
+      if (code === 0 || code === null) {
+        resolve();
+      } else {
+        reject(new Error(`命令退出码 ${code}: ${cmd} ${args.join(" ")}`));
+      }
     });
   });
 }
@@ -112,8 +121,8 @@ async function main() {
 
     console.log("\n✅ 完成！APK 已安装，dev server 正在运行。");
     console.log("   按 Ctrl+C 停止 dev server。");
-  } catch (err) {
-    console.error("\n❌ 出错:", err.message);
+  } catch (error) {
+    console.error("\n❌ 出错:", error.message);
     cleanup();
     process.exit(1);
   }

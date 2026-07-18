@@ -28,10 +28,13 @@ const illustQuery = createRoot(() =>
         queryKey: isActive
           ? queryKeys.userIllusts(s!.userId, s!.type === "manga" ? "manga" : "illust")
           : (["__disabled__", "illust", "userWorks", 0] as const),
-        queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
-          if (!s) return { illusts: [] as PixivIllust[], next_url: null as string | null };
-          if (pageParam)
+        queryFn: ({ pageParam }: { pageParam: string | undefined }) => {
+          if (!s) {
+            return { illusts: [] as PixivIllust[], next_url: null as string | null };
+          }
+          if (pageParam) {
             return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(pageParam);
+          }
           return loadUserIllusts(s.userId, s.type);
         },
         getNextPageParam: (lastPage: { next_url: string | null }) => lastPage.next_url ?? undefined,
@@ -53,10 +56,13 @@ const novelQuery = createRoot(() =>
         queryKey: isActive
           ? queryKeys.userNovels(s!.userId)
           : (["__disabled__", "novel", "userWorks", 0] as const),
-        queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
-          if (!s) return { novels: [] as PixivNovel[], next_url: null as string | null };
-          if (pageParam)
+        queryFn: ({ pageParam }: { pageParam: string | undefined }) => {
+          if (!s) {
+            return { novels: [] as PixivNovel[], next_url: null as string | null };
+          }
+          if (pageParam) {
             return apiClient.get<{ novels: PixivNovel[]; next_url: string | null }>(pageParam);
+          }
           return loadUserNovels(s.userId);
         },
         getNextPageParam: (lastPage: { next_url: string | null }) => lastPage.next_url ?? undefined,
@@ -80,26 +86,36 @@ const [scrollPositions, setScrollPositions] = createStore<Record<ContentType, nu
 /** Returns illusts (non-novel types) or empty array when current type is novel. */
 export const illusts = () => {
   const data = illustQuery.data;
-  if (!data) return [] as PixivIllust[];
+  if (!data) {
+    return [] as PixivIllust[];
+  }
   return filterFeedIllusts(data.pages.flatMap((p) => p.illusts));
 };
 
 /** Returns novels (novel type only) or empty array otherwise. */
 export const novels = () => {
-  if (contentType() !== "novel") return [] as PixivNovel[];
+  if (contentType() !== "novel") {
+    return [] as PixivNovel[];
+  }
   const data = novelQuery.data;
-  if (!data) return [] as PixivNovel[];
+  if (!data) {
+    return [] as PixivNovel[];
+  }
   return filterNovels(data.pages.flatMap((p) => p.novels));
 };
 
 export const nextUrl = (): string | null => {
   if (contentType() === "novel") {
     const data = novelQuery.data;
-    if (!data) return null;
+    if (!data) {
+      return null;
+    }
     return data.pages[data.pages.length - 1]?.next_url ?? null;
   }
   const data = illustQuery.data;
-  if (!data) return null;
+  if (!data) {
+    return null;
+  }
   return data.pages[data.pages.length - 1]?.next_url ?? null;
 };
 
@@ -133,11 +149,15 @@ export function load(userId: number, type: ContentType = "illust", force = false
 
 export async function loadMore() {
   if (contentType() === "novel") {
-    if (!novelQuery.hasNextPage || novelQuery.isFetchingNextPage) return;
+    if (!novelQuery.hasNextPage || novelQuery.isFetchingNextPage) {
+      return;
+    }
     await novelQuery.fetchNextPage();
     return;
   }
-  if (!illustQuery.hasNextPage || illustQuery.isFetchingNextPage) return;
+  if (!illustQuery.hasNextPage || illustQuery.isFetchingNextPage) {
+    return;
+  }
   await illustQuery.fetchNextPage();
 }
 

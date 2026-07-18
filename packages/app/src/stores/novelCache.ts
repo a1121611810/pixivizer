@@ -49,7 +49,9 @@ export type NovelCacheEntry = CacheEntry;
 let store: IDBStore | null = null;
 
 function getStore(): IDBStore {
-  if (!store) store = createIDBStore();
+  if (!store) {
+    store = createIDBStore();
+  }
   return store;
 }
 
@@ -70,14 +72,18 @@ function setHotNovel(id: number, entry: CacheEntry): void {
   if (hotNovels.has(id)) {
     // 更新时提升到 MRU 位置
     const idx = hotNovelInsertOrder.indexOf(id);
-    if (idx !== -1) hotNovelInsertOrder.splice(idx, 1);
+    if (idx !== -1) {
+      hotNovelInsertOrder.splice(idx, 1);
+    }
     hotNovels.set(id, entry);
     hotNovelInsertOrder.push(id);
     return;
   }
   if (hotNovels.size >= HOT_NOVELS_MAX) {
     const evict = hotNovelInsertOrder.shift();
-    if (evict !== undefined) hotNovels.delete(evict);
+    if (evict !== undefined) {
+      hotNovels.delete(evict);
+    }
   }
   hotNovels.set(id, entry);
   hotNovelInsertOrder.push(id);
@@ -86,14 +92,18 @@ function setHotNovel(id: number, entry: CacheEntry): void {
 function setHotSeries(id: number, entry: SeriesCacheEntry): void {
   if (hotSeries.has(id)) {
     const idx = hotSeriesInsertOrder.indexOf(id);
-    if (idx !== -1) hotSeriesInsertOrder.splice(idx, 1);
+    if (idx !== -1) {
+      hotSeriesInsertOrder.splice(idx, 1);
+    }
     hotSeries.set(id, entry);
     hotSeriesInsertOrder.push(id);
     return;
   }
   if (hotSeries.size >= HOT_SERIES_MAX) {
     const evict = hotSeriesInsertOrder.shift();
-    if (evict !== undefined) hotSeries.delete(evict);
+    if (evict !== undefined) {
+      hotSeries.delete(evict);
+    }
   }
   hotSeries.set(id, entry);
   hotSeriesInsertOrder.push(id);
@@ -103,7 +113,9 @@ function setHotSeries(id: number, entry: SeriesCacheEntry): void {
 
 async function enforceLimits(storeName: "novels" | "series", max: number): Promise<void> {
   const count = await getStore().count(storeName);
-  if (count <= max) return;
+  if (count <= max) {
+    return;
+  }
   const all = await getStore().getAll<{ id: number; cachedAt: number }>(storeName);
   all.sort((a, b) => a.cachedAt - b.cachedAt);
   const toDelete = all.slice(0, all.length - max);
@@ -130,7 +142,9 @@ export function peekSeries(id: number): SeriesCacheEntry | undefined {
  */
 export async function getEntry(id: number): Promise<CacheEntry | undefined> {
   const hot = hotNovels.get(id);
-  if (hot) return hot;
+  if (hot) {
+    return hot;
+  }
 
   const fromDB = await getStore().get<{
     id: number;
@@ -158,7 +172,9 @@ export async function getEntry(id: number): Promise<CacheEntry | undefined> {
 /** 异步取系列缓存。 */
 export async function getSeries(id: number): Promise<SeriesCacheEntry | undefined> {
   const hot = hotSeries.get(id);
-  if (hot) return hot;
+  if (hot) {
+    return hot;
+  }
 
   const fromDB = await getStore().get<{
     id: number;
@@ -187,8 +203,8 @@ export async function setEntry(id: number, data: CacheEntry): Promise<void> {
   try {
     await getStore().put("novels", { id, ...data, cachedAt: now });
     await enforceLimits("novels", MAX_NOVELS);
-  } catch (e) {
-    console.warn("[novelCache] Failed to persist entry", id, e);
+  } catch (error) {
+    console.warn("[novelCache] Failed to persist entry", id, error);
   }
   setHotNovel(id, data);
 }
@@ -229,8 +245,8 @@ export async function setSeries(id: number, data: SeriesCacheEntry): Promise<voi
   try {
     await getStore().put("series", { id, ...data, cachedAt: now });
     await enforceLimits("series", MAX_SERIES);
-  } catch (e) {
-    console.warn("[novelCache] Failed to persist series", id, e);
+  } catch (error) {
+    console.warn("[novelCache] Failed to persist series", id, error);
   }
   setHotSeries(id, data);
 }

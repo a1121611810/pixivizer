@@ -45,13 +45,13 @@ interface StyleMetrics {
   paddingBottom: number;
   titleLineHeight: number;
   tagLineHeight: number;
-  // textList / coverWall 使用
+  // TextList / coverWall 使用
   metaHeight?: number;
   metaMarginTop?: number;
   badgeHeight?: number;
   badgeMarginTop?: number;
   tagMarginTop?: number;
-  // list 模式使用
+  // List 模式使用
   authorLineHeight?: number;
   statsLineHeight?: number;
   bottomLineHeight?: number;
@@ -66,59 +66,59 @@ export interface ComputedTextCardResult {
 }
 
 // 预设值必须与对应卡片的 CSS 一致，否则虚拟滚动会出现间距不均或重叠。
-// textList 对应 NovelTextListCard；coverWall 对应 NovelCoverCard。
+// TextList 对应 NovelTextListCard；coverWall 对应 NovelCoverCard。
 const PRESETS: Record<TextCardStylePreset, StyleMetrics> = {
   textList: {
-    // py-3
+    // Py-3
     paddingTop: 12,
     paddingBottom: 12,
-    // meta: fontSizeBase200 (12px) * body lineHeightBase300 (1.4286) ≈ 17.14px，取 18
+    // Meta: fontSizeBase200 (12px) * body lineHeightBase300 (1.4286) ≈ 17.14px，取 18
     metaHeight: 18,
-    // mt-1
+    // Mt-1
     metaMarginTop: 4,
-    // fluent-badge 高约 20px
+    // Fluent-badge 高约 20px
     badgeHeight: 20,
-    // mt-1.5
+    // Mt-1.5
     badgeMarginTop: 6,
-    // tag: fontSizeBase100 (10px) * lineHeightBase100 (1.4) = 14px + py-0.5 (4px)
+    // Tag: fontSizeBase100 (10px) * lineHeightBase100 (1.4) = 14px + py-0.5 (4px)
     tagLineHeight: 18,
-    // mt-2
+    // Mt-2
     tagMarginTop: 8,
-    // title: fontSizeBase400 (16px) * leading-snug (1.375) = 22px
+    // Title: fontSizeBase400 (16px) * leading-snug (1.375) = 22px
     titleLineHeight: 22,
   },
   coverWall: {
-    // p-2
+    // P-2
     paddingTop: 8,
     paddingBottom: 8,
-    // meta/author: fontSizeBase200 (12px) * lineHeightBase200 (1.333) ≈ 16px
+    // Meta/author: fontSizeBase200 (12px) * lineHeightBase200 (1.333) ≈ 16px
     metaHeight: 16,
     // 信息区使用 gap-1
     metaMarginTop: 4,
     // 封面墙的系列 badge
     badgeHeight: 20,
     badgeMarginTop: 4,
-    // tag: fontSizeBase100 (10px) * lineHeightBase100 (1.4) = 14px + py-0.5 (4px)
+    // Tag: fontSizeBase100 (10px) * lineHeightBase100 (1.4) = 14px + py-0.5 (4px)
     tagLineHeight: 18,
     tagMarginTop: 4,
-    // title: fontSizeBase300 (14px) * leading-tight (1.25) ≈ 17.5px，取 18px
+    // Title: fontSizeBase300 (14px) * leading-tight (1.25) ≈ 17.5px，取 18px
     titleLineHeight: 18,
   },
   list: {
-    // p-2.5
+    // P-2.5
     paddingTop: 10,
     paddingBottom: 10,
-    // title: fontSizeBase200 (12px) * leading-tight (1.25) = 15px
+    // Title: fontSizeBase200 (12px) * leading-tight (1.25) = 15px
     titleLineHeight: 15,
-    // author: fontSizeBase100 (10px) * lineHeightBase100 (1.4) = 14px
+    // Author: fontSizeBase100 (10px) * lineHeightBase100 (1.4) = 14px
     authorLineHeight: 14,
-    // stats row: same as author
+    // Stats row: same as author
     statsLineHeight: 14,
-    // tag: fontSizeBase100 (10px) * lineHeightBase100 (1.4) = 14px + py-0.5 (4px)
+    // Tag: fontSizeBase100 (10px) * lineHeightBase100 (1.4) = 14px + py-0.5 (4px)
     tagLineHeight: 18,
-    // bottom row: same as author
+    // Bottom row: same as author
     bottomLineHeight: 14,
-    // gap-1 between sections
+    // Gap-1 between sections
     sectionGap: 4,
   },
 };
@@ -166,8 +166,12 @@ function computeTagLines(
   maxLines: number,
   lineHeight: number,
 ): { lineCount: number; height: number } {
-  if (tags.length === 0) return { lineCount: 0, height: 0 };
-  if (maxWidth <= 0) return { lineCount: maxLines, height: maxLines * lineHeight };
+  if (tags.length === 0) {
+    return { lineCount: 0, height: 0 };
+  }
+  if (maxWidth <= 0) {
+    return { lineCount: maxLines, height: maxLines * lineHeight };
+  }
 
   let lineCount: number;
   if (isPretextSupported()) {

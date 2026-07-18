@@ -39,7 +39,7 @@ describe("checkBackupIntegrity", () => {
 
     expect(result).toBe(true);
     expect(mockSecureStorage.get).toHaveBeenCalledWith("__pictelio_backup_marker");
-    // marker 已存在，不应再次写入
+    // Marker 已存在，不应再次写入
     expect(mockSecureStorage.set).not.toHaveBeenCalled();
   });
 
@@ -49,7 +49,7 @@ describe("checkBackupIntegrity", () => {
     const result = await checkBackupIntegrity();
 
     expect(result).toBe(false);
-    // token 应被清除
+    // Token 应被清除
     expect(mockSecureStorage.remove).toHaveBeenCalled();
   });
 

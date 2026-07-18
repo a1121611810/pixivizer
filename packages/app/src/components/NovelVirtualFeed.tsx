@@ -57,14 +57,20 @@ const NovelVirtualFeed: Component<Props> = (props) => {
   });
 
   function handleTouchStart(e: TouchEvent) {
-    if (props.loading) return;
-    if (window.scrollY > 5) return;
+    if (props.loading) {
+      return;
+    }
+    if (window.scrollY > 5) {
+      return;
+    }
     touchStartY = e.touches[0].clientY;
     setPullPhase("pulling");
   }
 
   function handleTouchMove(e: TouchEvent) {
-    if (pullPhase() === "idle" || pullPhase() === "refreshing") return;
+    if (pullPhase() === "idle" || pullPhase() === "refreshing") {
+      return;
+    }
     const deltaY = e.touches[0].clientY - touchStartY;
     if (deltaY < 0) {
       setPullDistance(0);
@@ -90,10 +96,14 @@ const NovelVirtualFeed: Component<Props> = (props) => {
   // ── Container width ──
   const [containerWidth, setContainerWidth] = createSignal(0);
   function onContainerRef(el: HTMLDivElement) {
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     setContainerWidth(el.clientWidth);
     const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) setContainerWidth(entry.contentRect.width);
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
     });
     ro.observe(el);
   }
@@ -175,7 +185,9 @@ const NovelVirtualFeed: Component<Props> = (props) => {
   // ── estimateSize ──
   const estimateSize = (index: number): number => {
     const novel = props.novels[index];
-    if (!novel) return 100;
+    if (!novel) {
+      return 100;
+    }
     const m = mode();
     if (m === "textList") {
       return textListCardMetrics.getInfoHeight(novel.id);
@@ -190,7 +202,9 @@ const NovelVirtualFeed: Component<Props> = (props) => {
 
   // ── Scroll restoration (saved state from store) ──
   const savedState = createMemo(() => {
-    if (!props.scrollKey) return undefined;
+    if (!props.scrollKey) {
+      return undefined;
+    }
     return getNovelScrollState(props.scrollKey);
   });
 
@@ -266,7 +280,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
   });
 
   // Proxy to match old interface
-  const virtualizer = {
+  const _virtualizer = {
     getVirtualItems: () => virtualItems(),
     getTotalSize: () => totalSize(),
     scrollToOffset: (offset: number) => {
@@ -363,7 +377,9 @@ const NovelVirtualFeed: Component<Props> = (props) => {
         <For each={virtualItems()}>
           {(vItem) => {
             const novel = props.novels[vItem.index];
-            if (!novel) return null;
+            if (!novel) {
+              return null;
+            }
             return (
               <div
                 style={{

@@ -2,9 +2,9 @@
 // Builds the signed release APK and publishes it to a GitHub release.
 //
 // Usage:
-//   pnpm exec node scripts/release-github.mjs --repo=yourname/pictelio
+//   Pnpm exec node scripts/release-github.mjs --repo=yourname/pictelio
 //   PICTELIO_GITHUB_REPO=yourname/pictelio pnpm exec node scripts/release-github.mjs
-//   pnpm exec node scripts/release-github.mjs --dry-run
+//   Pnpm exec node scripts/release-github.mjs --dry-run
 
 import { readFile, stat } from "node:fs/promises";
 import { execFile, execFileSync } from "node:child_process";
@@ -20,7 +20,7 @@ const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const repoArg = args.find((arg) => arg.startsWith(repoArgPrefix))?.slice(repoArgPrefix.length);
 
-async function readText(path) {
+function readText(path) {
   return readFile(path, "utf-8");
 }
 
@@ -37,10 +37,12 @@ function parseGitRemoteUrl(url) {
   // Supports:
   //   https://github.com/owner/repo.git
   //   https://github.com/owner/repo
-  //   git@github.com:owner/repo.git
-  //   git@github.com:owner/repo
-  if (!url) return null;
-  const httpsMatch = url.match(/github\.com[/:]([^/]+)\/([^/\s]+?)(?:\.git)?$/i);
+  //   Git@github.com:owner/repo.git
+  //   Git@github.com:owner/repo
+  if (!url) {
+    return null;
+  }
+  const httpsMatch = url.match(/github\.com[/u:]([^/]+)\/([^/u\s]+?)(?:\.git)?$/iu);
   if (httpsMatch) {
     return `${httpsMatch[1]}/${httpsMatch[2]}`;
   }
@@ -69,14 +71,14 @@ async function getVersionFromPackage() {
 
 async function getVersionCodeFromGradle() {
   const gradle = await readText("android/app/build.gradle");
-  const match = gradle.match(/versionCode\s+(\d+)/);
+  const match = gradle.match(/versionCode\s+(\d+)/u);
   if (!match) {
     throw new Error("无法从 android/app/build.gradle 读取 versionCode");
   }
   return match[1];
 }
 
-async function checkGhAvailable() {
+function checkGhAvailable() {
   return new Promise((resolve) => {
     execFile("gh", ["--version"], (error) => {
       resolve(!error);
@@ -84,7 +86,7 @@ async function checkGhAvailable() {
   });
 }
 
-async function checkGhAuthenticated() {
+function checkGhAuthenticated() {
   return new Promise((resolve) => {
     execFile("gh", ["auth", "status"], (error) => {
       resolve(!error);
@@ -106,10 +108,10 @@ function printGhInstructions() {
 function shellQuote(arg) {
   // 将参数安全地转义为可粘贴到 shell 的格式。
   // 包含空格、引号或特殊 shell 字符的参数用单引号包裹。
-  if (/^[a-zA-Z0-9_./:@-]+$/.test(arg)) {
+  if (/^[a-zA-Z0-9_./u:@-]+$/u.test(arg)) {
     return arg;
   }
-  return `'${arg.replace(/'/g, `'\\''`)}'`;
+  return `'${arg.replace(/'/gu, `'\\''`)}'`;
 }
 
 function execBuild(dry) {
@@ -130,7 +132,7 @@ function execBuild(dry) {
   });
 }
 
-async function createGitHubRelease(repo, tag, title, notes, apk, dry) {
+function createGitHubRelease(repo, tag, title, notes, apk, dry) {
   const notesArg = notes ? `--notes-file=-` : "--generate-notes";
   const cmdParts = [
     "gh",
@@ -189,7 +191,7 @@ async function main() {
     process.exit(1);
   }
   // 清理可能的 .git 后缀
-  repo = repo.replace(/\.git$/i, "");
+  repo = repo.replace(/\.git$/iu, "");
   console.log(`目标仓库：${repo}`);
 
   // 2. 读取版本信息

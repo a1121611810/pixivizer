@@ -11,7 +11,9 @@ import { ApiErrorType } from "./types";
  *   3. null（无错误）→ 返回 null
  */
 export function normalizeQueryError(err: unknown): ApiError | null {
-  if (!err) return null;
+  if (!err) {
+    return null;
+  }
   if (typeof err === "object" && "type" in err) {
     return err as ApiError;
   }

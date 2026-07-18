@@ -37,8 +37,8 @@ const AgeConfirmation: Component = () => {
         } else {
           await navigate({ to: "/login", replace: true });
         }
-      } catch (e) {
-        console.error("[AgeConfirmation] Auth initialization failed", e);
+      } catch (error) {
+        console.error("[AgeConfirmation] Auth initialization failed", error);
         try {
           await navigate({ to: "/login", replace: true });
         } catch {

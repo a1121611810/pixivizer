@@ -26,7 +26,7 @@ const NovelTextListCard: Component<Props> = (props) => {
         setBookmarkBurstTrigger((n) => n + 1);
       }
     } catch {
-      /* silently fail */
+      /* Silently fail */
     }
   };
 

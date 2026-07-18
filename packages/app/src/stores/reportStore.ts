@@ -36,8 +36,8 @@ export async function loadReportedIds(): Promise<void> {
       setReportRecords(records);
       setReportedIds(new Set(records.map((r) => r.id)));
     }
-  } catch (e) {
-    console.warn("[reportStore] Failed to load reported ids", e);
+  } catch (error) {
+    console.warn("[reportStore] Failed to load reported ids", error);
   }
 }
 
@@ -46,14 +46,16 @@ export async function loadReportedIds(): Promise<void> {
  * 重复举报同一作品会被忽略。
  */
 export async function reportIllust(id: number, reason: ReportReason): Promise<void> {
-  if (reportedIds().has(id)) return;
+  if (reportedIds().has(id)) {
+    return;
+  }
   const nextRecords = [...reportRecords(), { id, reason, reportedAt: Date.now() }];
   setReportRecords(nextRecords);
   setReportedIds(new Set(nextRecords.map((r) => r.id)));
   try {
     await Preferences.set({ key: PREF_KEY_REPORTED_IDS, value: JSON.stringify(nextRecords) });
-  } catch (e) {
-    console.warn("[reportStore] Failed to persist reported ids", e);
+  } catch (error) {
+    console.warn("[reportStore] Failed to persist reported ids", error);
   }
 }
 

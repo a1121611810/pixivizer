@@ -16,7 +16,9 @@ function createMockClassList() {
   classes = [];
   return {
     add: vi.fn((token: string) => {
-      if (!classes.includes(token)) classes.push(token);
+      if (!classes.includes(token)) {
+        classes.push(token);
+      }
     }),
     remove: vi.fn((...tokens: string[]) => {
       classes = classes.filter((c) => !tokens.includes(c));
@@ -25,7 +27,9 @@ function createMockClassList() {
     toggle: vi.fn((token: string, force?: boolean) => {
       const has = classes.includes(token);
       if (force === true) {
-        if (!has) classes.push(token);
+        if (!has) {
+          classes.push(token);
+        }
         return true;
       }
       if (force === false) {

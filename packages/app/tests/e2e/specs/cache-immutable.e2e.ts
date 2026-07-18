@@ -54,7 +54,7 @@ test.describe("Cache-Control immutable 浏览器缓存测试", () => {
     });
 
     await page.goto(`http://localhost:${port}/`);
-    await page.waitForFunction(() => document.title === "ok", { timeout: 10000 });
+    await page.waitForFunction(() => document.title === "ok", { timeout: 10_000 });
     await page.waitForTimeout(500);
 
     expect(requestCount).toBe(1);
@@ -94,7 +94,7 @@ test.describe("Cache-Control immutable 浏览器缓存测试", () => {
     });
 
     await page.goto(`http://localhost:${port}/`);
-    await page.waitForFunction(() => document.title === "ok", { timeout: 10000 });
+    await page.waitForFunction(() => document.title === "ok", { timeout: 10_000 });
     await page.waitForTimeout(500);
 
     expect(requestCount).toBeGreaterThanOrEqual(2);

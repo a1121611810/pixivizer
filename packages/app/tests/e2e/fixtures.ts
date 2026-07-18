@@ -42,7 +42,7 @@ async function loginWithRefreshToken(page: Page, token: string) {
   await page.getByText("登录").click();
 
   // Should be redirected to recommended page
-  await expect(page).toHaveURL(/\/recommended/, { timeout: 15000 });
+  await expect(page).toHaveURL(/\/recommended/u, { timeout: 15_000 });
 }
 
 export const test = base.extend<TestFixtures>({

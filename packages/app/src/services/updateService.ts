@@ -30,7 +30,7 @@ let cachedResult: CheckResult | null = null;
  * - Strips semver build metadata (everything after '+')
  */
 function normalizeVersion(v: string): string {
-  return v.trim().replace(/^v/i, "").replace(/\+.*$/, "");
+  return v.trim().replace(/^v/iu, "").replace(/\+.*$/u, "");
 }
 
 /**
@@ -46,10 +46,15 @@ export function isNewer(local: string, remote: string): boolean {
   for (let i = 0; i < 3; i++) {
     const l = lParts[i] ?? 0;
     const r = rParts[i] ?? 0;
-    if (r > l) return true;
-    if (r < l) return false;
+    if (r > l) {
+      return true;
+    }
+    if (r < l) {
+      return false;
+    }
   }
-  return false; // equal
+  // Equal
+  return false;
 }
 
 // ── Core fetch ──
@@ -84,15 +89,15 @@ export async function checkForUpdate(): Promise<CheckResult> {
 
     const result: CheckResult = {
       hasUpdate,
-      latestVersion: String(data.version || "").replace(/^v/, ""),
+      latestVersion: String(data.version || "").replace(/^v/u, ""),
       latestReleaseUrl: data.url || "",
       latestChangelog: data.changelog || "",
     };
 
     cachedResult = result;
     return result;
-  } catch (err) {
-    console.warn("[updateService] 异常:", err);
+  } catch (error) {
+    console.warn("[updateService] 异常:", error);
     return cachedResult ?? noUpdateResult();
   }
 }

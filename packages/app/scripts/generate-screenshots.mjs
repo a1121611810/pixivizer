@@ -36,7 +36,9 @@ const BRAND = {
 const FONT_STACK = "'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', sans-serif";
 
 function ensureDir(dir) {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
 }
 
 function removeGitkeep(dir) {
@@ -105,7 +107,7 @@ function featureGraphic() {
     <circle cx="820" cy="80" r="220" fill="${BRAND.blue}" opacity="0.04"/>
     <circle cx="120" cy="420" r="160" fill="${BRAND.blue}" opacity="0.03"/>
     <g transform="translate(80, 170)">
-      ${LOGO_SVG.replace("<svg", `<svg width="${logoSize}" height="${logoSize}"`).replace(/viewBox="[^"]*"/, 'viewBox="0 0 192 192"')}
+      ${LOGO_SVG.replace("<svg", `<svg width="${logoSize}" height="${logoSize}"`).replace(/viewBox="[^"]*"/u, 'viewBox="0 0 192 192"')}
     </g>
     <text x="272" y="250" font-family="${FONT_STACK}" font-size="92" font-weight="700" fill="${BRAND.gray900}">Pictelio</text>
     <text x="278" y="310" font-family="${FONT_STACK}" font-size="34" fill="${BRAND.gray700}">第三方 Pixiv 客户端 · 为 Android 打造</text>
@@ -399,7 +401,7 @@ function screenshotLogin() {
     `
     <rect width="${w}" height="${PHONE_H - STATUS_H}" fill="${BRAND.white}"/>
     <g transform="translate(${w / 2 - 100}, ${centerY - 120})">
-      ${LOGO_SVG.replace("<svg", '<svg width="200" height="200"').replace(/viewBox="[^"]*"/, 'viewBox="0 0 192 192"')}
+      ${LOGO_SVG.replace("<svg", '<svg width="200" height="200"').replace(/viewBox="[^"]*"/u, 'viewBox="0 0 192 192"')}
     </g>
     <text x="${w / 2}" y="${centerY + 140}" text-anchor="middle" font-family="${FONT_STACK}" font-size="64" font-weight="700" fill="${BRAND.gray900}">Pictelio</text>
     <text x="${w / 2}" y="${centerY + 200}" text-anchor="middle" font-family="${FONT_STACK}" font-size="28" fill="${BRAND.gray500}">第三方 Pixiv 客户端</text>

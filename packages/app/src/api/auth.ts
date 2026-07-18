@@ -53,7 +53,7 @@ export async function refreshToken(token: string): Promise<PixivAuthResponse> {
   }
 
   // ── DEV-ONLY 分支 ──────────────────────────────────────────────
-  // import.meta.env.DEV → Vite 编译期替换为 false → Rolldown 保留 if (false)
+  // Import.meta.env.DEV → Vite 编译期替换为 false → Rolldown 保留 if (false)
   // → terser 消除整个 { ... } → 凭证和 spark-md5 均不在生产 bundle 中
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (import.meta.env.DEV) {
@@ -63,7 +63,7 @@ export async function refreshToken(token: string): Promise<PixivAuthResponse> {
 
     const { default: SparkMD5 } = await import("spark-md5");
 
-    const time = new Date().toISOString().replace(/Z$/, "+00:00");
+    const time = new Date().toISOString().replace(/Z$/u, "+00:00");
     const hash = SparkMD5.hash(time + HASH_SECRET);
 
     const headers: Record<string, string> = {

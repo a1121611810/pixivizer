@@ -34,8 +34,14 @@ const ImageViewer: Component<Props> = (props) => {
   // 页面变化时，若未加载则触发下载
   createEffect(() => {
     const page = currentPage();
-    if (loadedUrls()[page] !== undefined) return; // 已加载
-    if (loadingStarted.has(page)) return; // 已发起
+    // 已加载
+    if (loadedUrls()[page] !== undefined) {
+      return;
+    }
+    // 已发起
+    if (loadingStarted.has(page)) {
+      return;
+    }
     loadingStarted.add(page);
     startLoad(page);
   });
@@ -47,15 +53,21 @@ const ImageViewer: Component<Props> = (props) => {
     mask?.remove();
 
     const page = currentPage();
-    if (loadedUrls()[page] !== undefined) return;
-    if (loadingStarted.has(page)) return;
+    if (loadedUrls()[page] !== undefined) {
+      return;
+    }
+    if (loadingStarted.has(page)) {
+      return;
+    }
     loadingStarted.add(page);
     startLoad(page);
   });
 
   async function startLoad(pageIndex: number) {
     const originalUrl = props.imageUrls[pageIndex];
-    if (!originalUrl) return;
+    if (!originalUrl) {
+      return;
+    }
 
     setProgressMap((prev) => ({ ...prev, [pageIndex]: 0 }));
 
@@ -77,7 +89,9 @@ const ImageViewer: Component<Props> = (props) => {
   let lastDist = 0;
 
   const handleTouchStart = (e: TouchEvent) => {
-    if (animating()) return;
+    if (animating()) {
+      return;
+    }
     const touches = e.touches;
     touchStart.time = Date.now();
 
@@ -93,7 +107,9 @@ const ImageViewer: Component<Props> = (props) => {
   };
 
   const handleTouchMove = (e: TouchEvent) => {
-    if (animating()) return;
+    if (animating()) {
+      return;
+    }
     const touches = e.touches;
 
     if (touches.length === 2 && scale() >= 1) {
@@ -123,7 +139,9 @@ const ImageViewer: Component<Props> = (props) => {
   };
 
   const handleTouchEnd = () => {
-    if (scale() < 1) setScale(1);
+    if (scale() < 1) {
+      setScale(1);
+    }
   };
 
   const handleDblClick = () => {

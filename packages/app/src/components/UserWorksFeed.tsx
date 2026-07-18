@@ -32,7 +32,7 @@ const UserWorksFeed: Component<Props> = (props) => {
 
   return (
     <>
-      {/* illust/manga feed: always mounted, hidden via CSS when novel */}
+      {/* Illust/manga feed: always mounted, hidden via CSS when novel */}
       <div
         data-feed-type="illust"
         style={{ display: props.contentType === "novel" ? "none" : "block" }}
@@ -51,7 +51,7 @@ const UserWorksFeed: Component<Props> = (props) => {
         />
       </div>
 
-      {/* novel feed: mounted once on first switch, then kept alive */}
+      {/* Novel feed: mounted once on first switch, then kept alive */}
       <div
         data-feed-type="novel"
         style={{ display: props.contentType === "novel" ? "block" : "none" }}

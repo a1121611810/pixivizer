@@ -124,7 +124,9 @@ function computeParagraph(
   // 剩余行使用完整宽度
   while (true) {
     const line = layoutNextLine(prepared, cursor, containerWidth);
-    if (line == null) break;
+    if (line == null) {
+      break;
+    }
     const end = charIndex + line.text.length;
     lineRanges.push({
       start: charIndex,
@@ -204,7 +206,9 @@ export function createNovelTextLayout(input: NovelTextLayoutInput): NovelTextLay
 
   function getOffsetByCharIndex(paragraphIndex: number, charIndex: number): number {
     const paragraph = paragraphLayouts[paragraphIndex];
-    if (!paragraph) return 0;
+    if (!paragraph) {
+      return 0;
+    }
 
     const clampedCharIndex = Math.max(
       0,

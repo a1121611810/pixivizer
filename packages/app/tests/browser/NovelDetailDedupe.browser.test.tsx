@@ -132,11 +132,15 @@ describe("NovelDetail loading deduplication", () => {
     > = {};
 
     mockLoadDetail.mockImplementation((id: number) => {
-      if (!detailPromises[id]) detailPromises[id] = deferred();
+      if (!detailPromises[id]) {
+        detailPromises[id] = deferred();
+      }
       return detailPromises[id].promise;
     });
     mockFetchNovelData.mockImplementation((id: number) => {
-      if (!textPromises[id]) textPromises[id] = deferred();
+      if (!textPromises[id]) {
+        textPromises[id] = deferred();
+      }
       return textPromises[id].promise;
     });
 

@@ -59,7 +59,9 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
 
   // 首次数据加载
   createEffect(() => {
-    if (!props.isOpen) return;
+    if (!props.isOpen) {
+      return;
+    }
     const ac = new AbortController();
     setError(null);
     setRootComments([]);
@@ -72,8 +74,8 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
         setNextUrl(res.next_url);
         setHasLoaded(true);
       })
-      .catch((e) => {
-        if ((e as { name?: string }).name !== "AbortError") {
+      .catch((error) => {
+        if ((error as { name?: string }).name !== "AbortError") {
           setError("加载评论失败，请重试");
         }
       });
@@ -87,7 +89,9 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
 
   async function loadMore() {
     const url = nextUrl();
-    if (!url || loadingMore()) return;
+    if (!url || loadingMore()) {
+      return;
+    }
     setLoadingMore(true);
     try {
       const res = await api().loadRootNext(url);
@@ -101,7 +105,9 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
   }
 
   createEffect(() => {
-    if (!props.isOpen) return;
+    if (!props.isOpen) {
+      return;
+    }
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && nextUrl() && !loadingMore()) {
@@ -110,14 +116,18 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
       },
       { rootMargin: "200px" },
     );
-    if (sentinelRef) observer.observe(sentinelRef);
+    if (sentinelRef) {
+      observer.observe(sentinelRef);
+    }
     onCleanup(() => observer.disconnect());
   });
 
   // 发表/回复
   async function handleSubmit() {
     const text = inputText().trim();
-    if (!text || posting()) return;
+    if (!text || posting()) {
+      return;
+    }
     setPosting(true);
     setPostError(null);
     try {
@@ -175,7 +185,9 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
         class="fixed inset-0 z-50"
         style={{ "background-color": "var(--colorOverlayBackground)" }}
         onClick={(e) => {
-          if (e.target === e.currentTarget) props.onClose();
+          if (e.target === e.currentTarget) {
+            props.onClose();
+          }
         }}
       >
         <div
@@ -324,7 +336,9 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
                 value={inputText()}
                 onInput={(e) => setInputText((e.target as HTMLInputElement).value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSubmit();
+                  if (e.key === "Enter") {
+                    handleSubmit();
+                  }
                 }}
               />
               <button
@@ -348,13 +362,21 @@ function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "刚刚";
-  if (diffMin < 60) return `${diffMin}分钟前`;
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 1) {
+    return "刚刚";
+  }
+  if (diffMin < 60) {
+    return `${diffMin}分钟前`;
+  }
   const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}小时前`;
+  if (diffHour < 24) {
+    return `${diffHour}小时前`;
+  }
   const diffDay = Math.floor(diffHour / 24);
-  if (diffDay < 30) return `${diffDay}天前`;
+  if (diffDay < 30) {
+    return `${diffDay}天前`;
+  }
   return d.toLocaleDateString("zh-CN");
 }
 

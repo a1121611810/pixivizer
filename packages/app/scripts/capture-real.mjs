@@ -45,19 +45,21 @@ function log(message) {
 
 function ensureDirs() {
   for (const dir of [OUT_EN, OUT_ZH]) {
-    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
   }
 }
 
 async function dismissAgeGate(page) {
   try {
-    const btn = page.getByRole("button", { name: /已满|adult/i });
+    const btn = page.getByRole("button", { name: /已满|adult/iu });
     await btn.waitFor({ state: "visible", timeout: 3000 });
     await btn.click();
     log("Age gate dismissed");
     await page.waitForTimeout(500);
   } catch {
-    /* not shown */
+    /* Not shown */
   }
 }
 
@@ -80,7 +82,7 @@ async function main() {
 
   // ── 1. Navigate to login, seed real token, reload for auth init ──
   log("Navigating to login page...");
-  await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle", timeout: 15000 });
+  await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle", timeout: 15_000 });
 
   // Seed real refresh_token into @aparajita/capacitor-secure-storage (web: localStorage capacitor-storage_ prefix)
   await page.evaluate((token) => {
@@ -88,19 +90,20 @@ async function main() {
   }, REFRESH_TOKEN);
 
   log("Reloading to trigger auth with real token...");
-  await page.reload({ waitUntil: "networkidle", timeout: 30000 });
+  await page.reload({ waitUntil: "networkidle", timeout: 30_000 });
   log(`After reload: ${page.url()}`);
 
   // If still on login, wait for redirect
   try {
-    await page.waitForURL("**/recommended", { timeout: 15000 });
+    await page.waitForURL("**/recommended", { timeout: 15_000 });
     log(`Redirected to recommended`);
   } catch {
     log(`Still on ${page.url()}, proceeding...`);
   }
 
   await dismissAgeGate(page);
-  await page.waitForTimeout(2000); // Let feed data load
+  // Let feed data load
+  await page.waitForTimeout(2000);
 
   // ── 01: Feed ──
   log("Capturing 01_feed...");
@@ -113,7 +116,7 @@ async function main() {
   log("Navigating to illust detail...");
   try {
     const firstCard = page.locator(".image-card").first();
-    await firstCard.waitFor({ state: "visible", timeout: 10000 });
+    await firstCard.waitFor({ state: "visible", timeout: 10_000 });
     await firstCard.click();
     await page.waitForTimeout(3000);
   } catch {
@@ -128,10 +131,10 @@ async function main() {
       });
       log(`Found illust links: ${JSON.stringify(hrefs)}`);
       if (hrefs.length > 0) {
-        await page.goto(`${BASE_URL}${hrefs[0]}`, { waitUntil: "networkidle", timeout: 15000 });
+        await page.goto(`${BASE_URL}${hrefs[0]}`, { waitUntil: "networkidle", timeout: 15_000 });
       }
     } catch {
-      /* give up */
+      /* Give up */
     }
   }
   await page.waitForTimeout(2000);
@@ -142,7 +145,7 @@ async function main() {
 
   // ── 03: Settings ──
   log("Navigating back to feed for settings screenshot...");
-  await page.goto(`${BASE_URL}/recommended`, { waitUntil: "networkidle", timeout: 15000 });
+  await page.goto(`${BASE_URL}/recommended`, { waitUntil: "networkidle", timeout: 15_000 });
   await dismissAgeGate(page);
   await page.waitForTimeout(2000);
 
@@ -159,10 +162,10 @@ async function main() {
       await accountSection.scrollIntoViewIfNeeded({ timeout: 3000 });
       await page.waitForTimeout(500);
     } catch {
-      /* fine */
+      /* Fine */
     }
-  } catch (err) {
-    log(`Settings button issue: ${err.message}`);
+  } catch (error) {
+    log(`Settings button issue: ${error.message}`);
   }
   await page.waitForTimeout(500);
   log("Capturing 03_settings...");
@@ -176,7 +179,7 @@ async function main() {
     localStorage.clear();
     sessionStorage.clear();
   });
-  await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle", timeout: 15000 });
+  await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle", timeout: 15_000 });
   await page.waitForTimeout(2000);
   log("Capturing 04_login...");
   await page.screenshot({ path: join(OUT_EN, "04_login.png"), type: "png" });
@@ -188,7 +191,7 @@ async function main() {
   log("All screenshots captured successfully.");
 }
 
-main().catch((err) => {
-  console.error("[capture] Fatal:", err);
+main().catch((error) => {
+  console.error("[capture] Fatal:", error);
   process.exit(1);
 });

@@ -25,27 +25,29 @@ export function createMemoryStore(): IDBStore {
   const data = new Map<string, Map<number, unknown>>();
 
   function storeMap(store: string): Map<number, unknown> {
-    if (!data.has(store)) data.set(store, new Map());
+    if (!data.has(store)) {
+      data.set(store, new Map());
+    }
     return data.get(store)!;
   }
 
   return {
-    async get(store, key) {
+    get(store, key) {
       return storeMap(store).get(key) as ReturnType<IDBStore["get"]>;
     },
-    async put(store, value) {
+    put(store, value) {
       storeMap(store).set(value.id, value);
     },
-    async delete(store, key) {
+    delete(store, key) {
       storeMap(store).delete(key);
     },
-    async count(store) {
+    count(store) {
       return storeMap(store).size;
     },
-    async getAll(store) {
+    getAll(store) {
       return Array.from(storeMap(store).values());
     },
-    async clear(store) {
+    clear(store) {
       data.delete(store);
     },
   };
@@ -79,8 +81,10 @@ function openDB(): Promise<IDBDatabase> {
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
-async function getDB(): Promise<IDBDatabase> {
-  if (!dbPromise) dbPromise = openDB();
+function getDB(): Promise<IDBDatabase> {
+  if (!dbPromise) {
+    dbPromise = openDB();
+  }
   return dbPromise;
 }
 

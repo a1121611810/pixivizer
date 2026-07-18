@@ -24,7 +24,7 @@ const r18Handler = () => refresh();
 
 const NovelBookmarks: Component = () => {
   const navigate = useNavigate();
-  const cached = isNovelCached("bookmarks");
+  const _cached = isNovelCached("bookmarks");
 
   const [sheetOpen, setSheetOpen] = createSignal(false);
   const [sheetSeries, setSheetSeries] = createSignal<{
@@ -36,7 +36,9 @@ const NovelBookmarks: Component = () => {
 
   function openSeriesSheet(seriesId: number) {
     const novel = novels().find((n) => n.series?.id === seriesId);
-    if (!novel?.series) return;
+    if (!novel?.series) {
+      return;
+    }
     setSheetSeries({
       id: seriesId,
       title: novel.series.title,
@@ -75,7 +77,8 @@ const NovelBookmarks: Component = () => {
 
   createEffect(() => {
     const u = user();
-    bookmarkRestrict(); // track restrict changes
+    // Track restrict changes
+    bookmarkRestrict();
     if (u) {
       ensureLoaded();
     }

@@ -82,7 +82,9 @@ const NovelImageBlock: Component<NovelImageBlockProps> = (props) => {
   });
 
   function handleClick() {
-    if (dim()) props.onClick();
+    if (dim()) {
+      props.onClick();
+    }
   }
 
   return (
@@ -138,10 +140,14 @@ const NovelImageBlock: Component<NovelImageBlockProps> = (props) => {
 };
 
 function parseProgress(raw: string | null): NovelProgress | null {
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (typeof parsed !== "object" || parsed === null) return null;
+    if (typeof parsed !== "object" || parsed === null) {
+      return null;
+    }
     const p = parsed as Record<string, unknown>;
     if (
       Number.isInteger(p.paragraphIndex) &&
@@ -156,7 +162,7 @@ function parseProgress(raw: string | null): NovelProgress | null {
       };
     }
   } catch {
-    /* ignore */
+    /* Ignore */
   }
   return null;
 }
@@ -274,7 +280,9 @@ const NovelDetail: Component = () => {
   }
 
   async function loadNovelById(id: number) {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     const cached = peekEntry(id);
     if (cached) {
       applyEntry(cached);
@@ -290,8 +298,8 @@ const NovelDetail: Component = () => {
       }
       const entry = await loadNovelEntry(id);
       applyEntry(entry);
-    } catch (e) {
-      setDetailError(toApiError(e));
+    } catch (error) {
+      setDetailError(toApiError(error));
       setDetailLoading(false);
     }
   }
@@ -319,10 +327,16 @@ const NovelDetail: Component = () => {
   // 系列内切换时手动加载；URL 变化导致的 ID 变化由路由 loader 提供数据，避免重复请求。
   createEffect(() => {
     const id = currentNovelId();
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     const d = data();
-    if (id === d.novel?.id && d.error === null) return;
-    if (id === Number(params().id)) return;
+    if (id === d.novel?.id && d.error === null) {
+      return;
+    }
+    if (id === Number(params().id)) {
+      return;
+    }
     void loadNovelById(id);
   });
 
@@ -357,11 +371,15 @@ const NovelDetail: Component = () => {
   createEffect(() => {
     const images = novelImages();
     const ids = Object.keys(images);
-    if (ids.length === 0) return;
+    if (ids.length === 0) {
+      return;
+    }
 
     let cancelled = false;
     loadNovelImageDimensions(images).then((dimensions) => {
-      if (!cancelled) setImageDimensions(dimensions);
+      if (!cancelled) {
+        setImageDimensions(dimensions);
+      }
     });
 
     onCleanup(() => {
@@ -402,7 +420,9 @@ const NovelDetail: Component = () => {
   const blocksWithHeights = createMemo(() => {
     const layout = virtualLayout.layoutResult();
     const h: Record<number, number> = {};
-    for (const p of layout.paragraphs) h[p.index] = p.height;
+    for (const p of layout.paragraphs) {
+      h[p.index] = p.height;
+    }
     // oxlint-disable-next-line no-map-spread -- blocks are immutable; we need shallow copies to trigger <For> re-render
     return blocks().map((b) => ({
       ...b,
@@ -453,7 +473,9 @@ const NovelDetail: Component = () => {
   // ── 阅读进度持久化 ──
   let progressSaveTimer: ReturnType<typeof setTimeout> | undefined;
   function saveProgress() {
-    if (progressSaveTimer) clearTimeout(progressSaveTimer);
+    if (progressSaveTimer) {
+      clearTimeout(progressSaveTimer);
+    }
     progressSaveTimer = setTimeout(() => {
       const current = virtualLayout.currentCharIndex();
       const layout = virtualLayout.layoutResult();
@@ -489,15 +511,23 @@ const NovelDetail: Component = () => {
       return;
     }
     const saved = parseProgress(localStorage.getItem(`novel_progress_${novelId()}`));
-    if (!saved) return;
+    if (!saved) {
+      return;
+    }
     const layout = virtualLayout.layoutResult();
     const layoutParagraphs = layout.paragraphs;
-    if (saved.paragraphIndex >= layoutParagraphs.length) return;
+    if (saved.paragraphIndex >= layoutParagraphs.length) {
+      return;
+    }
     const paragraph = layoutParagraphs[saved.paragraphIndex];
-    if (!paragraph) return;
+    if (!paragraph) {
+      return;
+    }
     const maxCharIndex =
       paragraph.lineRanges[paragraph.lineRanges.length - 1]?.end ?? paragraph.height;
-    if (saved.charIndex > maxCharIndex) return;
+    if (saved.charIndex > maxCharIndex) {
+      return;
+    }
     virtualLayout.scrollToCharIndex(saved.paragraphIndex, saved.charIndex);
   }
 
@@ -508,12 +538,16 @@ const NovelDetail: Component = () => {
   });
 
   function onTextContainerRef(el: HTMLElement) {
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     setTextContainerWidth(el.clientWidth);
     virtualLayout.containerRef(el);
 
     const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) setTextContainerWidth(entry.contentRect.width);
+      for (const entry of entries) {
+        setTextContainerWidth(entry.contentRect.width);
+      }
     });
     ro.observe(el);
 
@@ -643,7 +677,9 @@ const NovelDetail: Component = () => {
   // IntersectionObserver: 检测原始标题元素是否滚出 header 区域
   createEffect(() => {
     const el = titleEl();
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     const observer = new IntersectionObserver(
       ([entry]) => setShowHeaderTitle(!entry.isIntersecting),
       { rootMargin: "-48px 0px 0px 0px" },
@@ -810,7 +846,9 @@ const NovelDetail: Component = () => {
                     {(() => {
                       const all = blocksWithHeights();
                       const vis = virtualLayout.visibleBlocks();
-                      if (vis.length === 0 || all.length === 0) return null;
+                      if (vis.length === 0 || all.length === 0) {
+                        return null;
+                      }
                       const first = virtualLayout.getBlockLayout(vis[0]);
                       const last = virtualLayout.getBlockLayout(vis[vis.length - 1]);
                       const topH = first?.offset ?? 0;
@@ -823,7 +861,9 @@ const NovelDetail: Component = () => {
                           <For each={vis}>
                             {(idx) => {
                               const block = all[idx];
-                              if (!block) return null;
+                              if (!block) {
+                                return null;
+                              }
                               return (
                                 <NovelContentBlock
                                   block={() => block}

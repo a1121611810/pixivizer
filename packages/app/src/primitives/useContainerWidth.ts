@@ -11,7 +11,9 @@ export function useContainerWidth(): {
   const [width, setWidth] = createSignal(0);
 
   function ref(el: HTMLDivElement) {
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     setWidth(el.clientWidth);
 
     const ro = new ResizeObserver((entries) => {

@@ -15,34 +15,38 @@ export async function loadBlockedIds(): Promise<void> {
       const ids: number[] = JSON.parse(value);
       setBlockedIds(new Set(ids));
     }
-  } catch (e) {
-    console.warn("[blockStore] Failed to load blocked ids", e);
+  } catch (error) {
+    console.warn("[blockStore] Failed to load blocked ids", error);
   }
 }
 
 /** 屏蔽用户并持久化。重复屏蔽会被忽略。 */
 export async function blockUser(userId: number): Promise<void> {
-  if (blockedIds().has(userId)) return;
+  if (blockedIds().has(userId)) {
+    return;
+  }
   const next = new Set(blockedIds());
   next.add(userId);
   setBlockedIds(next);
   try {
     await Preferences.set({ key: PREF_KEY_BLOCKED_IDS, value: JSON.stringify([...next]) });
-  } catch (e) {
-    console.warn("[blockStore] Failed to persist blocked ids", e);
+  } catch (error) {
+    console.warn("[blockStore] Failed to persist blocked ids", error);
   }
 }
 
 /** 取消屏蔽用户并持久化。 */
 export async function unblockUser(userId: number): Promise<void> {
-  if (!blockedIds().has(userId)) return;
+  if (!blockedIds().has(userId)) {
+    return;
+  }
   const next = new Set(blockedIds());
   next.delete(userId);
   setBlockedIds(next);
   try {
     await Preferences.set({ key: PREF_KEY_BLOCKED_IDS, value: JSON.stringify([...next]) });
-  } catch (e) {
-    console.warn("[blockStore] Failed to persist blocked ids", e);
+  } catch (error) {
+    console.warn("[blockStore] Failed to persist blocked ids", error);
   }
 }
 

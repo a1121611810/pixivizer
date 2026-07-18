@@ -4,12 +4,12 @@ import { clickNavTab, openSettings, clientNavigate } from "../helpers";
 test.describe("Following Feed Filters", () => {
   test("following page has all/public/private filter buttons", async ({ loggedInPage: page }) => {
     await clickNavTab(page, "关注");
-    await expect(page).toHaveURL(/\/following/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/following/u, { timeout: 10_000 });
 
     // The filter buttons are <button> elements inside the following feed
     const allBtn = page.getByRole("button", { name: "全部" });
     const publicBtn = page.getByRole("button", { name: "公开", exact: true });
-    const privateBtn = page.getByRole("button", { name: /非公開|非公开|private/i });
+    const privateBtn = page.getByRole("button", { name: /非公開|非公开|private/iu });
 
     await expect(allBtn).toBeVisible({ timeout: 5000 });
     await expect(publicBtn).toBeVisible({ timeout: 5000 });
@@ -18,9 +18,9 @@ test.describe("Following Feed Filters", () => {
 
   test("switching filters loads new content", async ({ loggedInPage: page }) => {
     await clickNavTab(page, "关注");
-    await expect(page).toHaveURL(/\/following/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/following/u, { timeout: 10_000 });
 
-    const publicBtn = page.getByRole("button", { name: /公開|公开/i });
+    const publicBtn = page.getByRole("button", { name: /公開|公开/iu });
     if (await publicBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await publicBtn.click();
     }
@@ -65,7 +65,7 @@ test.describe("Image Host Settings", () => {
     expect(preState.dialogOpen).toBe(false);
 
     // 2. Click + verify dialog in one evaluate call to avoid timing issues
-    //    with SolidJS createEffect and Fluent Web Component lifecycles.
+    //    With SolidJS createEffect and Fluent Web Component lifecycles.
     const postState = await page.evaluate(async () => {
       const sw = document.querySelector('fluent-switch[aria-label="启用图床代理"]') as any;
       sw?.click();
@@ -185,8 +185,8 @@ test.describe("Theme Settings", () => {
   test("theme can be toggled via settings", async ({ loggedInPage: page }) => {
     await openSettings(page);
 
-    const darkBtn = page.getByRole("button", { name: /深色|dark|DARK/i });
-    const lightBtn = page.getByRole("button", { name: /浅色|light|LIGHT|明亮/i });
+    const darkBtn = page.getByRole("button", { name: /深色|dark|DARK/iu });
+    const lightBtn = page.getByRole("button", { name: /浅色|light|LIGHT|明亮/iu });
 
     if (await darkBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await darkBtn.click();
@@ -201,7 +201,7 @@ test.describe("Layout Mode", () => {
   test("layout mode can be changed in settings", async ({ loggedInPage: page }) => {
     await openSettings(page);
 
-    const waterfallBtn = page.getByRole("button", { name: /瀑布流|waterfall|single/i });
+    const waterfallBtn = page.getByRole("button", { name: /瀑布流|waterfall|single/iu });
     if (await waterfallBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await waterfallBtn.first().click();
     }

@@ -15,7 +15,7 @@ interface OverlayEntry {
   close: () => void;
 }
 
-/** overlay 栈：越靠后的元素越靠近栈顶。 */
+/** Overlay 栈：越靠后的元素越靠近栈顶。 */
 const [overlayStack, setOverlayStack] = createSignal<OverlayEntry[]>([]);
 
 /** 将指定类型的 overlay 关闭函数压入栈顶。 */
@@ -26,7 +26,9 @@ export function pushOverlay(type: OverlayType, close: () => void): void {
 /** 弹出并关闭当前栈顶 overlay，返回被弹出的条目；栈空时返回 undefined。 */
 function popTop(): OverlayEntry | undefined {
   const top = overlayStack()[overlayStack().length - 1];
-  if (!top) return undefined;
+  if (!top) {
+    return undefined;
+  }
   top.close();
   setOverlayStack((prev) => prev.slice(0, -1));
   return top;
@@ -38,7 +40,9 @@ function popTop(): OverlayEntry | undefined {
  */
 export function popOverlay(type: OverlayType): boolean {
   const top = overlayStack()[overlayStack().length - 1];
-  if (!top || top.type !== type) return false;
+  if (!top || top.type !== type) {
+    return false;
+  }
   popTop();
   return true;
 }

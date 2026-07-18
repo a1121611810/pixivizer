@@ -20,7 +20,7 @@ const query = createRoot(() =>
   createInfiniteQuery(
     () => ({
       queryKey: queryKeys.followList(mode(), userId()),
-      queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
+      queryFn: ({ pageParam }: { pageParam: string | undefined }) => {
         if (pageParam) {
           return apiClient.get<{ user_previews: PixivUserPreview[]; next_url: string | null }>(
             pageParam,
@@ -42,7 +42,9 @@ const query = createRoot(() =>
 // ── Derived exports ──
 export const users = (): PixivUserPreview[] => {
   const data = query.data;
-  if (!data) return [];
+  if (!data) {
+    return [];
+  }
   return filterUserPreviews(data.pages.flatMap((p) => p.user_previews));
 };
 
@@ -50,20 +52,24 @@ export const loading = () => query.isFetching;
 export const error = (): ApiError | null => normalizeQueryError(query.error);
 export const nextUrl = (): string | null => {
   const data = query.data;
-  if (!data) return null;
+  if (!data) {
+    return null;
+  }
   return data.pages[data.pages.length - 1]?.next_url ?? null;
 };
 
 // ── Actions ──
 
-export async function loadList(m: FollowMode, uid: number): Promise<void> {
+export function loadList(m: FollowMode, uid: number): Promise<void> {
   setMode(m);
   setUserId(uid);
   // TQ auto-fetches via queryKey reactivity
 }
 
 export async function loadMore(): Promise<void> {
-  if (!query.hasNextPage || query.isFetchingNextPage) return;
+  if (!query.hasNextPage || query.isFetchingNextPage) {
+    return;
+  }
   await query.fetchNextPage();
 }
 
@@ -74,14 +80,18 @@ export async function loadMore(): Promise<void> {
 export async function toggleFollow(index: number): Promise<void> {
   const current = users();
   const preview = current[index];
-  if (!preview) return;
+  if (!preview) {
+    return;
+  }
 
   const prev = preview.user.is_followed ?? false;
   preview.user.is_followed = !prev;
 
   // Re-trigger reactivity: must pass a new reference so TQ notifies observers
   queryClient.setQueryData(queryKeys.followList(mode(), userId()), (old) => {
-    if (!old) return old;
+    if (!old) {
+      return old;
+    }
     return { ...old, pages: [...old.pages] };
   });
 
@@ -92,9 +102,12 @@ export async function toggleFollow(index: number): Promise<void> {
       await followUser(preview.user.id);
     }
   } catch {
-    preview.user.is_followed = prev; // rollback
+    // Rollback
+    preview.user.is_followed = prev;
     queryClient.setQueryData(queryKeys.followList(mode(), userId()), (old) => {
-      if (!old) return old;
+      if (!old) {
+        return old;
+      }
       return { ...old, pages: [...old.pages] };
     });
   }

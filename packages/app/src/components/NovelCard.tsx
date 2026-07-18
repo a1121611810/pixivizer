@@ -33,10 +33,12 @@ const NovelCard: Component<Props> = (props) => {
         await addBookmark(props.novel.id, privateBookmark ? "private" : "public");
         setBookmarked(true);
         setBookmarkBurstTrigger((n) => n + 1);
-        if (privateBookmark) showPrivateToast();
+        if (privateBookmark) {
+          showPrivateToast();
+        }
       }
     } catch {
-      /* silently fail */
+      /* Silently fail */
     }
   };
 
@@ -177,10 +179,12 @@ export const NovelCoverCard: Component<Props> = (props) => {
         await addBookmark(props.novel.id, privateBookmark ? "private" : "public");
         setBookmarked(true);
         setBookmarkBurstTrigger((n) => n + 1);
-        if (privateBookmark) showPrivateToast();
+        if (privateBookmark) {
+          showPrivateToast();
+        }
       }
     } catch {
-      /* silently fail */
+      /* Silently fail */
     }
   };
 

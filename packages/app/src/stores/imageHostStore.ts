@@ -130,8 +130,8 @@ export const imageHostState = state;
 async function persist(snapshot: ImageHostState): Promise<void> {
   try {
     await Preferences.set({ key: PREF_KEY, value: JSON.stringify(snapshot) });
-  } catch (e) {
-    console.warn("[imageHostStore] Failed to persist state", e);
+  } catch (error) {
+    console.warn("[imageHostStore] Failed to persist state", error);
   }
 }
 
@@ -173,7 +173,9 @@ export function updateHost(id: string, patch: Partial<Omit<ImageHost, "id" | "is
   const next: ImageHostState = {
     ...state(),
     hosts: state().hosts.map((host) => {
-      if (host.id !== id) return host;
+      if (host.id !== id) {
+        return host;
+      }
       const edited = host.isBuiltIn
         ? Object.keys(patch).some((key) => {
             const k = key as keyof typeof patch;
@@ -189,7 +191,9 @@ export function updateHost(id: string, patch: Partial<Omit<ImageHost, "id" | "is
 
 export function resetBuiltInHost(id: string): void {
   const builtIn = BUILT_IN_HOSTS.find((h) => h.id === id);
-  if (!builtIn) return;
+  if (!builtIn) {
+    return;
+  }
 
   const next: ImageHostState = {
     ...state(),
@@ -241,9 +245,15 @@ export function removeCustomHost(id: string): void {
 
 export function setProbeResults(results: ProbeResult[]): void {
   const sorted = results.toSorted((a, b) => {
-    if (a.reachable !== b.reachable) return a.reachable ? -1 : 1;
-    if (a.latencyMs == null) return 1;
-    if (b.latencyMs == null) return -1;
+    if (a.reachable !== b.reachable) {
+      return a.reachable ? -1 : 1;
+    }
+    if (a.latencyMs == null) {
+      return 1;
+    }
+    if (b.latencyMs == null) {
+      return -1;
+    }
     return a.latencyMs - b.latencyMs;
   });
 
@@ -275,8 +285,8 @@ export async function loadImageHostPreference(): Promise<void> {
       const parsed = JSON.parse(value);
       setState(migrateLegacyState(parsed));
     }
-  } catch (e) {
-    console.warn("[imageHostStore] Failed to load preference", e);
+  } catch (error) {
+    console.warn("[imageHostStore] Failed to load preference", error);
     setState(defaultState());
   }
 }
@@ -292,7 +302,11 @@ export function getEnabledHosts(): ImageHost[] {
 
 export function getFastestHost(): ImageHost | undefined {
   const { fastestHostId, fastestHostExpiresAt } = state();
-  if (!fastestHostId) return undefined;
-  if (fastestHostExpiresAt && Date.now() > fastestHostExpiresAt) return undefined;
+  if (!fastestHostId) {
+    return undefined;
+  }
+  if (fastestHostExpiresAt && Date.now() > fastestHostExpiresAt) {
+    return undefined;
+  }
   return state().hosts.find((h) => h.id === fastestHostId);
 }

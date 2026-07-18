@@ -164,7 +164,7 @@ describe("userStore", () => {
       store.switchTab("followers");
 
       expect(store.activeTab()).toBe("followers");
-      // followersList is empty so it triggers load
+      // FollowersList is empty so it triggers load
       expect(mockGetUserFollowers).toHaveBeenCalled();
     });
   });

@@ -7,8 +7,12 @@ import { isBlocked } from "../stores/blockStore";
  * x_restrict: 0=全年龄, 1=R-18, 2=R-18G
  */
 function isRestricted(item: { x_restrict: number }): boolean {
-  if (!showR18() && item.x_restrict === 1) return true;
-  if (!showR18G() && item.x_restrict === 2) return true;
+  if (!showR18() && item.x_restrict === 1) {
+    return true;
+  }
+  if (!showR18G() && item.x_restrict === 2) {
+    return true;
+  }
   return false;
 }
 

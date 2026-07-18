@@ -37,7 +37,7 @@ describe("MemoryStore", () => {
     await store.put("novels", { id: 2, title: "B" });
     const all = await store.getAll<{ id: number; title: string }>("novels");
     expect(all).toHaveLength(2);
-    expect(all.map((x) => x.title).sort()).toEqual(["A", "B"]);
+    expect(all.map((x) => x.title).toSorted()).toEqual(["A", "B"]);
   });
 
   it("clear removes all entries in a store", async () => {

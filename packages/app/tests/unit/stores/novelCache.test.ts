@@ -99,9 +99,9 @@ describe("novelCache", () => {
     it("getEntry hydrates hot cache from IDB", async () => {
       // Write directly to IDB (simulate cold start)
       await memStore.put("novels", { id: 1, ...makeEntry(1), cachedAt: Date.now() });
-      // peekEntry should miss (hot cache is empty)
+      // PeekEntry should miss (hot cache is empty)
       expect(novelCache.peekEntry(1)).toBeUndefined();
-      // getEntry should read from IDB and hydrate hot cache
+      // GetEntry should read from IDB and hydrate hot cache
       const result = await novelCache.getEntry(1);
       expect(result).toBeDefined();
       // Now peekEntry should hit

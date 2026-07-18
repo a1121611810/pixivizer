@@ -28,7 +28,9 @@ const EXIT_DOUBLE_TAP_MS = 2000;
 export async function registerBackGesture(ctx: BackGestureContext): Promise<() => void> {
   let lastBackTime = 0;
   const listener = await CapApp.addListener("backButton", () => {
-    if (closeTopOverlay()) return;
+    if (closeTopOverlay()) {
+      return;
+    }
 
     if (!rootPaths.has(ctx.getPathname())) {
       ctx.navigateBack();

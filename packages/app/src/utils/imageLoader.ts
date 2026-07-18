@@ -40,7 +40,9 @@ function evictOldest() {
       oldestKey = k;
     }
   }
-  if (!oldestKey) return;
+  if (!oldestKey) {
+    return;
+  }
   const old = cache.get(oldestKey);
   if (old) {
     totalBytes -= old.byteSize;
@@ -105,12 +107,18 @@ export function getCacheSize(): number {
  * 纯函数，O(1) 正则匹配，不涉及网络/IO。
  */
 export function parsePixivUrlDimensions(url: string): { width: number; height: number } | null {
-  if (!url) return null;
-  const match = url.match(/\/(?:c|custom)\/(\d+)x(\d+)/);
-  if (!match) return null;
+  if (!url) {
+    return null;
+  }
+  const match = url.match(/\/(?:c|custom)\/(\d+)x(\d+)/u);
+  if (!match) {
+    return null;
+  }
   const w = parseInt(match[1], 10);
   const h = parseInt(match[2], 10);
-  if (w <= 0 || h <= 0) return null;
+  if (w <= 0 || h <= 0) {
+    return null;
+  }
   return { width: w, height: h };
 }
 
@@ -120,10 +128,16 @@ export function parsePixivUrlDimensions(url: string): { width: number; height: n
  * 将 i.pximg.net 的原始 URL 转换为代理路径。
  */
 export function resolveImageUrl(originalUrl: string): string {
-  if (!originalUrl) return "";
-  if (originalUrl.startsWith("/pixiv-img/")) return originalUrl;
-  // s.pximg.net 是静态资源 CDN（默认头像、印章等），不需要 Referer 验证，直接使用
-  if (originalUrl.startsWith("https://s.pximg.net/")) return originalUrl;
+  if (!originalUrl) {
+    return "";
+  }
+  if (originalUrl.startsWith("/pixiv-img/")) {
+    return originalUrl;
+  }
+  // S.pximg.net 是静态资源 CDN（默认头像、印章等），不需要 Referer 验证，直接使用
+  if (originalUrl.startsWith("https://s.pximg.net/")) {
+    return originalUrl;
+  }
 
   const parts = originalUrl.split("/");
   const path = parts.slice(3).join("/");
@@ -139,9 +153,15 @@ export function resolveImageUrl(originalUrl: string): string {
  * - 已是代理路径的 URL 直接返回
  */
 export function toWebProxyUrl(url: string): string {
-  if (!url || url.startsWith("/")) return url;
-  if (url.startsWith("https://i.pixiv.re/")) return url.replace("https://i.pixiv.re", "/pixiv-re");
-  if (url.startsWith("https://i.pixiv.nl/")) return url.replace("https://i.pixiv.nl", "/pixiv-nl");
+  if (!url || url.startsWith("/")) {
+    return url;
+  }
+  if (url.startsWith("https://i.pixiv.re/")) {
+    return url.replace("https://i.pixiv.re", "/pixiv-re");
+  }
+  if (url.startsWith("https://i.pixiv.nl/")) {
+    return url.replace("https://i.pixiv.nl", "/pixiv-nl");
+  }
   return resolveImageUrl(url);
 }
 
@@ -170,7 +190,7 @@ export interface LoadedImage {
  * 返回 { url, cleanup }。
  * cleanup() 为兼容保留，实际是 no-op。
  */
-export async function loadImage(originalUrl: string): Promise<LoadedImage> {
+export function loadImage(originalUrl: string): Promise<LoadedImage> {
   if (!originalUrl) {
     return { url: "", cleanup: () => {} };
   }
@@ -198,7 +218,7 @@ export async function loadImage(originalUrl: string): Promise<LoadedImage> {
   return promise;
 }
 
-/** loadImage 的内部实现 — 不含去重逻辑，由外层 loadImage 统一调度并发 */
+/** LoadImage 的内部实现 — 不含去重逻辑，由外层 loadImage 统一调度并发 */
 async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
   const targetUrl = isImageHostEnabled() ? getEffectiveImageUrl(originalUrl) : originalUrl;
 
@@ -215,8 +235,8 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
           cacheSet(originalUrl, decoded);
           return { url: resolveImageUrl(originalUrl), cleanup: () => {} };
         }
-      } catch (e) {
-        console.warn("[ImageCache] Disk cache check failed, falling back to network", e);
+      } catch (error) {
+        console.warn("[ImageCache] Disk cache check failed, falling back to network", error);
       }
 
       // 2) 未命中，发网络请求
@@ -227,9 +247,9 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
         const base64 = await blobToBase64(blob);
         imageCache
           .saveImage({ key: originalUrl, base64 })
-          .catch((e) => console.warn("[ImageCache] Failed to save to disk", e));
-      } catch (e) {
-        console.warn("[ImageCache] Failed to encode blob for disk cache", e);
+          .catch((error) => console.warn("[ImageCache] Failed to save to disk", error));
+      } catch (error) {
+        console.warn("[ImageCache] Failed to encode blob for disk cache", error);
       }
     } else {
       blob = await fetchWeb(targetUrl, originalUrl);
@@ -243,8 +263,8 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
       url: resolveImageUrl(originalUrl),
       cleanup: () => {},
     };
-  } catch (e) {
-    console.warn(`[ImageCache] Load failed: ${originalUrl}`, e);
+  } catch (error) {
+    console.warn(`[ImageCache] Load failed: ${originalUrl}`, error);
     return {
       url: resolveImageUrl(originalUrl),
       cleanup: () => {},
@@ -324,8 +344,8 @@ export async function loadImageWithProgress(
     onProgress({ loaded: blob.size, total: blob.size, percent: 100 });
 
     return { url: resolveImageUrl(originalUrl), cleanup: () => {}, durationMs };
-  } catch (e) {
-    console.warn(`[ImageCache] LoadWithProgress failed: ${originalUrl}`, e);
+  } catch (error) {
+    console.warn(`[ImageCache] LoadWithProgress failed: ${originalUrl}`, error);
     onProgress({ loaded: 0, total: 0, percent: -1 });
     return { url: resolveImageUrl(originalUrl), cleanup: () => {}, durationMs: 0 };
   }
@@ -337,7 +357,9 @@ async function loadWithProgressWeb(
   onProgress: (p: LoadProgress) => void,
 ): Promise<Blob> {
   const response = await fetch(proxyUrl);
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
 
   const contentLength = response.headers.get("Content-Length");
   const total = contentLength ? parseInt(contentLength, 10) : null;
@@ -348,7 +370,9 @@ async function loadWithProgressWeb(
   while (true) {
     // eslint-disable-next-line no-await-in-loop — ReadableStream chunks must be read sequentially
     const { done, value } = await reader.read();
-    if (done) break;
+    if (done) {
+      break;
+    }
     if (value) {
       chunks.push(value);
       loaded += value.length;
@@ -362,7 +386,7 @@ async function loadWithProgressWeb(
 }
 
 /** Web 模式：通过 Vite 代理或图床代理获取图片 */
-async function fetchWeb(targetUrl: string, originalUrl: string): Promise<Blob> {
+function fetchWeb(targetUrl: string, originalUrl: string): Promise<Blob> {
   const urls = getRaceCandidateUrls(targetUrl);
 
   if (urls.length > 1) {
@@ -376,14 +400,18 @@ async function fetchWeb(targetUrl: string, originalUrl: string): Promise<Blob> {
 
 async function fetchSingleWeb(url: string): Promise<Blob> {
   const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  if (!resp.ok) {
+    throw new Error(`HTTP ${resp.status}`);
+  }
   const blob = await resp.blob();
-  if (blob.size === 0) throw new Error("Empty response");
+  if (blob.size === 0) {
+    throw new Error("Empty response");
+  }
   return blob;
 }
 
 /** Native 模式：通过 WebView 代理获取图片（同 Web 模式一致，绕过 CapacitorHttp） */
-async function fetchNative(targetUrl: string, originalUrl: string): Promise<Blob> {
+function fetchNative(targetUrl: string, originalUrl: string): Promise<Blob> {
   const urls = getRaceCandidateUrls(targetUrl);
 
   if (urls.length > 1) {
@@ -460,12 +488,16 @@ function base64ToBlob(base64: string, mimeType: string = "image/jpeg"): Blob {
  * 预热失败不影响正常功能（降级为冷启动重新下载）。
  */
 export async function warmCacheFromDisk(): Promise<void> {
-  if (!isNative) return;
+  if (!isNative) {
+    return;
+  }
 
   try {
     const cache = getImageCache();
     const { keys } = await cache.getCachedKeys();
-    if (!keys || keys.length === 0) return;
+    if (!keys || keys.length === 0) {
+      return;
+    }
 
     // 取最近 50 张，并行加载到 LRU
     const recentKeys = keys.slice(-50);
@@ -481,8 +513,8 @@ export async function warmCacheFromDisk(): Promise<void> {
 
     const loaded = results.filter((r) => r.status === "fulfilled").length;
     console.log(`[ImageCache] Warmup: loaded ${loaded}/${recentKeys.length} entries`);
-  } catch (e) {
+  } catch (error) {
     // 预热失败不阻塞启动
-    console.warn("[ImageCache] Warmup failed", e);
+    console.warn("[ImageCache] Warmup failed", error);
   }
 }

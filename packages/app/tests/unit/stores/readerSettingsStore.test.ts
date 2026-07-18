@@ -189,8 +189,8 @@ describe("readerSettingsStore", () => {
 
       const store = await loadStore();
       expect(store.fontSize()).toBe(22);
-      expect(store.fontWeight()).toBe(400); // default
-      expect(store.fontFamily()).toBe("sans-serif"); // default
+      expect(store.fontWeight()).toBe(400); // Default
+      expect(store.fontFamily()).toBe("sans-serif"); // Default
     });
   });
 });

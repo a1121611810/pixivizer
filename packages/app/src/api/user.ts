@@ -17,7 +17,9 @@ export function getUserFollowing(
     user_id: String(userId),
     restrict,
   };
-  if (offset !== undefined) params.offset = String(offset);
+  if (offset !== undefined) {
+    params.offset = String(offset);
+  }
   return apiClient.get<PixivUserFollowingResponse>("/v1/user/following", params);
 }
 
@@ -28,6 +30,8 @@ export function getUserFollowers(
   const params: Record<string, string> = {
     user_id: String(userId),
   };
-  if (offset !== undefined) params.offset = String(offset);
+  if (offset !== undefined) {
+    params.offset = String(offset);
+  }
   return apiClient.get<PixivUserFollowingResponse>("/v1/user/follower", params);
 }

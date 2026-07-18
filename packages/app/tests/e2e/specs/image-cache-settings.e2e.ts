@@ -34,7 +34,7 @@ test.describe("ImageCacheSettings 页面", () => {
     await settingsButton.click();
 
     // 期望: 导航到了 /image-cache
-    await expect(page).toHaveURL(/\/image-cache/);
+    await expect(page).toHaveURL(/\/image-cache/u);
   });
 
   test("旧 slider「图片缓存限制」已移除", async ({ page }) => {

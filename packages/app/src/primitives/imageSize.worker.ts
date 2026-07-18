@@ -13,7 +13,7 @@ export type ImageSizeOutput =
  * 在 Worker 中使用 createImageBitmap 测量图片原始尺寸。
  * 读取后立即 close() 释放位图内存。
  */
-async function measureImages(items: ImageSizeInput[]): Promise<ImageSizeOutput[]> {
+function measureImages(items: ImageSizeInput[]): Promise<ImageSizeOutput[]> {
   return Promise.all(
     items.map(async (item): Promise<ImageSizeOutput> => {
       try {

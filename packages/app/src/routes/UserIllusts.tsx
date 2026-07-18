@@ -30,7 +30,9 @@ const UserIllusts: Component = () => {
   onMount(() => {
     const handler = () => {
       const uid = userId();
-      if (uid) load(uid, contentType());
+      if (uid) {
+        load(uid, contentType());
+      }
     };
     window.addEventListener("r18Changed", handler);
     onCleanup(() => window.removeEventListener("r18Changed", handler));
@@ -112,7 +114,9 @@ const UserIllusts: Component = () => {
             onLoadMore={loadMore}
             onRefresh={async () => {
               const uid = userId();
-              if (uid) await load(uid, contentType(), true);
+              if (uid) {
+                await load(uid, contentType(), true);
+              }
             }}
             layoutMode={layoutMode()}
           />

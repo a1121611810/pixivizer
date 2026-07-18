@@ -75,8 +75,12 @@ describe("age preference", () => {
 
   it("loading persisted minor state forces showR18 and showR18G to false", async () => {
     vi.mocked(Preferences.get).mockImplementation(async ({ key }) => {
-      if (key === "age_confirmed") return { value: "true" };
-      if (key === "is_adult") return { value: "false" };
+      if (key === "age_confirmed") {
+        return { value: "true" };
+      }
+      if (key === "is_adult") {
+        return { value: "false" };
+      }
       return { value: null };
     });
 
@@ -99,10 +103,18 @@ describe("age preference", () => {
 
   it("loading persisted adult state leaves showR18 and showR18G as persisted", async () => {
     vi.mocked(Preferences.get).mockImplementation(async ({ key }) => {
-      if (key === "age_confirmed") return { value: "true" };
-      if (key === "is_adult") return { value: "true" };
-      if (key === "show_r18") return { value: "true" };
-      if (key === "show_r18g") return { value: "true" };
+      if (key === "age_confirmed") {
+        return { value: "true" };
+      }
+      if (key === "is_adult") {
+        return { value: "true" };
+      }
+      if (key === "show_r18") {
+        return { value: "true" };
+      }
+      if (key === "show_r18g") {
+        return { value: "true" };
+      }
       return { value: null };
     });
 
@@ -272,7 +284,7 @@ describe("resetUiStore", () => {
       vi.mocked(Preferences.get).mockResolvedValue({ value: "invalid" });
       const { contentType, loadContentTypePreference } = await loadStore();
       await loadContentTypePreference();
-      expect(contentType()).toBe("illust"); // default unchanged
+      expect(contentType()).toBe("illust"); // Default unchanged
     });
 
     it("dispatches contentTypeChanged event", async () => {

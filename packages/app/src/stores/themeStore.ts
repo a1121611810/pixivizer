@@ -42,8 +42,8 @@ export async function loadColorThemePreference(): Promise<void> {
       value != null && (VALID_THEME_IDS as readonly string[]).includes(value)
         ? (value as ColorThemeId)
         : "fluent";
-  } catch (e) {
-    console.warn("[themeStore] Failed to load color theme preference", e);
+  } catch (error) {
+    console.warn("[themeStore] Failed to load color theme preference", error);
     id = "fluent";
   } finally {
     if (!userHasSetTheme) {
@@ -55,18 +55,24 @@ export async function loadColorThemePreference(): Promise<void> {
 }
 
 // 自动应用主题类与 .dark 类，并持久化到 Preferences。
-// themeStore 是运行期间 <html> 上 theme-* 与 .dark 类的唯一所有者（index.html 仅在首屏前负责 .dark 防闪白）。
+// ThemeStore 是运行期间 <html> 上 theme-* 与 .dark 类的唯一所有者（index.html 仅在首屏前负责 .dark 防闪白）。
 createRoot(() => {
   createEffect(() => {
     const id = internalColorTheme();
-    if (id == null || typeof document === "undefined" || !hasLoaded()) return;
+    if (id == null || typeof document === "undefined" || !hasLoaded()) {
+      return;
+    }
     applyColorThemeClass(id, resolvedTheme() === "dark");
   });
 
   createEffect(() => {
     const id = internalColorTheme();
-    if (id == null || !hasLoaded()) return;
-    if (id === lastPersistedId) return;
+    if (id == null || !hasLoaded()) {
+      return;
+    }
+    if (id === lastPersistedId) {
+      return;
+    }
     Preferences.set({ key: PREF_KEY_COLOR_THEME, value: id })
       .then(() => {
         // 仅在主题仍是本次写入的值时才更新 lastPersistedId，避免快速切换 A→B→A 时陈旧写入覆盖最新状态。
@@ -74,8 +80,8 @@ createRoot(() => {
           lastPersistedId = id;
         }
       })
-      .catch((e) => {
-        console.warn("[themeStore] Failed to persist color theme", e);
+      .catch((error) => {
+        console.warn("[themeStore] Failed to persist color theme", error);
       });
   });
 });

@@ -12,10 +12,10 @@ test.describe("Navigation", () => {
 
   test("clicking each nav tab changes route", async ({ loggedInPage: page }) => {
     await clickNavTab(page, "收藏");
-    await expect(page).toHaveURL(/\/bookmarks/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/bookmarks/u, { timeout: 10_000 });
 
     await clickNavTab(page, "推荐");
-    await expect(page).toHaveURL(/\/recommended/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/recommended/u, { timeout: 10_000 });
   });
 
   test("about page loads correctly via settings", async ({ loggedInPage: page }) => {

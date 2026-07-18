@@ -116,7 +116,7 @@ describe("api/novel.ts", () => {
           is_followed: false,
         },
         create_date: "2025-01-01T00:00:00+00:00",
-        total_character_count: 10000,
+        total_character_count: 10_000,
         display_text_count: 5000,
       },
       novels: [],
@@ -151,7 +151,7 @@ describe("api/novel.ts", () => {
           is_followed: false,
         },
         create_date: "2025-01-01T00:00:00+00:00",
-        total_character_count: 10000,
+        total_character_count: 10_000,
         display_text_count: 5000,
       },
       novels: [

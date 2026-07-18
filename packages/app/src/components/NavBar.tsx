@@ -72,7 +72,9 @@ const NavBar: Component = () => {
   // Sync with currentTab from store
   createEffect(() => {
     const ct = toNavTab(currentTab());
-    if (ct) setActiveTab(ct);
+    if (ct) {
+      setActiveTab(ct);
+    }
   });
 
   // ── 触摸滑动手势标志（防止点击触发）──
@@ -87,7 +89,9 @@ const NavBar: Component = () => {
   function onScroll() {
     // 如果用户关闭了自动隐藏，始终展开
     if (!autoHideNavBar()) {
-      if (compact()) setCompact(false);
+      if (compact()) {
+        setCompact(false);
+      }
       return;
     }
 
@@ -95,7 +99,9 @@ const NavBar: Component = () => {
 
     // TOP_ZONE 内始终展开
     if (currentY < TOP_ZONE) {
-      if (compact()) setCompact(false);
+      if (compact()) {
+        setCompact(false);
+      }
       lastScrollY = currentY;
       return;
     }

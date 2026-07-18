@@ -16,14 +16,20 @@ import { resolve as pathResolve } from "node:path";
  */
 function loadEnvFile(): void {
   const envPath = pathResolve(new URL("../../.env", import.meta.url).pathname);
-  if (!existsSync(envPath)) return;
+  if (!existsSync(envPath)) {
+    return;
+  }
 
   const content = readFileSync(envPath, "utf-8");
   for (const line of content.split("\n")) {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
     const eqIdx = trimmed.indexOf("=");
-    if (eqIdx === -1) continue;
+    if (eqIdx === -1) {
+      continue;
+    }
     const key = trimmed.slice(0, eqIdx).trim();
     const value = trimmed.slice(eqIdx + 1).trim();
     if (key && value && !process.env[key]) {
@@ -35,7 +41,7 @@ function loadEnvFile(): void {
 const DEV_SERVER_PORT = 5173;
 
 // Store the server process globally so globalTeardown can access it
-(globalThis as any).__e2eServerProcess = null as ChildProcess | null;
+(globalThis as any).e2eServerProcess = null as ChildProcess | null;
 
 function isPortInUse(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -68,14 +74,16 @@ function killProcessOnPort(port: number): void {
   }
 }
 
-async function waitForServer(url: string, timeoutMs = 30000): Promise<void> {
+async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
       const res = await fetch(url);
-      if (res.ok || res.status === 404) return;
+      if (res.ok || res.status === 404) {
+        return;
+      }
     } catch {
-      /* retry */
+      /* Retry */
     }
     await new Promise((r) => setTimeout(r, 500));
   }
@@ -118,17 +126,23 @@ export default async function globalSetup(): Promise<void> {
     shell: true,
   });
 
-  (globalThis as any).__e2eServerProcess = proc;
+  (globalThis as any).e2eServerProcess = proc;
 
   proc.stdout?.on("data", (d: Buffer) => {
-    if (process.env.DEBUG) process.stdout.write(`[vite] ${d.toString()}`);
+    if (process.env.DEBUG) {
+      process.stdout.write(`[vite] ${d.toString()}`);
+    }
   });
   proc.stderr?.on("data", (d: Buffer) => {
-    if (process.env.DEBUG) process.stderr.write(`[vite:err] ${d.toString()}`);
+    if (process.env.DEBUG) {
+      process.stderr.write(`[vite:err] ${d.toString()}`);
+    }
   });
   proc.on("exit", (code) => {
-    if (code && process.env.DEBUG) console.log(`[E2E] Vite exited with code ${code}`);
-    (globalThis as any).__e2eServerProcess = null;
+    if (code && process.env.DEBUG) {
+      console.log(`[E2E] Vite exited with code ${code}`);
+    }
+    (globalThis as any).e2eServerProcess = null;
   });
 
   await waitForServer(`http://localhost:${DEV_SERVER_PORT}`);

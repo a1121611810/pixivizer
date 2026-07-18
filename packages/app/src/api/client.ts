@@ -45,7 +45,9 @@ export function setOnUnauthorized(handler: () => Promise<void>) {
 
 /** 尝试从 Pixiv 错误响应体中提取人类可读的错误消息 */
 export function extractPixivErrorMessage(data: unknown): string | null {
-  if (!data || typeof data !== "object") return null;
+  if (!data || typeof data !== "object") {
+    return null;
+  }
   const d = data as Record<string, unknown>;
   if (d.errors && typeof d.errors === "object") {
     const errors = d.errors as Record<string, unknown>;
@@ -57,8 +59,12 @@ export function extractPixivErrorMessage(data: unknown): string | null {
       }
     }
   }
-  if (typeof d.message === "string") return d.message;
-  if (typeof d.error === "string") return d.error;
+  if (typeof d.message === "string") {
+    return d.message;
+  }
+  if (typeof d.error === "string") {
+    return d.error;
+  }
   return null;
 }
 
@@ -89,7 +95,9 @@ const ERROR_TYPE_PRIORITY: ApiErrorType[] = [
  */
 export function pickBestErrorType(...errors: ApiError[]): ApiErrorType {
   for (const t of ERROR_TYPE_PRIORITY) {
-    if (errors.some((e) => e.type === t)) return t;
+    if (errors.some((e) => e.type === t)) {
+      return t;
+    }
   }
   return ApiErrorType.UNKNOWN;
 }
@@ -134,18 +142,20 @@ export function classifyError(status: number, error: unknown, responseBody?: unk
         status: 429,
       };
     default:
-      if (status >= 500)
+      if (status >= 500) {
         return {
           type: ApiErrorType.SERVER,
           message: `服务器错误 (HTTP ${status})${suffix}`,
           status,
         };
-      if (status > 0)
+      }
+      if (status > 0) {
         return {
           type: ApiErrorType.UNKNOWN,
           message: `请求失败 (HTTP ${status})${suffix}`,
           status,
         };
+      }
       return { type: ApiErrorType.UNKNOWN, message: `未知错误${suffix}`, status };
   }
 }
@@ -156,7 +166,9 @@ export function classifyError(status: number, error: unknown, responseBody?: unk
  */
 export function rewriteUrl(path: string): string {
   // 已经是本地代理路径，直接返回
-  if (path.startsWith("/pixiv-")) return path;
+  if (path.startsWith("/pixiv-")) {
+    return path;
+  }
   // 已经是 http(s) URL
   if (path.startsWith("http")) {
     if (!isNative) {
@@ -170,7 +182,9 @@ export function rewriteUrl(path: string): string {
     return path;
   }
   // 相对路径：web 走 Vite 代理，native 拼完整 URL
-  if (!isNative) return `/pixiv-api${path}`;
+  if (!isNative) {
+    return `/pixiv-api${path}`;
+  }
   return `${PIXIV_API_BASE}${path}`;
 }
 
@@ -274,16 +288,18 @@ async function executeRequest<T>(
         try {
           errorBody = response!.data;
         } catch {
-          // ignore
+          // Ignore
         }
         throw classifyError(response!.status, null, errorBody);
       }
 
       return response!.data as T;
-    } catch (e) {
-      if ((e as ApiError).type) throw e;
-      const errMsg = e instanceof Error ? e.message : String(e ?? "");
-      throw classifyError(0, e, { message: errMsg });
+    } catch (error) {
+      if ((error as ApiError).type) {
+        throw error;
+      }
+      const errMsg = error instanceof Error ? error.message : String(error ?? "");
+      throw classifyError(0, error, { message: errMsg });
     }
   }
 }
@@ -292,7 +308,7 @@ async function executeRequest<T>(
  * 发送 HTTP 请求（GET 带去重，POST 不缓存）。
  * GET 请求去重：同一 URL+参数的并发请求自动合并为一个真实 HTTP 请求。
  */
-async function request<T>(
+function request<T>(
   method: "GET" | "POST",
   path: string,
   data?: Record<string, string>,

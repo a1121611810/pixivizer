@@ -7,8 +7,8 @@ export async function getRefreshToken(): Promise<string | null> {
   try {
     const value = await SecureStorage.get(REFRESH_TOKEN_KEY);
     return typeof value === "string" ? value : null;
-  } catch (err) {
-    console.error("[secureStorage] failed to get refresh_token", err);
+  } catch (error) {
+    console.error("[secureStorage] failed to get refresh_token", error);
     return null;
   }
 }

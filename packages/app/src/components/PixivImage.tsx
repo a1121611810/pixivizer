@@ -20,11 +20,12 @@ const PixivImage: Component<PixivImageProps> = (props) => {
   if (props.src) {
     const cachedUrl = checkImageCache(props.src);
     if (cachedUrl) {
-      syncBlobUrl = cachedUrl; // 持久 Blob URL，缓存管理生命周期
+      // 持久 Blob URL，缓存管理生命周期
+      syncBlobUrl = cachedUrl;
     }
   }
 
-  const [displayUrl, setDisplayUrl] = createSignal(
+  const [displayUrl, _setDisplayUrl] = createSignal(
     syncBlobUrl || (props.src ? resolveImageUrl(props.src) : ""),
   );
   const [failed, setFailed] = createSignal(false);

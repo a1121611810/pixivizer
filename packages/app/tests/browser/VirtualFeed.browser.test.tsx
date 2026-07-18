@@ -52,16 +52,18 @@ describe("VirtualFeed", () => {
       const illusts = createIllusts(20);
       const [width, setWidth] = createSignal(0);
       // Defer giving the feed container a real width until after the initial
-      // restoration frame would have fired. With the buggy code the scroll is
-      // applied while totalHeight is ~0 and is clamped to the top; the fix waits
-      // until the layout is tall enough before scrolling.
+      // Restoration frame would have fired. With the buggy code the scroll is
+      // Applied while totalHeight is ~0 and is clamped to the top; the fix waits
+      // Until the layout is tall enough before scrolling.
       setTimeout(() => setWidth(800), 50);
 
       // VirtualFeed's root has horizontal padding, so its clientWidth would be
-      // positive even when the parent width is 0. Strip that padding for this
-      // test so the 0-width phase truly reports containerWidth === 0.
+      // Positive even when the parent width is 0. Strip that padding for this
+      // Test so the 0-width phase truly reports containerWidth === 0.
       const existingStyle = document.getElementById(STYLE_ID);
-      if (existingStyle) existingStyle.remove();
+      if (existingStyle) {
+        existingStyle.remove();
+      }
       const style = document.createElement("style");
       style.id = STYLE_ID;
       style.textContent =
@@ -100,7 +102,9 @@ describe("VirtualFeed", () => {
       scrollToSpy.mockRestore();
       window.scrollTo(0, 0);
       const styleEl = document.getElementById(STYLE_ID);
-      if (styleEl) styleEl.remove();
+      if (styleEl) {
+        styleEl.remove();
+      }
     }
   });
 });

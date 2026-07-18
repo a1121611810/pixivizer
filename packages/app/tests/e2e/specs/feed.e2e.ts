@@ -4,14 +4,14 @@ import { clickNavTab } from "../helpers";
 test.describe("Feed / Recommended", () => {
   test("recommended feed loads and shows illust cards", async ({ loggedInPage: page }) => {
     const cards = page.locator(".image-card").first();
-    await expect(cards).toBeVisible({ timeout: 15000 });
+    await expect(cards).toBeVisible({ timeout: 15_000 });
     const count = await page.locator(".image-card").count();
     expect(count).toBeGreaterThan(0);
   });
 
   test("sub-tab switching works (illust/manga/mixed)", async ({ loggedInPage: page }) => {
-    await expect(page.locator(".image-card").first()).toBeVisible({ timeout: 15000 });
-    const mangaTab = page.getByRole("button", { name: /漫画|manga/i });
+    await expect(page.locator(".image-card").first()).toBeVisible({ timeout: 15_000 });
+    const mangaTab = page.getByRole("button", { name: /漫画|manga/iu });
     if (await mangaTab.isVisible({ timeout: 3000 }).catch(() => false)) {
       await mangaTab.click();
     }
@@ -19,7 +19,7 @@ test.describe("Feed / Recommended", () => {
 
   test("infinite scroll loads more illusts", async ({ loggedInPage: page }) => {
     const cards = page.locator(".image-card");
-    await expect(cards.first()).toBeVisible({ timeout: 15000 });
+    await expect(cards.first()).toBeVisible({ timeout: 15_000 });
 
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     const visibleCount = await cards.count();
@@ -34,7 +34,7 @@ test.describe("Feed / Recommended", () => {
 test.describe("Feed / Following", () => {
   test("following feed loads when switching tabs", async ({ loggedInPage: page }) => {
     await clickNavTab(page, "关注");
-    await expect(page).toHaveURL(/\/following/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/following/u, { timeout: 10_000 });
   });
 });
 
@@ -50,7 +50,7 @@ test.describe("Feed / Novel Follow", () => {
 
     // Wait for novel cards to render
     await expect(page.locator("fluent-badge").first()).toBeVisible({
-      timeout: 15000,
+      timeout: 15_000,
     });
 
     // Count all absolute-positioned card containers in the virtual feed
@@ -82,7 +82,7 @@ test.describe("Feed / Novel Follow", () => {
 
     // Wait for new cards to render
     await expect(page.locator("fluent-badge").first()).toBeVisible({
-      timeout: 10000,
+      timeout: 10_000,
     });
     // Small settle time for DOM reconciliation (For keyed remount)
     await page.waitForTimeout(500);
@@ -91,7 +91,7 @@ test.describe("Feed / Novel Follow", () => {
     const countAfter = await countAbsoluteChildren();
 
     // Critical assertion: after switching sub-tab, card count should not exceed
-    // a reasonable visible limit (no lingering old cards inflating the count).
+    // A reasonable visible limit (no lingering old cards inflating the count).
     // With For keyed remount, old items are gone — count should be ≤ viewport capacity.
     // A reasonable bound: ≤ before count + 2 (one extra for off-by-one in viewport calc)
     expect(countAfter).toBeLessThanOrEqual(countBefore + 2);
@@ -107,7 +107,9 @@ test.describe("Feed / Novel Follow", () => {
           const child = c.children[i] as HTMLElement;
           const top = parseInt(child.style.top, 10);
           if (!isNaN(top)) {
-            if (tops.has(top)) return true;
+            if (tops.has(top)) {
+              return true;
+            }
             tops.add(top);
           }
         }

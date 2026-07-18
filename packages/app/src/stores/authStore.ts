@@ -46,7 +46,9 @@ function setupUnauthorizedHandler() {
   appStateListener = App.addListener("appStateChange", ({ isActive }) => {
     if (isActive && refreshTokenSig() && Date.now() - lastRefreshTime > PRE_REFRESH_THRESHOLD_MS) {
       const latest = refreshTokenSig();
-      if (latest) performRefresh(latest);
+      if (latest) {
+        performRefresh(latest);
+      }
     }
   });
 }

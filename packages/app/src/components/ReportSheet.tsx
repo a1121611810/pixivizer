@@ -35,7 +35,9 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
 
   async function handleSubmit() {
     const reason = selectedReason();
-    if (!reason || alreadyReported()) return;
+    if (!reason || alreadyReported()) {
+      return;
+    }
     setSubmitting(true);
     await reportIllust(props.illustId, reason);
     openReportEmail(props.illustId, reason);

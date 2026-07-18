@@ -11,8 +11,10 @@ interface Props {
 }
 
 interface Frame {
-  url: string; // blob URL for the frame JPEG
-  delay: number; // milliseconds
+  // Blob URL for the frame JPEG
+  url: string;
+  // Milliseconds
+  delay: number;
 }
 
 const UgoiraViewer: Component<Props> = (props) => {
@@ -31,7 +33,9 @@ const UgoiraViewer: Component<Props> = (props) => {
 
       // 2. Download ZIP
       const zipResp = await fetch(`/pixiv-img/${zipUrl.split("/").slice(3).join("/")}`);
-      if (!zipResp.ok) throw new Error(`ZIP download failed: HTTP ${zipResp.status}`);
+      if (!zipResp.ok) {
+        throw new Error(`ZIP download failed: HTTP ${zipResp.status}`);
+      }
       const zipBlob = await zipResp.blob();
 
       // 3. Extract frames
@@ -42,7 +46,9 @@ const UgoiraViewer: Component<Props> = (props) => {
       // eslint-disable-next-line no-await-in-loop
       for (const frameMeta of meta.frames) {
         const file = zip.file(frameMeta.file);
-        if (!file) continue;
+        if (!file) {
+          continue;
+        }
         // eslint-disable-next-line no-await-in-loop
         const blob = await file.async("blob");
         const url = URL.createObjectURL(blob);
@@ -50,22 +56,28 @@ const UgoiraViewer: Component<Props> = (props) => {
         extracted.push({ url, delay: frameMeta.delay });
       }
 
-      if (extracted.length === 0) throw new Error("No frames found in ZIP");
+      if (extracted.length === 0) {
+        throw new Error("No frames found in ZIP");
+      }
 
       setFrames(extracted);
       setStatus("playing");
       scheduleNext(0, extracted);
-    } catch (e) {
-      console.error("[UgoiraViewer] Error:", e);
-      setError((e as Error).message || "加载动图失败");
+    } catch (error) {
+      console.error("[UgoiraViewer] Error:", error);
+      setError((error as Error).message || "加载动图失败");
       setStatus("paused");
     }
   });
 
   function scheduleNext(index: number, frameList: Frame[]) {
-    if (timer) clearTimeout(timer);
+    if (timer) {
+      clearTimeout(timer);
+    }
     const frame = frameList[index];
-    if (!frame) return;
+    if (!frame) {
+      return;
+    }
     setCurrentFrame(index);
     const nextIndex = (index + 1) % frameList.length;
     timer = setTimeout(() => scheduleNext(nextIndex, frameList), frame.delay);
@@ -73,7 +85,9 @@ const UgoiraViewer: Component<Props> = (props) => {
 
   function togglePause() {
     if (status() === "playing") {
-      if (timer) clearTimeout(timer);
+      if (timer) {
+        clearTimeout(timer);
+      }
       timer = null;
       setStatus("paused");
     } else if (status() === "paused" && frames().length > 0) {
@@ -83,7 +97,9 @@ const UgoiraViewer: Component<Props> = (props) => {
   }
 
   onCleanup(() => {
-    if (timer) clearTimeout(timer);
+    if (timer) {
+      clearTimeout(timer);
+    }
     for (const url of blobUrls) {
       URL.revokeObjectURL(url);
     }

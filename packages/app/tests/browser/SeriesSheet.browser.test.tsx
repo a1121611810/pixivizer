@@ -67,7 +67,7 @@ describe("SeriesSheet", () => {
       />
     ));
 
-    const item = await screen.findByRole("button", { name: /Target Novel/ });
+    const item = await screen.findByRole("button", { name: /Target Novel/u });
     fireEvent.click(item);
 
     expect(onClose).toHaveBeenCalledOnce();
@@ -89,7 +89,7 @@ describe("SeriesSheet", () => {
       />
     ));
 
-    const item = await screen.findByRole("button", { name: /当前章节：Target Novel/ });
+    const item = await screen.findByRole("button", { name: /当前章节：Target Novel/u });
     expect(item).not.toBeNull();
   });
 });

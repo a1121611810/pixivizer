@@ -55,7 +55,7 @@ export default defineConfig({
       "/pixiv-img": {
         target: "https://i.pximg.net",
         changeOrigin: true,
-        rewrite: (path: string) => path.replace(/^\/pixiv-img/, ""),
+        rewrite: (path: string) => path.replace(/^\/pixiv-img/u, ""),
         headers: {
           Referer: "https://app-api.pixiv.net/",
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
@@ -78,7 +78,7 @@ export default defineConfig({
       "/pixiv-re": {
         target: "https://i.pixiv.re",
         changeOrigin: true,
-        rewrite: (path: string) => path.replace(/^\/pixiv-re/, ""),
+        rewrite: (path: string) => path.replace(/^\/pixiv-re/u, ""),
         headers: {
           Referer: "https://app-api.pixiv.net/",
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
@@ -101,7 +101,7 @@ export default defineConfig({
       "/pixiv-nl": {
         target: "https://i.pixiv.nl",
         changeOrigin: true,
-        rewrite: (path: string) => path.replace(/^\/pixiv-nl/, ""),
+        rewrite: (path: string) => path.replace(/^\/pixiv-nl/u, ""),
         headers: {
           Referer: "https://app-api.pixiv.net/",
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
@@ -124,7 +124,7 @@ export default defineConfig({
       "/pixiv-api": {
         target: "https://app-api.pixiv.net",
         changeOrigin: true,
-        rewrite: (path: string) => path.replace(/^\/pixiv-api/, ""),
+        rewrite: (path: string) => path.replace(/^\/pixiv-api/u, ""),
         headers: {
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
           Referer: "https://app-api.pixiv.net/",
@@ -147,7 +147,7 @@ export default defineConfig({
       "/pixiv-oauth": {
         target: "https://oauth.secure.pixiv.net",
         changeOrigin: true,
-        rewrite: (path: string) => path.replace(/^\/pixiv-oauth/, ""),
+        rewrite: (path: string) => path.replace(/^\/pixiv-oauth/u, ""),
         headers: {
           "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
         },
@@ -170,13 +170,13 @@ export default defineConfig({
       "/github-api": {
         target: "https://api.github.com",
         changeOrigin: true,
-        rewrite: (path: string) => path.replace(/^\/github-api/, ""),
+        rewrite: (path: string) => path.replace(/^\/github-api/u, ""),
       },
       // Pixiv Web Ajax API — 用于评论等 web 端接口
       "/pixiv-www": {
         target: "https://www.pixiv.net",
         changeOrigin: true,
-        rewrite: (path: string) => path.replace(/^\/pixiv-www/, ""),
+        rewrite: (path: string) => path.replace(/^\/pixiv-www/u, ""),
         headers: {
           "User-Agent": "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36",
           Referer: "https://www.pixiv.net/",
@@ -239,7 +239,7 @@ export default defineConfig({
           "tests/**/*.e2e.ts",
           "tests/e2e/*.ts",
         ],
-        // override 设置 plugins 会替换（而非合并）基线列表，必须包含所有所需插件
+        // Override 设置 plugins 会替换（而非合并）基线列表，必须包含所有所需插件
         plugins: ["typescript", "unicorn", "oxc", "vitest"],
         env: { node: true },
         rules: {

@@ -306,11 +306,11 @@ describe("userIllustsStore", () => {
 
     it("saves positions independently per type", async () => {
       const store = await loadStore();
-      store.saveScrollPosition(50); // illust
+      store.saveScrollPosition(50); // Illust
       store.load(42, "manga");
-      store.saveScrollPosition(80); // manga
+      store.saveScrollPosition(80); // Manga
       store.load(42, "novel");
-      store.saveScrollPosition(200); // novel
+      store.saveScrollPosition(200); // Novel
       expect(store.getScrollPosition("illust")).toBe(50);
       expect(store.getScrollPosition("manga")).toBe(80);
       expect(store.getScrollPosition("novel")).toBe(200);

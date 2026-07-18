@@ -42,7 +42,8 @@ const IllustBookmarks: Component = () => {
   // Load data when restrict changes or when user becomes available
   createEffect(() => {
     const u = user();
-    restrict(); // track restrict changes
+    // Track restrict changes
+    restrict();
     if (u) {
       ensureLoaded();
     }

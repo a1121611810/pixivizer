@@ -1,6 +1,6 @@
-// sync-android-version.mjs
+// Sync-android-version.mjs
 // 从 package.json 读取 version，同步到 android/app/build.gradle 的 versionName 和 versionCode。
-// versionCode 生成规则：major×10000 + minor×100 + patch
+// VersionCode 生成规则：major×10000 + minor×100 + patch
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,16 +21,16 @@ if (parts.length !== 3 || parts.some(isNaN)) {
 }
 
 const [major, minor, patch] = parts;
-const versionCode = major * 10000 + minor * 100 + patch;
+const versionCode = major * 10_000 + minor * 100 + patch;
 
 const gradlePath = resolve(rootDir, "android", "app", "build.gradle");
 let gradle = readFileSync(gradlePath, "utf-8");
 
-const versionCodeBefore = gradle.match(/versionCode\s+(\d+)/)?.[1] ?? "?";
-const versionNameBefore = gradle.match(/versionName\s+"([^"]+)"/)?.[1] ?? "?";
+const versionCodeBefore = gradle.match(/versionCode\s+(\d+)/u)?.[1] ?? "?";
+const versionNameBefore = gradle.match(/versionName\s+"([^"]+)"/u)?.[1] ?? "?";
 
-gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`);
-gradle = gradle.replace(/versionName\s+"[^"]+"/, `versionName "${version}"`);
+gradle = gradle.replace(/versionCode\s+\d+/u, `versionCode ${versionCode}`);
+gradle = gradle.replace(/versionName\s+"[^"]+"/u, `versionName "${version}"`);
 
 writeFileSync(gradlePath, gradle, "utf-8");
 

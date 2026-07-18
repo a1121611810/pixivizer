@@ -32,7 +32,9 @@ export function measureTextWidth(
   fontWeight: number,
   fontFamily: string,
 ): number {
-  if (text.length === 0) return 0;
+  if (text.length === 0) {
+    return 0;
+  }
 
   const fontString = buildFontString(fontSize, fontWeight, fontFamily);
   if (isPretextSupported()) {

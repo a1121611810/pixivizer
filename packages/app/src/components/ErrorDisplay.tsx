@@ -114,8 +114,12 @@ const ErrorDisplay: Component<ErrorDisplayProps> = (props) => {
 
   // PROXY: show hint only when still logged in (OAuth proxy errors can happen during auth)
   const showHint = () => {
-    if (type() === ApiErrorType.UNAUTHORIZED) return hint();
-    if (type() === ApiErrorType.PROXY && !isLoggedIn()) return null;
+    if (type() === ApiErrorType.UNAUTHORIZED) {
+      return hint();
+    }
+    if (type() === ApiErrorType.PROXY && !isLoggedIn()) {
+      return null;
+    }
     return hint();
   };
 

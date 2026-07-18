@@ -56,8 +56,12 @@ export function createViewportLazy(options: ViewportLazyOptions = {}): ViewportL
 
   // ── IntersectionObserver 驱动 ──
   onMount(() => {
-    if (skipObserver || everVisible()) return;
-    if (!el) return;
+    if (skipObserver || everVisible()) {
+      return;
+    }
+    if (!el) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {

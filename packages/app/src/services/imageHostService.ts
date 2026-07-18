@@ -16,12 +16,16 @@ export function validateHostInput(input: HostInput): string | null {
   const name = input.name.trim();
   const baseUrl = input.baseUrl.trim();
 
-  if (!name) return "名称不能为空";
-  if (!baseUrl) return "代理 URL 不能为空";
+  if (!name) {
+    return "名称不能为空";
+  }
+  if (!baseUrl) {
+    return "代理 URL 不能为空";
+  }
 
   try {
     const url = new URL(baseUrl);
-    if (!/^https?:$/.test(url.protocol)) {
+    if (!/^https?:$/u.test(url.protocol)) {
       return "仅支持 http:// 或 https:// 协议";
     }
     if (url.hostname.includes("pximg.net")) {
@@ -35,9 +39,9 @@ export function validateHostInput(input: HostInput): string | null {
 }
 
 export function hasDuplicateBaseUrl(baseUrl: string, excludeId?: string): boolean {
-  const normalized = baseUrl.replace(/\/$/, "");
+  const normalized = baseUrl.replace(/\/$/u, "");
   return imageHostState().hosts.some(
-    (h) => h.id !== excludeId && h.baseUrl.replace(/\/$/, "") === normalized,
+    (h) => h.id !== excludeId && h.baseUrl.replace(/\/$/u, "") === normalized,
   );
 }
 
@@ -49,7 +53,9 @@ export function hasDuplicateBaseUrl(baseUrl: string, excludeId?: string): boolea
  * - 普通模式：仅替换 hostname，保留协议、路径、查询参数
  */
 export function transformUrl(originalUrl: string, baseUrl: string): string {
-  if (!originalUrl) return "";
+  if (!originalUrl) {
+    return "";
+  }
 
   try {
     if (baseUrl.includes("{path}")) {
@@ -71,14 +77,18 @@ export function transformUrl(originalUrl: string, baseUrl: string): string {
 /** 按权重随机选择一个启用的图床。 */
 export function selectWeightedHost(hosts: ImageHost[]): ImageHost | undefined {
   const enabled = hosts.filter((h) => h.enabled && h.weight > 0);
-  if (enabled.length === 0) return undefined;
+  if (enabled.length === 0) {
+    return undefined;
+  }
 
   const total = enabled.reduce((sum, h) => sum + h.weight, 0);
   let roll = Math.random() * total;
 
   for (const host of enabled) {
     roll -= host.weight;
-    if (roll <= 0) return host;
+    if (roll <= 0) {
+      return host;
+    }
   }
 
   return enabled[enabled.length - 1];
@@ -91,15 +101,21 @@ export function selectWeightedHost(hosts: ImageHost[]): ImageHost | undefined {
  * fastest-ip 模式若缓存过期，同样回退到加权选择。
  */
 export function getEffectiveImageUrl(originalUrl: string): string {
-  if (!isImageHostActive()) return originalUrl;
+  if (!isImageHostActive()) {
+    return originalUrl;
+  }
 
   const state = imageHostState();
   const enabled = getEnabledHosts();
-  if (enabled.length === 0) return originalUrl;
+  if (enabled.length === 0) {
+    return originalUrl;
+  }
 
   if (state.mode === "single") {
     const host = enabled.find((h) => h.id === state.selectedHostId);
-    if (host) return transformUrl(originalUrl, host.baseUrl);
+    if (host) {
+      return transformUrl(originalUrl, host.baseUrl);
+    }
     // 无选中或选中不可用，退回到第一个启用的
     return transformUrl(originalUrl, enabled[0].baseUrl);
   }
@@ -115,7 +131,9 @@ export function getEffectiveImageUrl(originalUrl: string): string {
 
   if (state.mode === "weighted" || state.mode === "fastest-ip") {
     const host = selectWeightedHost(enabled);
-    if (host) return transformUrl(originalUrl, host.baseUrl);
+    if (host) {
+      return transformUrl(originalUrl, host.baseUrl);
+    }
   }
 
   return transformUrl(originalUrl, enabled[0].baseUrl);
@@ -127,12 +145,16 @@ export function getEffectiveImageUrl(originalUrl: string): string {
  * 对于 fastest-ip 模式，若缓存已过期，会触发一次后台探测；
  * 但 probe 不阻塞当前加载，直接回退到加权选择返回，避免首屏等待。
  */
-export async function getEffectiveImageUrlAsync(originalUrl: string): Promise<string> {
-  if (!isImageHostActive()) return originalUrl;
+export function getEffectiveImageUrlAsync(originalUrl: string): Promise<string> {
+  if (!isImageHostActive()) {
+    return originalUrl;
+  }
 
   const state = imageHostState();
   const enabled = getEnabledHosts();
-  if (enabled.length === 0) return originalUrl;
+  if (enabled.length === 0) {
+    return originalUrl;
+  }
 
   if (state.mode === "fastest-ip") {
     const fastest = getFastestHost();
@@ -142,12 +164,16 @@ export async function getEffectiveImageUrlAsync(originalUrl: string): Promise<st
     // 无缓存时后台触发一次探测，不阻塞当前加载
     void probeHosts();
     const host = selectWeightedHost(enabled);
-    if (host) return transformUrl(originalUrl, host.baseUrl);
+    if (host) {
+      return transformUrl(originalUrl, host.baseUrl);
+    }
   }
 
   if (state.mode === "weighted") {
     const host = selectWeightedHost(enabled);
-    if (host) return transformUrl(originalUrl, host.baseUrl);
+    if (host) {
+      return transformUrl(originalUrl, host.baseUrl);
+    }
   }
 
   return transformUrl(originalUrl, enabled[0].baseUrl);
@@ -157,14 +183,18 @@ export async function getEffectiveImageUrlAsync(originalUrl: string): Promise<st
  * race 模式返回所有启用图床的 URL（并发竞速）；
  * 其他模式只返回 fetchWeb 传入的 targetUrl 原值（已是 getEffectiveImageUrl 选定的主机）。 */
 export function getRaceCandidateUrls(originalUrl: string): string[] {
-  if (!isImageHostActive()) return [originalUrl];
+  if (!isImageHostActive()) {
+    return [originalUrl];
+  }
   const enabled = getEnabledHosts();
-  if (enabled.length === 0) return [originalUrl];
-  // race 模式：返回所有启用主机的候选 URL
+  if (enabled.length === 0) {
+    return [originalUrl];
+  }
+  // Race 模式：返回所有启用主机的候选 URL
   if (imageHostState().mode === "race") {
     return enabled.map((host) => transformUrl(originalUrl, host.baseUrl));
   }
-  // weighted / fastest-ip / single：URL 已由 getEffectiveImageUrl 决定，不再变更
+  // Weighted / fastest-ip / single：URL 已由 getEffectiveImageUrl 决定，不再变更
   return [originalUrl];
 }
 
@@ -180,7 +210,9 @@ function isImageHostActive(): boolean {
  */
 export async function probeHosts(): Promise<ProbeResult[]> {
   const enabled = getEnabledHosts();
-  if (enabled.length === 0) return [];
+  if (enabled.length === 0) {
+    return [];
+  }
 
   const probeUrl = buildProbeSampleUrl();
 
@@ -189,7 +221,7 @@ export async function probeHosts(): Promise<ProbeResult[]> {
     const start = performance.now();
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5_000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
       const resp = await fetch(url, {
         method: "HEAD",
         mode: "no-cors",
@@ -197,7 +229,7 @@ export async function probeHosts(): Promise<ProbeResult[]> {
       });
       clearTimeout(timeoutId);
       const latency = Math.round(performance.now() - start);
-      // no-cors  opaque response status 为 0，视为可达
+      // No-cors  opaque response status 为 0，视为可达
       return {
         hostId: host.id,
         hostName: host.name,

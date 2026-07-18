@@ -10,7 +10,8 @@ interface CacheEntry {
 }
 
 const MAX_CACHE_ENTRIES = 3;
-const WIDTH_TOLERANCE = 1; // 变化绝对值严格小于 1px 视为命中
+// 变化绝对值严格小于 1px 视为命中
+const WIDTH_TOLERANCE = 1;
 
 const cache: CacheEntry[] = [];
 
@@ -70,7 +71,9 @@ function createCache(): NovelTextLayoutCache {
   return {
     get(novelId, containerWidth, settings) {
       const index = findEntryIndex(novelId, containerWidth, settings);
-      if (index === -1) return undefined;
+      if (index === -1) {
+        return undefined;
+      }
 
       const entry = cache[index];
       // 更新宽度为最新值，并移动到末尾表示最近使用

@@ -69,8 +69,12 @@ interface Props {
 }
 
 function fmtNum(n: number | undefined): string {
-  if (n == null) return "—";
-  if (n >= 10000) return `${(n / 10000).toFixed(1)}万`;
+  if (n == null) {
+    return "—";
+  }
+  if (n >= 10_000) {
+    return `${(n / 10_000).toFixed(1)}万`;
+  }
   return String(n);
 }
 
@@ -111,8 +115,11 @@ const PersonalCenter: Component<Props> = (props) => {
     rootMargin: "200px",
     enabled: () => !loading(),
     onTrigger: () => {
-      if (activeTab() === "following") loadMoreFollowing();
-      else loadMoreFollowers();
+      if (activeTab() === "following") {
+        loadMoreFollowing();
+      } else {
+        loadMoreFollowers();
+      }
     },
   });
 
@@ -225,10 +232,12 @@ const PersonalCenter: Component<Props> = (props) => {
                   }}
                   onClick={async () => {
                     const vu = viewedUser();
-                    if (!vu) return;
+                    if (!vu) {
+                      return;
+                    }
                     const prev = vu.is_followed ?? false;
                     vu.is_followed = !prev;
-                    // trigger reactive update
+                    // Trigger reactive update
                     loadProfile(vu.id);
                     try {
                       if (prev) {

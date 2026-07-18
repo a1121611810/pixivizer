@@ -2,7 +2,6 @@ import { createStore, produce } from "solid-js/store";
 import { batch, createEffect, createRoot } from "solid-js";
 import { loadRecommended, loadFollow, loadNext } from "../api/illust";
 import type { PixivIllust, ContentType, ApiError } from "../api/types";
-import { ApiErrorType } from "../api/types";
 import { currentTab } from "./uiStore";
 import { filterFeedIllusts } from "../utils/r18Filter";
 import { toApiError, pickBestErrorType } from "../api/client";
@@ -22,13 +21,13 @@ const pendingRefreshKeys = new Set<string>();
  */
 function getRefreshSourceKeys(tab: string): string[] {
   if (tab === "follow") {
-    // fetchFollow 始终同时加载 public + private
+    // FetchFollow 始终同时加载 public + private
     return ["follow_public", "follow_private"];
   }
   if (tab === "recommended") {
     const subTab = state.recommendSubTab;
     if (subTab === "mixed") {
-      // fetchMixed 同时加载 illust + manga
+      // FetchMixed 同时加载 illust + manga
       return ["recommended_illust", "recommended_manga"];
     }
     // 单一子标签只加载对应数据源
@@ -51,10 +50,10 @@ const [state, setState] = createStore({
 // ── Tab cache (non-reactive data store) ──
 // Caches raw API data per tab so tab switching doesn't re-fetch.
 // Follow-specific keys used:
-//   tabIllusts["follow_public"], tabNextUrl["follow_public"]
-//   tabIllusts["follow_private"], tabNextUrl["follow_private"]
+//   TabIllusts["follow_public"], tabNextUrl["follow_public"]
+//   TabIllusts["follow_private"], tabNextUrl["follow_private"]
 // Recommended sub-tab keys:
-//   tabIllusts["recommended_mixed"], tabIllusts["recommended_illust"], tabIllusts["recommended_manga"]
+//   TabIllusts["recommended_mixed"], tabIllusts["recommended_illust"], tabIllusts["recommended_manga"]
 /** @deprecated 迁移到 tabScrollState */
 const tabScrollY: Record<string, number> = {};
 
@@ -117,15 +116,25 @@ function mergeAndSort(a: PixivIllust[], b: PixivIllust[]): PixivIllust[] {
  */
 export function computeFollowIllusts(): PixivIllust[] {
   const tab = currentTab();
-  if (tab !== "follow") return filterFeedIllusts(tabIllusts[tab] ?? []);
+  if (tab !== "follow") {
+    return filterFeedIllusts(tabIllusts[tab] ?? []);
+  }
   const fTab = state.followTab;
-  if (fTab === "public") return filterFeedIllusts(tabIllusts["follow_public"] ?? []);
-  if (fTab === "private") return filterFeedIllusts(tabIllusts["follow_private"] ?? []);
+  if (fTab === "public") {
+    return filterFeedIllusts(tabIllusts["follow_public"] ?? []);
+  }
+  if (fTab === "private") {
+    return filterFeedIllusts(tabIllusts["follow_private"] ?? []);
+  }
   // "all" — merge both sources
   const pub = tabIllusts["follow_public"] ?? [];
   const priv = tabIllusts["follow_private"] ?? [];
-  if (pub.length === 0) return filterFeedIllusts(priv);
-  if (priv.length === 0) return filterFeedIllusts(pub);
+  if (pub.length === 0) {
+    return filterFeedIllusts(priv);
+  }
+  if (priv.length === 0) {
+    return filterFeedIllusts(pub);
+  }
   return filterFeedIllusts(mergeAndSort(pub, priv));
 }
 
@@ -148,7 +157,7 @@ export function computeMixedIllusts(): PixivIllust[] {
       combined.push(item);
     }
   };
-  // toSorted() is ES2023; use copied arrays + sort() for older runtimes.
+  // ToSorted() is ES2023; use copied arrays + sort() for older runtimes.
   const sortedIllust = [...illust].sort(byCreateDateDesc); // oxlint-disable-line unicorn/no-array-sort
   const sortedManga = [...manga].sort(byCreateDateDesc); // oxlint-disable-line unicorn/no-array-sort
   // 按时间降序合并（归并），同时去重
@@ -161,8 +170,12 @@ export function computeMixedIllusts(): PixivIllust[] {
       pushIfNotDuplicate(sortedManga[j++]);
     }
   }
-  while (i < sortedIllust.length) pushIfNotDuplicate(sortedIllust[i++]);
-  while (j < sortedManga.length) pushIfNotDuplicate(sortedManga[j++]);
+  while (i < sortedIllust.length) {
+    pushIfNotDuplicate(sortedIllust[i++]);
+  }
+  while (j < sortedManga.length) {
+    pushIfNotDuplicate(sortedManga[j++]);
+  }
   return filterFeedIllusts(combined);
 }
 
@@ -313,7 +326,9 @@ export async function refresh(signal?: AbortSignal) {
 
   // 检查是否有需要的数据源正在刷新中
   for (const key of sourceKeys) {
-    if (pendingRefreshKeys.has(key)) return;
+    if (pendingRefreshKeys.has(key)) {
+      return;
+    }
   }
 
   // 锁定数据源
@@ -354,7 +369,7 @@ export function saveTabScroll(tab: string) {
   if (tab === "recommended") {
     const key = `recommended_${recommendSubTab()}`;
     // For mixed sub-tab the source keys (recommended_illust / recommended_manga)
-    // already hold the truth; state.nextUrl is just a derived value.
+    // Already hold the truth; state.nextUrl is just a derived value.
     if (recommendSubTab() !== "mixed") {
       tabNextUrl[key] = state.nextUrl;
     }
@@ -366,7 +381,7 @@ export function saveTabScroll(tab: string) {
 }
 
 export function markFeedMounted() {
-  // no-op: lifecycle hook for Feed component
+  // No-op: lifecycle hook for Feed component
 }
 
 export function isFeedCached(tab?: string) {
@@ -433,14 +448,14 @@ export async function fetchRecommended(contentType: ContentType = "illust", sign
         setState("nextUrl", data.next_url);
       });
     }
-  } catch (e) {
-    setState("error", toApiError(e));
+  } catch (error) {
+    setState("error", toApiError(error));
   } finally {
     setState("loading", false);
   }
 }
 
-export async function fetchManga(signal?: AbortSignal) {
+export function fetchManga(signal?: AbortSignal) {
   return fetchRecommended("manga", signal);
 }
 
@@ -493,7 +508,9 @@ export async function fetchMixed(signal?: AbortSignal) {
 }
 
 export async function fetchMoreMixed(signal?: AbortSignal) {
-  if (state.loading) return;
+  if (state.loading) {
+    return;
+  }
   setState("loading", true);
   setState("error", null);
 
@@ -511,14 +528,16 @@ export async function fetchMoreMixed(signal?: AbortSignal) {
       key: "recommended_illust" | "recommended_manga",
     ): Promise<boolean> => {
       const next = tabNextUrl[key];
-      if (!next) return false;
+      if (!next) {
+        return false;
+      }
       try {
         const data = await loadNext(next, signal);
         tabIllusts[key] = [...(tabIllusts[key] || []), ...data.illusts];
         tabNextUrl[key] = data.next_url;
         return true;
-      } catch (e) {
-        errors.push(toApiError(e));
+      } catch (error) {
+        errors.push(toApiError(error));
         return false;
       }
     };
@@ -602,7 +621,9 @@ export async function fetchFollow(signal?: AbortSignal) {
 }
 
 export async function fetchMore(signal?: AbortSignal) {
-  if (state.loading) return;
+  if (state.loading) {
+    return;
+  }
   const tab = currentTab();
   if (tab === "recommended" && recommendSubTab() === "mixed") {
     return fetchMoreMixed(signal);
@@ -614,7 +635,9 @@ export async function fetchMore(signal?: AbortSignal) {
           ? "recommended_illust"
           : "recommended_manga"
         : tab;
-    if (!state.nextUrl) return;
+    if (!state.nextUrl) {
+      return;
+    }
     setState("loading", true);
     setState("error", null);
     try {
@@ -629,8 +652,8 @@ export async function fetchMore(signal?: AbortSignal) {
           }),
         );
       });
-    } catch (e) {
-      setState("error", toApiError(e));
+    } catch (error) {
+      setState("error", toApiError(error));
     } finally {
       setState("loading", false);
     }
@@ -676,7 +699,7 @@ export async function fetchMore(signal?: AbortSignal) {
       );
     } else {
       // "all" mode — load the source with older tail first;
-      // if that source is exhausted, fall through to the other.
+      // If that source is exhausted, fall through to the other.
       const pubIllusts = tabIllusts["follow_public"] || [];
       const privIllusts = tabIllusts["follow_private"] || [];
       const pubOldest =
@@ -694,7 +717,9 @@ export async function fetchMore(signal?: AbortSignal) {
 
       const loadSource = async (key: "follow_public" | "follow_private"): Promise<boolean> => {
         const next = tabNextUrl[key];
-        if (!next) return false;
+        if (!next) {
+          return false;
+        }
         const data = await loadNext(next, signal);
         tabIllusts[key] = [...(tabIllusts[key] || []), ...data.illusts];
         tabNextUrl[key] = data.next_url;
@@ -717,8 +742,8 @@ export async function fetchMore(signal?: AbortSignal) {
         return;
       }
     }
-  } catch (e) {
-    setState("error", toApiError(e));
+  } catch (error) {
+    setState("error", toApiError(error));
   } finally {
     setState("loading", false);
   }

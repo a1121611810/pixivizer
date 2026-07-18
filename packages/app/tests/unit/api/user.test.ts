@@ -19,7 +19,7 @@ describe("api/user.ts", () => {
   it("getUserDetail calls apiClient.get with user_id and filter", async () => {
     mockGet.mockResolvedValue({ user: {}, profile: {} });
     const { getUserDetail } = await loadApi();
-    await getUserDetail(12345);
+    await getUserDetail(12_345);
 
     expect(mockGet).toHaveBeenCalledWith("/v1/user/detail", {
       user_id: "12345",
@@ -30,7 +30,7 @@ describe("api/user.ts", () => {
   it("getUserFollowing calls apiClient.get with user_id and restrict default", async () => {
     mockGet.mockResolvedValue({ user_previews: [], next_url: null });
     const { getUserFollowing } = await loadApi();
-    await getUserFollowing(67890);
+    await getUserFollowing(67_890);
 
     expect(mockGet).toHaveBeenCalledWith("/v1/user/following", {
       user_id: "67890",
@@ -41,7 +41,7 @@ describe("api/user.ts", () => {
   it("getUserFollowing includes offset when provided", async () => {
     mockGet.mockResolvedValue({ user_previews: [], next_url: null });
     const { getUserFollowing } = await loadApi();
-    await getUserFollowing(67890, "private", 30);
+    await getUserFollowing(67_890, "private", 30);
 
     expect(mockGet).toHaveBeenCalledWith("/v1/user/following", {
       user_id: "67890",
@@ -53,7 +53,7 @@ describe("api/user.ts", () => {
   it("getUserFollowers calls apiClient.get with user_id", async () => {
     mockGet.mockResolvedValue({ user_previews: [], next_url: null });
     const { getUserFollowers } = await loadApi();
-    await getUserFollowers(11111);
+    await getUserFollowers(11_111);
 
     expect(mockGet).toHaveBeenCalledWith("/v1/user/follower", {
       user_id: "11111",
@@ -63,7 +63,7 @@ describe("api/user.ts", () => {
   it("getUserFollowers includes offset when provided", async () => {
     mockGet.mockResolvedValue({ user_previews: [], next_url: null });
     const { getUserFollowers } = await loadApi();
-    await getUserFollowers(11111, 20);
+    await getUserFollowers(11_111, 20);
 
     expect(mockGet).toHaveBeenCalledWith("/v1/user/follower", {
       user_id: "11111",

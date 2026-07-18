@@ -21,7 +21,9 @@ export async function loadNovelImageDimensions(
   images: NovelImagesMap,
 ): Promise<NovelImageDimensions> {
   const entries = Object.entries(images);
-  if (entries.length === 0) return {};
+  if (entries.length === 0) {
+    return {};
+  }
 
   const results: NovelImageDimensions = {};
 
@@ -30,10 +32,14 @@ export async function loadNovelImageDimensions(
     entries.map(async ([id, item]): Promise<ImageSizeInput> => {
       const thumbUrl = resolveImageUrl(item.urls["128x128"]);
       const loaded = await loadImage(thumbUrl);
-      if (!loaded.url) throw new Error(`Failed to load thumbnail for ${id}`);
+      if (!loaded.url) {
+        throw new Error(`Failed to load thumbnail for ${id}`);
+      }
 
       const response = await fetch(loaded.url);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
       const blob = await response.blob();
       return { id, blob };
@@ -51,7 +57,9 @@ export async function loadNovelImageDimensions(
     }
   }
 
-  if (items.length === 0) return results;
+  if (items.length === 0) {
+    return results;
+  }
 
   // 2. 优先使用 Worker 批量测量
   const workerOutputs: ImageSizeOutput[] = [];
@@ -60,8 +68,11 @@ export async function loadNovelImageDimensions(
     try {
       const workerResults = await worker.measureImages(items);
       workerOutputs.push(...workerResults);
-    } catch (e) {
-      console.warn("[novelImageDimensions] Worker measurement failed, fallback to main thread", e);
+    } catch (error) {
+      console.warn(
+        "[novelImageDimensions] Worker measurement failed, fallback to main thread",
+        error,
+      );
     }
   }
 

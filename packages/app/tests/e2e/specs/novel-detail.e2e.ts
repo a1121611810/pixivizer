@@ -24,7 +24,7 @@ test.describe("Novel Detail", () => {
 
     // Wait for a novel card cover image to appear
     const cover = page.locator("img[alt]").first();
-    await expect(cover).toBeVisible({ timeout: 15000 });
+    await expect(cover).toBeVisible({ timeout: 15_000 });
 
     // Get the novel title from the alt text
     const novelTitle = await cover.getAttribute("alt");
@@ -34,14 +34,14 @@ test.describe("Novel Detail", () => {
     // The card wrapper is the clickable parent of the cover image
     const card = cover.locator("..").locator("..").locator("..");
     await card.click();
-    await expect(page).toHaveURL(/\/novel\/\d+/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/novel\/\d+/u, { timeout: 10_000 });
 
     // 6. Wait for the detail page to load
     await page.waitForTimeout(2000);
 
     // 7. Verify the header title span exists (initially invisible)
     // The header h1 contains "小说" + a span with the title in 《》
-    const headerTitleSpan = page.locator("h1 span").filter({ hasText: /《.+》/ });
+    const headerTitleSpan = page.locator("h1 span").filter({ hasText: /《.+》/u });
     await expect(headerTitleSpan).toBeAttached({ timeout: 5000 });
 
     // 8. Check initial state: the title span should have opacity-0 class

@@ -65,7 +65,9 @@ function handleThemeChange(newTheme: Theme) {
 }
 
 async function handleCheckUpdate() {
-  if (isCheckingUpdate()) return;
+  if (isCheckingUpdate()) {
+    return;
+  }
   setIsCheckingUpdate(true);
   const result = await checkForUpdate();
   setHasUpdate(result.hasUpdate);
@@ -84,8 +86,12 @@ function openDeleteAccountPage() {
 }
 
 function fmtNum(n: number | undefined): string {
-  if (n == null) return "—";
-  if (n >= 10000) return `${(n / 10000).toFixed(1)}万`;
+  if (n == null) {
+    return "—";
+  }
+  if (n >= 10_000) {
+    return `${(n / 10_000).toFixed(1)}万`;
+  }
   return String(n);
 }
 
@@ -181,7 +187,8 @@ const SettingsDrawer: Component = () => {
   createEffect(() => {
     if (showSettingsDrawer()) {
       setProfileError(false);
-      loadProfile().catch(() => setProfileError(true)); // 利用缓存，几乎零成本
+      // 利用缓存，几乎零成本
+      loadProfile().catch(() => setProfileError(true));
       pushOverlay("settingsDrawer", closeSettingsDrawer);
 
       onCleanup(() => {
@@ -213,7 +220,9 @@ const SettingsDrawer: Component = () => {
   // Drawer 控制器 — fluent-drawer 使用 show()/hide() 方法，不支持 open 属性
   createEffect(() => {
     const drawerEl = document.querySelector("fluent-drawer");
-    if (!drawerEl) return;
+    if (!drawerEl) {
+      return;
+    }
     if (showSettingsDrawer()) {
       drawerEl.show();
     } else {

@@ -59,7 +59,9 @@ function mockRecommendedResponses(
   mangaResponse: { illusts: PixivIllust[]; next_url: string | null },
 ) {
   vi.mocked(loadRecommended).mockImplementation(async (type) => {
-    if (type === "manga") return mangaResponse;
+    if (type === "manga") {
+      return mangaResponse;
+    }
     return illustResponse;
   });
 }
@@ -132,7 +134,9 @@ describe("fetchMixed", () => {
   it("shows partial data when one source fails", async () => {
     (globalThis as any).window = { scrollY: 0 };
     vi.mocked(loadRecommended).mockImplementation(async (type) => {
-      if (type === "manga") throw new Error("manga error");
+      if (type === "manga") {
+        throw new Error("manga error");
+      }
       return { illusts: [createIllust(1, "2026-07-01T09:00:00+09:00", "illust")], next_url: null };
     });
 
@@ -329,7 +333,7 @@ describe("fetchMoreMixed", () => {
           next_url: null,
         };
       }
-      // illust 的新一页返回了一个与 manga 已有作品 id=2 相同 id 的作品
+      // Illust 的新一页返回了一个与 manga 已有作品 id=2 相同 id 的作品
       return {
         illusts: [
           createIllust(2, "2026-07-01T10:00:00+09:00", "illust"),
@@ -352,7 +356,7 @@ describe("fetchMoreMixed", () => {
     expect(new Set(ids).size).toBe(ids.length);
 
     // 第二次 fetchMoreMixed: manga 已无下一页，fallback 到 illust
-    // illust 返回了 id=2 (重复) 和 id=4 (新)
+    // Illust 返回了 id=2 (重复) 和 id=4 (新)
     await fetchMoreMixed();
     ids = illusts().map((i) => i.id);
     expect(ids).toEqual([1, 2, 3, 4]);
@@ -722,7 +726,7 @@ describe("refresh concurrent lock", () => {
     // 第二次刷新应被 pendingRefreshKeys 阻止，立即返回
     await refresh();
 
-    // loadFollow 应只被首次刷新调用（public + private = 2 次）
+    // LoadFollow 应只被首次刷新调用（public + private = 2 次）
     expect(loadFollow).toHaveBeenCalledTimes(2);
 
     // 让首次刷新完成，避免悬空 promise
@@ -747,11 +751,11 @@ describe("refresh concurrent lock", () => {
     const firstRefresh = refresh();
 
     // 切换到 mixed 子标签并尝试刷新
-    // mixed 锁 recommended_illust + recommended_manga，而 recommended_illust 已被锁
+    // Mixed 锁 recommended_illust + recommended_manga，而 recommended_illust 已被锁
     setRecommendSubTab("mixed");
     await refresh();
 
-    // loadRecommended 应只被首次刷新调用（1 次）
+    // LoadRecommended 应只被首次刷新调用（1 次）
     expect(loadRecommended).toHaveBeenCalledTimes(1);
 
     resolveRec!({ illusts: [createIllust(1, "2026-07-01T12:00:00+09:00")], next_url: null });
@@ -767,13 +771,15 @@ describe("refresh concurrent lock", () => {
       resolveIllust = r;
     });
     vi.mocked(loadRecommended).mockImplementation(async (type) => {
-      if (type === "illust") return deferred;
+      if (type === "illust") {
+        return deferred;
+      }
       return { illusts: [createIllust(2, "2026-07-01T10:00:00+09:00", "manga")], next_url: null };
     });
 
     const { setRecommendSubTab, refresh } = await import("@/stores/feedStore");
 
-    // illust 子标签刷新 — 挂起
+    // Illust 子标签刷新 — 挂起
     setRecommendSubTab("illust");
     const firstRefresh = refresh();
 
@@ -781,7 +787,7 @@ describe("refresh concurrent lock", () => {
     setRecommendSubTab("manga");
     await refresh();
 
-    // loadRecommended 应被调用 2 次：第一次 illust，第二次 manga
+    // LoadRecommended 应被调用 2 次：第一次 illust，第二次 manga
     expect(loadRecommended).toHaveBeenCalledTimes(2);
     expect(loadRecommended).toHaveBeenCalledWith("illust", undefined);
     expect(loadRecommended).toHaveBeenCalledWith("manga", undefined);
@@ -802,7 +808,7 @@ describe("refresh concurrent lock", () => {
 
     const { refresh } = await import("@/stores/feedStore");
 
-    // follow 刷新 — 挂起（锁 follow_public + follow_private）
+    // Follow 刷新 — 挂起（锁 follow_public + follow_private）
     const firstRefresh = refresh();
 
     // 切换到 recommended 标签并刷新 — 应通过（不同数据源）

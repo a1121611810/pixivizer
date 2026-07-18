@@ -118,9 +118,9 @@ const SeriesSheet: Component<Props> = (props) => {
           nextUrl: result.next_url,
         });
       }
-    } catch (e) {
+    } catch (error) {
       if (!abortController.signal.aborted) {
-        setError((e as { message?: string }).message ?? "加载失败");
+        setError((error as { message?: string }).message ?? "加载失败");
       }
     } finally {
       if (!abortController.signal.aborted) {
@@ -130,17 +130,21 @@ const SeriesSheet: Component<Props> = (props) => {
   }
 
   async function loadMore() {
-    if (!hasMore() || loadingMore() || loading()) return;
+    if (!hasMore() || loadingMore() || loading()) {
+      return;
+    }
     const url = nextUrl();
-    if (!url) return;
+    if (!url) {
+      return;
+    }
 
     setLoadingMore(true);
 
     try {
       const result = await loadSeriesNext(url);
       applyResult(result, true);
-    } catch (e) {
-      setError((e as { message?: string }).message ?? "加载失败");
+    } catch (error) {
+      setError((error as { message?: string }).message ?? "加载失败");
     } finally {
       setLoadingMore(false);
     }
@@ -166,9 +170,9 @@ const SeriesSheet: Component<Props> = (props) => {
           });
         }
       })
-      .catch((e) => {
+      .catch((error) => {
         if (!abortController?.signal.aborted) {
-          setError((e as { message?: string }).message ?? "加载失败");
+          setError((error as { message?: string }).message ?? "加载失败");
         }
       })
       .finally(() => {
@@ -192,7 +196,9 @@ const SeriesSheet: Component<Props> = (props) => {
   // 自动加载直到找到 activeNovelId，并滚动到可视区域
   createEffect(() => {
     const activeId = props.activeNovelId;
-    if (activeId == null || hasScrolledToActive()) return;
+    if (activeId == null || hasScrolledToActive()) {
+      return;
+    }
 
     const currentNovels = novels();
     const found = currentNovels.some((n) => n.id === activeId);

@@ -1,7 +1,7 @@
 import { type Component, createSignal, onMount } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import { loginWithToken, isLoggedIn } from "../stores/authStore";
-import { ApiErrorType, type ApiError } from "../api/types";
+import { type ApiError } from "../api/types";
 import { toApiError } from "../api/client";
 import ErrorDisplay from "../components/ErrorDisplay";
 
@@ -30,7 +30,9 @@ const Login: Component = () => {
   const [error, setError] = createSignal<ApiError | null>(null);
 
   onMount(() => {
-    if (isLoggedIn()) void navigate({ to: "/recommended", replace: true });
+    if (isLoggedIn()) {
+      void navigate({ to: "/recommended", replace: true });
+    }
   });
 
   const handleSubmit = async (e: Event) => {
@@ -40,8 +42,8 @@ const Login: Component = () => {
     try {
       await loginWithToken(tokenInput().trim());
       void navigate({ to: "/recommended", replace: true });
-    } catch (err) {
-      setError(toApiError(err, "登录失败"));
+    } catch (error) {
+      setError(toApiError(error, "登录失败"));
     } finally {
       setSubmitting(false);
     }

@@ -140,7 +140,7 @@ describe("NovelDetail scroll-header", () => {
     expect(toolbar).not.toBeNull();
 
     // Verify it uses translateY for show/hide
-    const style = toolbar!.getAttribute("style")?.replace(/\s+/g, " ");
+    const style = toolbar!.getAttribute("style")?.replace(/\s+/gu, " ");
     expect(style).toContain("transform");
     expect(style).toContain("translateY(0");
 

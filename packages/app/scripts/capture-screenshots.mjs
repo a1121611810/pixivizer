@@ -93,7 +93,7 @@ function makeMockIllust(id, title, width, height) {
     id,
     title,
     type: "illust",
-    user: makeMockUser(100000 + id),
+    user: makeMockUser(100_000 + id),
     image_urls: {
       square_medium: "/pixiv-img/sample.png",
       medium: "/pixiv-img/sample.png",
@@ -132,7 +132,7 @@ async function interceptApi(page) {
         response: {
           access_token: "fake-access-token",
           refresh_token: REFRESH_TOKEN,
-          user: makeMockUser(123456),
+          user: makeMockUser(123_456),
           expires_in: 3600,
           token_type: "Bearer",
         },
@@ -193,7 +193,7 @@ async function interceptApi(page) {
  */
 async function seedFakeToken(page) {
   // @aparajita/capacitor-secure-storage web implementation stores JSON-stringified
-  // values under the "capacitor-storage_" prefix.
+  // Values under the "capacitor-storage_" prefix.
   await page.evaluate((token) => {
     localStorage.setItem("capacitor-storage_refresh_token", JSON.stringify(token));
   }, REFRESH_TOKEN);
@@ -254,8 +254,9 @@ async function safeScreenshot(page, filename, contextLabel) {
     log(`Capturing ${filename} at ${url}`);
     const buffer = await page.screenshot({ type: "png", fullPage: false });
     saveScreenshot(buffer, filename);
-  } catch (err) {
-    warn(`Failed to capture ${filename} (${contextLabel}): ${/** @type {Error} */ (err).message}`);
+  } catch (error) {
+    const err = /** @type {Error} */ (error);
+    warn(`Failed to capture ${filename} (${contextLabel}): ${err.message}`);
   }
 }
 
@@ -268,15 +269,15 @@ async function safeScreenshot(page, filename, contextLabel) {
 async function fullNavigate(page, url) {
   try {
     log(`Navigating to ${url}`);
-    await page.goto(url, { waitUntil: "networkidle", timeout: 10000 });
+    await page.goto(url, { waitUntil: "networkidle", timeout: 10_000 });
     log(`Navigation complete: ${page.url()}`);
-  } catch (err) {
-    warn(`Navigation to ${url} failed: ${err.message}; retrying with load`);
+  } catch (error) {
+    warn(`Navigation to ${url} failed: ${error.message}; retrying with load`);
     try {
-      await page.goto(url, { waitUntil: "load", timeout: 10000 });
+      await page.goto(url, { waitUntil: "load", timeout: 10_000 });
       log(`Retry navigation complete: ${page.url()}`);
-    } catch (err2) {
-      warn(`Retry navigation to ${url} also failed: ${err2.message}; current url: ${page.url()}`);
+    } catch (error) {
+      warn(`Retry navigation to ${url} also failed: ${error.message}; current url: ${page.url()}`);
     }
   }
 }
@@ -295,8 +296,9 @@ async function captureCurrent(page, filename, contextLabel, beforeCapture) {
   if (beforeCapture) {
     try {
       await beforeCapture(page);
-    } catch (err) {
-      warn(`Pre-capture step failed for ${filename}: ${/** @type {Error} */ (err).message}`);
+    } catch (error) {
+      const err = /** @type {Error} */ (error);
+      warn(`Pre-capture step failed for ${filename}: ${err.message}`);
     }
   }
 
@@ -322,18 +324,18 @@ async function main() {
   await interceptApi(page);
 
   // Seed token and load the app once so RootLayout can complete auth init
-  // before we capture authenticated routes.
+  // Before we capture authenticated routes.
   await fullNavigate(page, `${BASE_URL}/login`);
   await seedFakeToken(page);
   // Reload so the app reads the seeded token and completes initializeAuth.
-  await page.reload({ waitUntil: "networkidle", timeout: 10000 });
+  await page.reload({ waitUntil: "networkidle", timeout: 10_000 });
   log(`App loaded at: ${page.url()}`);
 
   // If auth redirect didn't fire (Login.tsx onMount ran before auth completed),
-  // navigate to /recommended manually.
+  // Navigate to /recommended manually.
   if (page.url().includes("/login")) {
     log("Auth redirect did not fire automatically; navigating to /recommended");
-    await page.goto(`${BASE_URL}/recommended`, { waitUntil: "networkidle", timeout: 10000 });
+    await page.goto(`${BASE_URL}/recommended`, { waitUntil: "networkidle", timeout: 10_000 });
     log(`After manual navigation: ${page.url()}`);
   }
 
@@ -361,7 +363,7 @@ async function main() {
   // 03 — Settings sheet
   // Ensure we're on a page with the settings button
   if (!page.url().includes("/recommended") && !page.url().includes("/following")) {
-    await page.goto(`${BASE_URL}/recommended`, { waitUntil: "networkidle", timeout: 10000 });
+    await page.goto(`${BASE_URL}/recommended`, { waitUntil: "networkidle", timeout: 10_000 });
   }
   await captureCurrent(page, "03_settings.png", "/recommended", async (p) => {
     await dismissAgeGate(p);
@@ -411,7 +413,7 @@ async function main() {
   log("Screenshot capture complete.");
 }
 
-main().catch((err) => {
-  console.error("[capture-screenshots] Fatal error:", err);
+main().catch((error) => {
+  console.error("[capture-screenshots] Fatal error:", error);
   process.exit(1);
 });

@@ -133,7 +133,9 @@ export function createNovelVirtualLayout(
 
     const cache = getNovelTextLayoutCache();
     const cached = cache.get(id, width, settings);
-    if (cached) return cached;
+    if (cached) {
+      return cached;
+    }
 
     const result = createNovelTextLayout({
       paragraphs,
@@ -157,7 +159,9 @@ export function createNovelVirtualLayout(
     const spacing = paragraphSpacing();
     const textLayout = textLayoutResult();
 
-    if (width <= 0) return [];
+    if (width <= 0) {
+      return [];
+    }
 
     let offset = 0;
     let textIndex = 0;
@@ -190,7 +194,9 @@ export function createNovelVirtualLayout(
 
   const totalHeight = createMemo(() => {
     const layouts = blockLayouts();
-    if (layouts.length === 0) return 0;
+    if (layouts.length === 0) {
+      return 0;
+    }
     const last = layouts[layouts.length - 1];
     return last.offset + last.height;
   });
@@ -239,20 +245,23 @@ export function createNovelVirtualLayout(
     } as any);
     instance.measure();
     const items = instance.getVirtualItems();
-    if (typeof window !== "undefined")
+    if (typeof window !== "undefined") {
       console.log("[DEBUG-v6m] setVItems:", {
         layouts: layouts.length,
         items: items.length,
         totalSize: instance.getTotalSize(),
         scrollRect: (instance as any).scrollRect,
       });
+    }
     setVItems([...items] as any);
     setVTotalSize(instance.getTotalSize());
   });
 
   // Scroll listener
   createEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      return;
+    }
     const onScroll = () => {
       (instance as any).scrollOffset = window.scrollY;
       (instance as any)._willUpdate?.();
@@ -280,10 +289,14 @@ export function createNovelVirtualLayout(
     const layouts = blockLayouts();
     const textLayout = textLayoutResult();
     const textParagraph = textLayout.paragraphs[paragraphIndex];
-    if (!textParagraph) return;
+    if (!textParagraph) {
+      return;
+    }
 
     const block = layouts.find((l) => l.block.type === "text" && l.block.index === paragraphIndex);
-    if (!block || !block.textParagraph) return;
+    if (!block || !block.textParagraph) {
+      return;
+    }
 
     const charOffset =
       textLayout.getOffsetByCharIndex(paragraphIndex, charIndex) - textParagraph.offset;
@@ -300,7 +313,9 @@ export function createNovelVirtualLayout(
     let nearest: BlockLayout | undefined;
 
     for (const layout of layouts) {
-      if (layout.block.type !== "text" || !layout.textParagraph) continue;
+      if (layout.block.type !== "text" || !layout.textParagraph) {
+        continue;
+      }
       nearest = layout;
       if (st >= layout.offset && st < layout.offset + layout.height) {
         target = layout;

@@ -187,9 +187,9 @@ describe("NovelVirtualFeed", () => {
       const novels = createNovels(20);
       const [width, setWidth] = createSignal(0);
       // Defer giving the feed container a real width until after the initial
-      // restoration frame would have fired. With the buggy code the scroll is
-      // applied while totalHeight is ~0 and is clamped to the top; the fix waits
-      // until the layout is tall enough before scrolling.
+      // Restoration frame would have fired. With the buggy code the scroll is
+      // Applied while totalHeight is ~0 and is clamped to the top; the fix waits
+      // Until the layout is tall enough before scrolling.
       setTimeout(() => setWidth(800), 50);
 
       render(() => (

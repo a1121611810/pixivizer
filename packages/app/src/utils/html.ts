@@ -27,7 +27,9 @@ const FORBIDDEN_TAGS = new Set([
 const SAFE_HREF_PROTOCOLS = ["http://", "https://", "pixiv://"];
 
 function isSafeHref(href: string | null): boolean {
-  if (!href) return false;
+  if (!href) {
+    return false;
+  }
   return SAFE_HREF_PROTOCOLS.some((protocol) => href.toLowerCase().startsWith(protocol));
 }
 

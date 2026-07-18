@@ -83,7 +83,7 @@ describe("NovelDetail virtual scroll", () => {
     });
 
     // Scroll past the cover/metadata area. The text container is below it,
-    // so we are still near the top of the text content.
+    // So we are still near the top of the text content.
     window.scrollTo(0, 300);
     window.dispatchEvent(new Event("scroll"));
 

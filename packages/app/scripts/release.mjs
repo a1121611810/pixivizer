@@ -65,21 +65,21 @@ function ok(...m) {
 
 async function runBuildStep(label, cmd, argsArr, opts = {}) {
   log(`▶ ${label}...`);
-  const start = Date.now();
+  const _start = Date.now();
   try {
     const elapsed = await run(cmd, argsArr, opts);
     ok(`${label} 完成 (${elapsed}s)`);
-  } catch (err) {
+  } catch (error) {
     console.error(`\n[release] ── 构建错误 ──────────────────────`);
     console.error(`  步骤: ${label}`);
     console.error(`  命令: ${cmd} ${argsArr.join(" ")}`);
-    console.error(`  原因: ${err.message}`);
+    console.error(`  原因: ${error.message}`);
     console.error(`────────────────────────────────────────\n`);
-    throw err;
+    throw error;
   }
 }
 
-async function readText(path) {
+function readText(path) {
   return readFile(resolvePath(rootDir, path), "utf-8");
 }
 
@@ -104,8 +104,11 @@ function run(cmd, argsArr, opts = {}) {
     child.on("error", reject);
     child.on("close", (code) => {
       const elapsed = ((Date.now() - start) / 1000).toFixed(1);
-      if (code === 0) resolve(elapsed);
-      else reject(new Error(`"${label}" 失败 (退出码 ${code}, 耗时 ${elapsed}s)`));
+      if (code === 0) {
+        resolve(elapsed);
+      } else {
+        reject(new Error(`"${label}" 失败 (退出码 ${code}, 耗时 ${elapsed}s)`));
+      }
     });
   });
 }
@@ -120,7 +123,7 @@ function runOutput(cmd, argsArr) {
 
 // ── 核心流程 ──
 
-async function getLastTag() {
+function getLastTag() {
   try {
     return runOutput("git", ["describe", "--tags", "--abbrev=0"]);
   } catch {
@@ -128,8 +131,10 @@ async function getLastTag() {
   }
 }
 
-async function getGitLogSince(tag) {
-  if (!tag) return [];
+function getGitLogSince(tag) {
+  if (!tag) {
+    return [];
+  }
   const raw = runOutput("git", ["log", `${tag}..HEAD`, "--oneline", "--no-decorate"]);
   return raw.split("\n").filter(Boolean);
 }
@@ -154,7 +159,9 @@ function formatChangelog(messages) {
   const groups = {};
   for (const msg of messages) {
     const category = classifyCommit(msg);
-    if (!groups[category]) groups[category] = [];
+    if (!groups[category]) {
+      groups[category] = [];
+    }
     groups[category].push(msg);
   }
   const lines = [];
@@ -173,7 +180,9 @@ function generateChangelogPreview(selected) {
 
 function parseVersion(v) {
   const parts = v.split(".").map(Number);
-  if (parts.length !== 3 || parts.some(isNaN)) throw new Error(`Invalid version: ${v}`);
+  if (parts.length !== 3 || parts.some(isNaN)) {
+    throw new Error(`Invalid version: ${v}`);
+  }
   return { major: parts[0], minor: parts[1], patch: parts[2], str: v };
 }
 
@@ -189,7 +198,7 @@ function bump(v, part) {
   }
 }
 
-async function askQuestion(query) {
+function askQuestion(query) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   return new Promise((resolve) => {
     rl.question(query, (answer) => {
@@ -205,7 +214,9 @@ async function readCustomChangelog() {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   const lines = [];
   for await (const line of rl) {
-    if (line.trim() === "EOF") break;
+    if (line.trim() === "EOF") {
+      break;
+    }
     lines.push(line);
   }
   rl.close();
@@ -223,7 +234,7 @@ async function interactivePickCommits(commits) {
   console.log("  a = 全选  |  回车 = 空  |  q = 退出\n");
 
   // Display numbered list
-  const items = commits.map((line) => line.replace(/^[0-9a-f]+\s+/, ""));
+  const items = commits.map((line) => line.replace(/^[0-9a-f]+\s+/u, ""));
   for (let i = 0; i < items.length; i++) {
     const entry = CATEGORY_ENTRIES.find((e) => e.prefixes.some((p) => items[i].startsWith(p)));
     const cat = entry ? entry.emoji : "🔧";
@@ -247,18 +258,22 @@ async function interactivePickCommits(commits) {
       indices = [];
     } else {
       indices = [];
-      const parts = answer.split(/\s+/).filter(Boolean);
+      const parts = answer.split(/\s+/u).filter(Boolean);
       let valid = true;
       for (const part of parts) {
-        if (/^\d+$/.test(part)) {
+        if (/^\d+$/u.test(part)) {
           const idx = parseInt(part, 10) - 1;
-          if (idx >= 0 && idx < items.length) indices.push(idx);
-        } else if (/^(\d+)-(\d+)$/.test(part)) {
-          const [, s, e] = part.match(/^(\d+)-(\d+)$/);
+          if (idx >= 0 && idx < items.length) {
+            indices.push(idx);
+          }
+        } else if (/^(\d+)-(\d+)$/u.test(part)) {
+          const [, s, e] = part.match(/^(\d+)-(\d+)$/u);
           const start = parseInt(s, 10) - 1;
           const end = parseInt(e, 10) - 1;
           if (start >= 0 && end < items.length && start <= end) {
-            for (let j = start; j <= end; j++) indices.push(j);
+            for (let j = start; j <= end; j++) {
+              indices.push(j);
+            }
           } else {
             valid = false;
           }
@@ -315,7 +330,7 @@ async function interactivePickVersion(currentVersion) {
       case "4": {
         // eslint-disable-next-line no-await-in-loop
         const custom = await askQuestion("输入版本号 (格式 x.y.z): ");
-        if (/^\d+\.\d+\.\d+$/.test(custom)) {
+        if (/^\d+\.\d+\.\d+$/u.test(custom)) {
           return { type: "custom", version: custom };
         }
         console.log("  ⚠ 格式错误，请输入 x.y.z 格式（如 2.0.0）");
@@ -329,7 +344,9 @@ async function interactivePickVersion(currentVersion) {
 
 async function main() {
   log("Pictelio 一键发布脚本");
-  if (dryRun) log("[dry-run 模式] 仅预览，不会执行任何写入/推送操作");
+  if (dryRun) {
+    log("[dry-run 模式] 仅预览，不会执行任何写入/推送操作");
+  }
   console.log("");
 
   // ── 1. 解析版本 ──
@@ -345,7 +362,7 @@ async function main() {
   }
   let newVersion = versionArg || bump(currentVersion, bumpType);
   const parsed = parseVersion(newVersion);
-  let versionCode = parsed.major * 10000 + parsed.minor * 100 + parsed.patch;
+  let versionCode = parsed.major * 10_000 + parsed.minor * 100 + parsed.patch;
   let tag = `v${newVersion}`;
   let title = `Pictelio v${newVersion}`;
 
@@ -378,7 +395,7 @@ async function main() {
     const newVersionInteractive = versionPick.version;
     const { major: mi, minor: mn, patch: pt } = parseVersion(newVersionInteractive);
     newVersion = newVersionInteractive;
-    versionCode = mi * 10000 + mn * 100 + pt;
+    versionCode = mi * 10_000 + mn * 100 + pt;
     tag = `v${newVersion}`;
     title = `Pictelio v${newVersion}`;
 
@@ -399,7 +416,7 @@ async function main() {
     const { major: mi, minor: mn, patch: pt } = parseVersion(newVersionInteractive);
     // Update all version-related variables
     newVersion = newVersionInteractive;
-    versionCode = mi * 10000 + mn * 100 + pt;
+    versionCode = mi * 10_000 + mn * 100 + pt;
     tag = `v${newVersion}`;
     title = `Pictelio v${newVersion}`;
 
@@ -438,14 +455,22 @@ async function main() {
   const keyPassword = process.env.PICTELIO_KEY_PASSWORD;
   const keystoreExists = await exists("android/app/pictelio-release.keystore");
   const envErrors = [];
-  if (!keystorePassword) envErrors.push("缺少 PICTELIO_KEYSTORE_PASSWORD");
-  if (!keyPassword) envErrors.push("缺少 PICTELIO_KEY_PASSWORD");
-  if (!keystoreExists) envErrors.push("找不到 android/app/pictelio-release.keystore");
+  if (!keystorePassword) {
+    envErrors.push("缺少 PICTELIO_KEYSTORE_PASSWORD");
+  }
+  if (!keyPassword) {
+    envErrors.push("缺少 PICTELIO_KEY_PASSWORD");
+  }
+  if (!keystoreExists) {
+    envErrors.push("找不到 android/app/pictelio-release.keystore");
+  }
 
   if (envErrors.length > 0) {
     if (dryRun) {
       warn("签名环境检查发现问题（dry-run 模式继续）：");
-      for (const e of envErrors) warn(`  - ${e}`);
+      for (const e of envErrors) {
+        warn(`  - ${e}`);
+      }
       console.log("");
     } else {
       console.error("环境错误：" + envErrors.join("；"));
@@ -508,7 +533,8 @@ async function main() {
       [
         "编译 Release APK",
         "./gradlew",
-        ["assembleRelease"], // 首次不加 --stacktrace
+        // 首次不加 --stacktrace
+        ["assembleRelease"],
         {
           cwd: resolvePath(rootDir, "android"),
           stdio: "inherit",
@@ -583,9 +609,9 @@ async function main() {
         tag,
         "--repo",
         runOutput("git", ["remote", "get-url", "origin"])
-          .replace(/\.git$/, "")
-          .replace(/.*github\.com[/:]/, "")
-          .replace(/\.git$/, ""),
+          .replace(/\.git$/u, "")
+          .replace(/.*github\.com[/u:]/u, "")
+          .replace(/\.git$/u, ""),
         "--title",
         title,
         "--notes-file",
@@ -615,15 +641,15 @@ async function main() {
   console.log(`   APK: ${resolvePath(rootDir, apkPath)}`);
   console.log(
     `   地址: https://github.com/${runOutput("git", ["remote", "get-url", "origin"])
-      .replace(/.*github\.com[/:]/, "")
-      .replace(/\.git$/, "")}/releases/tag/${tag}`,
+      .replace(/.*github\.com[/u:]/u, "")
+      .replace(/\.git$/u, "")}/releases/utag/${tag}`,
   );
   console.log("=".repeat(50));
 }
 
-main().catch((err) => {
+main().catch((error) => {
   console.error(`\n[release] ❌ 发布流程失败`);
-  console.error(`   ${err.message}`);
+  console.error(`   ${error.message}`);
   console.error(
     `\n提示: 检查上方输出了解详细错误。如果问题持续，可以运行 pnpm run build:android:release 单独测试构建步骤。`,
   );

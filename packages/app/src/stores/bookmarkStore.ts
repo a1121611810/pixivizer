@@ -17,7 +17,7 @@ const query = createRoot(() =>
   createInfiniteQuery(
     () => ({
       queryKey: queryKeys.bookmarks(user()?.id ?? 0, restrict()),
-      queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
+      queryFn: ({ pageParam }: { pageParam: string | undefined }) => {
         if (pageParam) {
           return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(pageParam);
         }
@@ -36,7 +36,9 @@ const query = createRoot(() =>
 /** Filtered illusts (R18/R18G + blocked users applied) */
 export const illusts = () => {
   const data = query.data;
-  if (!data) return [] as PixivIllust[];
+  if (!data) {
+    return [] as PixivIllust[];
+  }
   const all = data.pages.flatMap((p) => p.illusts);
   return filterFeedIllusts(all);
 };
@@ -44,7 +46,9 @@ export const illusts = () => {
 /** Next page URL for pagination */
 export const nextUrl = (): string | null => {
   const data = query.data;
-  if (!data) return null;
+  if (!data) {
+    return null;
+  }
   return data.pages[data.pages.length - 1]?.next_url ?? null;
 };
 
@@ -85,7 +89,9 @@ export function ensureLoaded() {
  * Delegates to TQ's fetchNextPage which manages pagination state.
  */
 export const fetchMore = () => {
-  if (!query.hasNextPage || query.isFetchingNextPage) return;
+  if (!query.hasNextPage || query.isFetchingNextPage) {
+    return;
+  }
   return query.fetchNextPage();
 };
 
@@ -100,6 +106,8 @@ export const refresh = () => query.refetch();
  * Changing restrict signal updates the queryKey, triggering auto-refetch via TQ.
  */
 export function setRestrict(r: RestrictType) {
-  if (restrict() === r) return;
+  if (restrict() === r) {
+    return;
+  }
   setRestrictSignal(r);
 }

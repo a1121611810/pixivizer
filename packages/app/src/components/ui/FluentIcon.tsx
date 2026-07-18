@@ -1,4 +1,4 @@
-// packages/app/src/components/ui/FluentIcon.tsx
+// Packages/app/src/components/ui/FluentIcon.tsx
 import { type Component } from "solid-js";
 
 export type FluentIconName =

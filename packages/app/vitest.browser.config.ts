@@ -27,7 +27,7 @@ export default defineConfig({
       screenshotFailures: false,
     },
     passWithNoTests: true,
-    testTimeout: 30000,
+    testTimeout: 30_000,
   },
   resolve: {
     alias: {

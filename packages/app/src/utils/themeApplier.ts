@@ -6,7 +6,9 @@ import type { ColorThemeId } from "@/stores/themeStore";
  * - Fluent 主题根据 isDark 参数设置/移除 .dark。
  */
 export function applyColorThemeClass(id: ColorThemeId, isDark?: boolean): void {
-  if (typeof document === "undefined") return;
+  if (typeof document === "undefined") {
+    return;
+  }
 
   const root = document.documentElement;
   const toRemove: string[] = [];

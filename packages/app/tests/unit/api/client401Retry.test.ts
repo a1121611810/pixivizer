@@ -69,7 +69,7 @@ describe("401 并发重试 — Promise 队列", () => {
     setAccessToken("expired-token");
     setOnUnauthorized(mockRefresh);
 
-    // mockFetch: 前两次调用返回 401，后续返回 200
+    // MockFetch: 前两次调用返回 401，后续返回 200
     mockFetch
       .mockResolvedValueOnce(make401Response()) // 请求 A 首次
       .mockResolvedValueOnce(make401Response()) // 请求 B 首次（并发）
@@ -86,7 +86,7 @@ describe("401 并发重试 — Promise 队列", () => {
     expect(resultA).toEqual({ data: "A" });
     expect(resultB).toEqual({ data: "B" });
 
-    // refresh 只被调用一次
+    // Refresh 只被调用一次
     expect(refreshCallCount).toBe(1);
   });
 
@@ -96,7 +96,7 @@ describe("401 并发重试 — Promise 队列", () => {
     let refreshCallCount = 0;
     const mockRefresh = vi.fn(async () => {
       refreshCallCount++;
-      // refresh 失败，token 为空
+      // Refresh 失败，token 为空
       setAccessToken("");
     });
 
@@ -107,15 +107,15 @@ describe("401 并发重试 — Promise 队列", () => {
 
     // 并发发起两个请求
     const [errA, errB] = await Promise.all([
-      apiClient.get("/v1/illust/A").catch((e: Error) => e),
-      apiClient.get("/v1/illust/B").catch((e: Error) => e),
+      apiClient.get("/v1/illust/A").catch((error: Error) => error),
+      apiClient.get("/v1/illust/B").catch((error: Error) => error),
     ]);
 
     // 两个请求都收到 401 错误
     expect(errA.message).toContain("401");
     expect(errB.message).toContain("401");
 
-    // refresh 只被调用一次
+    // Refresh 只被调用一次
     expect(refreshCallCount).toBe(1);
   });
 });

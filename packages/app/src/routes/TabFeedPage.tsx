@@ -45,7 +45,8 @@ const TabFeedPage: Component<Props> = (props) => {
   const filteredIllusts = createMemo<PixivIllust[]>(() => {
     // Track followTab changes so filter updates immediately
     followTab();
-    return illusts(); // feedStore.computeFollowIllusts() already handles follow tab filtering
+    // FeedStore.computeFollowIllusts() already handles follow tab filtering
+    return illusts();
   });
 
   // Initialize abort controller for subsequent feed operations

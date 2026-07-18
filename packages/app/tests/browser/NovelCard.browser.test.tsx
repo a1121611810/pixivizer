@@ -98,7 +98,7 @@ describe("NovelCard", () => {
 
   it("renders text length", () => {
     const { container } = render(() => (
-      <NovelCard novel={createNovel({ text_length: 12345 })} onClick={vi.fn()} />
+      <NovelCard novel={createNovel({ text_length: 12_345 })} onClick={vi.fn()} />
     ));
     expect(container.textContent).toContain("12,345字");
   });

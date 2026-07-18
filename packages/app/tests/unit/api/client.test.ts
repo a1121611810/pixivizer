@@ -110,7 +110,7 @@ describe("classifyError", () => {
 
   it("returns PROXY type even when status suggests SERVER", async () => {
     const { classifyError } = await loadModule();
-    // proxy_error with 5xx — ensure PROXY classification wins
+    // Proxy_error with 5xx — ensure PROXY classification wins
     const err = classifyError(503, null, { error: "proxy_error" });
     expect(err.type).toBe(ApiErrorType.PROXY);
   });

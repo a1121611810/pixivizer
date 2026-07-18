@@ -89,7 +89,7 @@ describe("NovelDetail series switch scroll reset", () => {
     mockNavigate.mockClear();
 
     // Provide a non-zero container width synchronously so that layout is ready
-    // when restoreProgress runs, matching real browser timing.
+    // When restoreProgress runs, matching real browser timing.
     window.ResizeObserver = class implements ResizeObserver {
       constructor(private cb: ResizeObserverCallback) {}
       observe(target: Element) {
@@ -131,16 +131,16 @@ describe("NovelDetail series switch scroll reset", () => {
     window.scrollTo(0, 500);
     window.dispatchEvent(new Event("scroll"));
 
-    const nextButton = await screen.findByText(/下一章/);
+    const nextButton = await screen.findByText(/下一章/u);
     fireEvent.click(nextButton);
 
     // The target chapter should load and the page should end up back at the top,
-    // not at its previously saved reading position.
+    // Not at its previously saved reading position.
     await waitFor(() => {
       expect(container.textContent).toContain("Series Novel 2");
     });
-    // restoreProgress runs in a requestAnimationFrame; give it time to act before
-    // asserting the final scroll position.
+    // RestoreProgress runs in a requestAnimationFrame; give it time to act before
+    // Asserting the final scroll position.
     await new Promise((resolve) => setTimeout(resolve, 200));
     await waitFor(() => expect(window.scrollY).toBeLessThan(50));
   });

@@ -186,9 +186,9 @@ describe("createComputedTextCard", () => {
       });
       const m = metrics.getMetrics(1)!;
       // NovelTextListCard CSS:
-      // py-3 = 12px vertical padding each side
-      // title: fontSizeBase400 (16px) * leading-snug (1.375) = 22px per line
-      // meta: fontSizeBase200 (12px) * body lineHeight (1.4286) ≈ 17.14px + mt-1 (4px) ≈ 22px
+      // Py-3 = 12px vertical padding each side
+      // Title: fontSizeBase400 (16px) * leading-snug (1.375) = 22px per line
+      // Meta: fontSizeBase200 (12px) * body lineHeight (1.4286) ≈ 17.14px + mt-1 (4px) ≈ 22px
       expect(m.titleHeight).toBe(22);
       expect(m.titleLineCount).toBe(1);
       expect(m.height).toBe(12 + 22 + 22 + 12);
@@ -209,7 +209,7 @@ describe("createComputedTextCard", () => {
         maxTagLines: 2,
       });
       const m = metrics.getMetrics(1)!;
-      // padding 24 + title 22 + meta section 22 + badge section (mt-1.5 6 + badge 20)
+      // Padding 24 + title 22 + meta section 22 + badge section (mt-1.5 6 + badge 20)
       // + tag section (mt-2 8 + actual tag lines 1 * tagLineHeight 18)
       expect(m.tagLineCount).toBe(1);
       expect(m.height).toBe(24 + 22 + 22 + 26 + 26);
@@ -260,7 +260,7 @@ describe("createComputedTextCard", () => {
         maxTagLines: 2,
       });
       const m = metrics.getMetrics(1)!;
-      // ceil(4 / 3) = 2, clamped by maxTagLines
+      // Ceil(4 / 3) = 2, clamped by maxTagLines
       expect(m.tagLineCount).toBe(2);
       expect(m.tagHeight).toBe(36);
       dispose();
@@ -290,7 +290,7 @@ describe("createComputedTextCard", () => {
         stylePreset: () => "list",
       });
       const m = metrics.getMetrics(1)!;
-      // title 15 + author 14 + stats 14 + bottom 14 + 4 gaps * 4 = 73
+      // Title 15 + author 14 + stats 14 + bottom 14 + 4 gaps * 4 = 73
       expect(m.titleLineCount).toBe(1);
       expect(m.tagLineCount).toBe(0);
       expect(m.height).toBe(73);
@@ -330,7 +330,7 @@ describe("createComputedTextCard", () => {
       const m = metrics.getMetrics(1)!;
       expect(m.titleLineCount).toBe(3);
       expect(m.tagLineCount).toBe(3);
-      // title 45 + author 14 + stats 14 + tags 54 + bottom 14 + 4 gaps * 4 = 157
+      // Title 45 + author 14 + stats 14 + tags 54 + bottom 14 + 4 gaps * 4 = 157
       expect(m.height).toBe(157);
       dispose();
     }));

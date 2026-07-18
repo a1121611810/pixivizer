@@ -54,7 +54,7 @@ describe("429 重试 — 指数退避", () => {
     } as unknown as Response;
   }
 
-  it("429 后重试 3 次，指数退避，最终成功", { timeout: 15000 }, async () => {
+  it("429 后重试 3 次，指数退避，最终成功", { timeout: 15_000 }, async () => {
     const { apiClient } = await loadModule();
 
     // 前 3 次 429，第 4 次成功
@@ -71,7 +71,7 @@ describe("429 重试 — 指数退避", () => {
     expect(mockFetch).toHaveBeenCalledTimes(4);
   });
 
-  it("429 重试 3 次全部失败后抛出 429 错误", { timeout: 15000 }, async () => {
+  it("429 重试 3 次全部失败后抛出 429 错误", { timeout: 15_000 }, async () => {
     const { apiClient } = await loadModule();
 
     mockFetch.mockResolvedValue(make429Response());

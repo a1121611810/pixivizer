@@ -46,7 +46,9 @@ export function createNovelLoader(novelId: Accessor<number>): NovelLoaderResult 
 
   createEffect(() => {
     const id = novelId();
-    if (!id) return;
+    if (!id) {
+      return;
+    }
 
     // 读取旧状态但不对其产生依赖，避免设值后自我触发。
     const hadData = untrack(() => novelData()) != null;
@@ -65,15 +67,22 @@ export function createNovelLoader(novelId: Accessor<number>): NovelLoaderResult 
 
     setDetailLoading(!hadData);
     setDetailError(null);
-    if (!hadData) setNovelData(null);
-    if (!hadHtml) setNovelHtml(null);
+    if (!hadData) {
+      setNovelData(null);
+    }
+    if (!hadHtml) {
+      setNovelHtml(null);
+    }
     setNovelImages({});
 
     // 2. 异步：IndexedDB → 网络
     getEntry(id)
-      .catch(() => undefined) // IDB 错误 → 降级到网络请求
+      // IDB 错误 → 降级到网络请求
+      .catch(() => undefined)
       .then((entry) => {
-        if (signal.aborted) return;
+        if (signal.aborted) {
+          return;
+        }
         if (entry) {
           applyEntry(entry);
           return;
@@ -83,7 +92,9 @@ export function createNovelLoader(novelId: Accessor<number>): NovelLoaderResult 
           loadDetail(id),
           fetchNovelData(id).catch(() => ({ text: "", navigation: {}, images: {} })),
         ]).then(([detail, novelResult]) => {
-          if (signal.aborted) return;
+          if (signal.aborted) {
+            return;
+          }
           const entry: CacheEntry = {
             detail: detail.novel,
             text: novelResult.text,
@@ -91,12 +102,16 @@ export function createNovelLoader(novelId: Accessor<number>): NovelLoaderResult 
             images: novelResult.images ?? {},
           };
           applyEntry(entry);
-          if (entry.text) setEntry(id, entry);
+          if (entry.text) {
+            setEntry(id, entry);
+          }
         });
       })
-      .catch((e) => {
-        if (signal.aborted) return;
-        setDetailError((e as { message?: string }).message ?? "加载失败");
+      .catch((error) => {
+        if (signal.aborted) {
+          return;
+        }
+        setDetailError((error as { message?: string }).message ?? "加载失败");
         setDetailLoading(false);
       });
   });

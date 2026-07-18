@@ -22,8 +22,8 @@ export interface PageBreakBlock {
 
 export type NovelBlock = TextBlock | ImageBlock | PageBreakBlock;
 
-const IMAGE_PLACEHOLDER_RE = /^\[(uploadedimage|pixivimage):(\d+)\]$/;
-const NEWPAGE_RE = /^\[newpage\]$/;
+const IMAGE_PLACEHOLDER_RE = /^\[(uploadedimage|pixivimage):(\d+)\]$/u;
+const NEWPAGE_RE = /^\[newpage\]$/u;
 
 /**
  * 将小说原始正文解析为混合块序列。
@@ -37,8 +37,10 @@ export function parseNovelBlocks(text: string, images: NovelImagesMap | null): N
   const blocks: NovelBlock[] = [];
   let textIndex = 0;
 
-  for (const part of text.split(/\n+/)) {
-    if (part.length === 0) continue;
+  for (const part of text.split(/\n+/u)) {
+    if (part.length === 0) {
+      continue;
+    }
 
     const imageMatch = part.match(IMAGE_PLACEHOLDER_RE);
     if (imageMatch) {

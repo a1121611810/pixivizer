@@ -23,7 +23,9 @@ function getSkeletonDimensions(illust: PixivIllust): { width: number; height: nu
   for (const url of urls) {
     if (url) {
       const dims = parsePixivUrlDimensions(url);
-      if (dims) return dims;
+      if (dims) {
+        return dims;
+      }
     }
   }
   return null;

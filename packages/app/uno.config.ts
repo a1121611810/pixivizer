@@ -5,7 +5,7 @@ import { defineConfig, presetUno, presetIcons } from "unocss";
 export default defineConfig({
   presets: [presetUno(), presetIcons()],
 
-  // safelist: 强制生成 NavBar 容器类（UnoCSS 提取器可能遗漏）
+  // Safelist: 强制生成 NavBar 容器类（UnoCSS 提取器可能遗漏）
   safelist: [
     "floating-nav",
     "floating-nav-capsule",

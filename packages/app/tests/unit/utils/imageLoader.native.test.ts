@@ -36,7 +36,7 @@ describe("loadImage on native platform", () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(mockFetch).toHaveBeenCalledWith("/pixiv-img/img.jpg");
 
-    // loadImage 返回代理 URL（不走 blob: URL，避免 Network 面板条目 + 0.5ms 开销）
-    expect(result.url).toMatch(/^\/pixiv-img\//);
+    // LoadImage 返回代理 URL（不走 blob: URL，避免 Network 面板条目 + 0.5ms 开销）
+    expect(result.url).toMatch(/^\/pixiv-img\//u);
   });
 });

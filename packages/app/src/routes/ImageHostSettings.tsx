@@ -36,7 +36,7 @@ const ImageHostSettings: Component = () => {
     const group = radioGroupRef as unknown as { value?: string } | undefined;
     const mode = imageHostState().mode;
     if (group) {
-      // requestAnimationFrame 确保所有子 fluent-radio 已在 DOM 中并升级完成
+      // RequestAnimationFrame 确保所有子 fluent-radio 已在 DOM 中并升级完成
       requestAnimationFrame(() => {
         group.value = mode;
       });
@@ -48,7 +48,9 @@ const ImageHostSettings: Component = () => {
       | { show?: () => void; hide?: () => void; open?: boolean }
       | undefined;
     if (showConfirmDialog()) {
-      if (!dialog?.open) dialog?.show?.();
+      if (!dialog?.open) {
+        dialog?.show?.();
+      }
     } else if (dialog?.open) {
       dialog?.hide?.();
     }
@@ -59,7 +61,9 @@ const ImageHostSettings: Component = () => {
       | { show?: () => void; hide?: () => void; open?: boolean }
       | undefined;
     if (editingHost() !== null) {
-      if (!dialog?.open) dialog?.show?.();
+      if (!dialog?.open) {
+        dialog?.show?.();
+      }
     } else if (dialog?.open) {
       dialog?.hide?.();
     }
@@ -116,7 +120,9 @@ const ImageHostSettings: Component = () => {
 
   function saveEdit() {
     const host = editingHost();
-    if (!host) return;
+    if (!host) {
+      return;
+    }
 
     const error = validateHostInput({
       name: editName(),
@@ -239,7 +245,9 @@ const ImageHostSettings: Component = () => {
             ref={radioGroupRef}
             value={imageHostState().mode}
             on:change={(e) => {
-              if (e.detail?.value != null) setMode(e.detail.value);
+              if (e.detail?.value != null) {
+                setMode(e.detail.value);
+              }
             }}
             disabled={!imageHostState().masterEnabled}
             class="flex flex-col gap-3"
