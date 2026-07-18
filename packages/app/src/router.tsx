@@ -19,6 +19,7 @@ import { setCurrentTab } from "@/stores/uiStore";
 import { load as loadUserIllusts, contentType } from "@/stores/userIllustsStore";
 import { loadProfile, loadFollowing } from "@/stores/userStore";
 import { toApiError } from "./api/client";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 /** 将普通 Solid 组件/懒加载组件断言为 TanStack RouteComponent，避免每处重复转换。 */
 function asRoute(component: Component): RouteComponent {
@@ -252,6 +253,9 @@ export const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   defaultStaleTime: 0,
+  defaultPendingMs: 0,
+  defaultPendingMinMs: 0,
+  defaultPendingComponent: asRoute(LoadingSpinner),
 });
 
 // 声明路由类型，供 TanStack 的 type-safe 钩子使用
