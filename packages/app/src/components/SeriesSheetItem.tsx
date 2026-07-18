@@ -1,6 +1,7 @@
 import { type Component, Show, mergeProps } from "solid-js";
 import type { PixivNovel } from "../api/types";
 import { resolveImageUrl } from "../utils/imageLoader";
+import IllustTags from "./IllustTags";
 
 interface Props {
   novel: PixivNovel;
@@ -54,6 +55,10 @@ const SeriesSheetItem: Component<Props> = (props) => {
         <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] flex items-center gap-1">
           <span>📖 {props.novel.text_length.toLocaleString()}字</span>
         </p>
+        {/* 标签 */}
+        <div class="mt-1">
+          <IllustTags tags={props.novel.tags} size="small" class="gap-1" />
+        </div>
       </div>
     </div>
   );
