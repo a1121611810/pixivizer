@@ -49,7 +49,7 @@ import {
   setUseDnsOverride,
 } from "../stores/uiStore";
 import { isLoggedIn, logout, user } from "../stores/authStore";
-import { clearImageCache, resolveImageUrl } from "../utils/imageLoader";
+import { clearImageCache, resolveImageUrl, loadImage } from "../utils/imageLoader";
 import { resetBlockedIds } from "../stores/blockStore";
 import { clearAll as clearNovelCache } from "../stores/novelCache";
 import { resetReportedIds } from "../stores/reportStore";
@@ -120,6 +120,30 @@ const SettingsDrawer: Component = () => {
   const [showBlocklist, setShowBlocklist] = createSignal(false);
   const [actionToast, setActionToast] = createSignal<string | null>(null);
   const [profileError, setProfileError] = createSignal(false);
+  const isNative = Capacitor.isNativePlatform();
+  const [settingsAvatarUrl, setSettingsAvatarUrl] = createSignal("");
+
+  createEffect(() => {
+    const u = user();
+    if (!u) {
+      setSettingsAvatarUrl("");
+      return;
+    }
+    const src =
+      u.profile_image_urls.medium ||
+      u.profile_image_urls.px_170x170 ||
+      u.profile_image_urls.px_50x50 ||
+      "";
+    if (!src) {
+      setSettingsAvatarUrl("");
+      return;
+    }
+    if (isNative) {
+      loadImage(src).then((r) => setSettingsAvatarUrl(r.url));
+    } else {
+      setSettingsAvatarUrl(resolveImageUrl(src));
+    }
+  });
   const [dialogState, setDialogState] = createSignal<
     { type: "clear" } | { type: "deleteAccount" } | null
   >(null);
@@ -292,12 +316,7 @@ const SettingsDrawer: Component = () => {
             <div class="relative w-20 h-20">
               <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
               <img
-                src={resolveImageUrl(
-                  user()!.profile_image_urls.medium ||
-                    user()!.profile_image_urls.px_170x170 ||
-                    user()!.profile_image_urls.px_50x50 ||
-                    "",
-                )}
+                src={settingsAvatarUrl()}
                 alt={user()!.name}
                 class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
                 onError={(e) => ((e.target as HTMLElement).style.display = "none")}
