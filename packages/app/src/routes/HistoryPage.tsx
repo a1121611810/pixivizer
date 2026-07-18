@@ -131,7 +131,7 @@ const HistoryPage: Component = () => {
     const search = searchQuery();
     const tsStart = startTimestamp();
     const tsEnd = endTimestamp();
-    const uid = currentUser()?.id ?? "";
+    const uid = String(currentUser()?.id ?? "");
 
     return q
       .from({ h: historyCollection })
