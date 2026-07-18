@@ -46,7 +46,7 @@ export async function refreshToken(token: string): Promise<PixivAuthResponse> {
         id: result.userId,
         name: result.userName,
         account: result.userAccount,
-        profile_image_urls: {},
+        profile_image_urls: result.profileImageUrls ?? {},
         is_followed: false,
       },
     };

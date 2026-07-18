@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.MediaType;
@@ -123,6 +124,17 @@ public class AuthPlugin extends Plugin {
                         result.put("userId", user.optInt("id", 0));
                         result.put("userName", user.optString("name", ""));
                         result.put("userAccount", user.optString("account", ""));
+
+                        // 提取 profile_image_urls（头像 URL），供 JS 侧 user() 信号使用
+                        JSONObject profileImageUrls = user.optJSONObject("profile_image_urls");
+                        if (profileImageUrls != null) {
+                            JSObject urls = new JSObject();
+                            for (Iterator<String> it = profileImageUrls.keys(); it.hasNext();) {
+                                String key = it.next();
+                                urls.put(key, profileImageUrls.optString(key, ""));
+                            }
+                            result.put("profileImageUrls", urls);
+                        }
                     } else {
                         result.put("userId", 0);
                         result.put("userName", "");

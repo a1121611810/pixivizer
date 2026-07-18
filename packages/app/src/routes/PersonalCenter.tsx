@@ -92,10 +92,12 @@ const PersonalCenter: Component<Props> = (props) => {
   const COLLAPSE_THRESHOLD = 140;
   const isNative = Capacitor.isNativePlatform();
   const [avatarDisplayUrl, setAvatarDisplayUrl] = createSignal("");
+  const [profileAvatarErrored, setProfileAvatarErrored] = createSignal(false);
 
   createEffect(() => {
     const u = displayUser();
     if (!u) {
+      console.log("[DEBUG-avatar] PersonalCenter: no user, skipping");
       setAvatarDisplayUrl("");
       return;
     }
@@ -104,14 +106,27 @@ const PersonalCenter: Component<Props> = (props) => {
       u.profile_image_urls.px_170x170 ||
       u.profile_image_urls.px_50x50 ||
       "";
+    console.log("[DEBUG-avatar] PersonalCenter: src=%s, hasMedium=%s, hasPx170=%s, hasPx50=%s", src, !!u.profile_image_urls.medium, !!u.profile_image_urls.px_170x170, !!u.profile_image_urls.px_50x50);
     if (!src) {
+      console.log("[DEBUG-avatar] PersonalCenter: empty src, using fallback");
       setAvatarDisplayUrl("");
+      setProfileAvatarErrored(false);
       return;
     }
+    setProfileAvatarErrored(false);
     if (isNative) {
-      loadImage(src).then((r) => setAvatarDisplayUrl(r.url));
+      loadImage(src)
+        .then((r) => {
+          console.log("[DEBUG-avatar] PersonalCenter: loadImage OK url=%s", r.url);
+          setAvatarDisplayUrl(r.url);
+        })
+        .catch((err) => {
+          console.log("[DEBUG-avatar] PersonalCenter: loadImage ERROR", err);
+        });
     } else {
-      setAvatarDisplayUrl(resolveImageUrl(src));
+      const url = resolveImageUrl(src);
+      console.log("[DEBUG-avatar] PersonalCenter: web url=%s", url);
+      setAvatarDisplayUrl(url);
     }
   });
 
@@ -189,12 +204,14 @@ const PersonalCenter: Component<Props> = (props) => {
                 <div class="relative w-6 h-6 flex-shrink-0">
                   <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
                   <Show when={displayUser()}>
-                    <img
-                      src={avatarDisplayUrl()}
-                      alt={displayUser()!.name}
-                      class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover"
-                      onError={(e) => ((e.target as HTMLElement).style.display = "none")}
-                    />
+                    <Show when={!profileAvatarErrored() && avatarDisplayUrl()}>
+                      <img
+                        src={avatarDisplayUrl()}
+                        alt={displayUser()!.name}
+                        class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover"
+                        onError={() => setProfileAvatarErrored(true)}
+                      />
+                    </Show>
                   </Show>
                 </div>
                 <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
@@ -233,12 +250,14 @@ const PersonalCenter: Component<Props> = (props) => {
             <div class="flex flex-col items-center px-4 pt-6 pb-3">
               <div class="relative w-20 h-20">
                 <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
-                <img
-                  src={avatarDisplayUrl()}
-                  alt={displayUser()!.name}
-                  class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
-                  onError={(e) => ((e.target as HTMLElement).style.display = "none")}
-                />
+                <Show when={!profileAvatarErrored() && avatarDisplayUrl()}>
+                  <img
+                    src={avatarDisplayUrl()}
+                    alt={displayUser()!.name}
+                    class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
+                    onError={() => setProfileAvatarErrored(true)}
+                  />
+                </Show>
               </div>
               <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
                 {displayUser()!.name}

@@ -122,10 +122,12 @@ const SettingsDrawer: Component = () => {
   const [profileError, setProfileError] = createSignal(false);
   const isNative = Capacitor.isNativePlatform();
   const [settingsAvatarUrl, setSettingsAvatarUrl] = createSignal("");
+  const [settingsAvatarErrored, setSettingsAvatarErrored] = createSignal(false);
 
   createEffect(() => {
     const u = user();
     if (!u) {
+      console.log("[DEBUG-avatar] SettingsDrawer: no user, skipping");
       setSettingsAvatarUrl("");
       return;
     }
@@ -134,14 +136,25 @@ const SettingsDrawer: Component = () => {
       u.profile_image_urls.px_170x170 ||
       u.profile_image_urls.px_50x50 ||
       "";
+    console.log("[DEBUG-avatar] SettingsDrawer: src=%s, hasMedium=%s, hasPx170=%s, hasPx50=%s", src, !!u.profile_image_urls.medium, !!u.profile_image_urls.px_170x170, !!u.profile_image_urls.px_50x50);
     if (!src) {
+      console.log("[DEBUG-avatar] SettingsDrawer: empty src, using fallback");
       setSettingsAvatarUrl("");
       return;
     }
     if (isNative) {
-      loadImage(src).then((r) => setSettingsAvatarUrl(r.url));
+      loadImage(src)
+        .then((r) => {
+          console.log("[DEBUG-avatar] SettingsDrawer: loadImage OK url=%s", r.url);
+          setSettingsAvatarUrl(r.url);
+        })
+        .catch((err) => {
+          console.log("[DEBUG-avatar] SettingsDrawer: loadImage ERROR", err);
+        });
     } else {
-      setSettingsAvatarUrl(resolveImageUrl(src));
+      const url = resolveImageUrl(src);
+      console.log("[DEBUG-avatar] SettingsDrawer: web url=%s", url);
+      setSettingsAvatarUrl(url);
     }
   });
   const [dialogState, setDialogState] = createSignal<
@@ -315,12 +328,14 @@ const SettingsDrawer: Component = () => {
             {/* Avatar */}
             <div class="relative w-20 h-20">
               <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
-              <img
-                src={settingsAvatarUrl()}
-                alt={user()!.name}
-                class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
-                onError={(e) => ((e.target as HTMLElement).style.display = "none")}
-              />
+              <Show when={!settingsAvatarErrored() && settingsAvatarUrl()}>
+                <img
+                  src={settingsAvatarUrl()}
+                  alt={user()!.name}
+                  class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
+                  onError={() => setSettingsAvatarErrored(true)}
+                />
+              </Show>
             </div>
             {/* Name */}
             <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">

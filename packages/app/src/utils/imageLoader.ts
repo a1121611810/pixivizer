@@ -191,22 +191,27 @@ export interface LoadedImage {
  * cleanup() 为兼容保留，实际是 no-op。
  */
 export function loadImage(originalUrl: string): Promise<LoadedImage> {
+  console.log("[DEBUG-avatar] loadImage called: url=%s", originalUrl);
   if (!originalUrl) {
+    console.log("[DEBUG-avatar] loadImage: empty url, returning empty");
     return Promise.resolve({ url: "", cleanup: () => {} });
   }
 
   // 1. 检查缓存 — 无需异步操作，直接代理 URL 走浏览器缓存
   if (cache.has(originalUrl)) {
+    console.log("[DEBUG-avatar] loadImage: cache HIT for %s", originalUrl);
     return Promise.resolve({ url: resolveImageUrl(originalUrl), cleanup: () => {} });
   }
 
   // 2. 检查是否已有相同 URL 正在加载中 — 复用 Promise，避免重复请求
   const inflight = inflightRequests.get(originalUrl);
   if (inflight) {
+    console.log("[DEBUG-avatar] loadImage: inflight HIT for %s", originalUrl);
     return inflight;
   }
 
   // 3. 创建加载 Promise 并注册到飞行中 Map
+  console.log("[DEBUG-avatar] loadImage: cache MISS, starting fetch for %s", originalUrl);
   const promise = loadImageInner(originalUrl);
   inflightRequests.set(originalUrl, promise);
 
@@ -399,11 +404,14 @@ function fetchWeb(targetUrl: string, originalUrl: string): Promise<Blob> {
 }
 
 async function fetchSingleWeb(url: string): Promise<Blob> {
+  console.log("[DEBUG-avatar] fetchSingleWeb: fetching url=%s", url);
   const resp = await fetch(url);
+  console.log("[DEBUG-avatar] fetchSingleWeb: status=%d ok=%s for %s", resp.status, resp.ok, url);
   if (!resp.ok) {
     throw new Error(`HTTP ${resp.status}`);
   }
   const blob = await resp.blob();
+  console.log("[DEBUG-avatar] fetchSingleWeb: blob size=%d for %s", blob.size, url);
   if (blob.size === 0) {
     throw new Error("Empty response");
   }
