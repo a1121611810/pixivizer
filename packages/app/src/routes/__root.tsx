@@ -206,7 +206,9 @@ const RootLayout: Component = () => {
       </Show>
 
       <StartupUpdateDialog />
-      <SearchFAB />
+      <Show when={!isLoading()}>
+        <SearchFAB />
+      </Show>
     </div>
   );
 };

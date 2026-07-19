@@ -1,17 +1,18 @@
 import { createSignal, Show, type Component } from "solid-js";
 import { useNavigate, useLocation } from "@tanstack/solid-router";
 import FluentIcon from "@/components/ui/FluentIcon";
+import { isContentLoading } from "@/stores/uiStore";
 
 const SearchFAB: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ── Hide on /search, /login, /age-confirmation ──
+  // ── Hide on /search, /login, /age-confirmation, or during content loading ──
   const isSearchPage = () => location().pathname === "/search";
   const isLoginPage = () => location().pathname === "/login";
   const isAgeConfirmation = () => location().pathname === "/age-confirmation";
 
-  const hidden = () => isSearchPage() || isLoginPage() || isAgeConfirmation();
+  const hidden = () => isSearchPage() || isLoginPage() || isAgeConfirmation() || isContentLoading();
 
   // ── Draggable position ──
   const [pos, setPos] = createSignal<{ x: number; y: number } | null>(null);
