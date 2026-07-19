@@ -5,6 +5,36 @@ import HeartBurstEffect from "./HeartBurstEffect";
 import IllustTags from "./IllustTags";
 import { resolveImageUrl } from "../utils/imageLoader";
 
+/** 收藏爱心 SVG — 24×24 viewBox，与 FluentIcon 风格一致 */
+function HeartSvg(props: { filled: boolean; size?: number }) {
+  const s = props.size ?? 24;
+  return (
+    <svg
+      width={s}
+      height={s}
+      viewBox="0 0 24 24"
+      fill={props.filled ? "currentColor" : "none"}
+      aria-hidden="true"
+    >
+      {props.filled ? (
+        <path
+          d="M12.82 5.58l-.82.82-.82-.82a4.5 4.5 0 0 0-6.36 6.36l.82.82L12 20.06l6.36-6.36.82-.82a4.5 4.5 0 0 0-6.36-6.36z"
+          fill="currentColor"
+        />
+      ) : (
+        <path
+          d="M12.82 5.58l-.82.82-.82-.82a4.5 4.5 0 0 0-6.36 6.36l.82.82L12 20.06l6.36-6.36.82-.82a4.5 4.5 0 0 0-6.36-6.36z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      )}
+    </svg>
+  );
+}
+
 interface Props {
   novel: PixivNovel;
   onClick: (id: number) => void;
@@ -61,10 +91,10 @@ const NovelCard: Component<Props> = (props) => {
 
   return (
     <div
-      class="bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] shadow-[var(--elevation2)] overflow-hidden cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] max-h-[260px]"
+      class="surface-card overflow-hidden cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)]"
       onClick={() => props.onClick(props.novel.id)}
     >
-      <div class="flex gap-3 p-2.5 h-full">
+      <div class="flex gap-[var(--spacingHorizontalM)] p-[var(--spacingHorizontalM)]">
         {/* Cover image — fixed 128px square */}
         <div class="relative w-[128px] h-[128px] flex-shrink-0 rounded-[var(--borderRadiusSmall)] overflow-hidden">
           <img
@@ -74,7 +104,7 @@ const NovelCard: Component<Props> = (props) => {
             loading="lazy"
           />
           {/* Badge group — 左上角 */}
-          <div class="absolute top-1 left-1 flex items-center gap-1 pointer-events-none z-1">
+          <div class="absolute top-[var(--spacingVerticalXXS)] left-[var(--spacingHorizontalXXS)] flex items-center gap-[var(--spacingHorizontalXXS)] pointer-events-none z-1">
             {props.novel.x_restrict > 0 && (
               <fluent-badge
                 appearance="filled"
@@ -91,31 +121,39 @@ const NovelCard: Component<Props> = (props) => {
           </div>
         </div>
 
-        {/* Info area — 动态高度，由 NovelVirtualFeed 计算 */}
-        <div class="flex-1 min-w-0 flex flex-col gap-1">
+        {/* Info area */}
+        <div class="flex-1 min-w-0 flex flex-col gap-[var(--spacingVerticalXS)]">
           <p class="[font-size:var(--fontSizeBase200)] font-semibold text-[var(--colorNeutralForeground1)] line-clamp-3 leading-tight">
             {props.novel.title}
           </p>
           <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground2)] truncate">
             @{props.novel.user.name}
           </p>
-          <div class="flex items-center gap-2 text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase100)]">
-            <span>★ {props.novel.total_bookmarks}</span>
-            {props.novel.page_count > 1 && <span>📄 {props.novel.page_count}页</span>}
+          <div class="flex items-center gap-[var(--spacingHorizontalS)] text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase100)]">
+            <span>{props.novel.total_bookmarks}</span>
+            {props.novel.page_count > 1 && (
+              <span class="flex items-center gap-[var(--spacingHorizontalXXS)]">
+                <span aria-hidden="true">·</span>
+                <span>{props.novel.page_count}p</span>
+              </span>
+            )}
           </div>
           <IllustTags tags={props.novel.tags} size="small" class="max-h-[54px] overflow-hidden" />
-          <div class="flex items-center gap-2 text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase100)]">
-            <span>📖 {props.novel.text_length.toLocaleString()}字</span>
+          <div class="flex items-center gap-[var(--spacingHorizontalS)] text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase100)]">
+            <span>{props.novel.text_length.toLocaleString()}字</span>
             {props.novel.series?.title && (
               <button
-                class="inline-flex items-center bg-transparent border-none p-0 cursor-pointer"
+                class="inline-flex items-center bg-transparent border-none p-0 cursor-pointer text-[var(--colorBrandForeground1)] hover:text-[var(--colorBrandForegroundLinkHover)] [font-size:var(--fontSizeBase100)]"
                 onClick={(e) => {
                   e.stopPropagation();
                   props.onSeriesClick?.(props.novel.series!.id!);
                 }}
                 aria-label={`查看系列: ${props.novel.series.title}`}
               >
-                <fluent-badge appearance="subtle">📚 系列</fluent-badge>
+                <span aria-hidden="true">·</span>
+                <span class="ml-[var(--spacingHorizontalXXS)] truncate max-w-[100px]">
+                  {props.novel.series.title}
+                </span>
               </button>
             )}
           </div>
@@ -124,10 +162,11 @@ const NovelCard: Component<Props> = (props) => {
         {/* Bookmark button */}
         <div class="flex-shrink-0 self-start">
           <button
-            class="w-7 h-7 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-sm transition-all active:scale-90 select-none"
+            class="min-w-9 min-h-9 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralBackground2)] text-sm transition-all active:scale-90 select-none border-none cursor-pointer hover:bg-[var(--colorNeutralBackground3)]"
             classList={{
-              "text-red-400": bookmarked(),
-              "text-white/70 hover:text-red-300": !bookmarked(),
+              "text-[var(--colorStatusDangerForeground1)]": bookmarked(),
+              "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerBackground1)]":
+                !bookmarked(),
             }}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
@@ -140,7 +179,7 @@ const NovelCard: Component<Props> = (props) => {
             onClick={(e) => e.stopPropagation()}
             aria-label={bookmarked() ? "取消收藏" : "收藏"}
           >
-            {bookmarked() ? "♥" : "♡"}
+            <HeartSvg filled={bookmarked()} size={16} />
           </button>
           <HeartBurstEffect trigger={bookmarkBurstTrigger} size={80} particleCount={6} />
         </div>
@@ -148,8 +187,10 @@ const NovelCard: Component<Props> = (props) => {
 
       {/* Private bookmark toast */}
       {privateHint() && (
-        <div class="absolute inset-0 flex items-center justify-center bg-black/60 rounded-[var(--borderRadiusMedium)] pointer-events-none z-10">
-          <span class="text-white [font-size:var(--fontSizeBase200)] font-medium">已私密收藏</span>
+        <div class="absolute inset-0 flex items-center justify-center bg-[var(--colorOverlayBackground)] rounded-[var(--borderRadiusMedium)] pointer-events-none z-10">
+          <span class="text-[var(--colorOverlayForeground)] [font-size:var(--fontSizeBase200)] font-medium">
+            已私密收藏
+          </span>
         </div>
       )}
     </div>
@@ -214,7 +255,7 @@ export const NovelCoverCard: Component<Props> = (props) => {
 
   return (
     <div
-      class="relative bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] shadow-[var(--elevation2)] overflow-hidden cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] flex flex-col h-full"
+      class="relative surface-card overflow-hidden cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] flex flex-col h-full"
       onClick={() => props.onClick(props.novel.id)}
     >
       {/* Cover image — square, fills card width */}
@@ -226,7 +267,7 @@ export const NovelCoverCard: Component<Props> = (props) => {
           loading="lazy"
         />
         {/* Badge group — 左上角 */}
-        <div class="absolute top-1 left-1 flex items-center gap-1 pointer-events-none z-1">
+        <div class="absolute top-[var(--spacingVerticalXXS)] left-[var(--spacingHorizontalXXS)] flex items-center gap-[var(--spacingHorizontalXXS)] pointer-events-none z-1">
           {props.novel.x_restrict > 0 && (
             <fluent-badge
               appearance="filled"
@@ -242,12 +283,13 @@ export const NovelCoverCard: Component<Props> = (props) => {
           )}
         </div>
         {/* Bookmark button — 右下角 */}
-        <div class="absolute bottom-1.5 right-1.5 z-1">
+        <div class="absolute bottom-[var(--spacingVerticalXS)] right-[var(--spacingHorizontalXS)] z-1">
           <button
-            class="w-7 h-7 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-sm transition-all active:scale-90 select-none"
+            class="min-w-9 min-h-9 flex items-center justify-center rounded-full bg-[var(--colorOverlaySurface)] backdrop-blur-sm text-sm transition-all active:scale-90 select-none border-none cursor-pointer"
             classList={{
-              "text-red-400": bookmarked(),
-              "text-white/70 hover:text-red-300": !bookmarked(),
+              "text-[var(--colorStatusDangerForeground1)]": bookmarked(),
+              "text-[var(--colorNeutralForegroundOnBrand)] hover:text-[var(--colorStatusDangerBackground1)]":
+                !bookmarked(),
             }}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
@@ -260,29 +302,29 @@ export const NovelCoverCard: Component<Props> = (props) => {
             onClick={(e) => e.stopPropagation()}
             aria-label={bookmarked() ? "取消收藏" : "收藏"}
           >
-            {bookmarked() ? "♥" : "♡"}
+            <HeartSvg filled={bookmarked()} size={16} />
           </button>
           <HeartBurstEffect trigger={bookmarkBurstTrigger} size={60} particleCount={6} />
         </div>
       </div>
 
       {/* Info area — 封面下方 */}
-      <div class="flex flex-col gap-1 p-2 flex-1 min-w-0">
+      <div class="flex flex-col gap-[var(--spacingVerticalXS)] p-[var(--spacingHorizontalM)] flex-1 min-w-0">
         <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] line-clamp-2 leading-tight">
           {props.novel.title}
         </p>
-        <div class="flex items-center gap-1.5 text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase200)]">
-          <span>📄 {props.novel.page_count || 1}p</span>
+        <div class="flex items-center gap-[var(--spacingHorizontalXS)] text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase200)]">
+          <span>{props.novel.page_count || 1}p</span>
           <span aria-hidden="true">·</span>
-          <span>⭐ {props.novel.total_bookmarks}</span>
+          <span>{props.novel.total_bookmarks}</span>
         </div>
         <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorBrandForeground1)] truncate">
           @{props.novel.user.name}
         </p>
-        <div class="flex items-center gap-1 flex-wrap min-w-0 overflow-hidden">
+        <div class="flex items-center gap-[var(--spacingHorizontalXXS)] flex-wrap min-w-0 overflow-hidden">
           <For each={tags().visible}>
             {(tag) => (
-              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] bg-[var(--colorNeutralBackground2)] px-1.5 py-0.5 rounded-[var(--borderRadiusSmall)] truncate max-w-[80px]">
+              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] bg-[var(--colorNeutralBackground2)] px-[var(--spacingHorizontalXS)] py-[var(--spacingVerticalXXS)] rounded-[var(--borderRadiusSmall)] truncate max-w-[80px]">
                 {tag.translated_name || tag.name}
               </span>
             )}
@@ -295,7 +337,7 @@ export const NovelCoverCard: Component<Props> = (props) => {
         </div>
         {props.novel.series?.title && (
           <button
-            class="self-start inline-flex items-center bg-transparent border-none p-0 cursor-pointer mt-0.5 w-full overflow-hidden"
+            class="self-start inline-flex items-center bg-transparent border-none p-0 cursor-pointer mt-[var(--spacingVerticalXXS)] w-full overflow-hidden text-[var(--colorBrandForeground1)] [font-size:var(--fontSizeBase100)] hover:text-[var(--colorBrandForegroundLinkHover)]"
             onClick={(e) => {
               e.stopPropagation();
               props.onSeriesClick?.(props.novel.series!.id!);
@@ -306,7 +348,7 @@ export const NovelCoverCard: Component<Props> = (props) => {
               appearance="subtle"
               class="[font-size:var(--fontSizeBase100)] truncate max-w-full"
             >
-              📖 {props.novel.series.title}
+              {props.novel.series.title}
             </fluent-badge>
           </button>
         )}
@@ -314,8 +356,10 @@ export const NovelCoverCard: Component<Props> = (props) => {
 
       {/* Private bookmark toast */}
       {privateHint() && (
-        <div class="absolute inset-0 flex items-center justify-center bg-black/60 rounded-[var(--borderRadiusMedium)] pointer-events-none z-10">
-          <span class="text-white [font-size:var(--fontSizeBase200)] font-medium">已私密收藏</span>
+        <div class="absolute inset-0 flex items-center justify-center bg-[var(--colorOverlayBackground)] rounded-[var(--borderRadiusMedium)] pointer-events-none z-10">
+          <span class="text-[var(--colorOverlayForeground)] [font-size:var(--fontSizeBase200)] font-medium">
+            已私密收藏
+          </span>
         </div>
       )}
     </div>

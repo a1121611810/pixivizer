@@ -2,9 +2,9 @@ import { For, Show, type Component } from "solid-js";
 import type { SearchResultItem, ApiError, PixivIllust, PixivNovel } from "@/api/types";
 import ImageCard from "@/components/ImageCard";
 import NovelCard from "@/components/NovelCard";
-import IllustTags from "@/components/IllustTags";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorDisplay from "@/components/ErrorDisplay";
+import FluentIcon from "@/components/ui/FluentIcon";
 
 interface Props {
   results: SearchResultItem[];
@@ -26,7 +26,7 @@ const SearchResults: Component<Props> = (props) => {
 
       <Show when={!props.error}>
         {/* Results list */}
-        <div class="flex flex-col gap-3">
+        <div class="flex flex-col gap-[var(--spacingVerticalM)]">
           <For each={props.results}>
             {(item) => (
               <Show
@@ -38,15 +38,10 @@ const SearchResults: Component<Props> = (props) => {
                   />
                 }
               >
-                <div>
-                  <ImageCard
-                    illust={item.entity as PixivIllust}
-                    onClick={() => props.onIllustClick(item.entity.id)}
-                  />
-                  <div class="px-2.5 pt-1 pb-2">
-                    <IllustTags tags={(item.entity as PixivIllust).tags} size="small" />
-                  </div>
-                </div>
+                <ImageCard
+                  illust={item.entity as PixivIllust}
+                  onClick={() => props.onIllustClick(item.entity.id)}
+                />
               </Show>
             )}
           </For>
@@ -54,17 +49,17 @@ const SearchResults: Component<Props> = (props) => {
 
         {/* Loading indicator */}
         <Show when={props.loading}>
-          <div class="py-6">
+          <div class="py-[var(--spacingVerticalXXL)]">
             <LoadingSpinner text="加载中..." />
           </div>
         </Show>
 
-        {/* Load more button or end indicator */}
+        {/* Load more or end indicator */}
         <Show when={!props.loading}>
           <Show when={props.hasMore && props.results.length > 0}>
-            <div class="flex justify-center py-4">
+            <div class="flex justify-center py-[var(--spacingVerticalXL)]">
               <button
-                class="px-6 py-3 min-h-11 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] text-sm font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-[0.98] transition-all duration-[var(--durationFast)]"
+                class="px-[var(--spacingHorizontalXXL)] py-[var(--spacingVerticalM)] min-h-11 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-[var(--colorNeutralForegroundOnBrand)] text-sm font-semibold hover:bg-[var(--colorBrandBackgroundHover)] active:scale-[0.98] transition-all duration-[var(--durationFast)] focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-2 focus-visible:outline-offset-1"
                 onClick={props.onLoadMore}
               >
                 加载更多
@@ -73,17 +68,30 @@ const SearchResults: Component<Props> = (props) => {
           </Show>
 
           <Show when={!props.hasMore && props.results.length > 0}>
-            <p class="text-center py-6 text-[var(--colorNeutralForeground4)] text-sm">已经到底了</p>
+            <div class="flex items-center gap-3 py-[var(--spacingVerticalXXL)]" role="separator">
+              <span class="flex-1 h-[1px] bg-[var(--colorNeutralStroke2)]" />
+              <span class="text-[var(--colorNeutralForeground4)] [font-size:var(--fontSizeBase200)] flex-shrink-0">
+                没有更多了
+              </span>
+              <span class="flex-1 h-[1px] bg-[var(--colorNeutralStroke2)]" />
+            </div>
           </Show>
         </Show>
 
         {/* Empty state */}
         <Show when={!props.loading && props.results.length === 0 && !props.hasMore && !props.error}>
-          <div class="flex flex-col items-center gap-3 py-16 text-center">
-            <p class="text-[var(--colorNeutralForeground3)] text-base">没有找到相关作品</p>
-            <p class="text-[var(--colorNeutralForeground4)] text-sm">
-              试试其他关键词或调整筛选条件
-            </p>
+          <div class="flex flex-col items-center gap-[var(--spacingVerticalL)] py-[var(--spacingVerticalXXL)] text-center mt-8">
+            <span class="text-[var(--colorNeutralForeground4)]">
+              <FluentIcon name="search" size={48} />
+            </span>
+            <div class="flex flex-col gap-[var(--spacingVerticalXS)]">
+              <p class="text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase300)] font-medium">
+                没有找到相关作品
+              </p>
+              <p class="text-[var(--colorNeutralForeground4)] [font-size:var(--fontSizeBase200)]">
+                试试其他关键词或调整筛选条件
+              </p>
+            </div>
           </div>
         </Show>
       </Show>

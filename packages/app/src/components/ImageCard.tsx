@@ -4,6 +4,7 @@ import { listQuality } from "../stores/uiStore";
 import { addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import PixivImage from "./PixivImage";
 import HeartBurstEffect from "./HeartBurstEffect";
+import IllustTags from "./IllustTags";
 import { resolveImageUrl } from "../utils/imageLoader";
 
 function resolveUrl(illust: PixivIllust): string {
@@ -16,6 +17,36 @@ function resolveUrl(illust: PixivIllust): string {
   }
   // Original: use original_image_url if available, otherwise fallback to large
   return illust.meta_single_page?.original_image_url ?? illust.image_urls.large;
+}
+
+/** 收藏爱心 SVG — 24×24 viewBox，与 FluentIcon 风格一致 */
+function HeartSvg(props: { filled: boolean; size?: number }) {
+  const s = props.size ?? 24;
+  return (
+    <svg
+      width={s}
+      height={s}
+      viewBox="0 0 24 24"
+      fill={props.filled ? "currentColor" : "none"}
+      aria-hidden="true"
+    >
+      {props.filled ? (
+        <path
+          d="M12.82 5.58l-.82.82-.82-.82a4.5 4.5 0 0 0-6.36 6.36l.82.82L12 20.06l6.36-6.36.82-.82a4.5 4.5 0 0 0-6.36-6.36z"
+          fill="currentColor"
+        />
+      ) : (
+        <path
+          d="M12.82 5.58l-.82.82-.82-.82a4.5 4.5 0 0 0-6.36 6.36l.82.82L12 20.06l6.36-6.36.82-.82a4.5 4.5 0 0 0-6.36-6.36z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      )}
+    </svg>
+  );
 }
 
 interface Props {
@@ -105,7 +136,7 @@ const ImageCard: Component<Props> = (props) => {
   return (
     <div class="image-card" onClick={() => props.onClick(props.illust.id)}>
       <div class="relative overflow-hidden rounded-[var(--borderRadiusMedium)]">
-        {/* Blur-up placeholder: square_medium 瞬间加载，铺底模糊占位；主图加载后淡出 */}
+        {/* Blur-up placeholder */}
         <img
           src={resolveImageUrl(props.illust.image_urls.square_medium)}
           alt=""
@@ -136,12 +167,12 @@ const ImageCard: Component<Props> = (props) => {
           />
         )}
         {isUgoira() && (
-          <div class="absolute top-1.5 right-1.5">
-            <fluent-badge appearance="filled">▶ 动图</fluent-badge>
+          <div class="absolute top-[var(--spacingVerticalXS)] right-[var(--spacingHorizontalXS)]">
+            <fluent-badge appearance="filled">动图</fluent-badge>
           </div>
         )}
-        {/* Badge group — 左上角，水平排列 */}
-        <div class="absolute top-1.5 left-1.5 flex items-center gap-[var(--spacingHorizontalXXS)] pointer-events-none select-none z-1">
+        {/* Badge group — 左上角 */}
+        <div class="absolute top-[var(--spacingVerticalXS)] left-[var(--spacingHorizontalXS)] flex items-center gap-[var(--spacingHorizontalXXS)] pointer-events-none select-none z-1">
           {props.illust.x_restrict === 1 && (
             <fluent-badge appearance="filled" color="danger">
               R-18
@@ -159,17 +190,18 @@ const ImageCard: Component<Props> = (props) => {
           )}
         </div>
         {props.illust.page_count > 1 && (
-          <div class="absolute bottom-1.5 left-1.5">
-            <fluent-badge appearance="subtle">📄 {props.illust.page_count}</fluent-badge>
+          <div class="absolute bottom-[var(--spacingVerticalXS)] left-[var(--spacingHorizontalXS)]">
+            <fluent-badge appearance="subtle">{props.illust.page_count}p</fluent-badge>
           </div>
         )}
-        {/* Bookmark heart — bottom-right */}
-        <div class="absolute bottom-1.5 right-1.5">
+        {/* Bookmark heart — 右下角 */}
+        <div class="absolute bottom-[var(--spacingVerticalXS)] right-[var(--spacingHorizontalXS)]">
           <button
-            class="w-7 h-7 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-sm transition-all active:scale-90 select-none"
+            class="min-w-9 min-h-9 flex items-center justify-center rounded-full bg-[var(--colorOverlaySurface)] backdrop-blur-sm text-sm transition-all active:scale-90 select-none border-none cursor-pointer"
             classList={{
-              "text-red-400": bookmarked(),
-              "text-white/70 hover:text-red-300": !bookmarked(),
+              "text-[var(--colorStatusDangerForeground1)]": bookmarked(),
+              "text-[var(--colorNeutralForegroundOnBrand)] hover:text-[var(--colorStatusDangerBackground1)]":
+                !bookmarked(),
             }}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
@@ -182,7 +214,7 @@ const ImageCard: Component<Props> = (props) => {
             onClick={(e) => e.stopPropagation()}
             aria-label={bookmarked() ? "取消收藏" : "收藏"}
           >
-            {bookmarked() ? "♥" : "♡"}
+            <HeartSvg filled={bookmarked()} size={16} />
           </button>
           <HeartBurstEffect trigger={bookmarkBurstTrigger} size={80} particleCount={6} />
         </div>
@@ -194,11 +226,12 @@ const ImageCard: Component<Props> = (props) => {
           </div>
         )}
       </div>
-      <div class="p-2.5">
-        <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground1)] truncate font-semibold">
+      {/* Info area */}
+      <div class="p-[var(--spacingHorizontalM)]">
+        <p class="[font-size:var(--fontSizeBase200)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
           {props.illust.title}
         </p>
-        <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground2)] truncate mt-0.5 flex items-baseline gap-1">
+        <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground2)] truncate mt-[var(--spacingVerticalXXS)] flex items-baseline gap-[var(--spacingHorizontalXS)]">
           <span class="truncate">@{props.illust.user.name}</span>
           <span class="text-[var(--colorNeutralForegroundDisabled)] flex-shrink-0 select-none">
             ·
@@ -206,18 +239,21 @@ const ImageCard: Component<Props> = (props) => {
           <button
             class="inline-flex items-center min-h-[40px] font-semibold [font-size:var(--fontSizeBase100)] cursor-pointer select-none transition-colors duration-[var(--durationFast)] ease-[var(--curveEasyEase)] active:scale-[0.95] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)] appearance-none border-none bg-transparent p-0 flex-shrink-0"
             classList={{
-              "text-[var(--colorBrandForeground1)] hover:text-[var(--colorBrandForeground1Hover)]":
+              "text-[var(--colorBrandForeground1)] hover:text-[var(--colorBrandForegroundLinkHover)]":
                 !isFollowed(),
-              "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerForeground2)]":
+              "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerForeground1)]":
                 isFollowed(),
             }}
             onClick={(e) => toggleFollow(e)}
             disabled={following()}
             aria-label={isFollowed() ? "取消关注" : "关注"}
           >
-            {following() ? "…" : isFollowed() ? "已关注" : "关注"}
+            {following() ? "关注中…" : isFollowed() ? "已关注" : "关注"}
           </button>
         </p>
+        <div class="mt-[var(--spacingVerticalXS)]">
+          <IllustTags tags={props.illust.tags} size="small" />
+        </div>
       </div>
     </div>
   );
