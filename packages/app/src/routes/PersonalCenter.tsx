@@ -106,7 +106,13 @@ const PersonalCenter: Component<Props> = (props) => {
       u.profile_image_urls.px_170x170 ||
       u.profile_image_urls.px_50x50 ||
       "";
-    console.log("[DEBUG-avatar] PersonalCenter: src=%s, hasMedium=%s, hasPx170=%s, hasPx50=%s", src, !!u.profile_image_urls.medium, !!u.profile_image_urls.px_170x170, !!u.profile_image_urls.px_50x50);
+    console.log(
+      "[DEBUG-avatar] PersonalCenter: src=%s, hasMedium=%s, hasPx170=%s, hasPx50=%s",
+      src,
+      !!u.profile_image_urls.medium,
+      !!u.profile_image_urls.px_170x170,
+      !!u.profile_image_urls.px_50x50,
+    );
     if (!src) {
       console.log("[DEBUG-avatar] PersonalCenter: empty src, using fallback");
       setAvatarDisplayUrl("");

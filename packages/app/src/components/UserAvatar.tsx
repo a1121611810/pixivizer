@@ -16,7 +16,12 @@ const UserAvatar: Component = () => {
       return;
     }
     const src = u.profile_image_urls.px_50x50 || u.profile_image_urls.medium || "";
-    console.log("[DEBUG-avatar] UserAvatar: src=%s, hasPx50=%s, hasMedium=%s", src, !!u.profile_image_urls.px_50x50, !!u.profile_image_urls.medium);
+    console.log(
+      "[DEBUG-avatar] UserAvatar: src=%s, hasPx50=%s, hasMedium=%s",
+      src,
+      !!u.profile_image_urls.px_50x50,
+      !!u.profile_image_urls.medium,
+    );
     if (!src) {
       console.log("[DEBUG-avatar] UserAvatar: empty src, using fallback");
       return;

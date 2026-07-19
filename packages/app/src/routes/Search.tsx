@@ -80,15 +80,23 @@ const Search: Component = () => {
       setHydrated(true);
 
       // 优先从缓存恢复，避免重复请求
-      const cached = readSearchCache(params.word.trim(), params.scope as SearchScope || "all", params.sort as SearchSort || "date_desc");
+      const cached = readSearchCache(
+        params.word.trim(),
+        (params.scope as SearchScope) || "all",
+        (params.sort as SearchSort) || "date_desc",
+      );
       if (cached) {
         store.setResults(
-          cached.illustResults, cached.novelResults,
-          false, cached.hasMoreIllust, cached.hasMoreNovel,
-          cached.nextIllustUrl, cached.nextNovelUrl,
+          cached.illustResults,
+          cached.novelResults,
+          false,
+          cached.hasMoreIllust,
+          cached.hasMoreNovel,
+          cached.nextIllustUrl,
+          cached.nextNovelUrl,
         );
         scrollRestore.restore();
-        return;  // ← 不发网络请求
+        return; // ← 不发网络请求
       }
 
       store.executeSearch();
@@ -105,7 +113,7 @@ const Search: Component = () => {
     const results = mergedResults();
     if (hydrated() && !scrollRestored() && results.length > 0) {
       const restored = scrollRestore.restore();
-      (void restored); // suppress unused variable warning
+      void restored; // suppress unused variable warning
       setScrollRestored(true); // gate off regardless of restore success
     }
   });

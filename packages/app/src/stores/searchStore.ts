@@ -79,12 +79,21 @@ function getSearchCacheKey(word: string, scope: SearchScope, sort: SearchSort): 
   return `${word}_${scope}_${sort}`;
 }
 
-function readSearchCache(word: string, scope: SearchScope, sort: SearchSort): SearchCacheEntry | undefined {
+function readSearchCache(
+  word: string,
+  scope: SearchScope,
+  sort: SearchSort,
+): SearchCacheEntry | undefined {
   const key = getSearchCacheKey(word, scope, sort);
   return searchCache.get(key);
 }
 
-function writeSearchCache(word: string, scope: SearchScope, sort: SearchSort, entry: SearchCacheEntry): void {
+function writeSearchCache(
+  word: string,
+  scope: SearchScope,
+  sort: SearchSort,
+  entry: SearchCacheEntry,
+): void {
   const key = getSearchCacheKey(word, scope, sort);
   searchCache.delete(key);
   searchCache.set(key, entry);
@@ -273,7 +282,10 @@ export function createSearchStore(): SearchStoreState {
 
       decPending();
     } catch (err) {
-      if ((err as Error).name === "AbortError") { decPending(); return; }
+      if ((err as Error).name === "AbortError") {
+        decPending();
+        return;
+      }
       setError(toApiError(err));
       decPending();
     }
