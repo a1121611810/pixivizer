@@ -22,7 +22,8 @@ export type FluentIconName =
   | "search"
   | "dismiss"
   | "list"
-  | "history";
+  | "history"
+  | "filter";
 
 interface Props {
   name: FluentIconName;
@@ -157,6 +158,12 @@ const paths: Record<FluentIconName, { regular: string; filled: string }> = {
       "M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zm.5 2.5a1 1 0 0 0-1 1v5a1 1 0 0 0 .4.8l4 3a1 1 0 0 0 1.2-1.6L13 11.5V7a1 1 0 0 0-.5-.9z",
     filled:
       "M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm.5 4.5a1 1 0 0 0-1 1v5a1 1 0 0 0 .4.8l4 3a1 1 0 0 0 1.2-1.6L13 11.5V7.5a1 1 0 0 0-.5-.9z",
+  },
+  filter: {
+    regular:
+      "M10 18h4a1 1 0 0 1 .117 1.993L14 20h-4a1 1 0 0 1-.117-1.993L10 18zm-3-7h10a1 1 0 0 1 .117 1.993L17 13H7a1 1 0 0 1-.117-1.993L7 11zm-2-7h14a1 1 0 0 1 .117 1.993L19 6H5a1 1 0 0 1-.117-1.993L5 4z",
+    filled:
+      "M5 4a1 1 0 0 0 0 2h14a1 1 0 1 0 0-2H5zm2 7a1 1 0 0 0 0 2h10a1 1 0 1 0 0-2H7zm3 7a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2h-4z",
   },
 };
 
