@@ -116,12 +116,4 @@ export async function logout() {
   await removeRefreshToken();
   // 清空所有 TQ 缓存，防止退出登录后数据泄漏
   queryClient.clear();
-  // 跳转到登录页（动态导入避免与 router.tsx 的循环依赖）
-  try {
-    const { router } = await import("../router");
-    await router.navigate({ to: "/login", replace: true });
-  } catch {
-    // 兜底：window.location 全页导航
-    window.location.href = "/login";
-  }
 }

@@ -317,6 +317,11 @@ async function executeRequest<T>(
             });
           }
           await refreshPromise;
+          if (!accessToken) {
+            throw classifyError(401, null);
+          }
+          // 400 OAuth 后 token 已刷新，递归调用时绕过去重层
+          return executeRequest<T>(method, path, data, signal);
         }
         throw classifyError(response!.status, null, response!.data);
       }

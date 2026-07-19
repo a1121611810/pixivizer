@@ -60,6 +60,16 @@ const RootLayout: Component = () => {
     clearOverlays();
   });
 
+  // 监听登录过期：当 isLoggedIn 从 true 变为 false 时自动跳转登录页
+  createEffect(() => {
+    const loggedIn = isLoggedIn();
+    // 跳过启动阶段（startup 代码在 onMount 中处理了初始导航）
+    if (isLoading()) return;
+    if (!loggedIn && location().pathname !== '/login' && location().pathname !== '/age-confirmation') {
+      navigate({ to: "/login", replace: true });
+    }
+  });
+
   onMount(async () => {
     // Disable browser native scroll restoration — we manage scroll ourselves via stores + restoreScrollTop.
     // Without this, window.history.go(-1) triggers popstate and the browser may fight our scroll restoration.
