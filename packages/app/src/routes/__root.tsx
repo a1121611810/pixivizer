@@ -63,16 +63,10 @@ const RootLayout: Component = () => {
   // 监听登录过期：当 isLoggedIn 从 true 变为 false 时自动跳转登录页
   createEffect(() => {
     const loggedIn = isLoggedIn();
-    const loading = isLoading();
     const path = location().pathname;
     // 跳过启动阶段（startup 代码在 onMount 中处理了初始导航）
-    if (loading) {
-      console.warn("[DEBUG-AUTH] root effect: loading=true, skipping");
-      return;
-    }
-    console.warn("[DEBUG-AUTH] root effect: isLoggedIn=%s, path=%s", loggedIn, path);
+    if (isLoading()) return;
     if (!loggedIn && path !== '/login' && path !== '/age-confirmation') {
-      console.warn("[DEBUG-AUTH] root effect: navigating to /login");
       navigate({ to: "/login", replace: true });
     }
   });
