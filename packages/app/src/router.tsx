@@ -14,7 +14,7 @@ import {
   reset as resetFollowList,
   type FollowMode,
 } from "@/stores/followListStore";
-import { loadNovelEntry } from "@/stores/novelCache";
+import { loadNovelEntry, peekEntry, getEntry } from "@/stores/novelCache";
 import { setCurrentTab } from "@/stores/uiStore";
 import { load as loadUserIllusts, contentType } from "@/stores/userIllustsStore";
 import { loadProfile, loadFollowing } from "@/stores/userStore";
@@ -114,6 +114,31 @@ const novelRoute = createRoute({
   loader: async ({ params }) => {
     try {
       const id = Number(params.id);
+
+      // 优先从缓存读取，零网络请求
+      const cached = peekEntry(id);
+      if (cached) {
+        await loadProfile(cached.detail.user.id);
+        return {
+          novel: cached.detail,
+          text: cached.text,
+          nav: cached.nav,
+          images: cached.images,
+          error: null,
+        };
+      }
+      const dbEntry = await getEntry(id);
+      if (dbEntry) {
+        await loadProfile(dbEntry.detail.user.id);
+        return {
+          novel: dbEntry.detail,
+          text: dbEntry.text,
+          nav: dbEntry.nav,
+          images: dbEntry.images,
+          error: null,
+        };
+      }
+
       const entry = await loadNovelEntry(id);
       await loadProfile(entry.detail.user.id);
       return {

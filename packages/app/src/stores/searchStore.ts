@@ -24,6 +24,7 @@ export interface SearchStoreState {
   hasMoreNovel: () => boolean;
   nextIllustUrl: () => string | null;
   nextNovelUrl: () => string | null;
+  searchCache: () => number;
   searchHistory: () => string[];
   setKeyword: (word: string) => void;
   setScope: (scope: SearchScope) => void;
@@ -59,6 +60,49 @@ export interface SearchStoreState {
 }
 
 const MAX_HISTORY = 50;
+
+// ─── 搜索结果 LRU 缓存（跨组件卸载持久）───
+
+interface SearchCacheEntry {
+  illustResults: PixivIllust[];
+  novelResults: PixivNovel[];
+  hasMoreIllust: boolean;
+  hasMoreNovel: boolean;
+  nextIllustUrl: string | null;
+  nextNovelUrl: string | null;
+}
+
+const SEARCH_CACHE_MAX = 20;
+const searchCache = new Map<string, SearchCacheEntry>();
+
+function getSearchCacheKey(word: string, scope: SearchScope, sort: SearchSort): string {
+  return `${word}_${scope}_${sort}`;
+}
+
+function readSearchCache(word: string, scope: SearchScope, sort: SearchSort): SearchCacheEntry | undefined {
+  const key = getSearchCacheKey(word, scope, sort);
+  return searchCache.get(key);
+}
+
+function writeSearchCache(word: string, scope: SearchScope, sort: SearchSort, entry: SearchCacheEntry): void {
+  const key = getSearchCacheKey(word, scope, sort);
+  searchCache.delete(key);
+  searchCache.set(key, entry);
+  if (searchCache.size > SEARCH_CACHE_MAX) {
+    const first = searchCache.keys().next();
+    if (!first.done) searchCache.delete(first.value);
+  }
+}
+
+function clearSearchCache(word?: string, scope?: SearchScope, sort?: SearchSort): void {
+  if (word && scope && sort) {
+    searchCache.delete(getSearchCacheKey(word, scope, sort));
+  } else {
+    searchCache.clear();
+  }
+}
+
+export { readSearchCache, clearSearchCache };
 
 export function createSearchStore(): SearchStoreState {
   const [keyword, setKeyword] = createSignal("");
@@ -217,6 +261,16 @@ export function createSearchStore(): SearchStoreState {
         setError({ type: ApiErrorType.UNKNOWN, message: "搜索失败，请稍后重试" });
       }
 
+      // 写入搜索结果缓存
+      writeSearchCache(kw, currentScope, currentSort, {
+        illustResults: illustResults(),
+        novelResults: novelResults(),
+        hasMoreIllust: hasMoreIllust(),
+        hasMoreNovel: hasMoreNovel(),
+        nextIllustUrl: nextIllustUrl(),
+        nextNovelUrl: nextNovelUrl(),
+      });
+
       decPending();
     } catch (err) {
       if ((err as Error).name === "AbortError") { decPending(); return; }
@@ -274,6 +328,7 @@ export function createSearchStore(): SearchStoreState {
     hasMoreNovel,
     nextIllustUrl,
     nextNovelUrl,
+    searchCache: () => searchCache.size,
     searchHistory,
     setKeyword,
     setScope,
