@@ -295,21 +295,26 @@ async function executeRequest<T>(
       }
 
       if (response!.status === 401 && onUnauthorized) {
+        console.warn("[DEBUG-AUTH] 401 detected, calling onUnauthorized...");
         if (!refreshPromise) {
           refreshPromise = onUnauthorized().finally(() => {
             refreshPromise = null;
           });
         }
         await refreshPromise;
+        console.warn("[DEBUG-AUTH] after 401 refresh, accessToken=%s", accessToken ? "set" : "EMPTY");
         if (!accessToken) {
+          console.warn("[DEBUG-AUTH] no accessToken after 401 refresh, throwing");
           throw classifyError(401, null);
         }
         // 401 后 token 已刷新，递归调用时绕过去重层
+        console.warn("[DEBUG-AUTH] 401 token refreshed, retrying original request");
         return executeRequest<T>(method, path, data, signal);
       }
 
       // 400 OAuth 错误：refresh_token 已失效，触发清理后以 UNAUTHORIZED 抛出
       if (isOAuthTokenErrorResponse(response!.status, response!.data)) {
+        console.warn("[DEBUG-AUTH] 400 OAuth detected, calling onUnauthorized...");
         if (onUnauthorized) {
           if (!refreshPromise) {
             refreshPromise = onUnauthorized().finally(() => {
@@ -317,12 +322,16 @@ async function executeRequest<T>(
             });
           }
           await refreshPromise;
+          console.warn("[DEBUG-AUTH] after onUnauthorized, accessToken=%s", accessToken ? "set" : "EMPTY");
           if (!accessToken) {
+            console.warn("[DEBUG-AUTH] no accessToken after refresh, throwing UNAUTHORIZED");
             throw classifyError(401, null);
           }
           // 400 OAuth 后 token 已刷新，递归调用时绕过去重层
+          console.warn("[DEBUG-AUTH] token refreshed, retrying original request");
           return executeRequest<T>(method, path, data, signal);
         }
+        console.warn("[DEBUG-AUTH] 400 OAuth but no onUnauthorized handler");
         throw classifyError(response!.status, null, response!.data);
       }
 

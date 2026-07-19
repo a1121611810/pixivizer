@@ -67,15 +67,18 @@ export async function initializeAuth() {
 }
 
 async function performRefresh(token: string) {
+  console.warn("[DEBUG-AUTH] performRefresh called, token=%s", token ? "set" : "EMPTY");
   try {
     const resp = await refreshToken(token);
+    console.warn("[DEBUG-AUTH] refreshToken SUCCESS, new access_token=%s", resp.access_token ? "set" : "EMPTY");
     syncToken(resp.access_token);
     setRefreshTokenSig(resp.refresh_token);
     setUser(resp.user);
     setIsLoggedIn(true);
     lastRefreshTime = Date.now();
     await setRefreshToken(resp.refresh_token);
-  } catch {
+  } catch (e) {
+    console.warn("[DEBUG-AUTH] refreshToken FAILED:", e);
     await logout();
   }
 }
@@ -107,6 +110,7 @@ export async function loginWithPKCE(code: string, codeVerifier: string) {
 }
 
 export async function logout() {
+  console.warn("[DEBUG-AUTH] logout() called");
   appStateListener?.remove();
   appStateListener = null;
   syncToken("");
