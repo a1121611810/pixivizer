@@ -1,5 +1,4 @@
 import { createRoot, createSignal } from "solid-js";
-import { createStore } from "solid-js/store";
 import { createInfiniteQuery } from "@tanstack/solid-query";
 import { loadUserIllusts } from "../api/illust";
 import { loadUserNovels } from "../api/novel";
@@ -9,6 +8,7 @@ import { queryKeys } from "../api/queryKeys";
 import { normalizeQueryError } from "../api/normalizeQueryError";
 import { apiClient } from "../api/client";
 import { queryClient } from "../api/queryClient";
+import { scrollRestoreGlobal } from "../primitives/createScrollRestore";
 
 // ── Content type signal ──
 const [contentType, setContentType] = createSignal<ContentType>("illust");
@@ -74,12 +74,8 @@ const novelQuery = createRoot(() =>
   ),
 );
 
-// ── Scroll positions per content type (unchanged) ──
-const [scrollPositions, setScrollPositions] = createStore<Record<ContentType, number>>({
-  illust: 0,
-  manga: 0,
-  novel: 0,
-});
+// ── Scroll positions per content type ──
+// 通过 scrollRestoreGlobal 统一管理
 
 // ── Derived exports ──
 
@@ -125,7 +121,7 @@ export const loading = () =>
 export const error = (): ApiError | null =>
   normalizeQueryError(contentType() === "novel" ? novelQuery.error : illustQuery.error);
 
-export { contentType, scrollPositions };
+export { contentType };
 
 // ── Actions ──
 
@@ -168,10 +164,10 @@ export function switchType(type: ContentType) {
 
 /** Save scroll position for current content type. */
 export function saveScrollPosition(pos: number) {
-  setScrollPositions(contentType(), pos);
+  scrollRestoreGlobal.setSimple(contentType(), pos);
 }
 
 /** Get saved scroll position for a content type. */
 export function getScrollPosition(type: ContentType): number {
-  return scrollPositions[type] ?? 0;
+  return scrollRestoreGlobal.getSimple(type) ?? 0;
 }

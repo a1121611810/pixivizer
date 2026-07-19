@@ -5,6 +5,8 @@ import type { PixivIllust, ContentType, ApiError } from "../api/types";
 import { currentTab } from "./uiStore";
 import { filterFeedIllusts } from "../utils/r18Filter";
 import { toApiError, pickBestErrorType } from "../api/client";
+import { scrollRestoreGlobal } from "../primitives/createScrollRestore";
+import type { ScrollRestoreState } from "../primitives/createScrollRestore";
 
 export type RecommendSubTab = "mixed" | "illust" | "manga";
 
@@ -54,19 +56,7 @@ const [state, setState] = createStore({
 //   TabIllusts["follow_private"], tabNextUrl["follow_private"]
 // Recommended sub-tab keys:
 //   TabIllusts["recommended_mixed"], tabIllusts["recommended_illust"], tabIllusts["recommended_manga"]
-/** @deprecated 迁移到 tabScrollState */
-const tabScrollY: Record<string, number> = {};
-
-/**
- * 滚动恢复状态（TanStack Virtual 格式）。
- * 与旧的 tabScrollY（number）并存，迁移完成后移除旧格式。
- */
-export interface ScrollRestoreState {
-  snapshot: import("@tanstack/solid-virtual").VirtualItem[];
-  offset: number;
-  version: number;
-}
-const tabScrollState: Record<string, ScrollRestoreState> = {};
+export type { ScrollRestoreState };
 
 const tabIllusts: Record<string, PixivIllust[]> = {};
 const tabNextUrl: Record<string, string | null> = {};
@@ -363,7 +353,7 @@ export function saveTabScroll(tab: string) {
   if (tab === "follow") {
     // Don't save tabNextUrl["follow"] — it's never used for follow
     // The per-source nextUrls are already maintained in tabNextUrl["follow_public"/"follow_private"]
-    tabScrollY[tab] = window.scrollY;
+    scrollRestoreGlobal.saveSimple(tab);
     return;
   }
   if (tab === "recommended") {
@@ -373,11 +363,11 @@ export function saveTabScroll(tab: string) {
     if (recommendSubTab() !== "mixed") {
       tabNextUrl[key] = state.nextUrl;
     }
-    tabScrollY[key] = window.scrollY;
+    scrollRestoreGlobal.saveSimple(key);
     return;
   }
   tabNextUrl[tab] = state.nextUrl;
-  tabScrollY[tab] = window.scrollY;
+  scrollRestoreGlobal.saveSimple(tab);
 }
 
 export function markFeedMounted() {
@@ -404,9 +394,9 @@ export function isFeedCached(tab?: string) {
 export function getFeedScrollY(tab?: string) {
   const t = tab ?? currentTab();
   if (t === "recommended") {
-    return tabScrollY[`recommended_${recommendSubTab()}`] || 0;
+    return scrollRestoreGlobal.getSimple(`recommended_${recommendSubTab()}`) ?? 0;
   }
-  return tabScrollY[t] || 0;
+  return scrollRestoreGlobal.getSimple(t) ?? 0;
 }
 
 // ── TanStack Virtual 滚动状态 API ──
@@ -421,11 +411,11 @@ function getScrollStateKey(tab?: string): string {
 }
 
 export function saveFeedScrollState(tab: string, st: ScrollRestoreState) {
-  tabScrollState[getScrollStateKey(tab)] = st;
+  scrollRestoreGlobal.saveVirtual(getScrollStateKey(tab), st);
 }
 
 export function getFeedScrollState(tab?: string): ScrollRestoreState | null {
-  return tabScrollState[getScrollStateKey(tab)] ?? null;
+  return scrollRestoreGlobal.getVirtual(getScrollStateKey(tab)) ?? null;
 }
 
 // ── Internal fetch functions ──

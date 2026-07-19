@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { loadRecommended, loadBookmarks, loadNext, loadFollow } from "@/api/novel";
 import type { PixivNovel } from "@/api/types";
 import { ApiErrorType } from "@/api/types";
+import { scrollRestoreGlobal } from "@/primitives/createScrollRestore";
 
 vi.mock("@capacitor/core", async () => {
   const actual = await vi.importActual<typeof import("@capacitor/core")>("@capacitor/core");
@@ -72,6 +73,7 @@ describe("novelStore", () => {
     vi.clearAllMocks();
     mockCurrentTab = "recommended";
     mockUser = { id: 42, name: "testuser" };
+    scrollRestoreGlobal.clearAll();
   });
 
   describe("ensureLoaded — recommended tab", () => {

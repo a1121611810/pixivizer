@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { loadRecommended, loadFollow, loadNext } from "@/api/illust";
 import { ApiErrorType, type PixivIllust } from "@/api/types";
+import { scrollRestoreGlobal } from "@/primitives/createScrollRestore";
 
 vi.mock("@capacitor/core", async () => {
   const actual = await vi.importActual<typeof import("@capacitor/core")>("@capacitor/core");
@@ -70,6 +71,7 @@ describe("saveTabScroll", () => {
   beforeEach(() => {
     vi.resetModules();
     mockCurrentTab = "recommended";
+    scrollRestoreGlobal.clearAll();
   });
 
   afterEach(() => {
@@ -559,6 +561,7 @@ describe("recommended sub-tab regression fixes", () => {
     mockCurrentTab = "recommended";
     vi.mocked(loadRecommended).mockReset();
     vi.mocked(loadNext).mockReset();
+    scrollRestoreGlobal.clearAll();
   });
 
   afterEach(() => {

@@ -10,22 +10,15 @@ import { toApiError, pickBestErrorType } from "../api/client";
 import { filterNovels } from "../utils/r18Filter";
 import { currentTab } from "./uiStore";
 import { user } from "./authStore";
+import { scrollRestoreGlobal } from "../primitives/createScrollRestore";
+import type { ScrollRestoreState } from "../primitives/createScrollRestore";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  Tab cache
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const tabNovels: Record<string, PixivNovel[]> = {};
 const tabNextUrl: Record<string, string | null> = {};
-/** @deprecated 迁移到 tabScrollState */
-const tabScrollY: Record<string, number> = {};
-
-/** 滚动恢复状态（TanStack Virtual 格式） */
-export interface ScrollRestoreState {
-  snapshot: import("@tanstack/solid-virtual").VirtualItem[];
-  offset: number;
-  version: number;
-}
-const tabScrollState: Record<string, ScrollRestoreState> = {};
+export type { ScrollRestoreState };
 
 const tabLoaded: Record<string, boolean> = {};
 
@@ -471,28 +464,21 @@ export async function fetchMore(): Promise<void> {
   }
 }
 
-function safeScrollY(): number {
-  if (typeof window !== "undefined") {
-    return window.scrollY;
-  }
-  return 0;
-}
-
 export function saveTabScroll(tab: string) {
   if (tab === "follow") {
-    tabScrollY[`novel_follow_${state.followTab}`] = safeScrollY();
+    scrollRestoreGlobal.saveSimple(`novel_follow_${state.followTab}`);
     tabNextUrl[`novel_follow_${state.followTab}`] = state.nextUrl;
     return;
   }
-  tabScrollY[getSourceKey(tab)] = safeScrollY();
+  scrollRestoreGlobal.saveSimple(getSourceKey(tab));
 }
 
 export function getFeedScrollY(tab?: string): number {
   const t = tab ?? currentTab();
   if (t === "follow") {
-    return tabScrollY[`novel_follow_${state.followTab}`] || 0;
+    return scrollRestoreGlobal.getSimple(`novel_follow_${state.followTab}`) ?? 0;
   }
-  return tabScrollY[getSourceKey(t)] || 0;
+  return scrollRestoreGlobal.getSimple(getSourceKey(t)) ?? 0;
 }
 
 // ── TanStack Virtual 滚动状态 API ──
@@ -506,11 +492,11 @@ function getScrollStateKey(tab?: string): string {
 }
 
 export function saveNovelScrollState(tab: string, st: ScrollRestoreState) {
-  tabScrollState[getScrollStateKey(tab)] = st;
+  scrollRestoreGlobal.saveVirtual(getScrollStateKey(tab), st);
 }
 
 export function getNovelScrollState(tab?: string): ScrollRestoreState | null {
-  return tabScrollState[getScrollStateKey(tab)] ?? null;
+  return scrollRestoreGlobal.getVirtual(getScrollStateKey(tab)) ?? null;
 }
 
 export function isNovelCached(tab?: string): boolean {

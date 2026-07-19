@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PixivIllust, PixivNovel } from "@/api/types";
+import { scrollRestoreGlobal } from "@/primitives/createScrollRestore";
 
 // ── Mock TanStack Query ──
 // Two createInfiniteQuery calls: illust (first) and novel (second)
@@ -134,6 +135,7 @@ describe("userIllustsStore", () => {
     mockNovelFetchingNext = false;
     mockNovelError = null;
     mockNovelHasNext = false;
+    scrollRestoreGlobal.clearAll();
   });
 
   describe("initial state", () => {

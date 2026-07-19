@@ -8,6 +8,7 @@ import { queryKeys } from "../api/queryKeys";
 import { normalizeQueryError } from "../api/normalizeQueryError";
 import { apiClient } from "../api/client";
 import { queryClient } from "../api/queryClient";
+import { scrollRestoreGlobal } from "../primitives/createScrollRestore";
 
 // ── Restrict signal (unchanged) ──
 const [restrict, setRestrictSignal] = createSignal<RestrictType>("public");
@@ -63,15 +64,14 @@ export const error = (): ApiError | null => normalizeQueryError(query.error);
 
 export { restrict };
 
-// ── Scroll persistence (unchanged) ──
-let scrollY = 0;
-
+// ── Scroll persistence ──
+// 通过 scrollRestoreGlobal 统一管理，不再使用模块级变量
 export function saveBookmarkScroll() {
-  scrollY = window.scrollY;
+  scrollRestoreGlobal.saveSimple("bookmarks");
 }
 
 export function getBookmarkScrollY(): number {
-  return scrollY;
+  return scrollRestoreGlobal.getSimple("bookmarks") ?? 0;
 }
 
 // ── Actions ──
