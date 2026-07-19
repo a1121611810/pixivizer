@@ -7,12 +7,13 @@ const SearchFAB: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ── Hide on /search, /login, /age-confirmation, or during content loading ──
+  // ── Hide on /search, /login, /age-confirmation, /layout-settings, or during content loading ──
   const isSearchPage = () => location().pathname === "/search";
   const isLoginPage = () => location().pathname === "/login";
   const isAgeConfirmation = () => location().pathname === "/age-confirmation";
+  const isLayoutSettingsPage = () => location().pathname === "/layout-settings";
 
-  const hidden = () => isSearchPage() || isLoginPage() || isAgeConfirmation() || isContentLoading();
+  const hidden = () => isSearchPage() || isLoginPage() || isAgeConfirmation() || isLayoutSettingsPage() || isContentLoading();
 
   // ── Draggable position ──
   const [pos, setPos] = createSignal<{ x: number; y: number } | null>(null);
