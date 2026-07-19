@@ -158,6 +158,12 @@ export const setThemePersisted = async (newTheme: Theme): Promise<void> => {
   }
 };
 
+// ── Drawer 开关
+const [drawerOpen, setDrawerOpen] = createSignal(false);
+export const showSettingsDrawer = () => drawerOpen();
+export const setShowSettingsDrawer = (v: boolean) => setDrawerOpen(v);
+export const openSettingsDrawer = () => setDrawerOpen(true);
+export const closeSettingsDrawer = () => setDrawerOpen(false);
 
 // ── 全局内容加载状态（控制 SearchFAB 等在加载时隐藏）
 const [contentLoading, setContentLoading] = createSignal(false);

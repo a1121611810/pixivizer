@@ -3,6 +3,7 @@ import { useNavigate, useRouter } from "@tanstack/solid-router";
 import { resolveImageUrl } from "../utils/imageLoader";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
+import SettingsDrawer from "../components/SettingsDrawer";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { scrollToTop } from "../utils/scrollToTop";
@@ -178,6 +179,8 @@ const FollowListPage: Component<Props> = (props) => {
           </div>
         </div>
       </PageTransition>
+
+      <SettingsDrawer />
 
       <NavBar />
     </>

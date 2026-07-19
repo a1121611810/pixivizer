@@ -16,6 +16,7 @@ import { viewedUser } from "../stores/userStore";
 import UserWorksFeed from "../components/UserWorksFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
+import SettingsDrawer from "../components/SettingsDrawer";
 import { layoutMode } from "../stores/uiStore";
 import { scrollToTop } from "../utils/scrollToTop";
 
@@ -121,6 +122,8 @@ const UserIllusts: Component = () => {
           />
         </div>
       </PageTransition>
+
+      <SettingsDrawer />
 
       <NavBar />
     </>
