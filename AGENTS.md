@@ -7,7 +7,7 @@
 - **技术栈**: SolidJS 1.9 + TypeScript 6.0 (strict) + Vite 8.0 + UnoCSS 66.7 + Capacitor 8.4；小说正文布局使用 `@chenglou/pretext`
 - **Monorepo**: pnpm workspace，含两个子包：`pictelio-app`（SPA 主体）和 `pictelio-website`（VitePress 落地页）
 - **入口**: `packages/app/src/main.tsx` → `packages/app/src/startup.ts` → `packages/app/src/App.tsx` → `packages/app/src/router.tsx`（TanStack Router，路由定义与 App 分离）
-- **路由**: `/login` `/recommended` `/following` `/illust/$id` `/novel/$id` `/bookmarks` `/illust-bookmarks` `/me` `/user/$id` `/user/$id/illusts` `/user/$id/following` `/user/$id/followers` `/history` `/follow-list` `/about` `/image-host` `/image-cache` `/age-confirmation` `/debug`
+- **路由**: `/login` `/recommended` `/following` `/illust/$id` `/novel/$id` `/bookmarks` `/me` `/user/$id` `/user/$id/illusts` `/user/$id/following` `/user/$id/followers` `/history` `/about` `/image-host` `/image-cache` `/age-confirmation` `/debug`
 - **设计系统**: **强制** Microsoft Fluent Design System 2 — 所有视觉和交互决策基于 Fluent 令牌和规范（详见「Fluent Design 规范」章节）
 - **Pixiv API**: 自建 HTTP 客户端 (`src/api/client.ts` + `src/api/queryClient.ts`)，双模式（Web: fetch + Vite 代理 / Native: CapacitorHttp 直连 + `src/native/PictelioHttp.ts`），iOS OAuth 凭证策略（Android 已弃用），401 自动刷新 + 防死循环
 - **CSS 架构**: 分层加载 `reset.css` → `tokens.css` → `base.css` → `virtual:uno.css`；PostCSS `postcss-pxtorem` 自动转换字号为 rem；Fluent Web Components 主题同步
@@ -378,15 +378,15 @@ packages/app/src/
   - `tests/e2e/specs/` — 端到端测试
   - `src/**/*.test.ts` — 辅助函数/内部模块的就近测试
 - **单元测试覆盖**:
-  - `api/` — 8 测试文件（auth、client、comment、illust、novel、ssrfWhitelistContract、user、userAgent）
+  - `api/` — 10 测试文件（auth、client、client401Retry、client429Retry、comment、illust、novel、ssrfWhitelistContract、user、userAgent）
   - `components/` — ThemeSelector
   - `primitives/` — 5 文件（createComputedTextCard、createManualFetch、createNovelSearch、createNovelTextLayout、novelTextLayoutCache）
   - `routes/` — NovelDetail
   - `services/` — 3 文件（backGestureService、imageHostService、updateService）
-  - `stores/` — 15 文件（覆盖所有 store）
-  - `utils/` — 9 文件（含 `.native.test.ts`）
+  - `stores/` — 16 文件（覆盖所有 store，含 imageCacheSettings）
+  - `utils/` — 8 文件（含 `.native.test.ts`）
   - 根测试 — router.test.ts、startup.test.ts
-- **浏览器测试**: 19 个文件覆盖 IllustDetail、NovelCard、NovelDetail、SeriesSheet、VirtualFeed 等组件
+- **浏览器测试**: 22 个文件覆盖 IllustDetail、NovelCard、NovelDetail、SeriesSheet、VirtualFeed 等组件
 - **E2E 测试**: 10 个 spec 覆盖 Feed、Login、Illust Detail、Novel Detail、Bookmarks、Cache 等关键路径
 - `passWithNoTests: true` — 允许空测试文件不报错
 
