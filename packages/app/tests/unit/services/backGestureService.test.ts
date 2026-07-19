@@ -37,7 +37,7 @@ describe("backGestureService", () => {
       const closeB = vi.fn();
 
       pushOverlay("viewer", closeA);
-      pushOverlay("settingsDrawer", closeB);
+      pushOverlay("readerSettingsSheet", closeB);
       const result = closeTopOverlay();
 
       expect(result).toBe(true);
@@ -55,14 +55,14 @@ describe("backGestureService", () => {
       const order: string[] = [];
 
       pushOverlay("viewer", () => order.push("viewer"));
-      pushOverlay("settingsDrawer", () => order.push("settingsDrawer"));
+      pushOverlay("readerSettingsSheet", () => order.push("readerSettingsSheet"));
       pushOverlay("seriesSheet", () => order.push("seriesSheet"));
 
       closeTopOverlay();
       closeTopOverlay();
       closeTopOverlay();
 
-      expect(order).toEqual(["seriesSheet", "settingsDrawer", "viewer"]);
+      expect(order).toEqual(["seriesSheet", "readerSettingsSheet", "viewer"]);
     });
   });
 
@@ -73,7 +73,7 @@ describe("backGestureService", () => {
       const closeB = vi.fn();
 
       pushOverlay("viewer", closeA);
-      pushOverlay("settingsDrawer", closeB);
+      pushOverlay("readerSettingsSheet", closeB);
       clearOverlays();
 
       expect(closeA).not.toHaveBeenCalled();
@@ -95,9 +95,9 @@ describe("backGestureService", () => {
       const closeSettings = vi.fn();
 
       pushOverlay("viewer", closeViewer);
-      pushOverlay("settingsDrawer", closeSettings);
+      pushOverlay("readerSettingsSheet", closeSettings);
 
-      const result = popOverlay("settingsDrawer");
+      const result = popOverlay("readerSettingsSheet");
 
       expect(result).toBe(true);
       expect(closeSettings).toHaveBeenCalledTimes(1);
@@ -107,7 +107,7 @@ describe("backGestureService", () => {
     it("returns false when the top overlay type does not match", async () => {
       const { pushOverlay, popOverlay } = await loadService();
       pushOverlay("viewer", vi.fn());
-      expect(popOverlay("settingsDrawer")).toBe(false);
+      expect(popOverlay("readerSettingsSheet")).toBe(false);
     });
 
     it("returns false when the stack is empty", async () => {
