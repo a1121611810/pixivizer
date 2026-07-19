@@ -222,7 +222,7 @@ const SettingsContent: Component = () => {
 
         {/* BlocklistSheet */}
         <Show when={showBlocklist()}>
-          <BlocklistSheet onClose={() => setShowBlocklist(false)} />
+          <BlocklistSheet isOpen={showBlocklist()} onClose={() => { setShowBlocklist(false); }} />
         </Show>
       </div>
     </PageTransition>

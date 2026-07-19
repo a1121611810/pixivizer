@@ -3,18 +3,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@solidjs/testing-library";
 import "@/styles/tokens.css";
 
-const mockColorTheme = vi.fn().mockReturnValue("fluent");
+const mockNavigate = vi.fn();
 
-vi.mock("@/stores/themeStore", () => ({
-  colorTheme: () => mockColorTheme(),
-  setColorTheme: vi.fn(),
+vi.mock("@tanstack/solid-router", () => ({
+  useNavigate: () => mockNavigate,
 }));
 
 import SettingsDrawer from "@/components/SettingsDrawer";
 
-describe("SettingsDrawer light/dark theme visibility", () => {
+describe("SettingsDrawer navigation hub", () => {
   beforeEach(() => {
-    mockColorTheme.mockReturnValue("fluent");
+    mockNavigate.mockReset();
     (globalThis as any).APP_VERSION = "test";
   });
 
@@ -22,20 +21,16 @@ describe("SettingsDrawer light/dark theme visibility", () => {
     cleanup();
   });
 
-  it("shows the light/dark/system selector when Fluent is active", () => {
+  it("renders the drawer title", () => {
     render(() => <SettingsDrawer />);
-
-    expect(screen.getByLabelText("浅色")).toBeDefined();
-    expect(screen.getByLabelText("深色")).toBeDefined();
-    expect(screen.getByLabelText("跟随系统")).toBeDefined();
+    expect(screen.getByText("设置")).toBeDefined();
   });
 
-  it("hides the light/dark/system selector when a non-Fluent color theme is active", () => {
-    mockColorTheme.mockReturnValue("rose");
+  it("renders all four settings navigation links", () => {
     render(() => <SettingsDrawer />);
-
-    expect(screen.queryByLabelText("浅色")).toBeNull();
-    expect(screen.queryByLabelText("深色")).toBeNull();
-    expect(screen.queryByLabelText("跟随系统")).toBeNull();
+    expect(screen.getByText("显示与交互")).toBeDefined();
+    expect(screen.getByText("内容与过滤")).toBeDefined();
+    expect(screen.getByText("存储与缓存")).toBeDefined();
+    expect(screen.getByText("关于")).toBeDefined();
   });
 });
