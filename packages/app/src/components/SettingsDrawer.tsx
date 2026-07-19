@@ -1209,7 +1209,12 @@ const SettingsDrawer: Component = () => {
 
       {/* BlocklistSheet */}
       <Show when={showBlocklist()}>
-        <BlocklistSheet isOpen={showBlocklist()} onClose={() => { setShowBlocklist(false); }} />
+        <BlocklistSheet
+          isOpen={showBlocklist()}
+          onClose={() => {
+            setShowBlocklist(false);
+          }}
+        />
       </Show>
 
       {/* Clear data dialog */}

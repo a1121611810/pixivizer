@@ -10,6 +10,7 @@ import {
 } from "solid-js";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
 import FluentIcon from "@/components/ui/FluentIcon";
+import TagInput from "@/components/ui/TagInput";
 import { createSearchStore } from "@/stores/searchStore";
 import SearchResults from "@/components/SearchResults";
 import { createScrollRestore } from "@/primitives/createScrollRestore";
@@ -39,6 +40,26 @@ const Search: Component = () => {
   const searchParams = useSearch({ strict: false });
 
   const store = createSearchStore();
+
+  // ── Tag chips ──
+  const [tags, setTags] = createSignal<string[]>([]);
+
+  /** tags 变化时同步到 store，并触发防抖搜索 */
+  function handleTagsChange(newTags: string[]) {
+    setTags(newTags);
+    store.setKeyword(newTags.join(" "));
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      if (newTags.length > 0) {
+        addToHistory(newTags.join(" "));
+        void navigate({
+          to: "/search",
+          search: { word: newTags.join(" "), scope: store.scope(), sort: store.sort() },
+        });
+        store.executeSearch();
+      }
+    }, 300);
+  }
 
   // ── Local state: search history, autocomplete, type filter ──
   const [searchHistory, setSearchHistory] = createSignal<string[]>([]);
@@ -116,7 +137,9 @@ const Search: Component = () => {
     const params = searchParams() as Record<string, string | undefined>;
     if (!hydrated() && params.word?.trim()) {
       setHydrated(true);
-      store.setKeyword(params.word.trim());
+      const word = params.word.trim();
+      setTags(word.split(" ").filter(Boolean));
+      store.setKeyword(word);
       if (params.scope) store.setScope(params.scope as SearchScope);
       if (params.sort) store.setSort(params.sort as SearchSort);
       store.executeSearch().then(() => scrollRestore.restore());
@@ -140,35 +163,11 @@ const Search: Component = () => {
   // ── Debounced search execution ──
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
   onCleanup(() => clearTimeout(debounceTimer));
-  const handleInput = (value: string) => {
-    store.setKeyword(value);
+  function handleClearSearch() {
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      if (value.trim()) {
-        addToHistory(value.trim());
-        void navigate({
-          to: "/search",
-          search: { word: value.trim(), scope: store.scope(), sort: store.sort() },
-        });
-        store.executeSearch();
-      }
-    }, 300);
-  };
-
-  // ── Enter key also triggers search immediately ──
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "Enter") {
-      const value = (e.currentTarget as HTMLInputElement).value.trim();
-      if (value) {
-        clearTimeout(debounceTimer);
-        addToHistory(value);
-        void navigate({
-          to: "/search",
-          search: { word: value, scope: store.scope(), sort: store.sort() },
-        });
-        store.executeSearch();
-      }
-    }
+    setTags([]);
+    store.setKeyword("");
+    void navigate({ to: "/search", search: {} });
   }
 
   function handleScopeChange(scope: SearchScope) {
@@ -228,25 +227,38 @@ const Search: Component = () => {
           </button>
 
           <div class="flex items-center gap-1.5 flex-1 min-w-0 bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] border border-[var(--colorNeutralStroke2)] px-[var(--spacingHorizontalMNudge)] py-[var(--spacingVerticalSNudge)]">
-            <FluentIcon name="search" size={16} />
-            <input
-              type="search"
-              class="flex-1 min-w-0 bg-transparent border-none outline-none text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase300)] placeholder:text-[var(--colorNeutralForeground3)]"
-              placeholder="搜索"
-              aria-label="搜索"
-              value={store.keyword()}
-              onInput={(e) => handleInput(e.currentTarget.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={onCompactInputFocus}
-            />
+            <Show
+              when={tags().length > 0}
+              fallback={
+                <span
+                  class="flex items-center gap-1.5 text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase300)] select-none cursor-pointer"
+                  onClick={onCompactInputFocus}
+                >
+                  <FluentIcon name="search" size={16} />
+                  <span>搜索</span>
+                </span>
+              }
+            >
+              <div
+                class="flex items-center gap-1 flex-1 min-w-0 cursor-pointer overflow-hidden"
+                onClick={onCompactInputFocus}
+              >
+                <FluentIcon name="search" size={16} class="flex-shrink-0" />
+                <For each={tags()}>
+                  {(tag) => (
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-[var(--borderRadiusSmall)] bg-[var(--colorBrandBackground2)] text-[var(--colorBrandForeground1)] text-xs truncate max-w-[80px]">
+                      {tag}
+                    </span>
+                  )}
+                </For>
+              </div>
+            </Show>
             <Show when={store.keyword() !== ""}>
               <button
                 class="flex items-center justify-center min-w-8 min-h-8 rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground3)] hover:bg-[var(--colorNeutralBackground2)] hover:text-[var(--colorNeutralForeground1)] active:scale-90 transition-all duration-[var(--durationFast)]"
                 onClick={(e) => {
                   e.stopPropagation();
-                  clearTimeout(debounceTimer);
-                  store.setKeyword("");
-                  void navigate({ to: "/search", search: {} });
+                  handleClearSearch();
                 }}
                 aria-label="清除搜索"
               >
@@ -273,24 +285,16 @@ const Search: Component = () => {
             <span class="flex-shrink-0 text-[var(--colorNeutralForeground3)]">
               <FluentIcon name="search" size={20} />
             </span>
-            <input
-              ref={(el) => (mainInputRef = el)}
-              type="search"
-              class="flex-1 min-w-0 bg-transparent border-none outline-none text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase300)] placeholder:text-[var(--colorNeutralForeground3)]"
-              placeholder="输入标签或关键词搜索"
-              aria-label="搜索关键词"
-              value={store.keyword()}
-              onInput={(e) => handleInput(e.currentTarget.value)}
-              onKeyDown={handleKeyDown}
+            <TagInput
+              tags={tags()}
+              onTagsChange={handleTagsChange}
+              placeholder="输入标签，空格/回车添加"
+              inputRef={(el) => (mainInputRef = el)}
             />
-            <Show when={store.keyword() !== ""}>
+            <Show when={tags().length > 0}>
               <button
                 class="flex items-center justify-center min-w-8 min-h-8 rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground3)] hover:bg-[var(--colorNeutralBackground2)] hover:text-[var(--colorNeutralForeground1)] active:scale-90 transition-all duration-[var(--durationFast)]"
-                onClick={() => {
-                  clearTimeout(debounceTimer);
-                  store.setKeyword("");
-                  void navigate({ to: "/search", search: {} });
-                }}
+                onClick={() => handleClearSearch()}
                 aria-label="清除搜索"
               >
                 <FluentIcon name="dismiss" size={18} />
@@ -367,6 +371,8 @@ const Search: Component = () => {
               history={searchHistory()}
               onSelect={(word) => {
                 clearTimeout(debounceTimer);
+                const tagList = word.split(" ").filter(Boolean);
+                setTags(tagList);
                 store.setKeyword(word);
                 addToHistory(word);
                 void navigate({
