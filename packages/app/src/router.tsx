@@ -115,39 +115,20 @@ const novelRoute = createRoute({
     try {
       const id = Number(params.id);
 
-      // 优先从缓存读取，零网络请求
-      const cached = peekEntry(id);
-      if (cached) {
-        await loadProfile(cached.detail.user.id);
-        return {
-          novel: cached.detail,
-          text: cached.text,
-          nav: cached.nav,
-          images: cached.images,
-          error: null,
-        };
-      }
-      const dbEntry = await getEntry(id);
-      if (dbEntry) {
-        await loadProfile(dbEntry.detail.user.id);
-        return {
-          novel: dbEntry.detail,
-          text: dbEntry.text,
-          nav: dbEntry.nav,
-          images: dbEntry.images,
-          error: null,
-        };
+      // 辅助函数：从缓存条目加载 profile 并返回 route data
+      async function fromEntry(e: import("@/stores/novelCache").CacheEntry) {
+        await loadProfile(e.detail.user.id);
+        return { novel: e.detail, text: e.text, nav: e.nav, images: e.images, error: null };
       }
 
+      // 优先从缓存读取，零网络请求
+      const cached = peekEntry(id);
+      if (cached) return fromEntry(cached);
+      const dbEntry = await getEntry(id);
+      if (dbEntry) return fromEntry(dbEntry);
+
       const entry = await loadNovelEntry(id);
-      await loadProfile(entry.detail.user.id);
-      return {
-        novel: entry.detail,
-        text: entry.text,
-        nav: entry.nav,
-        images: entry.images,
-        error: null,
-      };
+      return fromEntry(entry);
     } catch (error) {
       return {
         novel: null,
