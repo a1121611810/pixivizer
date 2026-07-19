@@ -63,11 +63,6 @@ const NovelDetail = lazy(() => import("@/routes/NovelDetail"));
 const HistoryPage = lazy(() => import("@/routes/HistoryPage"));
 const Search = lazy(() => import("@/routes/Search"));
 const LayoutSettings = lazy(() => import("@/routes/LayoutSettings"));
-const Settings = lazy(() => import("@/routes/Settings"));
-const SettingsAppearance = lazy(() => import("@/routes/SettingsAppearance"));
-const SettingsContent = lazy(() => import("@/routes/SettingsContent"));
-const SettingsStorage = lazy(() => import("@/routes/SettingsStorage"));
-const SettingsAbout = lazy(() => import("@/routes/SettingsAbout"));
 
 const rootRoute = createRootRoute({ component: RootLayout });
 
@@ -205,36 +200,6 @@ const layoutSettingsRoute = createRoute({
   component: asRoute(LayoutSettings),
 });
 
-const settingsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "settings",
-  component: asRoute(Settings),
-});
-
-const settingsAppearanceRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "settings/appearance",
-  component: asRoute(SettingsAppearance),
-});
-
-const settingsContentRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "settings/content",
-  component: asRoute(SettingsContent),
-});
-
-const settingsStorageRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "settings/storage",
-  component: asRoute(SettingsStorage),
-});
-
-const settingsAboutRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "settings/about",
-  component: asRoute(SettingsAbout),
-});
-
 const ageConfirmationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "age-confirmation",
@@ -301,11 +266,6 @@ const routeTree = rootRoute.addChildren([
   imageHostRoute,
   imageCacheRoute,
   layoutSettingsRoute,
-  settingsRoute,
-  settingsAppearanceRoute,
-  settingsContentRoute,
-  settingsStorageRoute,
-  settingsAboutRoute,
   ageConfirmationRoute,
   userRoute.addChildren([userIllustsRoute, userFollowingRoute, userFollowersRoute]),
   catchAllRoute,
