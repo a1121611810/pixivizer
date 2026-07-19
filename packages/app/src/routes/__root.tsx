@@ -179,34 +179,33 @@ const RootLayout: Component = () => {
 
   return (
     <div class="page">
-      <Show
-        when={!isLoading()}
-        fallback={
-          <div class="flex flex-col items-center justify-center min-h-screen">
-            <LoadingSpinner size="lg" text="加载中..." />
+      <ErrorBoundary
+        fallback={(err, reset) => (
+          <div class="flex flex-col items-center justify-center min-h-screen gap-4 p-8">
+            <p class="text-[var(--colorStatusDangerForeground1)] text-lg font-semibold">
+              页面加载失败
+            </p>
+            <p class="text-[var(--colorNeutralForeground2)] text-sm text-center max-w-xs">
+              {err?.message ?? "未知错误"}
+            </p>
+            <button
+              class="px-4 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-[var(--colorNeutralForegroundOnBrand)] text-sm font-medium"
+              onClick={reset}
+            >
+              重试
+            </button>
           </div>
-        }
+        )}
       >
-        <ErrorBoundary
-          fallback={(err, reset) => (
-            <div class="flex flex-col items-center justify-center min-h-screen gap-4 p-8">
-              <p class="text-[var(--colorStatusDangerForeground1)] text-lg font-semibold">
-                页面加载失败
-              </p>
-              <p class="text-[var(--colorNeutralForeground2)] text-sm text-center max-w-xs">
-                {err?.message ?? "未知错误"}
-              </p>
-              <button
-                class="px-4 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorBrandBackground)] text-[var(--colorNeutralForegroundOnBrand)] text-sm font-medium"
-                onClick={reset}
-              >
-                重试
-              </button>
-            </div>
-          )}
-        >
-          <Outlet />
-        </ErrorBoundary>
+        {/* 始终渲染 Outlet，不让 Router 因 Outlet 卸载/重挂载而中止 Loader 的 AbortSignal */}
+        <Outlet />
+      </ErrorBoundary>
+
+      {/* 启动加载覆盖层：浮在内容之上，不卸载 Outlet */}
+      <Show when={isLoading()}>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--colorNeutralBackground3)]">
+          <LoadingSpinner size="lg" text="加载中..." />
+        </div>
       </Show>
 
       {/* Exit hint toast */}
