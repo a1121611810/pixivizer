@@ -1,5 +1,5 @@
 {
-  "version": "3.10.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.10.0",
-  "changelog": "✨ 新功能\n  feat: 实现搜索功能（API 层 + 入口页面 + 混排渲染 + 滚动恢复原语）\n🐛 修复\n  fix: 修正 init 命令为全局安装的 codegraph init\n  fix: 移除 init 命令中的硬编码绝对路径"
+  "version": "3.10.1",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.10.1",
+  "changelog": "💄 样式\n  style: pnpm fmt 格式校正\n♻️ 重构\n  refactor(stores): 统一滚动恢复到 createScrollRestore 共享缓存\n  refactor: novelRoute loader 提取 fromEntry 辅助函数消除重复\n🐛 修复\n  fix: 搜索结果缓存 + NovelDetail loader 缓存优先\n  fix: 搜索页 UI "
 }
