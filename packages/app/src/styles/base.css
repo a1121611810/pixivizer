@@ -138,6 +138,50 @@ body {
   }
 }
 
+/* Fluent shimmer sweep — slide gradient band across the badge */
+@keyframes fluent-shimmer-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Shimmer overlay gradient — light/dark adaptive opacity */
+.shimmer-gradient {
+  background: linear-gradient(
+    110deg,
+    transparent 35%,
+    color-mix(in srgb, var(--colorBrandStroke1) 12%, transparent) 50%,
+    transparent 65%
+  );
+}
+:root.dark .shimmer-gradient {
+  background: linear-gradient(
+    110deg,
+    transparent 35%,
+    color-mix(in srgb, var(--colorBrandStroke1) 18%, transparent) 50%,
+    transparent 65%
+  );
+}
+
+/* Loading text character pop-in — 从左到右逐个蹦出 */
+@keyframes char-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Splash screen entrance: fade-in only, no movement */
 @keyframes splash-fade-in {
   from {

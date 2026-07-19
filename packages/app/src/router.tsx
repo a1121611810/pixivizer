@@ -255,7 +255,7 @@ export const router = createRouter({
   defaultStaleTime: 0,
   defaultPendingMs: 0,
   defaultPendingMinMs: 0,
-  defaultPendingComponent: asRoute(LoadingSpinner),
+  defaultPendingComponent: asRoute(() => <LoadingSpinner text="加载中..." />),
 });
 
 // 声明路由类型，供 TanStack 的 type-safe 钩子使用

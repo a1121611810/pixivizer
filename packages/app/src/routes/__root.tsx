@@ -8,8 +8,9 @@ import {
   lazy,
   ErrorBoundary,
 } from "solid-js";
-import { Outlet, useLocation, useNavigate, useRouter } from "@tanstack/solid-router";
+import { useNavigate, useLocation, useRouter, Outlet } from "@tanstack/solid-router";
 import { isLoggedIn, isLoading, setIsLoading, initializeAuth } from "@/stores/authStore";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import {
   loadAutoHideNavBarPreference,
   loadShowR18Preference,
@@ -169,74 +170,8 @@ const RootLayout: Component = () => {
       <Show
         when={!isLoading()}
         fallback={
-          <div class="flex flex-col items-center justify-center min-h-screen gap-4">
-            {/* Pictelio logo, 64px, scale entrance */}
-            <svg
-              width="64"
-              height="64"
-              viewBox="0 0 192 192"
-              fill="none"
-              aria-hidden="true"
-              style="animation: fluent-scale-enter var(--durationNormal) var(--curveDecelerateMid) both"
-            >
-              <defs>
-                <filter id="splashShadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow
-                    dx="0"
-                    dy="6"
-                    stdDeviation="10"
-                    flood-color="#000000"
-                    flood-opacity="0.10"
-                  />
-                </filter>
-              </defs>
-              <rect
-                x="12"
-                y="12"
-                width="168"
-                height="168"
-                rx="44"
-                fill="#ffffff"
-                filter="url(#splashShadow)"
-              />
-              <svg x="36" y="36" width="120" height="120" viewBox="0 0 64 64">
-                <path
-                  d="M18 12 C18 12 16 28 19 52 C19 52 22 54 24 50 C26 47 24 39 26 33 C26 33 37 35 45 27 C51 21 47 13 38 11 C31 9 24 12 18 12 Z"
-                  fill="#2b579a"
-                />
-                <path
-                  d="M22 16 C22 16 21 28 23 46"
-                  fill="none"
-                  stroke="#5a9fd4"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                />
-                <circle cx="42" cy="19" r="2" fill="#7ab8e8" />
-                <circle cx="46" cy="25" r="1.5" fill="#7ab8e8" />
-              </svg>
-            </svg>
-
-            {/* Brand text: staggered fade-slide-up */}
-            <div class="flex flex-col items-center gap-1">
-              <h1
-                class="text-[var(--fontSizeBase600)] font-semibold text-[var(--colorNeutralForeground1)] leading-none"
-                style="animation: splash-fade-slide-up var(--durationNormal) var(--curveDecelerateMid) 100ms both"
-              >
-                Pictelio
-              </h1>
-              <p
-                class="text-[var(--fontSizeBase200)] text-[var(--colorNeutralForegroundDisabled)] font-400"
-                style="animation: splash-fade-slide-up var(--durationNormal) var(--curveDecelerateMid) 200ms both"
-              >
-                第三方插画浏览器
-              </p>
-            </div>
-
-            {/* ProgressRing: 16px, delayed 500ms — only visible if auth is slow */}
-            <div
-              class="w-4 h-4 [border-width:var(--strokeWidthThick)] border-solid [border-color:var(--colorNeutralStroke2)] [border-top-color:var(--colorBrandStroke1)] rounded-[var(--borderRadiusCircular)]"
-              style="animation: splash-fade-in var(--durationNormal) var(--curveDecelerateMid) 500ms both, spin 1s linear infinite"
-            />
+          <div class="flex flex-col items-center justify-center min-h-screen">
+            <LoadingSpinner size="lg" text="加载中..." />
           </div>
         }
       >
