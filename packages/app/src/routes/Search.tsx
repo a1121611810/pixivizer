@@ -4,11 +4,11 @@ import {
   createSignal,
   For,
   onCleanup,
+  onMount,
   Show,
   type Component,
 } from "solid-js";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
-import NavBar from "@/components/NavBar";
 import FluentIcon from "@/components/ui/FluentIcon";
 import { createSearchStore } from "@/stores/searchStore";
 import SearchResults from "@/components/SearchResults";
@@ -37,6 +37,9 @@ const Search: Component = () => {
   // ── Local UI state ──
   const [filterType, setFilterType] = createSignal<"all" | "illust" | "novel">("all");
 
+  // ── Back-to-top state ──
+  const [showBackToTop, setShowBackToTop] = createSignal(false);
+
   const mergedResults = createMemo(() => {
     if (filterType() === "illust") {
       return mergeSearchResults(store.illustResults(), []);
@@ -53,6 +56,13 @@ const Search: Component = () => {
   );
 
   onCleanup(() => scrollRestore.save());
+
+  // ── Scroll-to-top listener ──
+  onMount(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 300);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onCleanup(() => window.removeEventListener("scroll", onScroll));
+  });
 
   // ── Sync URL params → store ──
   createEffect(() => {
@@ -82,6 +92,7 @@ const Search: Component = () => {
     const results = mergedResults();
     if (hydrated() && !scrollRestored() && results.length > 0) {
       const restored = scrollRestore.restore();
+      (void restored); // suppress unused variable warning
       setScrollRestored(true); // gate off regardless of restore success
     }
   });
@@ -128,10 +139,16 @@ const Search: Component = () => {
 
   return (
     <div class="page">
-      <NavBar />
       <div class="pt-4 px-4 pb-24 max-w-3xl mx-auto">
         {/* ── Search bar ── */}
         <div class="flex items-center gap-2 p-3 mb-3 rounded-[var(--borderRadiusLarge)] bg-[var(--colorNeutralBackground1)] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)]">
+          <button
+            class="flex items-center justify-center min-w-11 min-h-11 rounded-[var(--borderRadiusCircular)] text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground3)] active:scale-90 transition-transform duration-[var(--durationFast)]"
+            onClick={() => window.history.back()}
+            aria-label="返回"
+          >
+            <FluentIcon name="chevronLeft" size={20} />
+          </button>
           <FluentIcon name="search" size={20} />
           <input
             type="search"
@@ -272,6 +289,17 @@ const Search: Component = () => {
           />
         </Show>
       </div>
+
+      {/* ── Back to top ── */}
+      <Show when={showBackToTop()}>
+        <button
+          class="fixed z-20 bottom-24 right-4 w-11 h-11 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorOverlaySurface)] backdrop-blur-[30px] backdrop-saturate-[125%] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorOverlaySurfaceHover)] active:scale-90 transition-all duration-[var(--durationFast)]"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          aria-label="回顶"
+        >
+          <span class="text-lg font-bold">↑</span>
+        </button>
+      </Show>
     </div>
   );
 };

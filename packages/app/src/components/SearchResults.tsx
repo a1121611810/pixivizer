@@ -2,6 +2,7 @@ import { For, Show, type Component } from "solid-js";
 import type { SearchResultItem, ApiError, PixivIllust, PixivNovel } from "@/api/types";
 import ImageCard from "@/components/ImageCard";
 import NovelCard from "@/components/NovelCard";
+import IllustTags from "@/components/IllustTags";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorDisplay from "@/components/ErrorDisplay";
 
@@ -37,10 +38,15 @@ const SearchResults: Component<Props> = (props) => {
                   />
                 }
               >
-                <ImageCard
-                  illust={item.entity as PixivIllust}
-                  onClick={() => props.onIllustClick(item.entity.id)}
-                />
+                <div>
+                  <ImageCard
+                    illust={item.entity as PixivIllust}
+                    onClick={() => props.onIllustClick(item.entity.id)}
+                  />
+                  <div class="px-2.5 pt-1 pb-2">
+                    <IllustTags tags={(item.entity as PixivIllust).tags} size="small" />
+                  </div>
+                </div>
               </Show>
             )}
           </For>

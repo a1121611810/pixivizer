@@ -23,7 +23,7 @@ const SearchFAB: Component = () => {
     startY = clientY;
     const current = pos();
     btnStartX = current?.x ?? window.innerWidth - 72;
-    btnStartY = current?.y ?? window.innerHeight - 88;
+    btnStartY = current?.y ?? window.innerHeight - 128;
     setDragged(false);
   }
 
@@ -80,7 +80,7 @@ const SearchFAB: Component = () => {
   return (
     <Show when={!isSearchPage()}>
       <button
-        class="fixed z-40 bottom-6 right-4 w-14 h-14 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorBrandBackground)] text-[var(--colorNeutralForegroundOnBrand)] shadow-[var(--elevation8)] cursor-pointer select-none touch-none transition-[transform,background-color,box-shadow] duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorBrandBackgroundHover)] hover:shadow-[var(--elevation16)] active:scale-[0.95] focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-2 focus-visible:outline-offset-2"
+        class="fixed z-40 bottom-20 right-4 w-14 h-14 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorBrandBackground)] text-[var(--colorNeutralForegroundOnBrand)] shadow-[var(--elevation8)] cursor-pointer select-none touch-none transition-[transform,background-color,box-shadow] duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorBrandBackgroundHover)] hover:shadow-[var(--elevation16)] active:scale-[0.95] focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-2 focus-visible:outline-offset-2"
         style={style()}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
