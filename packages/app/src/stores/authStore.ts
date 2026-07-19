@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { setAccessToken, setOnUnauthorized } from "../api/client";
+import { setAccessToken, setOnUnauthorized, setRefreshPromise } from "../api/client";
 import { refreshToken, exchangeCodeForToken } from "../api/auth";
 import type { PixivUser } from "../api/types";
 import {
@@ -62,7 +62,10 @@ export async function initializeAuth() {
   if (token) {
     setRefreshTokenSig(token);
     setupUnauthorizedHandler();
-    await performRefresh(token);
+    // 设置 refreshPromise，让并发请求在初始 token 刷新期间等待
+    const promise = performRefresh(token).finally(() => setRefreshPromise(null));
+    setRefreshPromise(promise);
+    await promise;
   }
 }
 

@@ -43,6 +43,14 @@ export function setOnUnauthorized(handler: () => Promise<void>) {
   onUnauthorized = handler;
 }
 
+/**
+ * 设置/清除 refreshPromise，让 executeRequest 中的并发请求
+ * 在 token 刷新期间等待，避免用旧/空 token 发注定失败的请求。
+ */
+export function setRefreshPromise(p: Promise<void> | null) {
+  refreshPromise = p;
+}
+
 /** 尝试从 Pixiv 错误响应体中提取人类可读的错误消息 */
 export function extractPixivErrorMessage(data: unknown): string | null {
   if (!data || typeof data !== "object") {
