@@ -1,7 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { setAccessToken } from "./client";
 import type { PixivAuthResponse, PixivUser } from "./types";
-import { AuthPlugin } from "@/native/AuthPlugin";
 import { PIXIV_USER_AGENT } from "./userAgent";
 
 // ─── 平台检测 ───
@@ -20,22 +19,73 @@ function extractAuth(data: any): { accessToken: string; refreshToken: string; us
   };
 }
 
+/** base64url 编码（URL-safe，无 padding）。 */
+function base64url(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 /**
- * 使用 refresh_token 交换新的 access_token。
+ * 生成 PKCE code_verifier + code_challenge。
+ *
+ * code_verifier: 43 字符 URL-safe 随机字符串。
+ * code_challenge: SHA-256(code_verifier) 的 base64url 编码。
+ */
+export async function generatePKCE(): Promise<{ codeVerifier: string; codeChallenge: string }> {
+  // 32 字节随机 → base64url → 43 字符
+  const random = new Uint8Array(32);
+  crypto.getRandomValues(random);
+  let binary = "";
+  for (let i = 0; i < random.length; i++) {
+    binary += String.fromCharCode(random[i]);
+  }
+  const codeVerifier = btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "")
+    .slice(0, 43);
+
+  // SHA-256 → base64url
+  const encoder = new TextEncoder();
+  const hash = await crypto.subtle.digest("SHA-256", encoder.encode(codeVerifier));
+  const codeChallenge = base64url(hash);
+
+  return { codeVerifier, codeChallenge };
+}
+
+/**
+ * 构建 Pixiv OAuth 登录 URL。
+ *
+ * @param codeChallenge PKCE code_challenge
+ * @returns Pixiv 登录页面 URL
+ */
+export function buildLoginUrl(codeChallenge: string): string {
+  const params = new URLSearchParams({
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
+    client: "pixiv-android",
+  });
+  return `https://app-api.pixiv.net/web/v1/login?${params.toString()}`;
+}
+
+/**
+ * 使用 authorization_code 交换 access_token + refresh_token。
  *
  * ── 生产环境（Android Native） ──
- * 通过 AuthPlugin 在 Java 端完成 OAuth 认证。
- * CLIENT_ID / CLIENT_SECRET / HASH_SECRET 仅存在于编译后的字节码中（classes.dex），
- * 不出现在 JS bundle 中。
+ * 通过 OAuthPlugin 在 Java 端完成。
  *
  * ── 开发环境（浏览器 pnpm dev） ──
- * 通过 JS fallback 处理，凭证在此分支中明文出现。
- * pnpm build 时 Rolldown 将 import.meta.env.DEV 替换为 false，
- * terser 消除 if (false) { ... } 整个块，此分支的凭证和 spark-md5 均不进入生产 bundle。
+ * 通过 JS fetch + Vite 代理完成。
+ * 此分支的凭证在 build 时被 terser 消除。
  */
-export async function refreshToken(token: string): Promise<PixivAuthResponse> {
+export async function exchangeCode(code: string, codeVerifier: string): Promise<PixivAuthResponse> {
   if (isNative) {
-    const result = await AuthPlugin.refreshToken({ refreshToken: token });
+    const { OAuthPlugin } = await import("@/native/OAuthPlugin");
+    const result = await OAuthPlugin.exchangeCode({ code, codeVerifier });
     setAccessToken(result.accessToken);
     return {
       access_token: result.accessToken,
@@ -53,8 +103,6 @@ export async function refreshToken(token: string): Promise<PixivAuthResponse> {
   }
 
   // ── DEV-ONLY 分支 ──────────────────────────────────────────────
-  // Import.meta.env.DEV → Vite 编译期替换为 false → Rolldown 保留 if (false)
-  // → terser 消除整个 { ... } → 凭证和 spark-md5 均不在生产 bundle 中
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (import.meta.env.DEV) {
     const CLIENT_ID = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
@@ -77,8 +125,10 @@ export async function refreshToken(token: string): Promise<PixivAuthResponse> {
     const bodyStr = new URLSearchParams({
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
-      grant_type: "refresh_token",
-      refresh_token: token,
+      grant_type: "authorization_code",
+      code,
+      code_verifier: codeVerifier,
+      redirect_uri: "https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback",
       get_secure_url: "1",
     }).toString();
 
@@ -101,21 +151,4 @@ export async function refreshToken(token: string): Promise<PixivAuthResponse> {
   }
 
   throw new Error("Auth not available outside native or dev mode");
-}
-
-/**
- * 使用 authorization_code 交换 access_token + refresh_token。
- *
- * 委托给 pkceAuth.exchangeCode() 实现，作为 auth.ts 的统一 API 层入口。
- *
- * @param code authorization_code
- * @param codeVerifier PKCE code_verifier
- * @returns OAuth 认证响应
- */
-export async function exchangeCodeForToken(
-  code: string,
-  codeVerifier: string,
-): Promise<PixivAuthResponse> {
-  const { exchangeCode } = await import("./pkceAuth");
-  return exchangeCode(code, codeVerifier);
 }

@@ -57,7 +57,8 @@ describe("extractPixivErrorMessage", () => {
     const { extractPixivErrorMessage } = await loadModule();
     const result = extractPixivErrorMessage({
       error: {
-        message: "Error occurred at the OAuth process. Please check your Access Token to fix this. Error Message: invalid_request",
+        message:
+          "Error occurred at the OAuth process. Please check your Access Token to fix this. Error Message: invalid_request",
       },
     });
     expect(result).toBe(

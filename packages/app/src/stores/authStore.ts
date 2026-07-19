@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import { setAccessToken, setOnUnauthorized } from "../api/client";
-import { refreshToken } from "../api/auth";
+import { refreshToken, exchangeCodeForToken } from "../api/auth";
 import type { PixivUser } from "../api/types";
 import {
   getRefreshToken,
@@ -82,6 +82,22 @@ async function performRefresh(token: string) {
 
 export async function loginWithToken(token: string) {
   const resp = await refreshToken(token);
+  syncToken(resp.access_token);
+  setRefreshTokenSig(resp.refresh_token);
+  setUser(resp.user);
+  setIsLoggedIn(true);
+  setupUnauthorizedHandler();
+  await setRefreshToken(resp.refresh_token);
+}
+
+/**
+ * 使用 OAuth Authorization Code + PKCE 登录。
+ *
+ * @param code authorization_code（从浏览器/WebView 回调 URL 中提取）
+ * @param codeVerifier PKCE code_verifier（生成 code_challenge 时保存的值）
+ */
+export async function loginWithPKCE(code: string, codeVerifier: string) {
+  const resp = await exchangeCodeForToken(code, codeVerifier);
   syncToken(resp.access_token);
   setRefreshTokenSig(resp.refresh_token);
   setUser(resp.user);

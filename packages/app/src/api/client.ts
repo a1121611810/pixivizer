@@ -370,13 +370,15 @@ function request<T>(
     }
     const promise = executeRequest<T>(method, path, data, signal);
     inflightGetRequests.set(key, promise);
-    promise.finally(() => {
-      inflightGetRequests.delete(key);
-    }).catch(() => {
-      // 忽略：原始 promise 的 rejection 由调用方处理，
-      // .finally() 返回的中间 promise 在 source 被 reject 时也会 reject，
-      // 不 catch 会导致 Node/vitest 的 unhandledRejection 检测误报
-    });
+    promise
+      .finally(() => {
+        inflightGetRequests.delete(key);
+      })
+      .catch(() => {
+        // 忽略：原始 promise 的 rejection 由调用方处理，
+        // .finally() 返回的中间 promise 在 source 被 reject 时也会 reject，
+        // 不 catch 会导致 Node/vitest 的 unhandledRejection 检测误报
+      });
     return promise;
   }
 

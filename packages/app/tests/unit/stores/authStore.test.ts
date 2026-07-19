@@ -11,9 +11,11 @@ vi.mock("@/api/client", () => ({
 }));
 
 const mockRefreshToken = vi.fn();
+const mockExchangeCodeForToken = vi.fn();
 
 vi.mock("@/api/auth", () => ({
   refreshToken: (...args: unknown[]) => mockRefreshToken(...args),
+  exchangeCodeForToken: (...args: unknown[]) => mockExchangeCodeForToken(...args),
 }));
 
 let mockSecureGetResult: string | null = null;

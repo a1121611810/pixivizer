@@ -44,9 +44,12 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(PictelioHttpPlugin.class);
         registerPlugin(ImageCachePlugin.class);
         registerPlugin(AuthPlugin.class);
+        registerPlugin(OAuthPlugin.class);
         super.onCreate(savedInstanceState);
-        // 调试模式 — 需要时取消注释，下次启动生效（release 构建记得改回来）
-        WebView.setWebContentsDebuggingEnabled(true);
+        // 调试模式 — debug 构建时启用
+        if (BuildConfig.DEBUG) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
     }
 
     @Override

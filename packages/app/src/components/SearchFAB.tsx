@@ -6,8 +6,12 @@ const SearchFAB: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ── Hide on /search ──
+  // ── Hide on /search, /login, /age-confirmation ──
   const isSearchPage = () => location().pathname === "/search";
+  const isLoginPage = () => location().pathname === "/login";
+  const isAgeConfirmation = () => location().pathname === "/age-confirmation";
+
+  const hidden = () => isSearchPage() || isLoginPage() || isAgeConfirmation();
 
   // ── Draggable position ──
   const [pos, setPos] = createSignal<{ x: number; y: number } | null>(null);
@@ -78,7 +82,7 @@ const SearchFAB: Component = () => {
   };
 
   return (
-    <Show when={!isSearchPage()}>
+    <Show when={!hidden()}>
       <button
         class="fixed z-40 bottom-20 right-4 w-14 h-14 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorBrandBackground)] text-[var(--colorNeutralForegroundOnBrand)] shadow-[var(--elevation8)] cursor-pointer select-none touch-none transition-[transform,background-color,box-shadow] duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorBrandBackgroundHover)] hover:shadow-[var(--elevation16)] active:scale-[0.95] focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-2 focus-visible:outline-offset-2"
         style={style()}
