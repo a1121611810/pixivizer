@@ -233,6 +233,10 @@ async function executeRequest<T>(
   if (signal?.aborted) {
     throw new DOMException("请求已取消", "AbortError");
   }
+  // 如果有 token 刷新正在进行，等待它完成，避免用旧 token 发注定失败的请求
+  if (refreshPromise) {
+    await refreshPromise;
+  }
   const url = rewriteUrl(path);
   const headers: Record<string, string> = {
     "User-Agent": PIXIV_USER_AGENT,
