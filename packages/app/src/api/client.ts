@@ -65,7 +65,33 @@ export function extractPixivErrorMessage(data: unknown): string | null {
   if (typeof d.error === "string") {
     return d.error;
   }
+  // OAuth 错误: { error: { message: "..." } }
+  if (typeof d.error === "object" && d.error !== null) {
+    const errObj = d.error as Record<string, unknown>;
+    if (typeof errObj.message === "string") {
+      return errObj.message;
+    }
+  }
   return null;
+}
+
+/**
+ * 检测是否为 OAuth token 失效错误（400 + 特定错误体）。
+ * Pixiv OAuth 端点在 refresh_token 过期时返回 400 而非 401，
+ * 响应体格式为 { error: { message: "...OAuth...invalid_request..." } }。
+ * 纯函数，O(1)，零分配。
+ */
+export function isOAuthTokenErrorResponse(status: number, responseBody: unknown): boolean {
+  if (status !== 400 || !responseBody || typeof responseBody !== "object") {
+    return false;
+  }
+  const d = responseBody as Record<string, unknown>;
+  const err = d.error;
+  if (typeof err !== "object" || err === null) {
+    return false;
+  }
+  const msg = (err as Record<string, unknown>).message;
+  return typeof msg === "string" && (msg.includes("OAuth") || msg.includes("invalid_request"));
 }
 
 /** 统一将任意错误值转换为 ApiError，已有 type 的保留原 type，否则创建 UNKNOWN */
@@ -142,6 +168,14 @@ export function classifyError(status: number, error: unknown, responseBody?: unk
         status: 429,
       };
     default:
+      // 400 OAuth 错误 → refresh_token 已失效，视为 UNAUTHORIZED
+      if (status === 400 && isOAuthTokenErrorResponse(status, responseBody)) {
+        return {
+          type: ApiErrorType.UNAUTHORIZED,
+          message: "登录凭证已失效，请重新登录",
+          status: 400,
+        };
+      }
       if (status >= 500) {
         return {
           type: ApiErrorType.SERVER,
@@ -274,6 +308,19 @@ async function executeRequest<T>(
         return executeRequest<T>(method, path, data, signal);
       }
 
+      // 400 OAuth 错误：refresh_token 已失效，触发清理后以 UNAUTHORIZED 抛出
+      if (isOAuthTokenErrorResponse(response!.status, response!.data)) {
+        if (onUnauthorized) {
+          if (!refreshPromise) {
+            refreshPromise = onUnauthorized().finally(() => {
+              refreshPromise = null;
+            });
+          }
+          await refreshPromise;
+        }
+        throw classifyError(response!.status, null, response!.data);
+      }
+
       if (response!.status === 429 && attempt < MAX_RETRIES) {
         if (signal?.aborted) {
           throw new DOMException("请求已取消", "AbortError");
@@ -325,6 +372,10 @@ function request<T>(
     inflightGetRequests.set(key, promise);
     promise.finally(() => {
       inflightGetRequests.delete(key);
+    }).catch(() => {
+      // 忽略：原始 promise 的 rejection 由调用方处理，
+      // .finally() 返回的中间 promise 在 source 被 reject 时也会 reject，
+      // 不 catch 会导致 Node/vitest 的 unhandledRejection 检测误报
     });
     return promise;
   }
