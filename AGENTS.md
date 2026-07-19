@@ -19,7 +19,7 @@
 
 > 如果 `.codegraph/` 索引尚未生成，在项目根目录运行以下命令初始化：
 > ```bash
-> cd /Users/lilianda/develop/pixivizer && pnpm dlx codegraph init
+> pnpm dlx codegraph init
 > ```
 
 ### 默认原则
@@ -150,7 +150,7 @@
 
 - **初始化**：若 `.codegraph/` 索引不存在或损坏，在项目根目录执行：
   ```bash
-  cd /Users/lilianda/develop/pixivizer && pnpm dlx codegraph init
+  pnpm dlx codegraph init
   ```
 - **更新**：文件大幅改动、新增/删除大量模块、或发现 CodeGraph 返回结果缺失/过期时，重新运行 `pnpm dlx codegraph init` 重建索引。
 - **验证**：调用 `codegraph_status` 检查索引是否就绪，关注 `Files indexed`、`Total nodes`、`Total edges` 等关键指标。
