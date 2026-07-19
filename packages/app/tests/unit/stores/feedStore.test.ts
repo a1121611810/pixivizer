@@ -26,7 +26,6 @@ vi.mock("@/stores/uiStore", () => ({
   setCurrentTab: vi.fn((t: string) => {
     mockCurrentTab = t;
   }),
-  setShowSettingsDrawer: vi.fn(),
   showR18: () => false,
   showR18G: () => false,
 }));

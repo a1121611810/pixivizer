@@ -26,10 +26,10 @@ test.describe("ImageCacheSettings 页面", () => {
     await expect(page.getByText("后台预取")).toBeVisible();
   });
 
-  test("SettingsDrawer 有入口导航到 /image-cache", async ({ page }) => {
-    await page.goto("/me");
+  test("设置页有入口导航到 /image-cache", async ({ page }) => {
+    await page.goto("/settings/storage");
 
-    // 展开设置面板 — 点击设置按钮
+    // 点击图片缓存入口
     const settingsButton = page.locator("button", { hasText: "图片缓存" });
     await settingsButton.click();
 
@@ -38,7 +38,7 @@ test.describe("ImageCacheSettings 页面", () => {
   });
 
   test("旧 slider「图片缓存限制」已移除", async ({ page }) => {
-    await page.goto("/me");
+    await page.goto("/settings/storage");
     // 旧 slider 文字不应存在
     await expect(page.getByText("图片缓存限制")).not.toBeVisible();
   });
