@@ -10,9 +10,8 @@ import {
 } from "solid-js";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
 import FluentIcon from "@/components/ui/FluentIcon";
-import { createSearchStore, readSearchCache } from "@/stores/searchStore";
+import { createSearchStore } from "@/stores/searchStore";
 import SearchResults from "@/components/SearchResults";
-import { mergeSearchResults } from "@/utils/searchMerger";
 import { createScrollRestore } from "@/primitives/createScrollRestore";
 import type { SearchScope, SearchSort } from "@/api/types";
 import PageTransition from "@/components/PageTransition";
@@ -41,13 +40,29 @@ const Search: Component = () => {
 
   const store = createSearchStore();
 
+  // ── Local state: search history, autocomplete, type filter ──
+  const [searchHistory, setSearchHistory] = createSignal<string[]>([]);
+  const MAX_HISTORY = 50;
+
+  function addToHistory(word: string) {
+    if (!word.trim()) return;
+    setSearchHistory((prev) => {
+      const filtered = prev.filter((h) => h !== word);
+      return [word, ...filtered].slice(0, MAX_HISTORY);
+    });
+  }
+
+  function removeFromHistory(word: string) {
+    setSearchHistory((prev) => prev.filter((h) => h !== word));
+  }
+
+  function clearHistory() {
+    setSearchHistory([]);
+  }
+
   // ── Back-to-top state & compact header state ──
   const [showBackToTop, setShowBackToTop] = createSignal(false);
   const [showCompactHeader, setShowCompactHeader] = createSignal(false);
-
-  const mergedResults = createMemo(() =>
-    mergeSearchResults(store.illustResults(), store.novelResults()),
-  );
 
   // ── Scroll position restoration ──
   const scrollRestore = createScrollRestore(() =>
@@ -101,27 +116,10 @@ const Search: Component = () => {
     const params = searchParams() as Record<string, string | undefined>;
     if (!hydrated() && params.word?.trim()) {
       setHydrated(true);
-
-      const cached = readSearchCache(
-        params.word.trim(),
-        (params.scope as SearchScope) || "all",
-        (params.sort as SearchSort) || "date_desc",
-      );
-      if (cached) {
-        store.setResults(
-          cached.illustResults,
-          cached.novelResults,
-          false,
-          cached.hasMoreIllust,
-          cached.hasMoreNovel,
-          cached.nextIllustUrl,
-          cached.nextNovelUrl,
-        );
-        scrollRestore.restore();
-        return;
-      }
-
-      store.executeSearch();
+      store.setKeyword(params.word.trim());
+      if (params.scope) store.setScope(params.scope as SearchScope);
+      if (params.sort) store.setSort(params.sort as SearchSort);
+      store.executeSearch().then(() => scrollRestore.restore());
     }
     if (!hydrated() && params.word === undefined) {
       setHydrated(true);
@@ -131,7 +129,7 @@ const Search: Component = () => {
   // ── Restore scroll position when results finish loading ──
   const [scrollRestored, setScrollRestored] = createSignal(false);
   createEffect(() => {
-    const results = mergedResults();
+    const results = store.results();
     if (hydrated() && !scrollRestored() && results.length > 0) {
       const restored = scrollRestore.restore();
       void restored;
@@ -147,7 +145,7 @@ const Search: Component = () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       if (value.trim()) {
-        store.addToHistory(value.trim());
+        addToHistory(value.trim());
         void navigate({
           to: "/search",
           search: { word: value.trim(), scope: store.scope(), sort: store.sort() },
@@ -163,7 +161,7 @@ const Search: Component = () => {
       const value = (e.currentTarget as HTMLInputElement).value.trim();
       if (value) {
         clearTimeout(debounceTimer);
-        store.addToHistory(value);
+        addToHistory(value);
         void navigate({
           to: "/search",
           search: { word: value, scope: store.scope(), sort: store.sort() },
@@ -366,19 +364,19 @@ const Search: Component = () => {
           {/* ── Search history (when no keyword) ── */}
           <Show when={!hasActiveSearch()}>
             <SearchHistorySection
-              history={store.searchHistory()}
+              history={searchHistory()}
               onSelect={(word) => {
                 clearTimeout(debounceTimer);
                 store.setKeyword(word);
-                store.addToHistory(word);
+                addToHistory(word);
                 void navigate({
                   to: "/search",
                   search: { word, scope: store.scope(), sort: store.sort() },
                 });
                 store.executeSearch();
               }}
-              onRemove={(word) => store.removeFromHistory(word)}
-              onClear={() => store.clearHistory()}
+              onRemove={(word) => removeFromHistory(word)}
+              onClear={() => clearHistory()}
             />
           </Show>
 
@@ -386,19 +384,10 @@ const Search: Component = () => {
           <Show when={hasActiveSearch()}>
             <div class="px-4">
               <SearchResults
-                results={mergedResults()}
+                results={store.results()}
                 loading={store.loading()}
-                hasMore={store.hasMoreIllust() || store.hasMoreNovel()}
-                onLoadMore={() => {
-                  if (store.hasMoreIllust() && store.hasMoreNovel()) {
-                    store.loadMoreIllust();
-                    store.loadMoreNovel();
-                  } else if (store.hasMoreIllust()) {
-                    store.loadMoreIllust();
-                  } else if (store.hasMoreNovel()) {
-                    store.loadMoreNovel();
-                  }
-                }}
+                hasMore={store.hasMore()}
+                onLoadMore={() => store.loadMore()}
                 onIllustClick={(id) => navigate({ to: "/illust/$id", params: { id: String(id) } })}
                 onNovelClick={(id) => navigate({ to: "/novel/$id", params: { id: String(id) } })}
                 onRefresh={() => store.executeSearch()}

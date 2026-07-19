@@ -1,10 +1,10 @@
-import { type Component, createSignal } from "solid-js";
+import { type Component } from "solid-js";
 import type { PixivIllust } from "../api/types";
 import { listQuality } from "../stores/uiStore";
-import { addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import PixivImage from "./PixivImage";
 import HeartBurstEffect from "./HeartBurstEffect";
 import { resolveImageUrl } from "../utils/imageLoader";
+import { useCardInteractions } from "../primitives/useCardInteractions";
 
 function resolveUrl(illust: PixivIllust): string {
   const q = listQuality();
@@ -24,75 +24,17 @@ interface Props {
 
 const GridCard: Component<Props> = (props) => {
   const img = () => resolveUrl(props.illust);
-  const [bookmarked, setBookmarked] = createSignal(props.illust.is_bookmarked);
-  const [bookmarkBurstTrigger, setBookmarkBurstTrigger] = createSignal(0);
-  const [privateHint, setPrivateHint] = createSignal(false);
-  const [isFollowed, setIsFollowed] = createSignal(props.illust.user.is_followed ?? false);
-  const [following, setFollowing] = createSignal(false);
-
-  let longPressTimer: ReturnType<typeof setTimeout>;
-  let hintTimer: ReturnType<typeof setTimeout>;
-
-  const toggleFollow = async (e: MouseEvent) => {
-    e.stopPropagation();
-    if (following()) {
-      return;
-    }
-    const prev = isFollowed();
-    setIsFollowed(!prev);
-    setFollowing(true);
-    try {
-      if (prev) {
-        await unfollowUser(props.illust.user.id);
-      } else {
-        await followUser(props.illust.user.id);
-      }
-    } catch {
-      setIsFollowed(prev);
-    } finally {
-      setFollowing(false);
-    }
-  };
-
-  const showPrivateToast = () => {
-    setPrivateHint(true);
-    clearTimeout(hintTimer);
-    hintTimer = setTimeout(() => setPrivateHint(false), 1500);
-  };
-
-  const toggleBookmark = async (e: MouseEvent, privateBookmark = false) => {
-    e.stopPropagation();
-    try {
-      if (bookmarked()) {
-        await deleteBookmark(props.illust.id);
-        setBookmarked(false);
-      } else {
-        await addBookmark(props.illust.id, privateBookmark ? "private" : "public");
-        setBookmarked(true);
-        setBookmarkBurstTrigger((n) => n + 1);
-        if (privateBookmark) {
-          showPrivateToast();
-        }
-      }
-    } catch {
-      /* Silently fail */
-    }
-  };
-
-  const onPointerDown = (e: PointerEvent) => {
-    longPressTimer = setTimeout(() => {
-      toggleBookmark(e as any, true);
-      longPressTimer = 0 as any;
-    }, 500);
-  };
-
-  const onPointerUp = (e: PointerEvent) => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      longPressTimer = 0 as any;
-      toggleBookmark(e as any, false);
-    }
-  };
+  const {
+    bookmarked,
+    isFollowed,
+    following,
+    toggleFollow,
+    bookmarkBurstTrigger,
+    privateHint,
+    onPointerDown,
+    onPointerUp,
+    onPointerLeave,
+  } = useCardInteractions(props.illust);
 
   return (
     <div
@@ -151,12 +93,7 @@ const GridCard: Component<Props> = (props) => {
             }}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
-            onPointerLeave={() => {
-              if (longPressTimer) {
-                clearTimeout(longPressTimer);
-                longPressTimer = 0 as any;
-              }
-            }}
+            onPointerLeave={onPointerLeave}
             onClick={(e) => e.stopPropagation()}
             aria-label={bookmarked() ? "取消收藏" : "收藏"}
           >

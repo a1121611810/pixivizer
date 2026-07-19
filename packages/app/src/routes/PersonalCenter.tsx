@@ -61,7 +61,6 @@ import {
 } from "../stores/userStore";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsDrawer from "../components/SettingsDrawer";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorDisplay from "../components/ErrorDisplay";
 
@@ -469,8 +468,6 @@ const PersonalCenter: Component<Props> = (props) => {
       </PageTransition>
 
       <NavBar />
-
-      <SettingsDrawer />
     </>
   );
 };

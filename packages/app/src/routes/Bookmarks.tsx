@@ -5,7 +5,6 @@ import UserAvatar from "../components/UserAvatar";
 import { setCurrentTab, contentType } from "../stores/uiStore";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsDrawer from "../components/SettingsDrawer";
 import IllustBookmarks from "./IllustBookmarks";
 import NovelBookmarks from "./NovelBookmarks";
 import { scrollToTop } from "../utils/scrollToTop";
@@ -44,8 +43,6 @@ const Bookmarks: Component = () => {
       </PageTransition>
 
       <NavBar />
-
-      <SettingsDrawer />
     </>
   );
 };

@@ -13,11 +13,10 @@ import {
   markFeedMounted,
   isFeedCached,
 } from "../stores/feedStore";
-import { currentTab, openSettingsDrawer, layoutMode } from "../stores/uiStore";
+import { currentTab, layoutMode } from "../stores/uiStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsDrawer from "../components/SettingsDrawer";
 const Feed: Component = () => {
   const navigate = useNavigate();
   const cached = isFeedCached();
@@ -46,7 +45,7 @@ const Feed: Component = () => {
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
               Pictelio
             </h1>
-            <div onClick={() => openSettingsDrawer()} style="display:inline-flex">
+            <div onClick={() => navigate({ to: "/settings" })} style="display:inline-flex">
               <fluent-button
                 appearance="subtle"
                 aria-label="设置"
@@ -78,8 +77,6 @@ const Feed: Component = () => {
       </PageTransition>
 
       <NavBar />
-
-      <SettingsDrawer />
     </>
   );
 };

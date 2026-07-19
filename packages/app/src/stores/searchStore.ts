@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 import type {
   PixivIllust,
   PixivNovel,
@@ -6,60 +6,39 @@ import type {
   SearchTarget,
   SearchScope,
   ApiError,
+  SearchResultItem,
 } from "@/api/types";
 import { searchIllust, searchNovel, searchIllustNext, searchNovelNext } from "@/api/search";
 import { toApiError } from "@/api/client";
 import { ApiErrorType } from "@/api/types";
+import { mergeSearchResults } from "@/utils/searchMerger";
 
 export interface SearchStoreState {
+  /** Current search keyword */
   keyword: () => string;
+  /** Search scope (all / illust / novel) */
   scope: () => SearchScope;
+  /** Sort order */
   sort: () => SearchSort;
-  searchTarget: () => SearchTarget;
-  illustResults: () => PixivIllust[];
-  novelResults: () => PixivNovel[];
+  /** Merged search results (illust + novel combined) */
+  results: () => SearchResultItem[];
+  /** Whether a search request is in flight */
   loading: () => boolean;
+  /** Error from the last search, if any */
   error: () => ApiError | null;
-  hasMoreIllust: () => boolean;
-  hasMoreNovel: () => boolean;
-  nextIllustUrl: () => string | null;
-  nextNovelUrl: () => string | null;
-  searchCache: () => number;
-  searchHistory: () => string[];
+  /** Update the search keyword */
   setKeyword: (word: string) => void;
+  /** Update the search scope */
   setScope: (scope: SearchScope) => void;
+  /** Update the sort order */
   setSort: (sort: SearchSort) => void;
-  setSearchTarget: (target: SearchTarget) => void;
-  setResults: (
-    illusts: PixivIllust[],
-    novels: PixivNovel[],
-    loading: boolean,
-    hasMoreIllust: boolean,
-    hasMoreNovel: boolean,
-    nextIllustUrl: string | null,
-    nextNovelUrl: string | null,
-  ) => void;
-  appendResults: (
-    illusts: PixivIllust[],
-    novels: PixivNovel[],
-    loading: boolean,
-    hasMoreIllust: boolean,
-    hasMoreNovel: boolean,
-    nextIllustUrl: string | null,
-    nextNovelUrl: string | null,
-  ) => void;
-  setLoading: (loading: boolean) => void;
-  setError: (err: ApiError | null) => void;
-  clearResults: () => void;
-  addToHistory: (word: string) => void;
-  removeFromHistory: (word: string) => void;
-  clearHistory: () => void;
+  /** Execute a search with current keyword/scope/sort. Checks internal cache first. */
   executeSearch: () => Promise<void>;
-  loadMoreIllust: () => Promise<void>;
-  loadMoreNovel: () => Promise<void>;
+  /** Whether there are more results to load */
+  hasMore: () => boolean;
+  /** Load more results (handles both illust and novel pagination internally) */
+  loadMore: () => Promise<void>;
 }
-
-const MAX_HISTORY = 50;
 
 // ─── 搜索结果 LRU 缓存（跨组件卸载持久）───
 
@@ -111,13 +90,13 @@ function clearSearchCache(word?: string, scope?: SearchScope, sort?: SearchSort)
   }
 }
 
-export { readSearchCache, clearSearchCache };
+export { clearSearchCache };
 
 export function createSearchStore(): SearchStoreState {
   const [keyword, setKeyword] = createSignal("");
   const [scope, setScope] = createSignal<SearchScope>("all");
   const [sort, setSort] = createSignal<SearchSort>("date_desc");
-  const [searchTarget, setSearchTarget] = createSignal<SearchTarget>("partial_match_for_tags");
+  const [searchTarget] = createSignal<SearchTarget>("partial_match_for_tags");
   const [illustResults, setIllustResults] = createSignal<PixivIllust[]>([]);
   const [novelResults, setNovelResults] = createSignal<PixivNovel[]>([]);
   const [loading, setLoading] = createSignal(false);
@@ -141,7 +120,10 @@ export function createSearchStore(): SearchStoreState {
   const [hasMoreNovel, setHasMoreNovel] = createSignal(false);
   const [nextIllustUrl, setNextIllustUrl] = createSignal<string | null>(null);
   const [nextNovelUrl, setNextNovelUrl] = createSignal<string | null>(null);
-  const [searchHistory, setSearchHistory] = createSignal<string[]>([]);
+
+  // ── Merged results (computed) ──
+  const results = createMemo(() => mergeSearchResults(illustResults(), novelResults()));
+  const hasMore = createMemo(() => hasMoreIllust() || hasMoreNovel());
 
   // ── AbortController management ──
   let abortController: AbortController | null = null;
@@ -149,43 +131,6 @@ export function createSearchStore(): SearchStoreState {
   function abortPrevious() {
     abortController?.abort();
     abortController = new AbortController();
-  }
-
-  function setResults(
-    illusts: PixivIllust[],
-    novels: PixivNovel[],
-    loading: boolean,
-    hasMoreI: boolean,
-    hasMoreN: boolean,
-    nextI: string | null,
-    nextN: string | null,
-  ) {
-    setIllustResults(illusts);
-    setNovelResults(novels);
-    setLoading(loading);
-    setHasMoreIllust(hasMoreI);
-    setHasMoreNovel(hasMoreN);
-    setNextIllustUrl(nextI);
-    setNextNovelUrl(nextN);
-    setError(null);
-  }
-
-  function appendResults(
-    illusts: PixivIllust[],
-    novels: PixivNovel[],
-    loading: boolean,
-    hasMoreI: boolean,
-    hasMoreN: boolean,
-    nextI: string | null,
-    nextN: string | null,
-  ) {
-    setIllustResults((prev) => [...prev, ...illusts]);
-    setNovelResults((prev) => [...prev, ...novels]);
-    setLoading(loading);
-    setHasMoreIllust(hasMoreI);
-    setHasMoreNovel(hasMoreN);
-    setNextIllustUrl(nextI);
-    setNextNovelUrl(nextN);
   }
 
   function clearResults() {
@@ -199,30 +144,31 @@ export function createSearchStore(): SearchStoreState {
     setNextNovelUrl(null);
   }
 
-  function addToHistory(word: string) {
-    if (!word.trim()) return;
-    setSearchHistory((prev) => {
-      const filtered = prev.filter((h) => h !== word);
-      return [word, ...filtered].slice(0, MAX_HISTORY);
-    });
-  }
-
-  function removeFromHistory(word: string) {
-    setSearchHistory((prev) => prev.filter((h) => h !== word));
-  }
-
-  function clearHistory() {
-    setSearchHistory([]);
-  }
-
   async function executeSearch() {
     const kw = keyword().trim();
     if (!kw) return;
 
     abortPrevious();
     const signal = abortController!.signal;
-    // 重置待处理计数，取消所有进行中的 loadMore 的 pending
     pendingRequests = 0;
+
+    const currentScope = scope();
+    const currentSort = sort();
+
+    // Check internal cache first
+    const cached = readSearchCache(kw, currentScope, currentSort);
+    if (cached) {
+      setIllustResults(cached.illustResults);
+      setNovelResults(cached.novelResults);
+      setHasMoreIllust(cached.hasMoreIllust);
+      setHasMoreNovel(cached.hasMoreNovel);
+      setNextIllustUrl(cached.nextIllustUrl);
+      setNextNovelUrl(cached.nextNovelUrl);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     incPending();
     setError(null);
     // Clear previous results to avoid stale data on partial failure
@@ -234,8 +180,6 @@ export function createSearchStore(): SearchStoreState {
     setNextNovelUrl(null);
 
     try {
-      const currentScope = scope();
-      const currentSort = sort();
       const currentTarget = searchTarget();
       let anySucceeded = false;
 
@@ -291,71 +235,68 @@ export function createSearchStore(): SearchStoreState {
     }
   }
 
-  async function loadMoreIllust() {
-    const url = nextIllustUrl();
-    if (!url) return;
-    setError(null);
-    incPending();
-    try {
-      const res = await searchIllustNext(url, abortController?.signal ?? undefined);
-      setIllustResults((prev) => [...prev, ...res.illusts]);
-      setHasMoreIllust(res.next_url != null);
-      setNextIllustUrl(res.next_url);
-    } catch (err) {
-      if ((err as Error).name === "AbortError") return;
-      setError(toApiError(err));
-    } finally {
-      decPending();
-    }
-  }
+  async function loadMore() {
+    const hasI = hasMoreIllust();
+    const hasN = hasMoreNovel();
+    if (!hasI && !hasN) return;
 
-  async function loadMoreNovel() {
-    const url = nextNovelUrl();
-    if (!url) return;
     setError(null);
-    incPending();
-    try {
-      const res = await searchNovelNext(url, abortController?.signal ?? undefined);
-      setNovelResults((prev) => [...prev, ...res.novels]);
-      setHasMoreNovel(res.next_url != null);
-      setNextNovelUrl(res.next_url);
-    } catch (err) {
-      if ((err as Error).name === "AbortError") return;
-      setError(toApiError(err));
-    } finally {
-      decPending();
-    }
+
+    // Load illust next page
+    const illustPromise = hasI
+      ? (async () => {
+          const url = nextIllustUrl();
+          if (!url) return;
+          incPending();
+          try {
+            const res = await searchIllustNext(url, abortController?.signal ?? undefined);
+            setIllustResults((prev) => [...prev, ...res.illusts]);
+            setHasMoreIllust(res.next_url != null);
+            setNextIllustUrl(res.next_url);
+          } catch (err) {
+            if ((err as Error).name === "AbortError") return;
+            setError(toApiError(err));
+          } finally {
+            decPending();
+          }
+        })()
+      : Promise.resolve();
+
+    // Load novel next page
+    const novelPromise = hasN
+      ? (async () => {
+          const url = nextNovelUrl();
+          if (!url) return;
+          incPending();
+          try {
+            const res = await searchNovelNext(url, abortController?.signal ?? undefined);
+            setNovelResults((prev) => [...prev, ...res.novels]);
+            setHasMoreNovel(res.next_url != null);
+            setNextNovelUrl(res.next_url);
+          } catch (err) {
+            if ((err as Error).name === "AbortError") return;
+            setError(toApiError(err));
+          } finally {
+            decPending();
+          }
+        })()
+      : Promise.resolve();
+
+    await Promise.all([illustPromise, novelPromise]);
   }
 
   return {
     keyword,
     scope,
     sort,
-    searchTarget,
-    illustResults,
-    novelResults,
+    results,
+    hasMore,
     loading,
     error,
-    hasMoreIllust,
-    hasMoreNovel,
-    nextIllustUrl,
-    nextNovelUrl,
-    searchCache: () => searchCache.size,
-    searchHistory,
     setKeyword,
     setScope,
     setSort,
-    setSearchTarget,
-    setResults,
-    appendResults,
-    setLoading,
-    setError,
-    clearResults,
-    addToHistory,
-    removeFromHistory,
-    clearHistory,
     executeSearch,
-    loadMoreIllust,
-    loadMoreNovel,
+    loadMore,
   };
 }

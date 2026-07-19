@@ -83,6 +83,6 @@ describe("mergeSearchResults", () => {
     const novels = [makeNovel(2, "2026-01-01T00:00:00Z")];
     const result = mergeSearchResults(illusts, novels);
     expect(result).toHaveLength(2);
-    expect(result.map((r) => r.entity.id).sort()).toEqual([1, 2]);
+    expect(result.map((r) => r.entity.id).toSorted()).toEqual([1, 2]);
   });
 });

@@ -18,7 +18,7 @@ import {
   setRecommendSubTab,
   type RecommendSubTab,
 } from "../stores/feedStore";
-import { openSettingsDrawer, layoutMode, contentType, setContentType } from "../stores/uiStore";
+import { layoutMode, contentType, setContentType } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
 import type { PixivIllust } from "../api/types";
 import { user, isLoggedIn } from "../stores/authStore";
@@ -27,7 +27,6 @@ import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import NovelFeedPage from "./NovelFeedPage";
 import PageTransition from "../components/PageTransition";
-import SettingsDrawer from "../components/SettingsDrawer";
 import { scrollToTop } from "../utils/scrollToTop";
 
 interface Props {
@@ -90,7 +89,7 @@ const TabFeedPage: Component<Props> = (props) => {
             <h1
               class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0"
               classList={{ "cursor-pointer": isLoggedIn() }}
-              onClick={() => isLoggedIn() && openSettingsDrawer()}
+              onClick={() => isLoggedIn() && navigate({ to: "/settings" })}
             >
               <Show when={isLoggedIn() && user()} fallback={<>Pictelio</>}>
                 <UserAvatar />
@@ -223,8 +222,6 @@ const TabFeedPage: Component<Props> = (props) => {
       </PageTransition>
 
       <NavBar />
-
-      <SettingsDrawer />
     </>
   );
 };
