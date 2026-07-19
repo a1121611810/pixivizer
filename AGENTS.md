@@ -17,22 +17,158 @@
 
 本项目使用 [CodeGraph](https://github.com/colbymchenry/codegraph) 作为默认代码理解工具。它基于本地预索引的代码知识图谱，提供符号定位、调用链追踪、影响分析、框架路由识别等能力，不只是「代码搜索」。
 
+> 如果 `.codegraph/` 索引尚未生成，在项目根目录运行以下命令初始化：
+> ```bash
+> cd /Users/lilianda/develop/pixivizer && pnpm dlx codegraph init
+> ```
+
 ### 默认原则
 
-- **任何涉及"理解代码结构、定位符号、追踪调用链、分析影响范围"的任务，默认优先使用 `mcp__codegraph__*` 系列工具。**
+- **任何涉及"理解代码结构、定位符号、追踪调用链、分析影响范围"的任务，默认优先使用 CodeGraph 系列工具（`codegraph_*`，通过 `mcp__codegraph__` MCP 前缀访问）。**
 - CodeGraph 是默认工具，不是搜索失败后的兜底工具。
 - 项目已通过 `reasonix.toml` 配置 `--path`，调用 CodeGraph 工具时**不要**手动传 `projectPath`。
 
-### 典型使用场景
+### 工具列表与典型使用场景
 
-| 场景                            | 首选工具                                                                | 说明/示例                             |
-| ------------------------------- | ----------------------------------------------------------------------- | ------------------------------------- |
-| 接到功能或 Bug 任务，不确定入口 | `mcp__codegraph__codegraph_context`                                     | "登录态自动恢复逻辑从哪里开始？"      |
-| 追踪函数/组件调用关系           | `mcp__codegraph__codegraph_trace` / `mcp__codegraph__codegraph_explore` | `handleLogin` 被谁调用、又调用了谁    |
-| 路由到处理函数的映射            | `mcp__codegraph__codegraph_explore`                                     | `/illust/:id` 路由对应哪个组件        |
-| 按名称定位符号                  | `mcp__codegraph__codegraph_search`                                      | 搜索 `useAuthStore`、`ImageCard`      |
-| 读取特定符号的源码              | `mcp__codegraph__codegraph_node`                                        | 获取某个函数/类的完整源码及行号       |
-| 针对任务构建上下文              | `mcp__codegraph__codegraph_context`                                     | 让 CodeGraph 判断与任务相关的代码区域 |
+| 场景 | 首选工具 | 说明 |
+|------|----------|------|
+| 接到功能或 Bug 任务，不确定入口 | `codegraph_context` | 任何"how does X work"/架构/bug 问题首选，返回相关上下文与源码 |
+| 按名称快速定位符号 | `codegraph_search` | 搜索函数、组件、变量、路由等 |
+| 两个符号之间的调用路径 | `codegraph_trace` | 追踪 A 到 B 的调用链，返回每跳的代码体 |
+| 一次性获取多个相关符号的源码 | `codegraph_explore` | 探索组件/函数依赖的 store、service、子组件等 |
+| 单个符号详情，含调用链 | `codegraph_node` | 读取某个方法/组件/类型的完整源码及行号 |
+| 重构前影响分析 | `codegraph_impact` | 分析修改某符号会影响哪些文件/页面 |
+| 查找调用者 | `codegraph_callers` | 查找谁调用了指定符号 |
+| 查找被调用者 | `codegraph_callees` | 查找指定符号内部调用了谁 |
+| 文件级代码浏览 | `codegraph_files` | 查看索引文件树或按模式定位文件 |
+| 索引健康检查 | `codegraph_status` | 检查索引是否就绪、文件/节点/边数量 |
+
+### 工具调用示例
+
+所有示例均通过 MCP 工具调用执行，工具名前缀为 `mcp__codegraph__`（如 `mcp__codegraph__codegraph_context`）。因本项目已通过 `reasonix.toml` 配置 `--path`，示例中**省略 `projectPath`**。
+
+#### `codegraph_context`（PRIMARY TOOL）
+
+参数：`task`（必填）、`maxNodes`（默认 20）、`includeCode`（默认 true）。
+
+```json
+{
+  "task": "登录态自动恢复逻辑从哪里开始？涉及哪些 store 和 API 调用？",
+  "maxNodes": 20,
+  "includeCode": true
+}
+```
+
+#### `codegraph_search`
+
+参数：`query`（必填）、`kind`（可选：function/method/class/interface/type/variable/route/component）、`limit`（默认 10）。
+
+```json
+{
+  "query": "handleLogin",
+  "kind": "function",
+  "limit": 10
+}
+```
+
+#### `codegraph_trace`
+
+参数：`from`（必填）、`to`（必填）。
+
+```json
+{
+  "from": "handleLogin",
+  "to": "PixivApiClient.request"
+}
+```
+
+#### `codegraph_explore`
+
+参数：`query`（必填）、`maxFiles`（默认 12）。
+
+```json
+{
+  "query": "ImageCard dependencies store",
+  "maxFiles": 12
+}
+```
+
+#### `codegraph_node`
+
+参数：`symbol`（必填）、`includeCode`（默认 false）。
+
+```json
+{
+  "symbol": "PixivApiClient.request",
+  "includeCode": true
+}
+```
+
+#### `codegraph_impact`
+
+参数：`symbol`（必填）、`depth`（默认 2）。
+
+```json
+{
+  "symbol": "authStore",
+  "depth": 2
+}
+```
+
+#### `codegraph_callers` / `codegraph_callees`
+
+参数：`symbol`（必填）、`limit`（默认 20）。
+
+```json
+{
+  "symbol": "PixivApiClient.request",
+  "limit": 20
+}
+```
+
+#### `codegraph_files`
+
+参数：`path`（可选）、`pattern`（可选）、`format`（tree/flat/grouped，默认 tree）、`includeMetadata`（默认 true）、`maxDepth`（可选）。
+
+```json
+{
+  "path": "src/api",
+  "format": "tree",
+  "includeMetadata": true
+}
+```
+
+#### `codegraph_status`
+
+参数：无（本项目通过 `reasonix.toml` 已配置路径）。
+
+```json
+{}
+```
+
+### 索引维护
+
+- **初始化**：若 `.codegraph/` 索引不存在或损坏，在项目根目录执行：
+  ```bash
+  cd /Users/lilianda/develop/pixivizer && pnpm dlx codegraph init
+  ```
+- **更新**：文件大幅改动、新增/删除大量模块、或发现 CodeGraph 返回结果缺失/过期时，重新运行 `pnpm dlx codegraph init` 重建索引。
+- **验证**：调用 `codegraph_status` 检查索引是否就绪，关注 `Files indexed`、`Total nodes`、`Total edges` 等关键指标。
+
+### 结果解读速查
+
+- **`Files indexed`**：被索引的文件数量。数量异常下降通常意味着索引范围配置变更或文件被排除。
+- **`Total nodes`**：图中符号节点总数，包括函数、组件、变量、路由、类等。
+- **`Total edges`**：符号间关系（调用、引用、导入、继承等）总数。
+- **`Nodes by Kind`**：按 `component`、`function`、`route`、`import`、`variable` 等类型统计的节点数量，帮助快速判断索引覆盖度。
+- **返回中的 `node`**：通常表示一个符号（函数、组件、类等），包含名称、路径、行号、源码片段等信息。
+- **返回中的 `edge`**：表示两个符号之间的关系，例如 `calls`（调用）、`imports`（导入）、`references`（引用）等。
+
+### projectPath 说明
+
+本项目已通过 `reasonix.toml` 配置 `--path`，因此：
+- 调用 CodeGraph 工具时**始终不传** `projectPath`。
+- 如果 `reasonix.toml` 未配置或需要查询其他项目，则通过向上查找 `.codegraph/` 目录确定项目根目录后显式传入。
 
 ### 禁止的默认行为
 
@@ -48,6 +184,8 @@
 2. **已知路径的完整文件读取**：任务已明确需要读取 `src/api/client.ts` 等具体文件，直接用 `Read` 更高效。
 3. **非代码文本搜索**：搜索日志、配置文件、依赖版本、文档等（如查 `package.json` 中的某个字段）。
 4. **简单列举文件**：使用 `Glob` 列出符合明确模式的文件（如 `src/components/**/*.tsx`）。
+5. **小范围精准定位**：已知符号名且在单个文件中，用 `Grep` 比 CodeGraph 更快（如查某个工具函数在哪定义）。
+6. **中文语义搜索**：当任务描述是中文业务术语（如"登录页面"、"收藏按钮"），而 CodeGraph 返回空或不相关结果时，改用任何可用的低成本定位手段（文本搜索、文件名模式匹配等）找到入口文件或符号名，然后再切回 CodeGraph 做调用链、影响面、依赖分析。不要反复用不同中文词组尝试 CodeGraph。
 
 ## 命令
 
@@ -408,8 +546,9 @@ packages/app/src/
 
 ## 任务完成前自检
 
-- **代码理解优先性**：本次任务若涉及代码结构、调用链、影响范围分析，是否优先使用了 `mcp__codegraph__*` 工具？
-- **Fallback 合理性**：若未使用 CodeGraph，是否属于已列出的允许例外（CodeGraph 不可用、已知路径文件读取、非代码文本搜索、简单文件列举）？
+- **代码理解优先性**：本次任务若涉及代码结构、调用链、影响范围分析，是否优先使用了 CodeGraph 工具？
+- **Fallback 合理性**：若未使用 CodeGraph，是否属于已列出的允许例外之一（CodeGraph 不可用、已知路径文件读取、非代码文本搜索、简单文件列举、小范围精准定位、中文语义搜索）？
+- **索引健康**：如果 CodeGraph 返回结果异常（缺失符号、调用链断裂），是否检查了索引状态（`codegraph_status`）并考虑重建索引？
 
 ## Notes
 
