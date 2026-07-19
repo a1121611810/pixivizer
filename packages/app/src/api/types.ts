@@ -173,6 +173,28 @@ export interface PixivCommentReplyResponse {
 export type ContentType = "illust" | "manga" | "novel";
 export type RestrictType = "public" | "private";
 
+// ─── 搜索 ───
+export type SearchSort = "date_desc" | "date_asc" | "popular_desc";
+export type SearchTarget = "partial_match_for_tags" | "exact_match_for_tags" | "title_and_caption";
+export type SearchScope = "all" | "illust" | "novel"; // Phase 2 搜索页使用
+
+export interface PixivAutocompleteResponse {
+  tags: PixivIllustTag[];
+}
+
+/** 搜索结果合流后的统一条目 */
+export type SearchResultItem =
+  | {
+      type: "illust";
+      entity: PixivIllust;
+      date: string;
+    }
+  | {
+      type: "novel";
+      entity: PixivNovel;
+      date: string;
+    };
+
 // ─── 用户关注/粉丝 ───
 export interface PixivUserPreview {
   user: PixivUser;

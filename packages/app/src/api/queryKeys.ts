@@ -1,4 +1,4 @@
-import type { RestrictType } from "./types";
+import type { RestrictType, SearchSort, SearchTarget } from "./types";
 
 /**
  * CreateInfiniteQuery 的 queryKey 工厂。
@@ -36,4 +36,18 @@ export const queryKeys = {
 
   followList: (mode: "following" | "followers", userId: number) =>
     ["user", "followList", mode, userId] as const,
+
+  searchIllust: (
+    word: string,
+    sort: SearchSort = "date_desc",
+    searchTarget: SearchTarget = "partial_match_for_tags",
+  ) => ["search", "illust", word, sort, searchTarget] as const,
+
+  searchNovel: (
+    word: string,
+    sort: SearchSort = "date_desc",
+    searchTarget: SearchTarget = "partial_match_for_tags",
+  ) => ["search", "novel", word, sort, searchTarget] as const,
+
+  searchAutocomplete: (word: string) => ["search", "autocomplete", word] as const,
 } as const;

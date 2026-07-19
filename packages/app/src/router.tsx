@@ -61,6 +61,7 @@ const ImageCacheSettings = lazy(() => import("@/routes/ImageCacheSettings"));
 const FollowListPage = lazy(() => import("@/routes/FollowListPage"));
 const NovelDetail = lazy(() => import("@/routes/NovelDetail"));
 const HistoryPage = lazy(() => import("@/routes/HistoryPage"));
+const Search = lazy(() => import("@/routes/Search"));
 
 const rootRoute = createRootRoute({ component: RootLayout });
 
@@ -145,6 +146,12 @@ const historyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "history",
   component: asRoute(HistoryPage),
+});
+
+const searchRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "search",
+  component: asRoute(Search),
 });
 
 const meRoute = createRoute({
@@ -240,6 +247,7 @@ const routeTree = rootRoute.addChildren([
   novelRoute,
   bookmarksRoute,
   historyRoute,
+  searchRoute,
   meRoute,
   aboutRoute,
   imageHostRoute,

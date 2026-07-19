@@ -44,6 +44,7 @@ import { loadBlockedIds } from "@/stores/blockStore";
 import { loadImageHostPreference } from "@/stores/imageHostStore";
 
 const StartupUpdateDialog = lazy(() => import("@/components/StartupUpdateDialog"));
+const SearchFAB = lazy(() => import("@/components/SearchFAB"));
 
 const RootLayout: Component = () => {
   const navigate = useNavigate();
@@ -205,6 +206,7 @@ const RootLayout: Component = () => {
       </Show>
 
       <StartupUpdateDialog />
+      <SearchFAB />
     </div>
   );
 };
