@@ -6,10 +6,10 @@
 
 - **技术栈**: SolidJS 1.9 + TypeScript 6.0 (strict) + Vite 8.0 + UnoCSS 66.7 + Capacitor 8.4；小说正文布局使用 `@chenglou/pretext`
 - **Monorepo**: pnpm workspace，含两个子包：`pictelio-app`（SPA 主体）和 `pictelio-website`（VitePress 落地页）
-- **入口**: `packages/app/src/main.tsx` → `packages/app/src/App.tsx`（TanStack Router）
-- **路由**: `/login` `/recommended` `/following` `/illust/$id` `/novel/$id` `/bookmarks` `/me` `/user/$id` `/user/$id/illusts` `/user/$id/following` `/user/$id/followers` `/about` `/image-host` `/image-cache` `/age-confirmation` `/debug`
+- **入口**: `packages/app/src/main.tsx` → `packages/app/src/startup.ts` → `packages/app/src/App.tsx` → `packages/app/src/router.tsx`（TanStack Router，路由定义与 App 分离）
+- **路由**: `/login` `/recommended` `/following` `/illust/$id` `/novel/$id` `/bookmarks` `/illust-bookmarks` `/me` `/user/$id` `/user/$id/illusts` `/user/$id/following` `/user/$id/followers` `/history` `/follow-list` `/about` `/image-host` `/image-cache` `/age-confirmation` `/debug`
 - **设计系统**: **强制** Microsoft Fluent Design System 2 — 所有视觉和交互决策基于 Fluent 令牌和规范（详见「Fluent Design 规范」章节）
-- **Pixiv API**: 自建 HTTP 客户端 (`src/api/client.ts`)，双模式（Web: fetch + Vite 代理 / Native: CapacitorHttp 直连），iOS OAuth 凭证策略（Android 已弃用），401 自动刷新 + 防死循环
+- **Pixiv API**: 自建 HTTP 客户端 (`src/api/client.ts` + `src/api/queryClient.ts`)，双模式（Web: fetch + Vite 代理 / Native: CapacitorHttp 直连 + `src/native/PictelioHttp.ts`），iOS OAuth 凭证策略（Android 已弃用），401 自动刷新 + 防死循环
 - **CSS 架构**: 分层加载 `reset.css` → `tokens.css` → `base.css` → `virtual:uno.css`；PostCSS `postcss-pxtorem` 自动转换字号为 rem；Fluent Web Components 主题同步
 - **构建工具**: 使用 `vite-plus`（内部封装 Vite + oxlint + oxfmt + vitest），通过 `vp` CLI 统一执行 dev/build/check/test/lint/fmt
 
@@ -116,9 +116,15 @@ packages/app/src/
 ├── api/                # Pixiv API 层
 │   ├── auth.ts         # OAuth 认证（iOS 凭证、spark-md5 哈希、password/refresh_token）
 │   ├── client.ts       # HTTP 客户端（PixivApiClient 接口、Web fetch / Native CapacitorHttp 双模式、URL 重写、401 自动刷新防死循环）
+│   ├── comment.ts      # 作品评论 API：获取、发送、删除
 │   ├── illust.ts       # 作品 API：推荐、关注、下一页、详情、收藏、ugoira 元数据、关注/取消关注用户
+│   ├── normalizeQueryError.ts # TanStack Query 错误归一化
+│   ├── novel.ts        # 小说 API：详情、系列、搜索
+│   ├── queryClient.ts  # TanStack Query client 单例 & 默认配置
+│   ├── queryKeys.ts    # TanStack Query 查询键工厂
+│   ├── types.ts        # 类型定义（PixivIllust、PixivUser、ApiError、PixivAuthResponse 等）
 │   ├── user.ts         # 用户 API：详情、关注列表、粉丝列表
-│   └── types.ts        # 类型定义（PixivIllust、PixivUser、ApiError、PixivAuthResponse 等）
+│   └── userAgent.ts    # User-Agent 管理
 ├── styles/             # CSS 分层（main.tsx 中按序导入）
 │   ├── reset.css       # modern-css-reset 定制
 │   ├── tokens.css      # Fluent Design System 2 设计令牌（颜色、间距、圆角、阴影、字体、动画曲线/时长）
@@ -126,79 +132,106 @@ packages/app/src/
 ├── types/              # 环境类型声明（spark-md5、postcss-pxtorem、env）
 ├── stores/             # SolidJS 响应式状态（createSignal + createStore 导出）
 │   ├── authStore.ts    # 登录状态（isLoggedIn、user、token、自动恢复、onUnauthorized 处理器）
-│   ├── feedStore.ts    # Feed 数据（illusts、分页、按 Tab 缓存、滚动位置）
-│   ├── uiStore.ts      # UI 状态（当前 Tab、主题、布局模式、R18 开关、设置面板、自动检查更新等）
-│   ├── bookmarkStore.ts# 收藏状态管理
-│   ├── userStore.ts    # 用户状态
-│   ├── userIllustsStore.ts # 用户作品列表状态
-│   ├── reportStore.ts  # 已举报作品 ID 持久化
+│   ├── backGestureStore.ts # Android 返回手势状态管理
 │   ├── blockStore.ts   # 已屏蔽用户 ID 持久化
+│   ├── bookmarkStore.ts# 收藏状态管理
+│   ├── db.ts           # TanStack DB 本地数据库配置（浏览历史持久化）
+│   ├── feedStore.ts    # Feed 数据（illusts、分页、按 Tab 缓存、滚动位置）
+│   ├── followListStore.ts # 关注/粉丝列表状态
+│   ├── historyStore.ts # 浏览历史状态（TanStack DB 查询封装）
+│   ├── imageHostStore.ts # 自定义图片托管配置状态
+│   ├── novelCache.ts   # 小说正文缓存（LRU）
+│   ├── novelStore.ts   # 小说 Feed 状态
 │   ├── readerSettingsStore.ts # 小说阅读设置（字号、字重、字体、行高、颜色）
-│   └── __tests__/      # Store 单元测试（uiStore、feedStore、reportStore、blockStore）
-├── routes/             # 页面组件（lazy loaded）
-│   ├── Login.tsx              # 登录页（refresh_token / 用户名密码）
-│   ├── AgeConfirmation.tsx    # 年龄确认页
-│   ├── TabFeedPage.tsx        # Tab 容器（recommended / follow），委托 Feed 渲染
-│   ├── Feed.tsx               # 瀑布流内容（虚拟滚动、下拉刷新、无限加载、哨兵分页）
-│   ├── IllustDetail.tsx       # 作品详情（大图查看、多页、动图播放、楼梯式浏览）
-│   ├── NovelDetail.tsx        # 小说详情（正文虚拟化、搜索高亮、阅读进度）
-│   ├── NovelFeedPage.tsx      # 小说 Feed 页
-│   ├── NovelBookmarks.tsx     # 小说收藏页
-│   ├── Bookmarks.tsx          # 收藏页
-│   ├── PersonalCenter.tsx     # 个人中心 / 用户主页（根据路由参数区分）
-│   ├── UserIllusts.tsx        # 用户作品列表页
-│   ├── About.tsx              # 关于页
-│   └── DebugImage.tsx         # 图片调试页
+│   ├── reportStore.ts  # 已举报作品 ID 持久化
+│   ├── themeStore.ts   # 主题管理（亮/暗/跟随系统）
+│   ├── uiStore.ts      # UI 状态（当前 Tab、布局模式、R18 开关、设置面板、自动检查更新等）
+│   ├── userIllustsStore.ts # 用户作品列表状态
+│   └── userStore.ts    # 用户状态
+├── routes/             # 页面组件（lazy loaded，路由定义在独立的 src/router.tsx）
+│   ├── __root.tsx              # 路由根布局（NavBar、页面过渡、全局监听）
+│   ├── Login.tsx               # 登录页（refresh_token / 用户名密码）
+│   ├── AgeConfirmation.tsx     # 年龄确认页
+│   ├── TabFeedPage.tsx         # Tab 容器（recommended / follow），委托 Feed 渲染
+│   ├── Feed.tsx                # 瀑布流内容（虚拟滚动、下拉刷新、无限加载、哨兵分页）
+│   ├── IllustDetail.tsx        # 作品详情（大图查看、多页、动图播放、楼梯式浏览）
+│   ├── NovelDetail.tsx         # 小说详情（正文虚拟化、搜索高亮、阅读进度）
+│   ├── NovelFeedPage.tsx       # 小说 Feed 页
+│   ├── NovelBookmarks.tsx      # 小说收藏页
+│   ├── IllustBookmarks.tsx     # 插画收藏页
+│   ├── Bookmarks.tsx           # 收藏总览页
+│   ├── HistoryPage.tsx         # 浏览历史页
+│   ├── FollowListPage.tsx      # 关注/粉丝列表页
+│   ├── PersonalCenter.tsx      # 个人中心 / 用户主页（根据路由参数区分）
+│   ├── UserIllusts.tsx         # 用户作品列表页
+│   ├── ImageHostSettings.tsx   # 图片托管设置页
+│   ├── ImageCacheSettings.tsx  # 图片缓存设置页
+│   ├── About.tsx               # 关于页
+│   └── DebugImage.tsx          # 图片调试页
 ├── components/         # 可复用 UI 组件
-│   ├── ImageCard.tsx            # Feed 卡片（含收藏/关注操作、R18 模糊、R18G 遮罩）
-│   ├── LazyImageCard.tsx        # 轻量虚拟化卡片包裹（进入视口才渲染 ImageCard）
-│   ├── LazyDetailImage.tsx      # 详情页懒加载图片包装
-│   ├── PixivImage.tsx           # 图片组件（CDN 代理 + 尺寸优化 + 渐进加载）
-│   ├── ImageViewer.tsx          # 全屏图片查看器（缩放/拖拽/滑动翻页）
-│   ├── UgoiraViewer.tsx         # 动图（Ugoira）播放器（JSZip 解压帧）
-│   ├── VirtualFeed.tsx          # 虚拟滚动 Feed 容器
-│   ├── LayoutEngine.tsx         # 布局引擎（瀑布流/单列/网格切换、Masonry 计算）
-│   ├── NavBar.tsx               # 顶部导航栏（自动隐藏）
-│   ├── SettingsSheet.tsx        # 设置面板
-│   ├── ReportSheet.tsx          # 举报面板
-│   ├── BlocklistSheet.tsx       # 屏蔽列表面板
 │   ├── AgeGate.tsx              # 年龄门槛组件
-│   ├── SkeletonCard.tsx         # 骨架屏占位卡片
-│   ├── PullIndicator.tsx        # 下拉刷新指示器
-│   ├── LoadingSpinner.tsx       # 加载动画
-│   ├── PageTransition.tsx       # 页面过渡动画
+│   ├── BlocklistSheet.tsx       # 屏蔽列表面板
+│   ├── CommentOverlay.tsx       # 评论浮层组件
+│   ├── ErrorDisplay.tsx         # 统一错误展示组件（按 ApiErrorType 渲染操作指引）
+│   ├── FluentIcon.tsx           # Fluent 图标封装（components/ui/）
+│   ├── GridCard.tsx             # 网格模式卡片
 │   ├── HeartBurstEffect.tsx     # 收藏爱心爆发效果
-│   ├── UserAvatar.tsx           # 用户头像组件
-│   ├── NovelVirtualFeed.tsx     # 小说虚拟滚动 Feed（textList / coverWall）
-│   ├── NovelTextListCard.tsx    # 小说文本列表卡片（纯渲染，无测量）
+│   ├── IllustTags.tsx           # 作品标签显示组件
+│   ├── ImageCard.tsx            # Feed 卡片（含收藏/关注操作、R18 模糊、R18G 遮罩）
+│   ├── ImageViewer.tsx          # 全屏图片查看器（缩放/拖拽/滑动翻页）
+│   ├── LazyDetailImage.tsx      # 详情页懒加载图片包装
+│   ├── LazyImageCard.tsx        # 轻量虚拟化卡片包裹（进入视口才渲染 ImageCard）
+│   ├── LoadingSpinner.tsx       # 加载动画
+│   ├── NavBar.tsx               # 顶部导航栏（自动隐藏）
 │   ├── NovelCard.tsx            # 小说卡片
 │   ├── NovelSearchBar.tsx       # 小说搜索栏
+│   ├── NovelTextListCard.tsx    # 小说文本列表卡片（纯渲染，无测量）
+│   ├── NovelVirtualFeed.tsx     # 小说虚拟滚动 Feed（textList / coverWall）
+│   ├── PageTransition.tsx       # 页面过渡动画
+│   ├── PixivImage.tsx           # 图片组件（CDN 代理 + 尺寸优化 + 渐进加载）
+│   ├── PullIndicator.tsx        # 下拉刷新指示器
 │   ├── ReaderSettingsSheet.tsx  # 阅读设置面板
-│   └── ui/FluentIcon.tsx        # Fluent 图标封装
+│   ├── ReportSheet.tsx          # 举报面板
+│   ├── SeriesSheet.tsx          # 作品系列面板
+│   ├── SeriesSheetItem.tsx      # 系列面板条目组件
+│   ├── SettingsDrawer.tsx       # 设置抽屉面板
+│   ├── SkeletonCard.tsx         # 骨架屏占位卡片
+│   ├── StartupUpdateDialog.tsx  # 启动时更新检查弹窗
+│   ├── ThemeSelector.tsx        # 主题选择器组件
+│   ├── UgoiraViewer.tsx         # 动图（Ugoira）播放器（JSZip 解压帧）
+│   ├── UserAvatar.tsx           # 用户头像组件
+│   ├── UserWorksFeed.tsx        # 用户作品瀑布流
+│   └── VirtualFeed.tsx          # 虚拟滚动 Feed 容器
 ├── primitives/         # 底层抽象（无 UI 的逻辑单元）
-│   ├── createVirtualScroll.ts   # 虚拟滚动核心（基于 MasonryLayout 计算可见窗口）
-│   ├── createSentinelPaginator.ts # 哨兵元素无限加载分页器
-│   ├── computeMasonryLayout.ts  # 瀑布流布局计算
-│   ├── masonryWorker.ts         # Web Worker 布局计算（通过 Comlink 通信）
-│   ├── createNovelTextLayout.ts # 小说正文纯文本布局（pretext）
-│   ├── createNovelVirtualLayout.ts # 小说正文虚拟化窗口管理
 │   ├── createComputedTextCard.ts # textList / coverWall 卡片信息区高度纯计算
-│   ├── novelTextLayoutCache.ts  # 小说布局结果 LRU 缓存
-│   ├── createNovelSearch.ts     # 小说正文搜索匹配（字符索引）
-│   ├── isPretextSupported.ts    # pretext 运行环境检测
-│   ├── useContainerWidth.ts     # 容器宽度响应式 Hook
-│   ├── useViewportLazy.ts       # 视口可见性 Hook
-│   └── types.ts                 # 布局类型定义
+│   ├── createImageSizeWorker.ts  # 图片尺寸 Web Worker 通信封装
+│   ├── createManualFetch.ts      # 手动 fetch 封装（AbortController 管理）
+│   ├── createNovelLoader.ts      # 小说内容加载器
+│   ├── createNovelSearch.ts      # 小说正文搜索匹配（字符索引）
+│   ├── createNovelTextLayout.ts  # 小说正文纯文本布局（pretext）
+│   ├── createNovelVirtualLayout.ts # 小说正文虚拟化窗口管理
+│   ├── createSentinelPaginator.ts # 哨兵元素无限加载分页器
+│   ├── imageSize.worker.ts       # Web Worker 图片尺寸计算（替代旧的 masonryWorker）
+│   ├── isPretextSupported.ts     # pretext 运行环境检测
+│   ├── measureText.ts            # 文本测量工具
+│   ├── novelTextLayoutCache.ts   # 小说布局结果 LRU 缓存
+│   ├── types.ts                 # 布局类型定义
+│   ├── useContainerWidth.ts      # 容器宽度响应式 Hook
+│   └── useViewportLazy.ts        # 视口可见性 Hook
 ├── services/           # 服务封装
-│   ├── pixiv.ts            # PixivClient 单例（@book000/pixivts，辅助用途）
+│   ├── backGestureService.ts # Android 返回手势动画服务
+│   ├── imageHostService.ts # 自定义图片托管服务
 │   └── updateService.ts   # 应用更新检查服务
 └── utils/              # 工具函数
-    ├── imageLoader.ts        # 图片加载与缓存（LRU、预加载、CDN URL 构建）
-    ├── imageLoader.native.test.ts # 图片加载器原生测试
-    ├── secureStorage.ts      # refresh_token 安全存储（capacitor-secure-storage-plugin）
-    ├── r18Filter.ts          # R18/R18G 内容过滤
+    ├── createDedupedRequest.ts # 去重请求工具
     ├── html.ts               # HTML 处理工具
-    └── __tests__/html.test.ts# HTML 工具测试
+    ├── imageLoader.ts        # 图片加载与缓存（LRU、预加载、CDN URL 构建）
+    ├── novelBlocks.ts        # 小说段落解析工具
+    ├── novelImageDimensions.ts # 小说内嵌图片尺寸提取
+    ├── r18Filter.ts          # R18/R18G 内容过滤
+    ├── scrollToTop.ts        # 回顶工具函数
+    ├── secureStorage.ts      # refresh_token 安全存储（capacitor-secure-storage-plugin）
+    └── themeApplier.ts       # 主题应用工具（同步 Fluent tokens）
 ```
 
 ## 关键设计决策
@@ -213,6 +246,7 @@ packages/app/src/
 
 - **返回键处理**: Android 返回键通过 `@capacitor/app` 的 `CapApp.addListener("backButton", ...)` 统一处理：关闭查看器/设置、非根路径执行 `navigate(-1)`、根路径双击退出应用。
 - **图片代理**: `MainActivity.java` 中 `shouldInterceptRequest` 拦截所有 `/pixiv-img/` 请求，代理到 `i.pximg.net` 并注入正确的 Referer 和 User-Agent 头。
+- **原生桥接**: `src/native/` 目录包含 Android 原生通信模块：`AuthPlugin.ts`（原生认证插件）、`ImageCache.ts`（原生图片缓存）、`PictelioHttp.ts`（原生 HTTP 客户端封装）。
 - **插件注册**: 自定义插件在 `MainActivity.java` 的 `onCreate` 中通过 `registerPlugin()` 注册，**必须在 `super.onCreate(savedInstanceState)` 之前**。
 
 ### 安全存储
@@ -223,8 +257,8 @@ packages/app/src/
 
 ### 虚拟滚动与布局
 
-- **Masonry 瀑布流**: `computeMasonryLayout.ts` 计算布局，支持通过 Web Worker（`masonryWorker.ts` + Comlink）异步计算，避免阻塞主线程。
-- **虚拟滚动**: `createVirtualScroll.ts` 根据 MasonryLayout 和滚动位置计算可见窗口（startIndex/endIndex），仅渲染视口内 + overscan 范围的卡片。
+- **Masonry 瀑布流**: 通过 `createImageSizeWorker.ts` + `imageSize.worker.ts`（Web Worker）异步计算图片尺寸，驱动瀑布流布局，避免阻塞主线程。
+- **虚拟滚动**: `createManualFetch.ts` + 虚拟滚动计算可见窗口（startIndex/endIndex），仅渲染视口内 + overscan 范围的卡片。
 - **三种布局模式**: 瀑布流（2 列）、单列（1 列）、网格（3 列），可切换并持久化。
 
 ### 年龄限制与内容过滤
@@ -337,15 +371,23 @@ packages/app/src/
 ## 测试
 
 - **框架**: Vitest 4.1，通过 `vite-plus` 的 `vp test` 运行
-- **环境**: `node`（配置在 `vitest.config.ts`）
-- **测试文件位置**: `tests/unit/**/*.test.{ts,tsx}`（配置在 `vitest.config.ts`），辅助函数/内部模块的就近测试可放在 `src/**/*.test.ts`
-- **现有测试**:
-  - `uiStore.test.ts` — UI 状态管理测试
-  - `feedStore.test.ts` — Feed 数据状态测试
-  - `reportStore.test.ts` — 举报状态测试
-  - `blockStore.test.ts` — 屏蔽状态测试
-  - `html.test.ts` — HTML 处理工具测试
-  - `imageLoader.native.test.ts` — 图片加载器原生环境测试
+- **环境**: `node`、`browser`（Playwright provider，配置在 `vitest.config.ts`）
+- **测试文件位置**:
+  - `tests/unit/**/*.test.{ts,tsx}` — 单元测试，按源目录结构组织
+  - `tests/browser/**/*.browser.test.{ts,tsx}` — 浏览器环境组件测试
+  - `tests/e2e/specs/` — 端到端测试
+  - `src/**/*.test.ts` — 辅助函数/内部模块的就近测试
+- **单元测试覆盖**:
+  - `api/` — 8 测试文件（auth、client、comment、illust、novel、ssrfWhitelistContract、user、userAgent）
+  - `components/` — ThemeSelector
+  - `primitives/` — 5 文件（createComputedTextCard、createManualFetch、createNovelSearch、createNovelTextLayout、novelTextLayoutCache）
+  - `routes/` — NovelDetail
+  - `services/` — 3 文件（backGestureService、imageHostService、updateService）
+  - `stores/` — 15 文件（覆盖所有 store）
+  - `utils/` — 9 文件（含 `.native.test.ts`）
+  - 根测试 — router.test.ts、startup.test.ts
+- **浏览器测试**: 19 个文件覆盖 IllustDetail、NovelCard、NovelDetail、SeriesSheet、VirtualFeed 等组件
+- **E2E 测试**: 10 个 spec 覆盖 Feed、Login、Illust Detail、Novel Detail、Bookmarks、Cache 等关键路径
 - `passWithNoTests: true` — 允许空测试文件不报错
 
 ## 部署
@@ -375,3 +417,6 @@ packages/app/src/
 - 目录名为 `pixivizer`，但项目名/包名为 Pictelio
 - 代码中图片 CDN 通过 `/pixiv-img/` 代理路径访问 `i.pximg.net`，非直连
 - 不要在 HTML/CSS/JS 中硬编码 Pixiv CDN URL（`i.pximg.net`、`app-api.pixiv.net`），应使用代理路径
+- 路由定义在 `src/router.tsx` 中独立管理，与 `App.tsx` 分离
+- `src/startup.ts` 编排启动流程（年龄确认、主题初始化、auth 恢复），在 React 树渲染前执行
+- `src/native/` 目录下的原生桥接文件仅 Android 构建时生效，在 Web 开发环境中不加载

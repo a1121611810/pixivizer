@@ -64,7 +64,9 @@
 | **作品详情页** `/illust/:id` — 大图、多页、Ugoira 动图          | **用户主页** `/user/:id` — 浏览画师作品集            | **下拉刷新** — 滑动到顶继续下拉触发              |
 | **用户作品页** `/user/:id/illusts` — 画师全部作品               | **关注/取消关注** — 在卡片上直接操作                 | **自动隐藏导航** — 沉浸式浏览体验                |
 | **瀑布流/单列/网格** — 三种布局模式切换                         | **举报与屏蔽** — 管理不想看到的内容                  | **安全存储** — Android Keystore 加密 token       |
-| **年龄确认与 R18 过滤** — 首次启动确认，内容分级显示            | **检查更新** — 通过 GitHub Releases 获取新版本       | **PWA 离线缓存** — Service Worker 缓存图片与资源 |
+| **小说阅读** `/novel/:id` — 正文虚拟化、搜索高亮、阅读进度       | **浏览历史** `/history` — 自动记录访问历史           | **PWA 离线缓存** — Service Worker 缓存图片与资源 |
+| **小说 Feed** `/novel-feed` — 小说发现与浏览                    | **评论浏览** — 查看作品评论                          | **主题切换** — 亮/暗/跟随系统                    |
+| **年龄确认与 R18 过滤** — 首次启动确认，内容分级显示            | **检查更新** — 通过 GitHub Releases 获取新版本       | **原生桥接** — AuthPlugin / ImageCache / PictelioHttp |
 
 ### 🛠️ 技术栈
 
@@ -72,6 +74,8 @@
 | :--------------- | :-------------------------------------------------------------------- | -----: |
 | **框架**         | [SolidJS](https://www.solidjs.com/)                                   | 1.9.13 |
 | **路由**         | [@tanstack/solid-router](https://github.com/TanStack/router)            | 1.170.17 |
+| **数据获取**     | [@tanstack/solid-query](https://tanstack.com/query)                     | 6.15.1 |
+| **本地数据库**   | [@tanstack/solid-db](https://tanstack.com/db)                           | 0.4.3 |
 | **构建工具**     | [vite-plus](https://github.com/asonkeri/vite-plus)（封装 Vite）       |  0.2.1 |
 | **打包工具**     | [Vite](https://vite.dev/)                                             |  8.1.0 |
 | **样式引擎**     | [UnoCSS](https://unocss.dev/)                                         | 66.7.3 |
@@ -115,7 +119,7 @@ pixivizer/
 
 ### 🚀 快速开始
 
-**环境要求：** [Node.js](https://nodejs.org/) 18+、[pnpm](https://pnpm.io/) 11.9.0、Android 构建需要 [Android Studio](https://developer.android.com/studio)、JDK 17、Android SDK
+**环境要求：** [Node.js](https://nodejs.org/) 20.19+、[pnpm](https://pnpm.io/) 11.9.0、Android 构建需要 [Android Studio](https://developer.android.com/studio)、JDK 21、Android SDK
 
 > **⚠️ Android 平台要求：** 应用最低兼容 **Android 11.0（API 30）**，且需要 **WebView ≥ 85**。低于 Android 11 的设备无法安装，WebView 版本不足时启动会显示升级提示。详见 `docs/platform-compatibility.md`。
 
@@ -236,7 +240,9 @@ pnpm dev
 | **Illust Detail** `/illust/:id` — Full resolution, multi-page, Ugoira playback            | **User Page** `/user/:id` — Browse an artist's portfolio      | **Pull to Refresh** — Swipe down to reload                           |
 | **User Illusts** `/user/:id/illusts` — All works by an artist                             | **Follow / Unfollow** — Directly from image cards             | **Auto-hide Navigation** — Scroll-based nav bar hiding               |
 | **Waterfall / Single Column / Grid** — Three layout modes                                 | **Report & Block** — Manage unwanted content                  | **Secure Storage** — Android Keystore encrypted token                |
-| **Age Confirmation & R18 Filter** — First-launch gate with content filtering              | **Update Check** — Get new versions via GitHub Releases       | **PWA Offline Cache** — Service Worker caches images & assets        |
+| **Novel Reading** `/novel/:id` — Virtualized text, search highlight, reading progress      | **Browsing History** `/history` — Auto-tracked visit history  | **PWA Offline Cache** — Service Worker caches images & assets        |
+| **Novel Feed** `/novel-feed` — Discover and browse novels                                 | **Comment Browsing** — View comments on illusts/novels        | **Theme Switching** — Light / Dark / System                           |
+| **Age Confirmation & R18 Filter** — First-launch gate with content filtering              | **Update Check** — Get new versions via GitHub Releases       | **Native Bridge** — AuthPlugin / ImageCache / PictelioHttp           |
 
 </div>
 
@@ -248,6 +254,8 @@ pnpm dev
 | :------------------ | :-------------------------------------------------------------------- | -------: |
 | **Framework**       | [SolidJS](https://www.solidjs.com/)                                   |   1.9.13 |
 | **Routing**         | [@tanstack/solid-router](https://github.com/TanStack/router)            |   1.170.17 |
+| **Data Fetching**   | [@tanstack/solid-query](https://tanstack.com/query)                     |   6.15.1 |
+| **Local Database**  | [@tanstack/solid-db](https://tanstack.com/db)                           |   0.4.3 |
 | **Build Tool**      | [vite-plus](https://github.com/asonkeri/vite-plus) (wraps Vite)       |    0.2.1 |
 | **Bundler**         | [Vite](https://vite.dev/)                                             |    8.1.0 |
 | **Styling Engine**  | [UnoCSS](https://unocss.dev/)                                         |   66.7.3 |
@@ -297,9 +305,9 @@ pixivizer/
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) 18+
+- [Node.js](https://nodejs.org/) 20.19+
 - [pnpm](https://pnpm.io/) 11.9.0
-- Android builds require: [Android Studio](https://developer.android.com/studio), JDK 17, Android SDK, `ANDROID_HOME` env var
+- Android builds require: [Android Studio](https://developer.android.com/studio), JDK 21, Android SDK, `ANDROID_HOME` env var
 
 > **⚠️ Android Platform Requirements:** The app targets **Android 11.0 (API 30)** minimum and requires **WebView ≥ 85**. Devices below Android 11 cannot install the APK. If the WebView version is too old, the app shows an upgrade prompt on launch. See `docs/platform-compatibility.md` for details.
 
