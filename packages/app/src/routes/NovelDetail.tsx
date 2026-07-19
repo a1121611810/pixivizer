@@ -44,6 +44,7 @@ import ReaderSettingsSheet from "../components/ReaderSettingsSheet";
 import SeriesSheet from "../components/SeriesSheet";
 import PageTransition from "../components/PageTransition";
 import CommentOverlay from "../components/CommentOverlay";
+import SearchableTag from "../components/SearchableTag";
 import { ApiErrorType, type ApiError } from "../api/types";
 import ErrorDisplay from "../components/ErrorDisplay";
 import { pushOverlay, popOverlay } from "../stores/backGestureStore";
@@ -814,9 +815,11 @@ const NovelDetail: Component = () => {
                   {/* Tags */}
                   <div class="flex flex-wrap gap-1.5 mt-2">
                     {novel().tags.map((tag) => (
-                      <span class="[font-size:var(--fontSizeBase100)] px-2 py-0.5 rounded-[var(--borderRadiusSmall)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground2)]">
-                        {tag.translated_name ?? tag.name}
-                      </span>
+                      <SearchableTag
+                        name={tag.name}
+                        translatedName={tag.translated_name}
+                        class="[font-size:var(--fontSizeBase100)] px-[var(--spacingHorizontalXS)] py-[var(--spacingVerticalXXS)] rounded-[var(--borderRadiusSmall)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground2Hover)]"
+                      />
                     ))}
                   </div>
 

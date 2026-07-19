@@ -1,5 +1,6 @@
 import { type Component, For } from "solid-js";
 import type { PixivIllustTag } from "../api/types";
+import SearchableTag from "./SearchableTag";
 
 interface IllustTagsProps {
   tags: PixivIllustTag[];
@@ -16,6 +17,7 @@ const sizeClasses: Record<NonNullable<IllustTagsProps["size"]>, string> = {
 
 const IllustTags: Component<IllustTagsProps> = (props) => {
   const size = () => props.size ?? "small";
+
   return (
     <div
       class={`flex flex-wrap gap-[var(--spacingHorizontalXXS)] ${props.class ?? ""}`}
@@ -24,12 +26,11 @@ const IllustTags: Component<IllustTagsProps> = (props) => {
     >
       <For each={props.tags}>
         {(tag) => (
-          <span
-            class={`inline-flex items-center rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground3)] text-[var(--colorNeutralForeground2)] ${sizeClasses[size()]}`}
-            role="listitem"
-          >
-            {tag.translated_name ?? tag.name}
-          </span>
+          <SearchableTag
+            name={tag.name}
+            translatedName={tag.translated_name}
+            class={`rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground3)] text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground3Hover)] ${sizeClasses[size()]}`}
+          />
         )}
       </For>
     </div>

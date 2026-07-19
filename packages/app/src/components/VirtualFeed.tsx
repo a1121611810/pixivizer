@@ -50,7 +50,7 @@ const LAYOUT_COLUMNS: Record<LayoutMode, number> = {
 
 const GAP = 12;
 const VERTICAL_GAP = 12;
-const CARD_INFO_HEIGHT = 80;
+const CARD_INFO_HEIGHT = 140;
 
 const VirtualFeed: Component<Props> = (props) => {
   const { attach: sentinelAttach } = createSentinelPaginator({

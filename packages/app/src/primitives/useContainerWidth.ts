@@ -14,7 +14,10 @@ export function useContainerWidth(): {
     if (!el) {
       return;
     }
-    setWidth(el.clientWidth);
+    // 初始值使用 contentRect.width 相同的口径（excludes padding）
+    const cs = getComputedStyle(el);
+    const paddingH = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+    setWidth(el.clientWidth - paddingH);
 
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {

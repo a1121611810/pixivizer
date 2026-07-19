@@ -2,6 +2,7 @@ import { type Component, createSignal, For } from "solid-js";
 import type { PixivNovel } from "../api/types";
 import { addBookmark, deleteBookmark } from "../api/novel";
 import HeartBurstEffect from "./HeartBurstEffect";
+import SearchableTag from "./SearchableTag";
 
 interface Props {
   novel: PixivNovel;
@@ -118,12 +119,11 @@ const NovelTextListCard: Component<Props> = (props) => {
           >
             <For each={props.novel.tags}>
               {(tag) => (
-                <span
-                  class="inline-flex items-center rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground3)] text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase100)] [line-height:var(--lineHeightBase100)] px-[var(--spacingHorizontalXS)] py-[var(--spacingVerticalXXS)]"
-                  role="listitem"
-                >
-                  {tag.translated_name ?? tag.name}
-                </span>
+                <SearchableTag
+                  name={tag.name}
+                  translatedName={tag.translated_name}
+                  class="rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground3)] text-[var(--colorNeutralForeground2)] [font-size:var(--fontSizeBase100)] [line-height:var(--lineHeightBase100)] px-[var(--spacingHorizontalXS)] py-[var(--spacingVerticalXXS)] hover:bg-[var(--colorNeutralBackground3Hover)]"
+                />
               )}
             </For>
           </div>

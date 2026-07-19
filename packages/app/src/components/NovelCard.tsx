@@ -3,6 +3,7 @@ import type { PixivNovel } from "../api/types";
 import { addBookmark, deleteBookmark } from "../api/novel";
 import HeartBurstEffect from "./HeartBurstEffect";
 import IllustTags from "./IllustTags";
+import SearchableTag from "./SearchableTag";
 import { resolveImageUrl } from "../utils/imageLoader";
 
 /** 收藏爱心 SVG — 24×24 viewBox，与 FluentIcon 风格一致 */
@@ -324,9 +325,11 @@ export const NovelCoverCard: Component<Props> = (props) => {
         <div class="flex items-center gap-[var(--spacingHorizontalXXS)] flex-wrap min-w-0 overflow-hidden">
           <For each={tags().visible}>
             {(tag) => (
-              <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] bg-[var(--colorNeutralBackground2)] px-[var(--spacingHorizontalXS)] py-[var(--spacingVerticalXXS)] rounded-[var(--borderRadiusSmall)] truncate max-w-[80px]">
-                {tag.translated_name || tag.name}
-              </span>
+              <SearchableTag
+                name={tag.name}
+                translatedName={tag.translated_name}
+                class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] bg-[var(--colorNeutralBackground2)] px-[var(--spacingHorizontalXS)] py-[var(--spacingVerticalXXS)] rounded-[var(--borderRadiusSmall)] truncate max-w-[80px] hover:bg-[var(--colorNeutralBackground2Hover)]"
+              />
             )}
           </For>
           {tags().overflow > 0 && (

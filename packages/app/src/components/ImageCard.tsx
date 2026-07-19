@@ -251,7 +251,7 @@ const ImageCard: Component<Props> = (props) => {
             {following() ? "关注中…" : isFollowed() ? "已关注" : "关注"}
           </button>
         </p>
-        <div class="mt-[var(--spacingVerticalXS)]">
+        <div class="mt-[var(--spacingVerticalXS)] max-h-[54px] overflow-hidden">
           <IllustTags tags={props.illust.tags} size="small" />
         </div>
       </div>
