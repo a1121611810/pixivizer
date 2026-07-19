@@ -15,11 +15,7 @@ const UserAvatar: Component = () => {
       return;
     }
     const src = u.profile_image_urls.px_50x50 || u.profile_image_urls.medium || "";
-    console.log(
-      src,
-      !!u.profile_image_urls.px_50x50,
-      !!u.profile_image_urls.medium,
-    );
+    console.log(src, !!u.profile_image_urls.px_50x50, !!u.profile_image_urls.medium);
     if (!src) {
       return;
     }
@@ -28,8 +24,7 @@ const UserAvatar: Component = () => {
         .then((r) => {
           setAvatarUrl(r.url);
         })
-        .catch((err) => {
-        });
+        .catch((err) => {});
     } else {
       const url = resolveImageUrl(src);
       setAvatarUrl(url);

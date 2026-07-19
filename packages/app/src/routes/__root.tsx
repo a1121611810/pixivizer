@@ -66,7 +66,7 @@ const RootLayout: Component = () => {
     const path = location().pathname;
     // 跳过启动阶段（startup 代码在 onMount 中处理了初始导航）
     if (isLoading()) return;
-    if (!loggedIn && path !== '/login' && path !== '/age-confirmation') {
+    if (!loggedIn && path !== "/login" && path !== "/age-confirmation") {
       navigate({ to: "/login", replace: true });
     }
   });
@@ -161,11 +161,11 @@ const RootLayout: Component = () => {
 
       await initializeAuth();
       if (isLoggedIn()) {
-        if (location().pathname !== '/recommended' && location().pathname !== '/following') {
+        if (location().pathname !== "/recommended" && location().pathname !== "/following") {
           await navigate({ to: "/recommended", replace: true });
         }
       } else {
-        if (location().pathname !== '/login') {
+        if (location().pathname !== "/login") {
           await navigate({ to: "/login", replace: true });
         }
       }
