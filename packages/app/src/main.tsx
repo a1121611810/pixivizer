@@ -21,6 +21,7 @@ import "@fluentui/web-components/spinner.js";
 import "@fluentui/web-components/switch.js";
 import "@fluentui/web-components/textarea.js";
 import { initializeStartupPreferences } from "@/startup";
+import { initializeAuth } from "@/stores/authStore";
 
 function syncFluentTheme() {
   const isDark = document.documentElement.classList.contains("dark");
@@ -37,6 +38,10 @@ async function bootstrap() {
     attributes: true,
     attributeFilter: ["class"],
   });
+
+  // 在渲染前初始化认证并设置 refreshPromise，让路由 loaders 在
+  // executeRequest 中 await refreshPromise 等待 token 就绪后再发送请求
+  await initializeAuth();
 
   const root = document.getElementById("root");
   if (root) {

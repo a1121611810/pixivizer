@@ -53,7 +53,12 @@ function setupUnauthorizedHandler() {
   });
 }
 
+/** 防止 initializeAuth 被重复调用（startup 和 onMount 都可能触发） */
+let _authInitialized = false;
+
 export async function initializeAuth() {
+  if (_authInitialized) return;
+  _authInitialized = true;
   setIsLoading(true);
   let token = await getRefreshToken();
   if (!token) {
