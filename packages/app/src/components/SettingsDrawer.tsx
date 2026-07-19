@@ -127,7 +127,6 @@ const SettingsDrawer: Component = () => {
   createEffect(() => {
     const u = user();
     if (!u) {
-      console.log("[DEBUG-avatar] SettingsDrawer: no user, skipping");
       setSettingsAvatarUrl("");
       return;
     }
@@ -137,29 +136,24 @@ const SettingsDrawer: Component = () => {
       u.profile_image_urls.px_50x50 ||
       "";
     console.log(
-      "[DEBUG-avatar] SettingsDrawer: src=%s, hasMedium=%s, hasPx170=%s, hasPx50=%s",
       src,
       !!u.profile_image_urls.medium,
       !!u.profile_image_urls.px_170x170,
       !!u.profile_image_urls.px_50x50,
     );
     if (!src) {
-      console.log("[DEBUG-avatar] SettingsDrawer: empty src, using fallback");
       setSettingsAvatarUrl("");
       return;
     }
     if (isNative) {
       loadImage(src)
         .then((r) => {
-          console.log("[DEBUG-avatar] SettingsDrawer: loadImage OK url=%s", r.url);
           setSettingsAvatarUrl(r.url);
         })
         .catch((err) => {
-          console.log("[DEBUG-avatar] SettingsDrawer: loadImage ERROR", err);
         });
     } else {
       const url = resolveImageUrl(src);
-      console.log("[DEBUG-avatar] SettingsDrawer: web url=%s", url);
       setSettingsAvatarUrl(url);
     }
   });

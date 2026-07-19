@@ -97,7 +97,6 @@ const PersonalCenter: Component<Props> = (props) => {
   createEffect(() => {
     const u = displayUser();
     if (!u) {
-      console.log("[DEBUG-avatar] PersonalCenter: no user, skipping");
       setAvatarDisplayUrl("");
       return;
     }
@@ -107,14 +106,12 @@ const PersonalCenter: Component<Props> = (props) => {
       u.profile_image_urls.px_50x50 ||
       "";
     console.log(
-      "[DEBUG-avatar] PersonalCenter: src=%s, hasMedium=%s, hasPx170=%s, hasPx50=%s",
       src,
       !!u.profile_image_urls.medium,
       !!u.profile_image_urls.px_170x170,
       !!u.profile_image_urls.px_50x50,
     );
     if (!src) {
-      console.log("[DEBUG-avatar] PersonalCenter: empty src, using fallback");
       setAvatarDisplayUrl("");
       setProfileAvatarErrored(false);
       return;
@@ -123,15 +120,12 @@ const PersonalCenter: Component<Props> = (props) => {
     if (isNative) {
       loadImage(src)
         .then((r) => {
-          console.log("[DEBUG-avatar] PersonalCenter: loadImage OK url=%s", r.url);
           setAvatarDisplayUrl(r.url);
         })
         .catch((err) => {
-          console.log("[DEBUG-avatar] PersonalCenter: loadImage ERROR", err);
         });
     } else {
       const url = resolveImageUrl(src);
-      console.log("[DEBUG-avatar] PersonalCenter: web url=%s", url);
       setAvatarDisplayUrl(url);
     }
   });

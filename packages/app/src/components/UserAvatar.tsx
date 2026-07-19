@@ -12,32 +12,26 @@ const UserAvatar: Component = () => {
   createEffect(() => {
     const u = user();
     if (!u) {
-      console.log("[DEBUG-avatar] UserAvatar: no user, skipping");
       return;
     }
     const src = u.profile_image_urls.px_50x50 || u.profile_image_urls.medium || "";
     console.log(
-      "[DEBUG-avatar] UserAvatar: src=%s, hasPx50=%s, hasMedium=%s",
       src,
       !!u.profile_image_urls.px_50x50,
       !!u.profile_image_urls.medium,
     );
     if (!src) {
-      console.log("[DEBUG-avatar] UserAvatar: empty src, using fallback");
       return;
     }
     if (isNative) {
       loadImage(src)
         .then((r) => {
-          console.log("[DEBUG-avatar] UserAvatar: loadImage OK url=%s", r.url);
           setAvatarUrl(r.url);
         })
         .catch((err) => {
-          console.log("[DEBUG-avatar] UserAvatar: loadImage ERROR", err);
         });
     } else {
       const url = resolveImageUrl(src);
-      console.log("[DEBUG-avatar] UserAvatar: web url=%s", url);
       setAvatarUrl(url);
     }
   });
