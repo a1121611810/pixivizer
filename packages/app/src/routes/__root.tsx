@@ -161,9 +161,13 @@ const RootLayout: Component = () => {
 
       await initializeAuth();
       if (isLoggedIn()) {
-        await navigate({ to: "/recommended", replace: true });
+        if (location().pathname !== '/recommended' && location().pathname !== '/following') {
+          await navigate({ to: "/recommended", replace: true });
+        }
       } else {
-        await navigate({ to: "/login", replace: true });
+        if (location().pathname !== '/login') {
+          await navigate({ to: "/login", replace: true });
+        }
       }
     } catch (error) {
       console.error("[App] Auth initialization failed", error);

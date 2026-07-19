@@ -239,16 +239,12 @@ async function executeRequest<T>(
 ): Promise<T> {
   // 请求前检查是否已取消
   if (signal?.aborted) {
-    console.warn("[DEBUG-ABORT] request cancelled at entry, path=%s", path);
     throw new DOMException("请求已取消", "AbortError");
   }
   // 如果有 token 刷新正在进行，等待它完成，避免用旧 token 发注定失败的请求
   if (refreshPromise) {
-    console.warn("[DEBUG-ABORT] waiting for refreshPromise, path=%s", path);
     await refreshPromise;
-    console.warn("[DEBUG-ABORT] after refreshPromise, checking signal, path=%s", path);
     if (signal?.aborted) {
-      console.warn("[DEBUG-ABORT] signal aborted AFTER refreshPromise wait, path=%s", path);
       throw new DOMException("请求已取消", "AbortError");
     }
   }
@@ -295,9 +291,7 @@ async function executeRequest<T>(
       } else {
         if (method === "GET") {
           const params = data ? "?" + new URLSearchParams(data).toString() : "";
-          const fetchUrl = url + params;
-          console.warn("[DEBUG-ABORT] about to fetch GET, path=%s, signal.aborted=%s", path, signal?.aborted);
-          const res = await fetch(fetchUrl, { method: "GET", headers, signal });
+          const res = await fetch(url + params, { method: "GET", headers, signal });
           response = { status: res.status, data: await res.json() };
         } else {
           const body = data ? new URLSearchParams(data).toString() : "";
@@ -368,7 +362,6 @@ async function executeRequest<T>(
 
       return response!.data as T;
     } catch (error) {
-      console.warn("[DEBUG-ABORT] executeRequest catch, path=%s, error=%s", path, error instanceof Error ? error.message : String(error));
       if ((error as ApiError).type) {
         throw error;
       }
