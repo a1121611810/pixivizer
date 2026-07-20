@@ -85,79 +85,89 @@ vi.mock("@/components/ui/FluentIcon", () => ({
 }));
 
 vi.mock("@tanstack/solid-virtual", () => {
-  let getCount: () => number = () => 0;
-  let getSize: (i: number) => number = () => 100;
+  // Shared state for Virtualizer constructor
   return {
-    createWindowVirtualizer: (opts: {
-      count?: () => number;
-      estimateSize?: (i: number) => number;
-    }) => {
-      getCount = opts.count ?? (() => 0);
-      getSize = opts.estimateSize ?? (() => 100);
-      return {
-        getVirtualItems: () => {
-          const count = getCount();
-          const items: Array<{
-            index: number;
-            key: number;
-            start: number;
-            size: number;
-            end: number;
-            lane: number;
-          }> = [];
-          let y = 0;
-          for (let i = 0; i < count; i++) {
-            const h = getSize(i);
-            items.push({ index: i, key: i, start: y, size: h, end: y + h, lane: 0 });
-            y += h;
-          }
-          return items;
-        },
-        getTotalSize: () => {
-          const items = [];
-          const count = getCount();
-          let y = 0;
-          for (let i = 0; i < count; i++) {
-            const h = getSize(i);
-            items.push({ start: y, size: h });
-            y += h;
-          }
-          return items.length > 0
-            ? items[items.length - 1].start + items[items.length - 1].size
-            : 0;
-        },
-        scrollToOffset: vi.fn(),
-        scrollToIndex: vi.fn(),
-        get scrollOffset() {
-          return 0;
-        },
-        takeSnapshot: () => {
-          const count = getCount();
-          return Array.from({ length: count }, (_, i) => ({
-            index: i,
-            key: i,
-            start: i * 100,
-            size: 100,
-            end: (i + 1) * 100,
-            lane: 0,
-          }));
-        },
-        getDistanceFromEnd: () => 0,
-        isAtEnd: () => true,
-        isScrolling: false,
-        measureElement: vi.fn(),
-      };
-    },
-    createVirtualizer: () => ({
-      getVirtualItems: () => [],
-      getTotalSize: () => 0,
-      scrollToOffset: vi.fn(),
-      get scrollOffset() {
-        return 0;
-      },
-      takeSnapshot: () => [],
-      isScrolling: false,
+    Virtualizer: vi.fn(function VirtualizerMock(
+      this: Record<string, unknown>,
+      opts: { count?: number; estimateSize?: (i: number) => number },
+    ) {
+      let count = opts.count ?? 0;
+      let estimateSize = opts.estimateSize ?? (() => 100);
+      let options = opts;
+
+      function computeItems() {
+        const items: Array<{
+          index: number;
+          key: number;
+          start: number;
+          size: number;
+          end: number;
+          lane: number;
+        }> = [];
+        let y = 0;
+        for (let i = 0; i < count; i++) {
+          const h = estimateSize(i);
+          items.push({ index: i, key: i, start: y, size: h, end: y + h, lane: 0 });
+          y += h;
+        }
+        return items;
+      }
+
+      function computeTotalSize() {
+        const items = computeItems();
+        return items.length > 0
+          ? items[items.length - 1].start + items[items.length - 1].size
+          : 0;
+      }
+
+      this.setOptions = vi.fn((newOpts: Record<string, unknown>) => {
+        if (typeof newOpts.count === "number") count = newOpts.count;
+        if (typeof newOpts.estimateSize === "function") estimateSize = newOpts.estimateSize;
+        options = newOpts;
+      });
+      this.measure = vi.fn();
+      this.getVirtualItems = vi.fn(() => computeItems());
+      this.getTotalSize = vi.fn(() => computeTotalSize());
+      this.scrollToOffset = vi.fn();
+      this.scrollToIndex = vi.fn();
+      this.takeSnapshot = vi.fn(() => {
+        const items = [];
+        for (let i = 0; i < count; i++) {
+          items.push({ index: i, key: i, start: i * 100, size: 100, end: (i + 1) * 100, lane: 0 });
+        }
+        return items;
+      });
+      this.isScrolling = false;
+      this.getDistanceFromEnd = vi.fn(() => 0);
+      this.isAtEnd = vi.fn(() => true);
+      this.measureElement = vi.fn();
+      this._didMount = vi.fn(() => vi.fn());
+      this._willUpdate = vi.fn();
+      Object.defineProperty(this, "scrollOffset", {
+        get: () => (this as any).__scrollOffset ?? 0,
+        set: (v: number) => { (this as any).__scrollOffset = v; },
+        configurable: true,
+      });
     }),
+    observeWindowRect: vi.fn(),
+    observeWindowOffset: vi.fn(),
+    windowScroll: vi.fn(),
+    createWindowVirtualizer: vi.fn(() => ({
+      getVirtualItems: vi.fn(() => []),
+      getTotalSize: vi.fn(() => 0),
+      scrollToOffset: vi.fn(),
+      get scrollOffset() { return 0; },
+      takeSnapshot: vi.fn(() => []),
+      isScrolling: false,
+    })),
+    createVirtualizer: vi.fn(() => ({
+      getVirtualItems: vi.fn(() => []),
+      getTotalSize: vi.fn(() => 0),
+      scrollToOffset: vi.fn(),
+      get scrollOffset() { return 0; },
+      takeSnapshot: vi.fn(() => []),
+      isScrolling: false,
+    })),
   };
 });
 

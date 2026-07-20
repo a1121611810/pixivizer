@@ -139,6 +139,13 @@ function createMockDiv(): HTMLDivElement {
   return document.createElement("div") as unknown as HTMLDivElement;
 }
 
+// --- Helper to create a touch event with clientY ---
+function createTouchEvent(type: string, clientY: number): Event {
+  const event = new Event(type);
+  (event as Record<string, unknown>).touches = [{ clientY }];
+  return event;
+}
+
 // --- Helper to create a config with defaults ---
 function createMockConfig(overrides: Record<string, unknown> = {}) {
   const [items, setItems] = createSignal<any[]>([]);
@@ -186,11 +193,7 @@ describe("createFeedVirtualizer", () => {
       result.containerRef(el);
 
       // Simulate touch start
-      const touchStartEvent = new Event("touchstart");
-      Object.defineProperty(touchStartEvent, "touches", {
-        value: [{ clientY: 100 }],
-      });
-      el.dispatchEvent(touchStartEvent);
+      el.dispatchEvent(createTouchEvent("touchstart", 100));
 
       expect(result.pullPhase()).toBe("pulling");
     });
@@ -203,18 +206,10 @@ describe("createFeedVirtualizer", () => {
       result.containerRef(el);
 
       // Touch start
-      const touchStartEvent = new Event("touchstart");
-      Object.defineProperty(touchStartEvent, "touches", {
-        value: [{ clientY: 100 }],
-      });
-      el.dispatchEvent(touchStartEvent);
+      el.dispatchEvent(createTouchEvent("touchstart", 100));
 
       // Touch move (need 120+ raw px to exceed 60 threshold with 0.5 damping)
-      const touchMoveEvent = new Event("touchmove");
-      Object.defineProperty(touchMoveEvent, "touches", {
-        value: [{ clientY: 300 }],
-      });
-      el.dispatchEvent(touchMoveEvent);
+      el.dispatchEvent(createTouchEvent("touchmove", 300));
 
       expect(result.pullPhase()).toBe("refresh-ready");
       expect(result.pullDistance()).toBeGreaterThanOrEqual(60);
@@ -229,19 +224,11 @@ describe("createFeedVirtualizer", () => {
       result.containerRef(el);
 
       // Touch start
-      const touchStartEvent = new Event("touchstart");
-      Object.defineProperty(touchStartEvent, "touches", {
-        value: [{ clientY: 100 }],
-      });
-      el.dispatchEvent(touchStartEvent);
+      el.dispatchEvent(createTouchEvent("touchstart", 100));
       expect(result.pullPhase()).toBe("pulling");
 
       // Touch move past threshold
-      const touchMoveEvent = new Event("touchmove");
-      Object.defineProperty(touchMoveEvent, "touches", {
-        value: [{ clientY: 300 }],
-      });
-      el.dispatchEvent(touchMoveEvent);
+      el.dispatchEvent(createTouchEvent("touchmove", 300));
       expect(result.pullPhase()).toBe("refresh-ready");
       expect(result.pullDistance()).toBeGreaterThanOrEqual(60);
 
@@ -262,18 +249,8 @@ describe("createFeedVirtualizer", () => {
       const el = createMockDiv();
       result.containerRef(el);
 
-      const touchStartEvent = new Event("touchstart");
-      Object.defineProperty(touchStartEvent, "touches", {
-        value: [{ clientY: 100 }],
-      });
-      el.dispatchEvent(touchStartEvent);
-
-      const touchMoveEvent = new Event("touchmove");
-      Object.defineProperty(touchMoveEvent, "touches", {
-        value: [{ clientY: 300 }],
-      });
-      el.dispatchEvent(touchMoveEvent);
-
+      el.dispatchEvent(createTouchEvent("touchstart", 100));
+      el.dispatchEvent(createTouchEvent("touchmove", 300));
       el.dispatchEvent(new Event("touchend"));
 
       expect(result.pullPhase()).toBe("refreshing");
@@ -298,7 +275,7 @@ describe("createFeedVirtualizer", () => {
       Object.defineProperty(touchStartEvent, "touches", {
         value: [{ clientY: 100 }],
       });
-      el.dispatchEvent(touchStartEvent);
+      el.dispatchEvent(createTouchEvent("touchstart", 100));
 
       expect(result.pullPhase()).toBe("idle");
     });
@@ -312,11 +289,7 @@ describe("createFeedVirtualizer", () => {
       const el = createMockDiv();
       result.containerRef(el);
 
-      const touchStartEvent = new Event("touchstart");
-      Object.defineProperty(touchStartEvent, "touches", {
-        value: [{ clientY: 100 }],
-      });
-      el.dispatchEvent(touchStartEvent);
+      el.dispatchEvent(createTouchEvent("touchstart", 100));
 
       expect(result.pullPhase()).toBe("idle");
     });

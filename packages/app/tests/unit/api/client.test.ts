@@ -1,21 +1,21 @@
 import { describe, it, expect, expectTypeOf, vi, beforeEach, afterEach } from "vitest";
 import { ApiErrorType, type ApiError } from "@/api/types";
 
-vi.mock("@capacitor/core", async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...(actual as Record<string, unknown>),
-    Capacitor: {
-      isNativePlatform: () => false,
-    },
-    CapacitorHttp: {
-      request: vi.fn(),
-    },
-  };
-});
+vi.mock("@capacitor/core", () => ({
+  Capacitor: {
+    isNativePlatform: () => false,
+  },
+  CapacitorHttp: {
+    request: vi.fn(),
+  },
+}));
 
 vi.mock("@/native/PictelioHttp", () => ({
   PictelioHttp: { request: vi.fn() },
+}));
+
+vi.mock("@/stores/uiStore", () => ({
+  useDnsOverride: () => false,
 }));
 
 async function loadModule() {
@@ -263,6 +263,7 @@ describe("setAccessToken / setOnUnauthorized", () => {
 describe("executeRequest 400 OAuth integration", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    delete (globalThis as any).fetch;
   });
 
   it("triggers onUnauthorized and returns UNAUTHORIZED on 400 OAuth error", async () => {
@@ -273,10 +274,14 @@ describe("executeRequest 400 OAuth integration", () => {
       { status: 400, headers: { "content-type": "application/json" } },
     );
     const mockFetch = vi.fn(() => Promise.resolve(mockResponse));
-    vi.stubGlobal("fetch", mockFetch);
 
+    // stub fetch before loading module, then re-stub after resetModules
+    vi.stubGlobal("fetch", mockFetch);
     const { setAccessToken, setOnUnauthorized, apiClient } = await loadModule();
+    // resetModules clears stubGlobal, re-apply
+    globalThis.fetch = mockFetch;
     const onUnauth = vi.fn().mockResolvedValue(undefined);
+
     setAccessToken("stale-token");
     setOnUnauthorized(onUnauth);
 

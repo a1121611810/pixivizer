@@ -30,6 +30,12 @@ vi.mock("@/utils/secureStorage", () => ({
   migrateRefreshTokenFromPreferences: vi.fn(() => Promise.resolve(mockPrefToken)),
 }));
 
+vi.mock("@capacitor/app", () => ({
+  App: {
+    addListener: vi.fn(() => Promise.resolve({ remove: vi.fn() })),
+  },
+}));
+
 async function loadStore() {
   vi.resetModules();
   return import("@/stores/authStore");
