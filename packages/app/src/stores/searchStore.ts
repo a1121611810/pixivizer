@@ -96,7 +96,10 @@ export function createSearchStore(): SearchStoreState {
   const [keyword, setKeyword] = createSignal("");
   const [scope, setScope] = createSignal<SearchScope>("all");
   const [sort, setSort] = createSignal<SearchSort>("date_desc");
-  const [searchTarget] = createSignal<SearchTarget>("partial_match_for_tags");
+  // 多标签（含空格）时使用精确标签匹配，单标签使用部分匹配以搜到复合标签
+  const searchTarget = createMemo<SearchTarget>(() => {
+    return keyword().includes(" ") ? "exact_match_for_tags" : "partial_match_for_tags";
+  });
   const [illustResults, setIllustResults] = createSignal<PixivIllust[]>([]);
   const [novelResults, setNovelResults] = createSignal<PixivNovel[]>([]);
   const [loading, setLoading] = createSignal(false);

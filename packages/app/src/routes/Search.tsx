@@ -123,10 +123,27 @@ const Search: Component = () => {
     onCleanup(() => window.removeEventListener("scroll", onScroll));
   });
 
+  // ── 从 URL word 参数同步到 tags + keyword ──
+  function syncFromUrl(word: string) {
+    setTags(word.split(" ").filter(Boolean));
+    store.setKeyword(word);
+  }
+
   // ── Sync URL params → store ──
+  let prevUrlWord: string | undefined;
   createEffect(() => {
     const params = searchParams() as Record<string, string | undefined>;
-    if (params.word) store.setKeyword(params.word);
+    if (params.word !== undefined && params.word !== prevUrlWord) {
+      prevUrlWord = params.word;
+      syncFromUrl(params.word);
+      if (hydrated()) {
+        // Hydration 后的 URL 变化（浏览器前进/后退）触发搜索
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          store.executeSearch().then(() => scrollRestore.restore());
+        }, 300);
+      }
+    }
     if (params.scope) store.setScope(params.scope as SearchScope);
     if (params.sort) store.setSort(params.sort as SearchSort);
   });
@@ -138,8 +155,7 @@ const Search: Component = () => {
     if (!hydrated() && params.word?.trim()) {
       setHydrated(true);
       const word = params.word.trim();
-      setTags(word.split(" ").filter(Boolean));
-      store.setKeyword(word);
+      syncFromUrl(word);
       if (params.scope) store.setScope(params.scope as SearchScope);
       if (params.sort) store.setSort(params.sort as SearchSort);
       store.executeSearch().then(() => scrollRestore.restore());
@@ -253,7 +269,7 @@ const Search: Component = () => {
                 </For>
               </div>
             </Show>
-            <Show when={store.keyword() !== ""}>
+            <Show when={tags().length > 0}>
               <button
                 class="flex items-center justify-center min-w-8 min-h-8 rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground3)] hover:bg-[var(--colorNeutralBackground2)] hover:text-[var(--colorNeutralForeground1)] active:scale-90 transition-all duration-[var(--durationFast)]"
                 onClick={(e) => {
