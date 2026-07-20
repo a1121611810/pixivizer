@@ -86,7 +86,7 @@ const FollowListPage: Component<Props> = (props) => {
           <div class="px-4 flex flex-col" style={{ gap: "var(--spacingVerticalS)" }}>
             {error() && (
               <div class="text-center py-4 px-4 rounded-[var(--borderRadiusMedium)] bg-[var(--colorStatusDangerBackground2)] text-[var(--colorStatusDangerForeground1)]">
-                <p class="[font-size:var(--fontSizeBase200)]">{error()}</p>
+                <p class="[font-size:var(--fontSizeBase200)]">{error()?.message ?? '加载失败，请重试'}</p>
               </div>
             )}
 

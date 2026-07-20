@@ -32,22 +32,22 @@ export function createMemoryStore(): IDBStore {
   }
 
   return {
-    get(store, key) {
-      return storeMap(store).get(key) as ReturnType<IDBStore["get"]>;
+    async get<T>(store: string, key: number): Promise<T | undefined> {
+      return storeMap(store).get(key) as T | undefined;
     },
-    put(store, value) {
+    async put<T extends { id: number }>(store: string, value: T): Promise<void> {
       storeMap(store).set(value.id, value);
     },
-    delete(store, key) {
+    async delete(store: string, key: number): Promise<void> {
       storeMap(store).delete(key);
     },
-    count(store) {
+    async count(store: string): Promise<number> {
       return storeMap(store).size;
     },
-    getAll(store) {
-      return Array.from(storeMap(store).values());
+    async getAll<T>(store: string): Promise<T[]> {
+      return Array.from(storeMap(store).values()) as T[];
     },
-    clear(store) {
+    async clear(store: string): Promise<void> {
       data.delete(store);
     },
   };

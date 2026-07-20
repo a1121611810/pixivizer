@@ -66,6 +66,6 @@ export function hasReported(id: number): boolean {
 
 /** 清空本地举报记录（不操作 Preferences，调用方负责清除）。 */
 export function resetReportedIds(): void {
-  setReportedIds(new Set());
+  setReportedIds(new Set<number>());
   setReportRecords([]);
 }

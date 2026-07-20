@@ -122,7 +122,7 @@ const PersonalCenter: Component<Props> = (props) => {
         .then((r) => {
           setAvatarDisplayUrl(r.url);
         })
-        .catch((err) => {});
+        .catch((_err) => {});
     } else {
       const url = resolveImageUrl(src);
       setAvatarDisplayUrl(url);

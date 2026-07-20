@@ -229,7 +229,7 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
       // 1) 先检查 Android 文件缓存（异常时降级到网络，不阻塞加载路径）
       const imageCache = getImageCache();
       try {
-        const cached = await imageCache.getImage({ key: originalUrl });
+        const cached = await imageCache!.getImage({ key: originalUrl });
         if (cached?.base64) {
           const decoded = await base64ToBlob(cached.base64);
           cacheSet(originalUrl, decoded);
@@ -245,7 +245,7 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
       // 3) 后台保存到磁盘缓存（异常不影响主加载路径）
       try {
         const base64 = await blobToBase64(blob);
-        imageCache
+        imageCache!
           .saveImage({ key: originalUrl, base64 })
           .catch((error) => console.warn("[ImageCache] Failed to save to disk", error));
       } catch (error) {
@@ -382,7 +382,7 @@ async function loadWithProgressWeb(
   }
 
   const contentType = response.headers.get("Content-Type") || "image/jpeg";
-  return new Blob(chunks, { type: contentType });
+  return new Blob(chunks as BlobPart[], { type: contentType });
 }
 
 /** Web 模式：通过 Vite 代理或图床代理获取图片 */
@@ -494,7 +494,7 @@ export async function warmCacheFromDisk(): Promise<void> {
 
   try {
     const cache = getImageCache();
-    const { keys } = await cache.getCachedKeys();
+    const { keys } = await cache!.getCachedKeys();
     if (!keys || keys.length === 0) {
       return;
     }
@@ -503,7 +503,7 @@ export async function warmCacheFromDisk(): Promise<void> {
     const recentKeys = keys.slice(-50);
     const results = await Promise.allSettled(
       recentKeys.map(async (key: string) => {
-        const cached = await cache.getImage({ key });
+        const cached = await cache!.getImage({ key });
         if (cached?.base64) {
           const blob = await base64ToBlob(cached.base64);
           injectCacheEntry(key, blob);

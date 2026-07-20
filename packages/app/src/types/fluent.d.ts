@@ -21,7 +21,10 @@ declare module "solid-js" {
       "fluent-dialog": Record<string, unknown>;
       "fluent-dialog-body": Record<string, unknown>;
       "fluent-divider": Record<string, unknown>;
-      "fluent-drawer": Record<string, unknown>;
+      "fluent-drawer": Record<string, unknown> & {
+        show?: () => void;
+        hide?: () => void;
+      };
       "fluent-drawer-body": Record<string, unknown>;
       "fluent-message-bar": Record<string, unknown>;
       "fluent-radio": Record<string, unknown>;

@@ -314,6 +314,8 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     measureElement: instance.measureElement.bind(instance),
   };
 
+  void _virtualizer;
+
   // ── 保存 scroll state ──
   onCleanup(() => {
     if (props.scrollKey) {

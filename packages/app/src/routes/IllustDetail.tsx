@@ -692,7 +692,7 @@ const IllustDetail: Component = () => {
               {illust()!.caption && (
                 <p
                   class="[font-size:var(--fontSizeBase300)] text-[var(--colorNeutralForeground2)] leading-relaxed whitespace-pre-wrap"
-                  innerHTML={sanitizeHtml(illust()!.caption)}
+                  innerHTML={sanitizeHtml(illust()!.caption ?? "")}
                   onClick={handleCaptionClick}
                 />
               )}

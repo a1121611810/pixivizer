@@ -65,7 +65,7 @@ const initialState = () => {
     contentType: "illust" as ContentType,
 
     // 主题
-    theme: initialTheme,
+    theme: initialTheme as Theme,
     resolvedTheme: computeResolvedTheme(initialTheme) as "dark" | "light",
 
     // 布局

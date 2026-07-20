@@ -177,7 +177,7 @@ const Login: Component = () => {
                 style="--inline-size:100%;--min-block-size:80px"
                 placeholder="粘贴 refresh_token..."
                 value={tokenInput()}
-                on:input={(e) => setTokenInput((e.target as any).value)}
+                on:input={(e: Event) => setTokenInput((e.target as any).value)}
                 required
                 disabled={submitting()}
               />

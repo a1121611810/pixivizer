@@ -140,7 +140,7 @@ const SettingsDrawer: Component = () => {
         .then((r) => {
           setSettingsAvatarUrl(r.url);
         })
-        .catch((err) => {});
+        .catch((_err) => {});
     } else {
       const url = resolveImageUrl(src);
       setSettingsAvatarUrl(url);
@@ -250,9 +250,9 @@ const SettingsDrawer: Component = () => {
       return;
     }
     if (showSettingsDrawer()) {
-      drawerEl.show();
+      (drawerEl as HTMLElement & { show: () => void }).show();
     } else {
-      drawerEl.hide();
+      (drawerEl as HTMLElement & { hide: () => void }).hide();
     }
   });
 
@@ -487,9 +487,9 @@ const SettingsDrawer: Component = () => {
                     明暗主题
                   </p>
                   <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                    {theme() === "light"
+                    {(theme() as Theme) === "light"
                       ? "始终浅色"
-                      : theme() === "dark"
+                      : (theme() as Theme) === "dark"
                         ? "始终深色"
                         : "跟随系统"}
                   </p>

@@ -11,7 +11,6 @@ import {
   refresh,
   setBookmarkRestrict,
   saveTabScroll,
-  isNovelCached,
 } from "../stores/novelStore";
 import { user } from "../stores/authStore";
 import NovelVirtualFeed from "../components/NovelVirtualFeed";
@@ -24,8 +23,6 @@ const r18Handler = () => refresh();
 
 const NovelBookmarks: Component = () => {
   const navigate = useNavigate();
-  const _cached = isNovelCached("bookmarks");
-
   const [sheetOpen, setSheetOpen] = createSignal(false);
   const [sheetSeries, setSheetSeries] = createSignal<{
     id: number;

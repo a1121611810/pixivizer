@@ -331,7 +331,8 @@ export function createNovelVirtualLayout(
     const localOffset = st - textBlock.offset;
     const textOnlyOffset = textBlock.textParagraph.offset + localOffset;
     const { charIndex } = textLayout.getCharIndexByOffset(textOnlyOffset);
-    return { paragraphIndex: textBlock.block.index, charIndex };
+    const blockIndex = textBlock.block.type === "text" ? textBlock.block.index : 0;
+    return { paragraphIndex: blockIndex, charIndex };
   });
 
   function containerRef(el: HTMLElement) {

@@ -1,6 +1,7 @@
 import { type Component, Show, createEffect } from "solid-js";
 import { Capacitor } from "@capacitor/core";
-import { type ApiError, toApiError } from "../api/client";
+import { toApiError } from "../api/client";
+import type { ApiError } from "../api/types";
 
 /**
  * OAuthWebView 组件的属性。

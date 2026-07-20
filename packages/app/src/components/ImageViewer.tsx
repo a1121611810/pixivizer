@@ -173,7 +173,7 @@ const ImageViewer: Component<Props> = (props) => {
           transform: `translateX(-${currentPage() * 100}%)`,
         }}
       >
-        {props.imageUrls.map((url, i) => {
+        {props.imageUrls.map((_url, i) => {
           const pb = previewBlobUrl(i);
           const progress = progressMap()[i];
           const loaded = loadedUrls()[i];

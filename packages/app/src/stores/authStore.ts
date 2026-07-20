@@ -30,9 +30,9 @@ function syncToken(token: string) {
 }
 
 /** 安装 onUnauthorized 处理器 + 前台恢复预刷新监听 */
-let appStateListener: ReturnType<typeof App.addListener> | null = null;
+let appStateListener: Awaited<ReturnType<typeof App.addListener>> | null = null;
 
-function setupUnauthorizedHandler() {
+async function setupUnauthorizedHandler() {
   setOnUnauthorized(async () => {
     const latest = refreshTokenSig();
     if (latest) {
@@ -43,7 +43,7 @@ function setupUnauthorizedHandler() {
   });
 
   // 前台恢复时预判性刷新：如果距离上次刷新超过阈值，提前 refresh
-  appStateListener = App.addListener("appStateChange", ({ isActive }) => {
+  appStateListener = await App.addListener("appStateChange", ({ isActive }) => {
     if (isActive && refreshTokenSig() && Date.now() - lastRefreshTime > PRE_REFRESH_THRESHOLD_MS) {
       const latest = refreshTokenSig();
       if (latest) {
@@ -66,7 +66,7 @@ export async function initializeAuth() {
   }
   if (token) {
     setRefreshTokenSig(token);
-    setupUnauthorizedHandler();
+    await setupUnauthorizedHandler();
     // 设置 refreshPromise，让并发请求在初始 token 刷新期间等待
     const promise = performRefresh(token).finally(() => setRefreshPromise(null));
     setRefreshPromise(promise);
@@ -94,7 +94,7 @@ export async function loginWithToken(token: string) {
   setRefreshTokenSig(resp.refresh_token);
   setUser(resp.user);
   setIsLoggedIn(true);
-  setupUnauthorizedHandler();
+  await setupUnauthorizedHandler();
   await setRefreshToken(resp.refresh_token);
 }
 
@@ -110,7 +110,7 @@ export async function loginWithPKCE(code: string, codeVerifier: string) {
   setRefreshTokenSig(resp.refresh_token);
   setUser(resp.user);
   setIsLoggedIn(true);
-  setupUnauthorizedHandler();
+  await setupUnauthorizedHandler();
   await setRefreshToken(resp.refresh_token);
 }
 

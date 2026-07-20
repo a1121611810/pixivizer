@@ -42,7 +42,7 @@ const DebugImage: Component = () => {
           style="--inline-size:100%"
           placeholder="粘贴 i.pximg.net 图片 URL..."
           value={testUrl()}
-          on:input={(e) => setTestUrl((e.target as any).value)}
+          on:input={(e: Event) => setTestUrl((e.target as any).value)}
         ></fluent-textarea>
 
         <fluent-button appearance="primary" on:click={testFetch}>

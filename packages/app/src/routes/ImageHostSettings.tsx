@@ -244,7 +244,7 @@ const ImageHostSettings: Component = () => {
           <fluent-radio-group
             ref={radioGroupRef}
             value={imageHostState().mode}
-            on:change={(e) => {
+            on:change={(e: CustomEvent) => {
               if (e.detail?.value != null) {
                 setMode(e.detail.value);
               }

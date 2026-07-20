@@ -24,7 +24,7 @@ const UserAvatar: Component = () => {
         .then((r) => {
           setAvatarUrl(r.url);
         })
-        .catch((err) => {});
+        .catch((_err) => {});
     } else {
       const url = resolveImageUrl(src);
       setAvatarUrl(url);

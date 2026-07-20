@@ -87,7 +87,7 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
           </p>
           <fluent-radio-group
             value={selectedReason()}
-            on:change={(e) => setSelectedReason(e.detail.value)}
+            on:change={(e: CustomEvent) => setSelectedReason(e.detail.value)}
           >
             {REASONS.map((reason) => (
               <fluent-radio value={reason} disabled={alreadyReported()}>

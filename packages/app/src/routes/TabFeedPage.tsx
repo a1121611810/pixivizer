@@ -166,7 +166,6 @@ const TabFeedPage: Component<Props> = (props) => {
                   { key: "manga" as RecommendSubTab, label: "漫画" },
                 ].map((opt) => (
                   <button
-                    key={opt.key}
                     role="tab"
                     aria-selected={recommendSubTab() === opt.key}
                     class="flex-1 py-[var(--spacingVerticalS)] px-[var(--spacingHorizontalM)] rounded-[var(--borderRadiusSmall)] [font-size:var(--fontSizeBase200)] font-semibold transition-all active:scale-95 appearance-none border-none outline-none cursor-pointer"
@@ -175,11 +174,9 @@ const TabFeedPage: Component<Props> = (props) => {
                         recommendSubTab() === opt.key,
                       "bg-transparent text-[var(--colorNeutralForeground2)]":
                         recommendSubTab() !== opt.key,
-                    }}
-                    disabled={isSwitchingSubTab()}
-                    classList={{
                       "opacity-50 cursor-not-allowed": isSwitchingSubTab(),
                     }}
+                    disabled={isSwitchingSubTab()}
                     onClick={async () => {
                       if (isSwitchingSubTab() || recommendSubTab() === opt.key) {
                         return;

@@ -15,7 +15,7 @@ import { createSignal, onCleanup } from "solid-js";
  *   // fetcher.loading() → boolean
  *   // fetcher.error() → string | null
  */
-export function createManualFetch<T>(fetcher: (signal: AbortSignal) => Promise<T>) {
+export function createManualFetch<T extends {}>(fetcher: (signal: AbortSignal) => Promise<T>) {
   const [data, setData] = createSignal<T | null>(null);
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
@@ -39,7 +39,7 @@ export function createManualFetch<T>(fetcher: (signal: AbortSignal) => Promise<T
     try {
       const result = await fetcher(signal);
       if (!signal.aborted) {
-        setData(result);
+        setData(() => result);
       }
     } catch (error) {
       if (!signal.aborted) {

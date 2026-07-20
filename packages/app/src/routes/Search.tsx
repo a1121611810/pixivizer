@@ -259,7 +259,7 @@ const Search: Component = () => {
                 class="flex items-center gap-1 flex-1 min-w-0 cursor-pointer overflow-hidden"
                 onClick={onCompactInputFocus}
               >
-                <FluentIcon name="search" size={16} class="flex-shrink-0" />
+                <FluentIcon name="search" size={16} />
                 <For each={tags()}>
                   {(tag) => (
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded-[var(--borderRadiusSmall)] bg-[var(--colorBrandBackground2)] text-[var(--colorBrandForeground1)] text-xs truncate max-w-[80px]">

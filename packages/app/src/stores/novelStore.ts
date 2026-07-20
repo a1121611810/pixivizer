@@ -214,10 +214,10 @@ export async function ensureLoaded(): Promise<void> {
       }
       const data = await loadBookmarks(u.id, state.bookmarkRestrict);
       tabNovels[sourceKey] = data.novels;
-      tabNextUrl[sourceKey] = data.nextUrl;
+      tabNextUrl[sourceKey] = data.next_url;
       batch(() => {
         setState("novels", data.novels);
-        setState("nextUrl", data.nextUrl);
+        setState("nextUrl", data.next_url);
       });
     }
     tabLoaded[sourceKey] = true;

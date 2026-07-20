@@ -314,7 +314,7 @@ const NovelDetail: Component = () => {
 
   // Hydrate initial data from route loader
   createEffect(() => {
-    const d = data();
+    const d = data() as { error: ApiError | null };
     if (d.error) {
       setDetailError(
         typeof d.error === "string" ? { type: ApiErrorType.UNKNOWN, message: d.error } : d.error,
@@ -322,12 +322,13 @@ const NovelDetail: Component = () => {
       setDetailLoading(false);
       return;
     }
-    if (d.novel) {
+    const full = data() as { novel: PixivNovel | null; text: string; nav: SeriesNavigation; images: NovelImagesMap };
+    if (full.novel) {
       applyEntry({
-        detail: d.novel,
-        text: d.text ?? "",
-        nav: d.nav ?? {},
-        images: d.images ?? {},
+        detail: full.novel,
+        text: full.text ?? "",
+        nav: full.nav ?? {},
+        images: full.images ?? {},
       });
     }
   });

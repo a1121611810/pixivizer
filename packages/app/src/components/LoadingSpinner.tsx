@@ -1,4 +1,4 @@
-import { type Component, createSignal, onMount, onCleanup } from "solid-js";
+import { type Component } from "solid-js";
 
 interface Props {
   size?: "sm" | "md" | "lg";
@@ -6,7 +6,6 @@ interface Props {
 }
 
 const sizeMap = { sm: 64, md: 80, lg: 96 } as const;
-const CYCLE_MS = 3000; // 文字动画循环间隔
 const CHAR_POP_DURATION = 0.3; // 每个字蹦出动画时长 (300ms = Fluent gentle)
 const CHAR_STAGGER = 0.1; // 字间交错延迟 (s)
 
@@ -18,13 +17,6 @@ const CHAR_STAGGER = 0.1; // 字间交错延迟 (s)
  */
 const LoadingSpinner: Component<Props> = (props) => {
   const size = () => props.size ?? "md";
-  const [charKey, setCharKey] = createSignal(0);
-
-  onMount(() => {
-    if (!props.text) return;
-    const timer = setInterval(() => setCharKey((k) => k + 1), CYCLE_MS);
-    onCleanup(() => clearInterval(timer));
-  });
 
   return (
     <div
@@ -95,7 +87,7 @@ const LoadingSpinner: Component<Props> = (props) => {
             top: "calc(12 / 192 * 100%)",
             width: "calc(168 / 192 * 100%)",
             height: "calc(168 / 192 * 100%)",
-            borderRadius: "calc(44 / 168 * 100%)",
+            "border-radius": "calc(44 / 168 * 100%)",
           }}
         >
           {/* 滑动的渐变条 — 从左侧扫入，右侧扫出 */}
@@ -112,7 +104,6 @@ const LoadingSpinner: Component<Props> = (props) => {
       {props.text && (
         <p
           class="text-[var(--colorNeutralForegroundDisabled)] text-[var(--fontSizeBase200)]"
-          key={charKey()}
         >
           {props.text.split("").map((char, i) => (
             <span

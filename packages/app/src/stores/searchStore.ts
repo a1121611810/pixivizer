@@ -136,17 +136,6 @@ export function createSearchStore(): SearchStoreState {
     abortController = new AbortController();
   }
 
-  function clearResults() {
-    setIllustResults([]);
-    setNovelResults([]);
-    setLoading(false);
-    setError(null);
-    setHasMoreIllust(false);
-    setHasMoreNovel(false);
-    setNextIllustUrl(null);
-    setNextNovelUrl(null);
-  }
-
   async function executeSearch() {
     const kw = keyword().trim();
     if (!kw) return;

@@ -101,9 +101,9 @@ const ReaderSettingsSheet: Component<Props> = (props) => {
                 <button
                   class="w-8 h-8 flex items-center justify-center rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer disabled:opacity-30"
                   onClick={() => {
-                    const idx = FONT_SIZES.indexOf(fontSize());
+                    const idx = FONT_SIZES.indexOf(fontSize() as (typeof FONT_SIZES)[number]);
                     if (idx > 0) {
-                      setReaderFontSize(FONT_SIZES[idx - 1]);
+                      setReaderFontSize(FONT_SIZES[idx - 1] as (typeof FONT_SIZES)[number]);
                     }
                   }}
                   disabled={fontSize() <= FONT_SIZES[0]}
@@ -130,9 +130,9 @@ const ReaderSettingsSheet: Component<Props> = (props) => {
                 <button
                   class="w-8 h-8 flex items-center justify-center rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer disabled:opacity-30"
                   onClick={() => {
-                    const idx = FONT_SIZES.indexOf(fontSize());
+                    const idx = FONT_SIZES.indexOf(fontSize() as (typeof FONT_SIZES)[number]);
                     if (idx < FONT_SIZES.length - 1) {
-                      setReaderFontSize(FONT_SIZES[idx + 1]);
+                      setReaderFontSize(FONT_SIZES[idx + 1] as (typeof FONT_SIZES)[number]);
                     }
                   }}
                   disabled={fontSize() >= FONT_SIZES[FONT_SIZES.length - 1]}
@@ -249,10 +249,10 @@ const ReaderSettingsSheet: Component<Props> = (props) => {
                       <div
                         class="absolute inset-0"
                         style={{
-                          backgroundImage:
+                          "background-image":
                             "linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%)",
-                          backgroundSize: "8px 8px",
-                          backgroundPosition: "0 0, 4px 4px",
+                          "background-size": "8px 8px",
+                          "background-position": "0 0, 4px 4px",
                         }}
                       />
                     )}

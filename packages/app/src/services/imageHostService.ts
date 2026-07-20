@@ -145,7 +145,7 @@ export function getEffectiveImageUrl(originalUrl: string): string {
  * 对于 fastest-ip 模式，若缓存已过期，会触发一次后台探测；
  * 但 probe 不阻塞当前加载，直接回退到加权选择返回，避免首屏等待。
  */
-export function getEffectiveImageUrlAsync(originalUrl: string): Promise<string> {
+export async function getEffectiveImageUrlAsync(originalUrl: string): Promise<string> {
   if (!isImageHostActive()) {
     return originalUrl;
   }

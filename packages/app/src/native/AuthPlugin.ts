@@ -14,6 +14,8 @@ export interface AuthRefreshResult {
   userName: string;
   /** 用户登录账号。 */
   userAccount: string;
+  /** 用户头像 URL 映射（如 px_16x16、px_50x50、px_170x170）。 */
+  profileImageUrls?: Record<string, string>;
 }
 
 /**

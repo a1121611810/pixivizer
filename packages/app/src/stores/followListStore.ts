@@ -3,7 +3,7 @@ import { createInfiniteQuery } from "@tanstack/solid-query";
 import { getUserFollowing, getUserFollowers } from "../api/user";
 import { followUser, unfollowUser } from "../api/illust";
 import { filterUserPreviews } from "../utils/r18Filter";
-import type { PixivUserPreview, ApiError } from "../api/types";
+import type { PixivUserPreview, PixivUserFollowingResponse, ApiError } from "../api/types";
 import { queryKeys } from "../api/queryKeys";
 import { normalizeQueryError } from "../api/normalizeQueryError";
 import { queryClient } from "../api/queryClient";
@@ -60,7 +60,7 @@ export const nextUrl = (): string | null => {
 
 // ── Actions ──
 
-export function loadList(m: FollowMode, uid: number): Promise<void> {
+export function loadList(m: FollowMode, uid: number): void {
   setMode(m);
   setUserId(uid);
   // TQ auto-fetches via queryKey reactivity
@@ -88,7 +88,7 @@ export async function toggleFollow(index: number): Promise<void> {
   preview.user.is_followed = !prev;
 
   // Re-trigger reactivity: must pass a new reference so TQ notifies observers
-  queryClient.setQueryData(queryKeys.followList(mode(), userId()), (old) => {
+  queryClient.setQueryData(queryKeys.followList(mode(), userId()), (old: { pages: PixivUserFollowingResponse[]; pageParams: unknown[] } | undefined) => {
     if (!old) {
       return old;
     }
@@ -104,7 +104,7 @@ export async function toggleFollow(index: number): Promise<void> {
   } catch {
     // Rollback
     preview.user.is_followed = prev;
-    queryClient.setQueryData(queryKeys.followList(mode(), userId()), (old) => {
+    queryClient.setQueryData(queryKeys.followList(mode(), userId()), (old: { pages: PixivUserFollowingResponse[]; pageParams: unknown[] } | undefined) => {
       if (!old) {
         return old;
       }

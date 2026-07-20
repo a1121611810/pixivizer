@@ -1,4 +1,4 @@
-import { createSignal, createEffect, createMemo, onCleanup, onMount } from "solid-js";
+import { createSignal, createEffect, onCleanup, onMount } from "solid-js";
 import type { Accessor } from "solid-js";
 import {
   Virtualizer,

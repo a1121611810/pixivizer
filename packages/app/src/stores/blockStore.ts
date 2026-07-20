@@ -57,5 +57,5 @@ export function isBlocked(userId: number): boolean {
 
 /** 清空本地屏蔽列表（不操作 Preferences，调用方负责清除）。 */
 export function resetBlockedIds(): void {
-  setBlockedIds(new Set());
+  setBlockedIds(new Set<number>());
 }
