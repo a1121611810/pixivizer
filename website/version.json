@@ -1,5 +1,5 @@
 {
-  "version": "3.10.1",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.10.1",
-  "changelog": "💄 样式\n  style: pnpm fmt 格式校正\n♻️ 重构\n  refactor(stores): 统一滚动恢复到 createScrollRestore 共享缓存\n  refactor: novelRoute loader 提取 fromEntry 辅助函数消除重复\n🐛 修复\n  fix: 搜索结果缓存 + NovelDetail loader 缓存优先\n  fix: 搜索页 UI "
+  "version": "3.11.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.11.0",
+  "changelog": "### ✨ 新功能\n\n- **PKCE OAuth 登录流**：引入 Pixiv PKCE 授权码流程，配合 Fluent Design 2 UI\n- **标签搜索页**：点击作品标签跳转专属搜索页，支持 Fluent Design 2 全新视觉\n- **搜索快速入口**：Floating Action Button 作为搜索快捷入口（加载中隐藏）\n- **设置中心**：原设置抽屉改为完整的子页面"
 }
