@@ -1,5 +1,5 @@
 {
-  "version": "3.12.1",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.12.1",
-  "changelog": "🐛 修复\n  fix(release): replace stdin pipe with temp file for gh release notes"
+  "version": "3.12.2",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.12.2",
+  "changelog": "♻️ 重构\n  refactor(release): remove auto mode and dry-run, keep only -i and -c"
 }
