@@ -3,19 +3,12 @@
 /**
  * Pictelio 一键发布脚本
  *
- * 一条命令完成：版本号更新 → 生成 changelog → 构建 APK → GitHub Release → 上传 APK
+ * 一条命令完成：选择 commits → 生成 changelog → 选版本 → 构建 APK → GitHub Release
  *
  * 用法:
- *   pnpm run release                   # 自动递增 patch 版本 (1.2.0 → 1.2.1)
- *   pnpm run release -- --patch        # 同上，显式指定递增 patch（小修复）
- *   pnpm run release -- --minor        # 递增 minor 版本 (1.2.0 → 1.3.0，新功能)
- *   pnpm run release -- --major        # 递增 major 版本 (1.2.0 → 2.0.0，大改版)
- *   pnpm run release -- --version=2.0.0   # 指定完整版本号
- *   pnpm run release -- --dry-run      # 预览模式，不实际执行
- *   pnpm run release -- --interactive   # 交互模式：手动选择提交和版本
- *   pnpm run release -i                 # 同上，简写
- *   pnpm run release -- --custom        # 自定义模式：粘贴自己的发布文案
- *   pnpm run release -c                 # 同上，简写
+ *   pnpm run release         # 等价于 -i
+ *   pnpm run release -i      # 交互模式：选择提交和版本
+ *   pnpm run release -c      # 自定义模式：粘贴自己的发布文案
  *
  * 环境变量:
  *   PICTELIO_KEYSTORE_PASSWORD   - keystore 密码（必须）
@@ -34,21 +27,10 @@ const rootDir = resolvePath(dirname(fileURLToPath(import.meta.url)), "..");
 const apkPath = "android/app/build/outputs/apk/release/app-release.apk";
 
 const args = process.argv.slice(2);
-const dryRun = args.includes("--dry-run");
-const bumpMajor = args.includes("--major");
-const bumpMinor = args.includes("--minor");
-// `--patch` default — no explicit check needed, falls through as default
-const versionArg = args.find((a) => a.startsWith("--version="))?.split("=")[1];
-const isInteractive = args.includes("--interactive") || args.includes("-i");
-const isCustom = args.includes("--custom") || args.includes("-c");
+const isCustom = args.includes("-c");
 
-if (isInteractive && !process.stdin.isTTY) {
-  console.error("[release] ❌ --interactive 模式需要 TTY 终端");
-  process.exit(1);
-}
-
-if (isCustom && !process.stdin.isTTY) {
-  console.error("[release] ❌ --custom 模式需要 TTY 终端");
+if (!process.stdin.isTTY) {
+  console.error("[release] ❌ 发布脚本需要 TTY 终端中运行");
   process.exit(1);
 }
 
@@ -56,9 +38,6 @@ if (isCustom && !process.stdin.isTTY) {
 
 function log(...m) {
   console.log(`[release]`, ...m);
-}
-function warn(...m) {
-  console.warn(`[release] ⚠`, ...m);
 }
 function ok(...m) {
   console.log(`[release] ✅`, ...m);
@@ -122,6 +101,12 @@ function runOutput(cmd, argsArr) {
   }).trim();
 }
 
+function getRepoSlug() {
+  return runOutput("git", ["remote", "get-url", "origin"])
+    .replace(/.*github\.com[/u:]/u, "")
+    .replace(/\.git$/u, "");
+}
+
 // ── 核心流程 ──
 
 function getLastTag() {
@@ -182,7 +167,7 @@ function generateChangelogPreview(selected) {
 function parseVersion(v) {
   const parts = v.split(".").map(Number);
   if (parts.length !== 3 || parts.some(isNaN)) {
-    throw new Error(`Invalid version: ${v}`);
+    throw new Error(`版本号格式无效: ${v}`);
   }
   return { major: parts[0], minor: parts[1], patch: parts[2], str: v };
 }
@@ -345,35 +330,14 @@ async function interactivePickVersion(currentVersion) {
 
 async function main() {
   log("Pictelio 一键发布脚本");
-  if (dryRun) {
-    log("[dry-run 模式] 仅预览，不会执行任何写入/推送操作");
-  }
   console.log("");
 
-  // ── 1. 解析版本 ──
   const pkg = JSON.parse(await readText("package.json"));
   const currentVersion = pkg.version;
-  let bumpType = "patch";
-  if (versionArg) {
-    // 显式指定版本号
-  } else if (bumpMajor) {
-    bumpType = "major";
-  } else if (bumpMinor) {
-    bumpType = "minor";
-  }
-  let newVersion = versionArg || bump(currentVersion, bumpType);
-  const parsed = parseVersion(newVersion);
-  let versionCode = parsed.major * 10_000 + parsed.minor * 100 + parsed.patch;
-  let tag = `v${newVersion}`;
-  let title = `Pictelio v${newVersion}`;
-
-  log(`当前版本: ${currentVersion}`);
-  log(
-    `目标版本: ${newVersion} (versionCode: ${versionCode}) [${versionArg ? "指定版本" : bumpType + "递增"}]`,
-  );
-  log(`标签: ${tag}`);
-  console.log("");
-
+  let newVersion;
+  let versionCode;
+  let tag;
+  let title;
   let changelog;
 
   if (isCustom) {
@@ -393,16 +357,11 @@ async function main() {
     }
 
     const versionPick = await interactivePickVersion(currentVersion);
-    const newVersionInteractive = versionPick.version;
-    const { major: mi, minor: mn, patch: pt } = parseVersion(newVersionInteractive);
-    newVersion = newVersionInteractive;
-    versionCode = mi * 10_000 + mn * 100 + pt;
-    tag = `v${newVersion}`;
-    title = `Pictelio v${newVersion}`;
+    newVersion = versionPick.version;
 
-    log(`目标版本: ${newVersion} (versionCode: ${versionCode}) [${versionPick.type}]`);
+    log(`目标版本: ${newVersion}`);
     console.log("");
-  } else if (isInteractive) {
+  } else {
     // ── Interactive mode: user picks commits and version ──
     const lastTag = await getLastTag();
     const commits = lastTag ? await getGitLogSince(lastTag) : [];
@@ -412,44 +371,33 @@ async function main() {
     changelog = generateChangelogPreview(selectedCommits) || "小修复与改进";
 
     const versionPick = await interactivePickVersion(currentVersion);
-    // Override the auto-detected version
-    const newVersionInteractive = versionPick.version;
-    const { major: mi, minor: mn, patch: pt } = parseVersion(newVersionInteractive);
-    // Update all version-related variables
-    newVersion = newVersionInteractive;
-    versionCode = mi * 10_000 + mn * 100 + pt;
-    tag = `v${newVersion}`;
-    title = `Pictelio v${newVersion}`;
+    newVersion = versionPick.version;
 
-    log(`目标版本: ${newVersion} (versionCode: ${versionCode}) [${versionPick.type}]`);
+    log(`目标版本: ${newVersion}`);
     console.log("");
     log("最终 changelog：");
     console.log(changelog);
     console.log("");
-  } else {
-    // ── Auto mode: existing logic ──
-    const changes = [
-      "🧹 依赖升级",
-      "  - 升级 5 个依赖：@capacitor/core@8.4.1, @capacitor/cli@8.4.1, @types/node@26.0.1, unocss@66.7.3, vite@8.1.0",
-      "  - pnpm 供应链安全配置（minimumReleaseAge, trustPolicy, blockExoticSubdeps）",
-      "  - lint 修复与代码清理",
-      "",
-      "🐛 修复",
-      "  - 个人中心返回列表时保留滚动位置和缓存状态",
-      "  - 修复 TabFeedPage 组件初始化时 cached 变量读取 currentTab() 时序错误",
-      "",
-    ];
-    changelog = changes.join("\n");
-
-    log("自定义 changelog：");
-    console.log(changelog);
-    console.log("");
   }
 
-  if (dryRun) {
-    log("[dry-run] 以上是将会检测到的变更，继续展示后续步骤...");
-    console.log("");
+  const { major: mi, minor: mn, patch: pt } = parseVersion(newVersion);
+  versionCode = mi * 10_000 + mn * 100 + pt;
+  tag = `v${newVersion}`;
+  title = `Pictelio v${newVersion}`;
+
+  // ── 发布计划确认 ──
+  console.log("─".repeat(40));
+  log("即将执行以下发布操作：");
+  console.log(`  版本: ${currentVersion} → ${newVersion} (versionCode: ${versionCode})`);
+  console.log(`  标签: ${tag}`);
+  console.log(`  步骤: 更新版本 → 构建 APK → git commit/tag → git push → GitHub Release`);
+  console.log("─".repeat(40));
+  const confirmRelease = await askQuestion("\n确认发布? (Y/n): ");
+  if (confirmRelease.toLowerCase() === "n") {
+    console.log("[release] 已取消");
+    process.exit(0);
   }
+  console.log("");
 
   // ── 3. 检查签名环境 ──
   const keystorePassword = process.env.PICTELIO_KEYSTORE_PASSWORD;
@@ -467,109 +415,81 @@ async function main() {
   }
 
   if (envErrors.length > 0) {
-    if (dryRun) {
-      warn("签名环境检查发现问题（dry-run 模式继续）：");
-      for (const e of envErrors) {
-        warn(`  - ${e}`);
-      }
-      console.log("");
-    } else {
-      console.error("环境错误：" + envErrors.join("；"));
-      console.error("请先在 ~/.zshrc 中设置 PICTELIO_KEYSTORE_PASSWORD 和 PICTELIO_KEY_PASSWORD");
-      process.exit(1);
-    }
+    console.error("环境错误：" + envErrors.join("；"));
+    console.error("请先在 ~/.zshrc 中设置 PICTELIO_KEYSTORE_PASSWORD 和 PICTELIO_KEY_PASSWORD");
+    process.exit(1);
   }
   ok("签名环境检查通过");
   console.log("");
 
   // ── 4. 更新版本号 ──
-  if (!dryRun) {
-    pkg.version = newVersion;
-    await writeText("package.json", JSON.stringify(pkg, null, 2) + "\n");
-    ok(`package.json 版本已更新为 ${newVersion}`);
+  pkg.version = newVersion;
+  await writeText("package.json", JSON.stringify(pkg, null, 2) + "\n");
+  ok(`package.json 版本已更新为 ${newVersion}`);
 
-    // 同步 Android 版本
-    await run("node", ["scripts/sync-android-version.mjs"]);
-    ok(`Android build.gradle 已同步 (versionCode: ${versionCode})`);
+  await run("node", ["scripts/sync-android-version.mjs"]);
+  ok(`Android build.gradle 已同步 (versionCode: ${versionCode})`);
 
-    // 写入 changelog
-    const changelogPath = `fastlane/metadata/android/en-US/changelogs/${versionCode}.txt`;
-    await mkdir(dirname(resolvePath(rootDir, changelogPath)), { recursive: true });
-    await writeText(changelogPath, changelog);
-    ok(`Changelog 已写入 ${changelogPath}`);
+  const changelogPath = `fastlane/metadata/android/en-US/changelogs/${versionCode}.txt`;
+  await mkdir(dirname(resolvePath(rootDir, changelogPath)), { recursive: true });
+  await writeText(changelogPath, changelog);
+  ok(`Changelog 已写入 ${changelogPath}`);
 
-    // 更新 version.json（供 app 内检查更新使用）
-    // 同时写入新旧路径，兼容已发布的旧版 APK
-    const verJson =
-      JSON.stringify(
-        {
-          version: newVersion,
-          url: `https://github.com/a1121611810/pixivizer/releases/tag/${tag}`,
-          changelog: changelog.slice(0, 200),
-        },
-        null,
-        2,
-      ) + "\n";
-    await mkdir(dirname(resolvePath(rootDir, "../../packages/website/version.json")), {
-      recursive: true,
-    });
-    await writeText("../../packages/website/version.json", verJson);
-    await mkdir(dirname(resolvePath(rootDir, "../../website/version.json")), { recursive: true });
-    await writeText("../../website/version.json", verJson);
-    ok(`version.json 已更新 (${newVersion})`);
-  } else {
-    log(`[dry-run] 将更新 package.json → ${newVersion}`);
-    log(`[dry-run] 将运行 sync-android-version (versionCode → ${versionCode})`);
-    log(`[dry-run] 将写入 changelog → fastlane/.../changelogs/${versionCode}.txt`);
-    log(`[dry-run] 将更新 version.json → ${newVersion}`);
-  }
+  const verJson =
+    JSON.stringify(
+      {
+        version: newVersion,
+        url: `https://github.com/a1121611810/pixivizer/releases/tag/${tag}`,
+        changelog: changelog.slice(0, 200),
+      },
+      null,
+      2,
+    ) + "\n";
+  await mkdir(dirname(resolvePath(rootDir, "../../packages/website/version.json")), {
+    recursive: true,
+  });
+  await writeText("../../packages/website/version.json", verJson);
+  await mkdir(dirname(resolvePath(rootDir, "../../website/version.json")), { recursive: true });
+  await writeText("../../website/version.json", verJson);
+  ok(`version.json 已更新 (${newVersion})`);
   console.log("");
 
   // ── 5. 构建 APK ──
-  if (!dryRun) {
-    const buildSteps = [
-      ["同步 Android 版本", "pnpm", ["run", "sync:android-version"]],
-      ["同步 OAuth 配置", "pnpm", ["run", "sync:credentials"]],
-      ["构建 Web 产物", "pnpm", ["run", "build"]],
-      ["同步 Capacitor 资源", "pnpm", ["run", "cap:sync"]],
-      [
-        "编译 Release APK",
-        "./gradlew",
-        // 首次不加 --stacktrace
-        ["assembleRelease"],
-        {
-          cwd: resolvePath(rootDir, "android"),
-          stdio: "inherit",
-          env: {
-            ...process.env,
-            GRADLE_USER_HOME: resolvePath(rootDir, "android", ".gradle"),
-          },
-        },
-      ],
-    ];
-    const buildStart = Date.now();
-    for (const [label, cmd, args, opts] of buildSteps) {
-      if (cmd === "./gradlew") {
-        // Gradle 构建：首次不加 --stacktrace（更快），失败后自动重试加详细堆栈
-        const gradleOpts = opts || {};
-        try {
-          await runBuildStep(label, cmd, args, gradleOpts);
-        } catch {
-          const retryArgs = [...args, "--stacktrace"];
-          log("Gradle 构建失败，重试并输出详细堆栈...");
-          await runBuildStep(`${label}（详细堆栈）`, cmd, retryArgs, gradleOpts);
-        }
-      } else {
-        await runBuildStep(label, cmd, args, opts || {});
+  const buildSteps = [
+    ["同步 Android 版本", "pnpm", ["run", "sync:android-version"]],
+    ["同步 OAuth 配置", "pnpm", ["run", "sync:credentials"]],
+    ["构建 Web 产物", "pnpm", ["run", "build"]],
+    ["同步 Capacitor 资源", "pnpm", ["run", "cap:sync"]],
+    [
+      "编译 Release APK",
+      "./gradlew",
+      ["assembleRelease"],
+      {
+        cwd: resolvePath(rootDir, "android"),
+        stdio: "inherit",
+        env: { ...process.env, GRADLE_USER_HOME: resolvePath(rootDir, "android", ".gradle") },
+      },
+    ],
+  ];
+  const buildStart = Date.now();
+  for (const [label, cmd, args, opts] of buildSteps) {
+    if (cmd === "./gradlew") {
+      const gradleOpts = opts || {};
+      try {
+        await runBuildStep(label, cmd, args, gradleOpts);
+      } catch {
+        const retryArgs = [...args, "--stacktrace"];
+        log("Gradle 构建失败，重试并输出详细堆栈...");
+        await runBuildStep(`${label}（详细堆栈）`, cmd, retryArgs, gradleOpts);
       }
+    } else {
+      await runBuildStep(label, cmd, args, opts || {});
     }
-    const buildTotal = ((Date.now() - buildStart) / 1000).toFixed(1);
-    ok(`APK 构建成功 (总耗时 ${buildTotal}s)`);
-  } else {
-    log("[dry-run] 将执行 pnpm run build:android:release");
   }
+  const buildTotal = ((Date.now() - buildStart) / 1000).toFixed(1);
+  ok(`APK 构建成功 (总耗时 ${buildTotal}s)`);
 
-  // 验证 APK
+  // ── 6. 验证 APK ──
   const apkExists = await exists(apkPath);
   if (!apkExists) {
     console.error(`错误：APK 未生成 (${apkPath})`);
@@ -579,63 +499,47 @@ async function main() {
   console.log("");
 
   // ── 7. Git 提交 + Tag ──
-  if (!dryRun) {
-    await run("git", ["add", "-A"]);
-    await run("git", ["commit", "-m", `chore: bump version to ${newVersion}`, "-m", changelog]);
-    await run("git", ["tag", "-a", tag, "-m", title]);
-    ok(`Git 已提交并打标签 ${tag}`);
-  } else {
-    log(`[dry-run] 将执行: git commit + git tag ${tag}`);
-  }
+  await run("git", ["add", "-A"]);
+  await run("git", ["commit", "-m", `chore: bump version to ${newVersion}`, "-m", changelog]);
+  await run("git", ["tag", "-a", tag, "-m", title]);
+  ok(`Git 已提交并打标签 ${tag}`);
   console.log("");
 
   // ── 8. 推送到 GitHub ──
-  if (!dryRun) {
-    log("推送到远程...");
-    await run("git", ["push", "origin", "main", "--tags"]);
-    ok("已推送到 GitHub");
-  } else {
-    log("[dry-run] 将执行: git push origin main --tags");
-  }
+  log("推送到远程...");
+  await run("git", ["push", "origin", "main", "--tags"]);
+  ok("已推送到 GitHub");
   console.log("");
 
   // ── 9. 创建 GitHub Release 并上传 APK ──
-  if (!dryRun) {
-    log("创建 GitHub Release...");
-    const apkAbs = resolvePath(rootDir, apkPath);
-    const repo = runOutput("git", ["remote", "get-url", "origin"])
-      .replace(/\.git$/u, "")
-      .replace(/.*github\.com[/u:]/u, "")
-      .replace(/\.git$/u, "");
+  log("创建 GitHub Release...");
+  const apkAbs = resolvePath(rootDir, apkPath);
+  const repo = getRepoSlug();
 
-    // 临时文件存放 release notes，避免 --notes-file - 的 stdin 管道竞争
-    let notesFile;
-    let tmpDir;
-    try {
-      tmpDir = await mkdtemp(resolvePath(tmpdir(), "pictelio-release-"));
-      notesFile = resolvePath(tmpDir, "release-notes.md");
-      await writeFile(notesFile, changelog, "utf-8");
+  let notesFile;
+  let tmpDir;
+  try {
+    tmpDir = await mkdtemp(resolvePath(tmpdir(), "pictelio-release-"));
+    notesFile = resolvePath(tmpDir, "release-notes.md");
+    await writeFile(notesFile, changelog, "utf-8");
 
-      await new Promise((resolve, reject) => {
-        const child = execFile(
-          "gh",
-          ["release", "create", tag, "--repo", repo, "--title", title, "--notes-file", notesFile, apkAbs],
-          { cwd: rootDir, stdio: "inherit" },
-        );
-        child.on("error", reject);
-        child.on("close", (code) =>
-          code === 0 ? resolve() : reject(new Error(`gh release create exited with code ${code}`)),
-        );
-      });
-    } finally {
-      await unlink(notesFile).catch(() => {});
-      await rmdir(tmpDir).catch(() => {});
-    }
-
-    ok(`GitHub Release ${tag} 发布成功！`);
-  } else {
-    log(`[dry-run] 将执行: gh release create ${tag} --title "${title}" --notes ... + 上传 APK`);
+    await new Promise((resolve, reject) => {
+      const child = execFile(
+        "gh",
+        ["release", "create", tag, "--repo", repo, "--title", title, "--notes-file", notesFile, apkAbs],
+        { cwd: rootDir, stdio: "inherit" },
+      );
+      child.on("error", reject);
+      child.on("close", (code) =>
+        code === 0 ? resolve() : reject(new Error(`gh release create exited with code ${code}`)),
+      );
+    });
+  } finally {
+    await unlink(notesFile).catch(() => {});
+    await rmdir(tmpDir).catch(() => {});
   }
+
+  ok(`GitHub Release ${tag} 发布成功！`);
 
   console.log("");
   console.log("=".repeat(50));
@@ -643,11 +547,7 @@ async function main() {
   console.log(`   版本: ${newVersion}`);
   console.log(`   标签: ${tag}`);
   console.log(`   APK: ${resolvePath(rootDir, apkPath)}`);
-  console.log(
-    `   地址: https://github.com/${runOutput("git", ["remote", "get-url", "origin"])
-      .replace(/.*github\.com[/u:]/u, "")
-      .replace(/\.git$/u, "")}/releases/utag/${tag}`,
-  );
+  console.log(`   地址: https://github.com/${getRepoSlug()}/releases/tag/${tag}`);
   console.log("=".repeat(50));
 }
 
