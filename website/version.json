@@ -1,5 +1,5 @@
 {
-  "version": "3.13.1",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.13.1",
-  "changelog": "🐛 修复\n  fix: add text-shadow token to eliminate last hardcoded rgba value\n  fix: split pkceAuth to eliminate INEFFECTIVE_DYNAMIC_IMPORT warning\n♻️ 重构\n  refactor: replace dynamic import in auth.ts with"
+  "version": "3.14.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.14.0",
+  "changelog": "✨ 新功能\n  feat(android): add WebView warmup on Application.onCreate"
 }
