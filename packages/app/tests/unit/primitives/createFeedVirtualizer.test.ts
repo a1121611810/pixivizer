@@ -148,10 +148,10 @@ function createTouchEvent(type: string, clientY: number): Event {
 
 // --- Helper to create a config with defaults ---
 function createMockConfig(overrides: Record<string, unknown> = {}) {
-  const [items, setItems] = createSignal<any[]>([]);
-  const [loading, setLoading] = createSignal(false);
-  const [error, setError] = createSignal<ApiError | null>(null);
-  const [hasMore, setHasMore] = createSignal(true);
+  const [items, _setItems] = createSignal<any[]>([]);
+  const [loading, _setLoading] = createSignal(false);
+  const [error, _setError] = createSignal<ApiError | null>(null);
+  const [hasMore, _setHasMore] = createSignal(true);
 
   return {
     items: (overrides.items as typeof items) ?? items,
@@ -255,7 +255,8 @@ describe("createFeedVirtualizer", () => {
 
       expect(result.pullPhase()).toBe("refreshing");
 
-      // Simulate loading finishing
+      // Simulate loading starting and then finishing
+      setLoading(true);
       setLoading(false);
 
       expect(result.pullPhase()).toBe("idle");

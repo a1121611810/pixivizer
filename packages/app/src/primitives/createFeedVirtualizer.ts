@@ -1,4 +1,4 @@
-import { createSignal, createEffect, onCleanup, onMount } from "solid-js";
+import { createSignal, createEffect, onCleanup, onMount, on } from "solid-js";
 import type { Accessor } from "solid-js";
 import {
   Virtualizer,
@@ -79,13 +79,16 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
   const [pullPhase, setPullPhase] = createSignal<PullPhase>("idle");
   let touchStartY = 0;
 
-  // Reset pull state when refresh completes (loading transitions false→true→false)
-  createEffect(() => {
-    if (pullPhase() === "refreshing" && !config.loading()) {
-      setPullDistance(0);
-      setPullPhase("idle");
-    }
-  });
+  // Reset pull state when refresh completes (loading transitions true→false)
+  createEffect(on(
+    () => config.loading(),
+    (loading) => {
+      if (pullPhase() === "refreshing" && !loading) {
+        setPullDistance(0);
+        setPullPhase("idle");
+      }
+    },
+  ));
 
   function handleTouchStart(e: TouchEvent) {
     if (config.loading()) return;

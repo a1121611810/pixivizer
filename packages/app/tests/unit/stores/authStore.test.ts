@@ -8,6 +8,7 @@ const mockSetOnUnauthorized = vi.fn();
 vi.mock("@/api/client", () => ({
   setAccessToken: (...args: unknown[]) => mockSetAccessToken(...args),
   setOnUnauthorized: (...args: unknown[]) => mockSetOnUnauthorized(...args),
+  setRefreshPromise: vi.fn(),
 }));
 
 const mockRefreshToken = vi.fn();

@@ -1,24 +1,6 @@
 // @vitest-environment browser
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Helper to mount a SolidJS component manually
-function createComponent(
-  componentFn: (props: Record<string, unknown>) => () => any,
-  props: Record<string, unknown>,
-) {
-  const container = document.createElement("div");
-  document.body.appendChild(container);
-
-  // Import SolidJS renderer
-  const dispose = vi.hoisted(() => {
-    // We'll render using innerHTML approach since we can't easily
-    // set up SolidJS compiler in browser tests
-    return () => container.remove();
-  });
-
-  return { container, dispose };
-}
-
 describe("OAuthWebView — Web mode", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
@@ -76,7 +58,7 @@ describe("OAuthWebView — Web mode", () => {
 
     const { render } = await import("solid-js/web");
     const OAuthWebView = (await import("@/components/OAuthWebView")).default;
-    const dispose = render(
+    const _dispose = render(
       () =>
         OAuthWebView({
           open: true,

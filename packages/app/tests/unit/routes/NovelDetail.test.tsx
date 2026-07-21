@@ -93,7 +93,6 @@ vi.mock("@tanstack/solid-virtual", () => {
     ) {
       let count = opts.count ?? 0;
       let estimateSize = opts.estimateSize ?? (() => 100);
-      let options = opts;
 
       function computeItems() {
         const items: Array<{
@@ -123,7 +122,6 @@ vi.mock("@tanstack/solid-virtual", () => {
       this.setOptions = vi.fn((newOpts: Record<string, unknown>) => {
         if (typeof newOpts.count === "number") count = newOpts.count;
         if (typeof newOpts.estimateSize === "function") estimateSize = newOpts.estimateSize;
-        options = newOpts;
       });
       this.measure = vi.fn();
       this.getVirtualItems = vi.fn(() => computeItems());

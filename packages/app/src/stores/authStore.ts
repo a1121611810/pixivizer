@@ -72,6 +72,7 @@ export async function initializeAuth() {
     setRefreshPromise(promise);
     await promise;
   }
+  setIsLoading(false);
 }
 
 async function performRefresh(token: string) {
