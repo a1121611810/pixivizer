@@ -48,10 +48,7 @@ function base64url(buf: ArrayBuffer): string {
 /**
  * 使用 authorization_code 交换 access_token + refresh_token。
  */
-export async function exchangeCode(
-  code: string,
-  codeVerifier: string,
-): Promise<PixivAuthResponse> {
+export async function exchangeCode(code: string, codeVerifier: string): Promise<PixivAuthResponse> {
   if (isNative) {
     const { OAuthPlugin } = await import("@/native/OAuthPlugin");
     const result = await OAuthPlugin.exchangeCode({ code, codeVerifier });

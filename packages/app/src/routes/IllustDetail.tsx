@@ -762,7 +762,7 @@ const IllustDetail: Component = () => {
                     }}
                     style={{
                       "text-shadow":
-                        i !== currentVisiblePage() ? "0 1px 3px rgba(0,0,0,0.6)" : "none",
+                        i !== currentVisiblePage() ? "var(--textShadowDefault)" : "none",
                     }}
                     onClick={() => scrollToPage(i)}
                     aria-label={`第 ${i + 1} 页`}
