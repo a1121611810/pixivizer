@@ -87,7 +87,9 @@ const IllustBookmarks: Component = () => {
         hasMore={nextUrl() !== null}
         onIllustClick={(id) => void navigate({ to: `/illust/${id}` })}
         onLoadMore={fetchMore}
-        onRefresh={() => { refresh() }}
+        onRefresh={() => {
+          refresh();
+        }}
         emptyText={restrict() === "public" ? "公开收藏夹为空" : "非公开收藏夹为空"}
         skipAnimation={true}
         layoutMode={layoutMode()}

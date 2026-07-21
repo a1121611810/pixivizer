@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { ApiErrorType } from "@/api/types";
 
 vi.mock("@capacitor/core", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@capacitor/core")>();
@@ -54,32 +55,18 @@ describe("429 重试 — 指数退避", () => {
     } as unknown as Response;
   }
 
-  it("429 后重试 3 次，指数退避，最终成功", { timeout: 15_000 }, async () => {
-    const { apiClient } = await loadModule();
-
-    // 前 3 次 429，第 4 次成功
-    mockFetch
-      .mockResolvedValueOnce(make429Response())
-      .mockResolvedValueOnce(make429Response())
-      .mockResolvedValueOnce(make429Response())
-      .mockResolvedValueOnce(make200Response({ data: "ok" }));
-
-    const result = await apiClient.get("/v1/illust/detail");
-
-    expect(result).toEqual({ data: "ok" });
-    // 总共调了 4 次 fetch（前 3 次 429 + 第 4 次 200）
-    expect(mockFetch).toHaveBeenCalledTimes(4);
-  });
-
-  it("429 重试 3 次全部失败后抛出 429 错误", { timeout: 15_000 }, async () => {
+  it("429 直接抛出，由 TanStack Query 处理重试", async () => {
     const { apiClient } = await loadModule();
 
     mockFetch.mockResolvedValue(make429Response());
 
-    await expect(apiClient.get("/v1/illust/detail")).rejects.toThrow(/429/);
+    await expect(apiClient.get("/v1/illust/detail")).rejects.toMatchObject({
+      type: ApiErrorType.RATE_LIMIT,
+      message: "请求过于频繁，请稍后重试 (HTTP 429)",
+    });
 
-    // 重试 3 次后放弃，总共 4 次调用（首次 + 3 次重试）
-    expect(mockFetch).toHaveBeenCalledTimes(4);
+    // 只调了 1 次 fetch，client.ts 不做重试
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
   it("非 429 错误不触发重试", async () => {

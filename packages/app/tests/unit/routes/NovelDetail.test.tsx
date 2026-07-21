@@ -114,9 +114,7 @@ vi.mock("@tanstack/solid-virtual", () => {
 
       function computeTotalSize() {
         const items = computeItems();
-        return items.length > 0
-          ? items[items.length - 1].start + items[items.length - 1].size
-          : 0;
+        return items.length > 0 ? items[items.length - 1].start + items[items.length - 1].size : 0;
       }
 
       this.setOptions = vi.fn((newOpts: Record<string, unknown>) => {
@@ -143,7 +141,9 @@ vi.mock("@tanstack/solid-virtual", () => {
       this._willUpdate = vi.fn();
       Object.defineProperty(this, "scrollOffset", {
         get: () => (this as any).__scrollOffset ?? 0,
-        set: (v: number) => { (this as any).__scrollOffset = v; },
+        set: (v: number) => {
+          (this as any).__scrollOffset = v;
+        },
         configurable: true,
       });
     }),
@@ -154,7 +154,9 @@ vi.mock("@tanstack/solid-virtual", () => {
       getVirtualItems: vi.fn(() => []),
       getTotalSize: vi.fn(() => 0),
       scrollToOffset: vi.fn(),
-      get scrollOffset() { return 0; },
+      get scrollOffset() {
+        return 0;
+      },
       takeSnapshot: vi.fn(() => []),
       isScrolling: false,
     })),
@@ -162,7 +164,9 @@ vi.mock("@tanstack/solid-virtual", () => {
       getVirtualItems: vi.fn(() => []),
       getTotalSize: vi.fn(() => 0),
       scrollToOffset: vi.fn(),
-      get scrollOffset() { return 0; },
+      get scrollOffset() {
+        return 0;
+      },
       takeSnapshot: vi.fn(() => []),
       isScrolling: false,
     })),

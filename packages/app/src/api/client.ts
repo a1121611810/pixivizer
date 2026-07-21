@@ -230,145 +230,135 @@ export function rewriteUrl(path: string): string {
   return `${PIXIV_API_BASE}${path}`;
 }
 
-/** 实际执行 HTTP 请求（不含去重层），含 401 刷新和 429 重试 */
+/**
+ * 发送一个 HTTP 请求并返回 {status, data}。
+ * 纯传输层：不重试、不退避、不处理认证刷新。
+ */
+async function sendRequest(
+  method: "GET" | "POST",
+  url: string,
+  data: Record<string, string> | undefined,
+  headers: Record<string, string>,
+  signal?: AbortSignal,
+): Promise<{ status: number; data: unknown }> {
+  // Web 模式用 AbortController 实现 15s 超时，同时支持外部 signal 取消
+
+  if (isNative) {
+    if (method === "POST") headers["Content-Type"] = "application/x-www-form-urlencoded";
+    if (useDnsOverride()) {
+      const resp = await PictelioHttp.request({
+        url,
+        method,
+        headers,
+        body: method === "POST" && data ? new URLSearchParams(data).toString() : undefined,
+      });
+      try {
+        return { status: resp.status, data: JSON.parse(resp.data) };
+      } catch {
+        return { status: resp.status, data: resp.data };
+      }
+    } else if (method === "GET") {
+      const resp = await CapacitorHttp.request({
+        method: "GET",
+        url,
+        headers,
+        params: data as any,
+      });
+      return { status: resp.status, data: resp.data };
+    } else {
+      const body = data ? new URLSearchParams(data).toString() : "";
+      const resp = await CapacitorHttp.request({ method: "POST", url, headers, data: body });
+      return { status: resp.status, data: resp.data };
+    }
+  }
+
+  // Web 模式
+  if (method === "GET") {
+    const params = data ? "?" + new URLSearchParams(data).toString() : "";
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15_000);
+    // 外部 signal 也能取消请求
+    const onAbort = () => controller.abort();
+    signal?.addEventListener("abort", onAbort);
+    try {
+      const res = await fetch(url + params, { method: "GET", headers, signal: controller.signal });
+      return { status: res.status, data: await res.json() };
+    } finally {
+      clearTimeout(timeoutId);
+      signal?.removeEventListener("abort", onAbort);
+    }
+  } else {
+    const body = data ? new URLSearchParams(data).toString() : "";
+    headers["Content-Type"] = "application/x-www-form-urlencoded";
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15_000);
+    // 外部 signal 也能取消请求
+    const onAbort = () => controller.abort();
+    signal?.addEventListener("abort", onAbort);
+    try {
+      const res = await fetch(url, { method: "POST", headers, body, signal: controller.signal });
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        return { status: res.status, data: await res.json() };
+      }
+      const text = await res.text().catch(() => "");
+      throw new Error(
+        `\u670d\u52a1\u5668\u8fd4\u56de\u975e JSON (HTTP ${res.status}): ${text.slice(0, 300)}`,
+      );
+    } finally {
+      clearTimeout(timeoutId);
+      signal?.removeEventListener("abort", onAbort);
+    }
+  }
+}
+
+/** 刷新 token 或抛出 UNAUTHORIZED。多个并发请求共享同一个 refresh Promise */
+async function refreshAuth(): Promise<void> {
+  if (!onUnauthorized) throw classifyError(401, null);
+  if (!refreshPromise) {
+    refreshPromise = onUnauthorized().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  await refreshPromise;
+}
+
+/** 执行 HTTP 请求（不含去重层），含 401/400OAuth 自动刷新 */
 async function executeRequest<T>(
   method: "GET" | "POST",
   path: string,
   data?: Record<string, string>,
   signal?: AbortSignal,
 ): Promise<T> {
-  // 请求前检查是否已取消
-  if (signal?.aborted) {
-    throw new DOMException("请求已取消", "AbortError");
-  }
-  // 如果有 token 刷新正在进行，等待它完成，避免用旧 token 发注定失败的请求
-  if (refreshPromise) {
-    await refreshPromise;
-    if (signal?.aborted) {
-      throw new DOMException("请求已取消", "AbortError");
-    }
-  }
+  if (signal?.aborted) throw new DOMException("\u8bf7\u6c42\u5df2\u53d6\u6d88", "AbortError");
+  if (refreshPromise) await refreshPromise;
+
   const url = rewriteUrl(path);
   const headers: Record<string, string> = {
     "User-Agent": PIXIV_USER_AGENT,
     Referer: "https://app-api.pixiv.net/",
   };
-  if (accessToken) {
-    headers["Authorization"] = `Bearer ${accessToken}`;
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+
+  const result = await sendRequest(method, url, data, headers, signal);
+
+  // 401 → 刷新 token 后重试（最多一次递归）
+  if (result.status === 401 && onUnauthorized) {
+    await refreshAuth();
+    return executeRequest<T>(method, path, data, signal);
   }
 
-  const MAX_RETRIES = 3;
-  for (let attempt = 0; ; attempt++) {
-    try {
-      let response;
-      if (isNative) {
-        if (method === "POST") {
-          headers["Content-Type"] = "application/x-www-form-urlencoded";
-        }
-        if (useDnsOverride()) {
-          const resp = await PictelioHttp.request({
-            url,
-            method,
-            headers,
-            body: method === "POST" && data ? new URLSearchParams(data).toString() : undefined,
-          });
-          try {
-            response = { status: resp.status, data: JSON.parse(resp.data) };
-          } catch {
-            response = { status: resp.status, data: resp.data };
-          }
-        } else if (method === "GET") {
-          response = await CapacitorHttp.request({
-            method: "GET",
-            url,
-            headers,
-            params: data as any,
-          });
-        } else {
-          const body = data ? new URLSearchParams(data).toString() : "";
-          response = await CapacitorHttp.request({ method: "POST", url, headers, data: body });
-        }
-      } else {
-        if (method === "GET") {
-          const params = data ? "?" + new URLSearchParams(data).toString() : "";
-          const res = await fetch(url + params, { method: "GET", headers, signal });
-          response = { status: res.status, data: await res.json() };
-        } else {
-          const body = data ? new URLSearchParams(data).toString() : "";
-          headers["Content-Type"] = "application/x-www-form-urlencoded";
-          const res = await fetch(url, { method: "POST", headers, body, signal });
-          const contentType = res.headers.get("content-type") || "";
-          if (contentType.includes("application/json")) {
-            response = { status: res.status, data: await res.json() };
-          } else {
-            const text = await res.text().catch(() => "");
-            throw new Error(
-              `\u670d\u52a1\u5668\u8fd4\u56de\u975e JSON (HTTP ${res.status}): ${text.slice(0, 300)}`,
-            );
-          }
-        }
-      }
-
-      if (response!.status === 401 && onUnauthorized) {
-        if (!refreshPromise) {
-          refreshPromise = onUnauthorized().finally(() => {
-            refreshPromise = null;
-          });
-        }
-        await refreshPromise;
-        if (!accessToken) {
-          throw classifyError(401, null);
-        }
-        // 401 后 token 已刷新，递归调用时绕过去重层
-        return executeRequest<T>(method, path, data, signal);
-      }
-
-      // 400 OAuth 错误：refresh_token 已失效，触发清理后以 UNAUTHORIZED 抛出
-      if (isOAuthTokenErrorResponse(response!.status, response!.data)) {
-        if (onUnauthorized) {
-          if (!refreshPromise) {
-            refreshPromise = onUnauthorized().finally(() => {
-              refreshPromise = null;
-            });
-          }
-          await refreshPromise;
-          if (!accessToken) {
-            throw classifyError(401, null);
-          }
-          // 400 OAuth 后 token 已刷新，递归调用时绕过去重层
-          return executeRequest<T>(method, path, data, signal);
-        }
-        throw classifyError(response!.status, null, response!.data);
-      }
-
-      if (response!.status === 429 && attempt < MAX_RETRIES) {
-        if (signal?.aborted) {
-          throw new DOMException("请求已取消", "AbortError");
-        }
-        const delay = Math.pow(2, attempt) * 1000;
-        await new Promise((r) => setTimeout(r, delay));
-        continue;
-      }
-
-      if (response!.status >= 400) {
-        let errorBody: unknown;
-        try {
-          errorBody = response!.data;
-        } catch {
-          // Ignore
-        }
-        throw classifyError(response!.status, null, errorBody);
-      }
-
-      return response!.data as T;
-    } catch (error) {
-      if ((error as ApiError).type) {
-        throw error;
-      }
-      const errMsg = error instanceof Error ? error.message : String(error ?? "");
-      throw classifyError(0, error, { message: errMsg });
+  // 400 OAuth → 同 401
+  if (isOAuthTokenErrorResponse(result.status, result.data)) {
+    if (onUnauthorized) {
+      await refreshAuth();
+      return executeRequest<T>(method, path, data, signal);
     }
+    throw classifyError(result.status, null, result.data);
   }
+
+  if (result.status >= 400) throw classifyError(result.status, null, result.data);
+  return result.data as T;
 }
 
 /**

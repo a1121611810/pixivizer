@@ -102,9 +102,7 @@ const LoadingSpinner: Component<Props> = (props) => {
 
       {/* ── 可选文字（逐个蹦出，循环播放） ── */}
       {props.text && (
-        <p
-          class="text-[var(--colorNeutralForegroundDisabled)] text-[var(--fontSizeBase200)]"
-        >
+        <p class="text-[var(--colorNeutralForegroundDisabled)] text-[var(--fontSizeBase200)]">
           {props.text.split("").map((char, i) => (
             <span
               class="inline-block"

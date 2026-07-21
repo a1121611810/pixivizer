@@ -271,8 +271,8 @@ describe("executeRequest 400 OAuth integration", () => {
     const mockResponseData = {
       error: { message: "Error occurred at the OAuth process. invalid_request" },
     };
-    // 第二次调用返回非 OAuth 错误，避免 OAuth handler 无限递归
-    const mockRetryResponseData = { error: { message: "some other error" } };
+    // 第二次调用模拟 token 清空后的 401
+    const mockRetryResponseData = { error: { message: "invalid grant" } };
     let callCount = 0;
     const mockFetch = vi.fn(() => {
       callCount++;
@@ -284,9 +284,9 @@ describe("executeRequest 400 OAuth integration", () => {
           headers: { get: () => "application/json" },
         });
       }
-      // 第二次请求（递归重试时）返回非 OAuth 错误，停止递归
+      // 第二次请求：token 已被清空，API 返回 401
       return Promise.resolve({
-        status: 400,
+        status: 401,
         ok: false,
         json: () => Promise.resolve(mockRetryResponseData),
         headers: { get: () => "application/json" },

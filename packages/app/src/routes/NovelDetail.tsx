@@ -322,7 +322,12 @@ const NovelDetail: Component = () => {
       setDetailLoading(false);
       return;
     }
-    const full = data() as { novel: PixivNovel | null; text: string; nav: SeriesNavigation; images: NovelImagesMap };
+    const full = data() as {
+      novel: PixivNovel | null;
+      text: string;
+      nav: SeriesNavigation;
+      images: NovelImagesMap;
+    };
     if (full.novel) {
       applyEntry({
         detail: full.novel,

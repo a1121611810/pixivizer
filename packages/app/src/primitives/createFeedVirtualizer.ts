@@ -80,15 +80,17 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
   let touchStartY = 0;
 
   // Reset pull state when refresh completes (loading transitions true→false)
-  createEffect(on(
-    () => config.loading(),
-    (loading) => {
-      if (pullPhase() === "refreshing" && !loading) {
-        setPullDistance(0);
-        setPullPhase("idle");
-      }
-    },
-  ));
+  createEffect(
+    on(
+      () => config.loading(),
+      (loading) => {
+        if (pullPhase() === "refreshing" && !loading) {
+          setPullDistance(0);
+          setPullPhase("idle");
+        }
+      },
+    ),
+  );
 
   function handleTouchStart(e: TouchEvent) {
     if (config.loading()) return;

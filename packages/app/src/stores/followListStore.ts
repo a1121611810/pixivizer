@@ -88,12 +88,15 @@ export async function toggleFollow(index: number): Promise<void> {
   preview.user.is_followed = !prev;
 
   // Re-trigger reactivity: must pass a new reference so TQ notifies observers
-  queryClient.setQueryData(queryKeys.followList(mode(), userId()), (old: { pages: PixivUserFollowingResponse[]; pageParams: unknown[] } | undefined) => {
-    if (!old) {
-      return old;
-    }
-    return { ...old, pages: [...old.pages] };
-  });
+  queryClient.setQueryData(
+    queryKeys.followList(mode(), userId()),
+    (old: { pages: PixivUserFollowingResponse[]; pageParams: unknown[] } | undefined) => {
+      if (!old) {
+        return old;
+      }
+      return { ...old, pages: [...old.pages] };
+    },
+  );
 
   try {
     if (prev) {
@@ -104,12 +107,15 @@ export async function toggleFollow(index: number): Promise<void> {
   } catch {
     // Rollback
     preview.user.is_followed = prev;
-    queryClient.setQueryData(queryKeys.followList(mode(), userId()), (old: { pages: PixivUserFollowingResponse[]; pageParams: unknown[] } | undefined) => {
-      if (!old) {
-        return old;
-      }
-      return { ...old, pages: [...old.pages] };
-    });
+    queryClient.setQueryData(
+      queryKeys.followList(mode(), userId()),
+      (old: { pages: PixivUserFollowingResponse[]; pageParams: unknown[] } | undefined) => {
+        if (!old) {
+          return old;
+        }
+        return { ...old, pages: [...old.pages] };
+      },
+    );
   }
 }
 
