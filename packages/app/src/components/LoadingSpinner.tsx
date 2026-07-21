@@ -1,4 +1,5 @@
 import { type Component } from "solid-js";
+import PictelioIcon from "./PictelioIcon";
 
 interface Props {
   size?: "sm" | "md" | "lg";
@@ -33,51 +34,7 @@ const LoadingSpinner: Component<Props> = (props) => {
           height: `${sizeMap[size()]}px`,
         }}
       >
-        {/* Pictelio logo SVG */}
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 192 192"
-          fill="none"
-          aria-hidden="true"
-          class="absolute inset-0"
-        >
-          <defs>
-            <filter id="loadingLogoShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow
-                dx="0"
-                dy="4"
-                stdDeviation="6"
-                flood-color="#000000"
-                flood-opacity="0.08"
-              />
-            </filter>
-          </defs>
-          <rect
-            x="12"
-            y="12"
-            width="168"
-            height="168"
-            rx="44"
-            fill="#ffffff"
-            filter="url(#loadingLogoShadow)"
-          />
-          <svg x="36" y="36" width="120" height="120" viewBox="0 0 64 64">
-            <path
-              d="M18 12 C18 12 16 28 19 52 C19 52 22 54 24 50 C26 47 24 39 26 33 C26 33 37 35 45 27 C51 21 47 13 38 11 C31 9 24 12 18 12 Z"
-              fill="#2b579a"
-            />
-            <path
-              d="M22 16 C22 16 21 28 23 46"
-              fill="none"
-              stroke="#5a9fd4"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <circle cx="42" cy="19" r="2" fill="#7ab8e8" />
-            <circle cx="46" cy="25" r="1.5" fill="#7ab8e8" />
-          </svg>
-        </svg>
+        <PictelioIcon class="absolute inset-0 w-full h-full" />
 
         {/* Shimmer 扫光层 — 覆盖白色徽章区域 */}
         <div
