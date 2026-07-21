@@ -106,10 +106,10 @@ export async function refreshToken(token: string): Promise<PixivAuthResponse> {
   throw new Error("Auth not available outside native or dev mode");
 }
 
+import { exchangeCode as pkceExchangeCode } from "./pkceAuth";
+
 /**
  * 使用 authorization_code 交换 access_token + refresh_token。
- *
- * 委托给 pkceAuth.exchangeCode() 实现，作为 auth.ts 的统一 API 层入口。
  *
  * @param code authorization_code
  * @param codeVerifier PKCE code_verifier
@@ -119,6 +119,5 @@ export async function exchangeCodeForToken(
   code: string,
   codeVerifier: string,
 ): Promise<PixivAuthResponse> {
-  const { exchangeCode } = await import("./pkceExchange");
-  return exchangeCode(code, codeVerifier);
+  return pkceExchangeCode(code, codeVerifier);
 }
