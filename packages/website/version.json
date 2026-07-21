@@ -1,5 +1,5 @@
 {
-  "version": "3.12.3",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.12.3",
-  "changelog": "♻️ 重构\n  refactor(release script): restructure release script with step tracking"
+  "version": "3.12.4",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.12.4",
+  "changelog": "🔧 其他\n  build(release): add ora spinner to improve release script output"
 }
