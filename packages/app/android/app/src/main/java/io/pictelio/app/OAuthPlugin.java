@@ -1,5 +1,7 @@
 package io.pictelio.app;
 
+import io.pictelio.app.config.OAuthConfig;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
@@ -45,21 +47,11 @@ import okhttp3.Response;
  *    通过 shouldOverrideUrlLoading 拦截回调 URL，提取 authorization_code。
  *
  * 2. exchangeCode() — 使用 authorization_code 交换 access_token + refresh_token。
- *    CLIENT_ID / CLIENT_SECRET / HASH_SECRET 仅存在于编译后的 Java 字节码中，
- *    不出现在 JS bundle 中，避免凭证泄漏。
+ *    凭证从 OAuthConfig（由 credentials.json5 自动生成）读取，
+ *    仅存在于编译后的 Java 字节码中，不出现在 JS bundle 中。
  */
 @CapacitorPlugin(name = "OAuthPlugin")
 public class OAuthPlugin extends Plugin {
-
-    // ─── Pixiv OAuth 凭证（与 AuthPlugin 共享） ───
-    private static final String CLIENT_ID = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
-    private static final String CLIENT_SECRET = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
-    private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
-    private static final String AUTH_URL = "https://oauth.secure.pixiv.net/auth/token";
-    private static final String REDIRECT_URI = "https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback";
-    private static final String USER_AGENT = "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)";
-
-    private static final long TIMEOUT_MS = 120_000; // 2 分钟
 
     private static volatile OkHttpClient client;
     private AlertDialog dialog;
@@ -71,8 +63,8 @@ public class OAuthPlugin extends Plugin {
         synchronized (OAuthPlugin.class) {
             if (client != null) return client;
             client = new OkHttpClient.Builder()
-                    .connectTimeout(15, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
+                    .connectTimeout(OAuthConfig.TIMEOUT_CONNECT, TimeUnit.MILLISECONDS)
+                    .readTimeout(OAuthConfig.TIMEOUT_READ, TimeUnit.MILLISECONDS)
                     .build();
         }
         return client;
@@ -103,7 +95,7 @@ public class OAuthPlugin extends Plugin {
             webView.getSettings().setJavaScriptEnabled(true);
             webView.getSettings().setDomStorageEnabled(true);
             webView.getSettings().setAllowFileAccess(false);
-            webView.getSettings().setUserAgentString(USER_AGENT);
+            webView.getSettings().setUserAgentString(OAuthConfig.USER_AGENT);
 
             // ── 加载指示器 ──
             LinearLayout layout = new LinearLayout(getContext());
@@ -208,7 +200,7 @@ public class OAuthPlugin extends Plugin {
                     dismissDialog();
                     call.reject("timeout");
                 }
-            }, TIMEOUT_MS);
+            }, OAuthConfig.TIMEOUT_OAUTH_DIALOG_READ);
 
             // ── 加载登录页 ──
             webView.loadUrl(loginUrl);
@@ -238,27 +230,27 @@ public class OAuthPlugin extends Plugin {
                 .format(Instant.now())
                 .replace("Z", "+00:00");
 
-        String clientHash = md5Hex(localTime + HASH_SECRET);
+        String clientHash = md5Hex(localTime + OAuthConfig.HASH_SECRET);
 
         String body = new AuthPlugin.URLSearchParams()
-                .add("client_id", CLIENT_ID)
-                .add("client_secret", CLIENT_SECRET)
+                .add("client_id", OAuthConfig.CLIENT_ID)
+                .add("client_secret", OAuthConfig.CLIENT_SECRET)
                 .add("grant_type", "authorization_code")
                 .add("code", code)
                 .add("code_verifier", codeVerifier)
-                .add("redirect_uri", REDIRECT_URI)
+                .add("redirect_uri", OAuthConfig.REDIRECT_URI)
                 .add("get_secure_url", "1")
                 .build();
 
         Request request = new Request.Builder()
-                .url(AUTH_URL)
+                .url(OAuthConfig.AUTH_URL)
                 .addHeader("X-Client-Time", localTime)
                 .addHeader("X-Client-Hash", clientHash)
-                .addHeader("App-OS", "ios")
-                .addHeader("App-OS-Version", "18.5")
-                .addHeader("User-Agent", USER_AGENT)
-                .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                .post(RequestBody.create(body, MediaType.parse("application/x-www-form-urlencoded")))
+                .addHeader("App-OS", OAuthConfig.APP_OS)
+                .addHeader("App-OS-Version", OAuthConfig.APP_OS_VERSION)
+                .addHeader("User-Agent", OAuthConfig.USER_AGENT)
+                .addHeader("Content-Type", OAuthConfig.CONTENT_TYPE)
+                .post(RequestBody.create(body, MediaType.parse(OAuthConfig.CONTENT_TYPE)))
                 .build();
 
         getClient().newCall(request).enqueue(new okhttp3.Callback() {

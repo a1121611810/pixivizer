@@ -528,6 +528,7 @@ async function main() {
   if (!dryRun) {
     const buildSteps = [
       ["同步 Android 版本", "pnpm", ["run", "sync:android-version"]],
+      ["同步 OAuth 配置", "pnpm", ["run", "sync:credentials"]],
       ["构建 Web 产物", "pnpm", ["run", "build"]],
       ["同步 Capacitor 资源", "pnpm", ["run", "cap:sync"]],
       [

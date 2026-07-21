@@ -5,7 +5,23 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import postcssPxToRem from "postcss-pxtorem";
 import pkg from "./package.json";
-import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const _root = dirname(fileURLToPath(import.meta.url));
+
+// ─── 从 credentials.json5 加载编译时常量 ──────────────────────────
+import JSON5 from "json5";
+const _credsPath = resolve(_root, "credentials.json5");
+const _raw = readFileSync(_credsPath, "utf-8");
+const credentials = JSON5.parse(_raw);
+const __CREDENTIALS__ = JSON.stringify(credentials);
+// __PUBLIC_CONFIG__ 仅包含 B-F 非敏感配置，用于模块顶层引用，
+// 不含 A 类凭据（clientId/clientSecret/hashSecret），
+// 避免凭据通过 Vite define 内联进入生产 JS bundle。
+const { clientId: _a, clientSecret: _b, hashSecret: _c, ..._pub } = credentials;
+const __PUBLIC_CONFIG__ = JSON.stringify(_pub);
 
 // 系统代理（中国大陆需要代理访问 Pixiv）
 const proxyUrl =
@@ -33,6 +49,8 @@ export default defineConfig({
   plugins: [solid(), UnoCSS()],
   define: {
     APP_VERSION: JSON.stringify(pkg.version),
+    __CREDENTIALS__,
+    __PUBLIC_CONFIG__,
   },
 
   css: {
@@ -51,14 +69,13 @@ export default defineConfig({
     host: "0.0.0.0",
     allowedHosts: true,
     proxy: {
-      // User-Agent 值保持与 src/api/userAgent.ts 的 PIXIV_USER_AGENT 一致
       "/pixiv-img": {
-        target: "https://i.pximg.net",
+        target: credentials.imageCdnUrl,
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/pixiv-img/u, ""),
         headers: {
-          Referer: "https://app-api.pixiv.net/",
-          "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+          Referer: credentials.referer,
+          "User-Agent": credentials.userAgent,
         },
         agent: proxyAgent,
         configure: (proxy: any) => {
@@ -80,8 +97,8 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/pixiv-re/u, ""),
         headers: {
-          Referer: "https://app-api.pixiv.net/",
-          "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+          Referer: credentials.referer,
+          "User-Agent": credentials.userAgent,
         },
         agent: proxyAgent,
         configure: (proxy: any) => {
@@ -103,8 +120,8 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/pixiv-nl/u, ""),
         headers: {
-          Referer: "https://app-api.pixiv.net/",
-          "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+          Referer: credentials.referer,
+          "User-Agent": credentials.userAgent,
         },
         agent: proxyAgent,
         configure: (proxy: any) => {
@@ -122,12 +139,12 @@ export default defineConfig({
         },
       },
       "/pixiv-api": {
-        target: "https://app-api.pixiv.net",
+        target: credentials.apiBaseUrl,
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/pixiv-api/u, ""),
         headers: {
-          "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
-          Referer: "https://app-api.pixiv.net/",
+          "User-Agent": credentials.userAgent,
+          Referer: credentials.referer,
         },
         agent: proxyAgent,
         configure: (proxy: any) => {
@@ -145,11 +162,11 @@ export default defineConfig({
         },
       },
       "/pixiv-oauth": {
-        target: "https://oauth.secure.pixiv.net",
+        target: credentials.authUrl.replace(/\/auth\/token$/u, ""),
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/pixiv-oauth/u, ""),
         headers: {
-          "User-Agent": "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+          "User-Agent": credentials.userAgent,
         },
         agent: proxyAgent,
         configure: (proxy: any) => {

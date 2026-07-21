@@ -4,10 +4,10 @@ import { PictelioHttp } from "../native/PictelioHttp";
 import { useDnsOverride } from "../stores/uiStore";
 import { PIXIV_USER_AGENT } from "./userAgent";
 
-// ─── 端点 ───
-const PIXIV_API_BASE = "https://app-api.pixiv.net";
-const PIXIV_AUTH_URL = "https://oauth.secure.pixiv.net/auth/token";
-const REQUEST_TIMEOUT_MS = 15_000;
+// ─── 端点（编译时常量，从 credentials.json5 注入） ───
+const PIXIV_API_BASE = __PUBLIC_CONFIG__.apiBaseUrl;
+const PIXIV_AUTH_URL = __PUBLIC_CONFIG__.authUrl;
+const REQUEST_TIMEOUT_MS = __PUBLIC_CONFIG__.timeout.connect;
 
 // ─── 平台检测 ───
 const isNative = Capacitor.isNativePlatform();
@@ -263,7 +263,7 @@ async function sendRequest(
   signal?: AbortSignal,
 ): Promise<{ status: number; data: unknown }> {
   if (isNative) {
-    if (method === "POST") headers["Content-Type"] = "application/x-www-form-urlencoded";
+    if (method === "POST") headers["Content-Type"] = __PUBLIC_CONFIG__.contentType;
 
     // 原生路径用 Promise.race 实现超时（CapacitorHttp/PictelioHttp 不支持 AbortController）
     const withTimeout = <T>(promise: Promise<T>): Promise<T> => {
@@ -313,7 +313,7 @@ async function sendRequest(
     return { status: res.status, data: await res.json() };
   } else {
     const body = data ? new URLSearchParams(data).toString() : "";
-    headers["Content-Type"] = "application/x-www-form-urlencoded";
+    headers["Content-Type"] = __PUBLIC_CONFIG__.contentType;
     const res = await fetchWithTimeout(url, { method: "POST", headers, body }, signal);
     const contentType = res.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
@@ -350,7 +350,7 @@ async function executeRequest<T>(
   const url = rewriteUrl(path);
   const headers: Record<string, string> = {
     "User-Agent": PIXIV_USER_AGENT,
-    Referer: "https://app-api.pixiv.net/",
+    Referer: __PUBLIC_CONFIG__.referer,
   };
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
 

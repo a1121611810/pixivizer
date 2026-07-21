@@ -1,5 +1,7 @@
 package io.pictelio.app;
 
+import io.pictelio.app.config.OAuthConfig;
+
 import android.content.pm.PackageInfo;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
@@ -28,9 +30,6 @@ import java.util.Map;
  * Pictelio Android 客户端 — 拦截 /pixiv-img/ 请求并代理到 i.pximg.net（注入 Referer 头）。
  */
 public class MainActivity extends BridgeActivity {
-
-    /** WebView 最低主版本号要求（低于此版本拦截启动并提示用户升级）。 */
-    private static final int MIN_WEBVIEW_MAJOR_VERSION = 70;
 
 
     @Override
@@ -120,7 +119,7 @@ public class MainActivity extends BridgeActivity {
 
         try {
             String path = url.substring(url.indexOf("/pixiv-img/") + "/pixiv-img/".length());
-            String pixivUrl = new URI("https://i.pximg.net/" + path).normalize().toString();
+            String pixivUrl = new URI(OAuthConfig.IMAGE_CDN_URL + "/" + path).normalize().toString();
 
             // 读取 JS 侧持久化的缓存开关（Capacitor Preferences 存储在默认 SharedPreferences 中）
             android.content.SharedPreferences prefs = getApplicationContext().getSharedPreferences("CapacitorStorage", android.content.Context.MODE_PRIVATE);
@@ -130,7 +129,7 @@ public class MainActivity extends BridgeActivity {
             // ── A: 磁盘缓存检查 ────────────────────────────────────
             if (diskCacheEnabled) {
                 String filename = Base64.encodeToString(url.getBytes(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
-                File cacheFile = new File(getCacheDir() + "/pictelio-images/", filename);
+                File cacheFile = new File(getCacheDir() + "/" + OAuthConfig.CACHE_DIR + "/", filename);
                 if (cacheFile.exists()) {
                     String mime = "image/jpeg";
                     if (path.endsWith(".png")) mime = "image/png";
@@ -141,11 +140,10 @@ public class MainActivity extends BridgeActivity {
             }
 
             HttpURLConnection conn = (HttpURLConnection) new URL(pixivUrl).openConnection();
-            conn.setRequestProperty("Referer", "https://app-api.pixiv.net/");
-            // 与 JS 侧 src/api/userAgent.ts 的 PIXIV_USER_AGENT 保持一致
-            conn.setRequestProperty("User-Agent", "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)");
-            conn.setConnectTimeout(10000);
-            conn.setReadTimeout(15000);
+            conn.setRequestProperty("Referer", OAuthConfig.REFERER);
+            conn.setRequestProperty("User-Agent", OAuthConfig.USER_AGENT);
+            conn.setConnectTimeout(OAuthConfig.TIMEOUT_IMAGE_PROXY_CONNECT);
+            conn.setReadTimeout(OAuthConfig.TIMEOUT_IMAGE_PROXY_READ);
 
             String mime = conn.getContentType();
             if (mime == null) mime = "image/jpeg";
@@ -193,7 +191,7 @@ public class MainActivity extends BridgeActivity {
     private boolean isWebViewVersionOk() {
         int major = getWebViewMajorVersion();
         if (major < 0) return true;     // 检测失败 → 放行，让应用自己处理
-        return major >= MIN_WEBVIEW_MAJOR_VERSION;
+        return major >= OAuthConfig.MIN_WEBVIEW_VERSION;
     }
 
     /**

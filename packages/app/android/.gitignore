@@ -95,6 +95,9 @@ capacitor-cordova-android-plugins
 # Copied web assets
 app/src/main/assets/public
 
+# Generated OAuth config (from credentials.json5 via scripts/sync-credentials.mjs)
+app/src/main/java/io/pictelio/app/config/
+
 # Generated Config files
 app/src/main/assets/capacitor.config.json
 app/src/main/assets/capacitor.plugins.json

@@ -1,5 +1,7 @@
 package io.pictelio.app;
 
+import io.pictelio.app.config.OAuthConfig;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -17,7 +19,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
-import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.MediaType;
@@ -29,8 +30,8 @@ import okhttp3.Response;
 /**
  * Pixiv OAuth 认证插件 — 在 Native 层完成 refresh_token 交换。
  *
- * CLIENT_ID / CLIENT_SECRET / HASH_SECRET 仅存在于编译后的 Java 字节码中，
- * 不出现在 JS bundle 中，避免凭证泄漏。
+ * 凭证从 OAuthConfig（由 credentials.json5 自动生成）读取，
+ * 仅存在于编译后的 Java 字节码中，不出现在 JS bundle 中。
  *
  * 调用方式（JS 侧）：
  *   AuthPlugin.refreshToken({ refreshToken: "..." })
@@ -39,13 +40,6 @@ import okhttp3.Response;
 @CapacitorPlugin(name = "AuthPlugin")
 public class AuthPlugin extends Plugin {
 
-    // ─── Pixiv OAuth 凭证（仅在此 Java 文件中出现） ───
-    private static final String CLIENT_ID = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
-    private static final String CLIENT_SECRET = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
-    private static final String HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
-    private static final String AUTH_URL = "https://oauth.secure.pixiv.net/auth/token";
-    private static final String USER_AGENT = "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)";
-
     private static volatile OkHttpClient client;
 
     private static OkHttpClient getClient() {
@@ -53,8 +47,8 @@ public class AuthPlugin extends Plugin {
         synchronized (AuthPlugin.class) {
             if (client != null) return client;
             client = new OkHttpClient.Builder()
-                    .connectTimeout(15, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
+                    .connectTimeout(OAuthConfig.TIMEOUT_CONNECT, TimeUnit.MILLISECONDS)
+                    .readTimeout(OAuthConfig.TIMEOUT_READ, TimeUnit.MILLISECONDS)
                     .build();
         }
         return client;
@@ -78,25 +72,25 @@ public class AuthPlugin extends Plugin {
                 .format(Instant.now())
                 .replace("Z", "+00:00");
 
-        String clientHash = md5Hex(localTime + HASH_SECRET);
+        String clientHash = md5Hex(localTime + OAuthConfig.HASH_SECRET);
 
         String body = new URLSearchParams()
-                .add("client_id", CLIENT_ID)
-                .add("client_secret", CLIENT_SECRET)
+                .add("client_id", OAuthConfig.CLIENT_ID)
+                .add("client_secret", OAuthConfig.CLIENT_SECRET)
                 .add("grant_type", "refresh_token")
                 .add("refresh_token", refreshToken)
                 .add("get_secure_url", "1")
                 .build();
 
         Request request = new Request.Builder()
-                .url(AUTH_URL)
+                .url(OAuthConfig.AUTH_URL)
                 .addHeader("X-Client-Time", localTime)
                 .addHeader("X-Client-Hash", clientHash)
-                .addHeader("App-OS", "ios")
-                .addHeader("App-OS-Version", "18.5")
-                .addHeader("User-Agent", USER_AGENT)
-                .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                .post(RequestBody.create(body, MediaType.parse("application/x-www-form-urlencoded")))
+                .addHeader("App-OS", OAuthConfig.APP_OS)
+                .addHeader("App-OS-Version", OAuthConfig.APP_OS_VERSION)
+                .addHeader("User-Agent", OAuthConfig.USER_AGENT)
+                .addHeader("Content-Type", OAuthConfig.CONTENT_TYPE)
+                .post(RequestBody.create(body, MediaType.parse(OAuthConfig.CONTENT_TYPE)))
                 .build();
 
         getClient().newCall(request).enqueue(new okhttp3.Callback() {

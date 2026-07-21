@@ -53,13 +53,16 @@ export async function refreshToken(token: string): Promise<PixivAuthResponse> {
   }
 
   // ── DEV-ONLY 分支 ──────────────────────────────────────────────
-  // Import.meta.env.DEV → Vite 编译期替换为 false → Rolldown 保留 if (false)
+  // import.meta.env.DEV → Vite 编译期替换为 false → Rolldown 保留 if (false)
   // → terser 消除整个 { ... } → 凭证和 spark-md5 均不在生产 bundle 中
+  // __CREDENTIALS__ 引用在死代码消除中被一并移除
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (import.meta.env.DEV) {
-    const CLIENT_ID = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
-    const CLIENT_SECRET = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
-    const HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
+    const {
+      clientId: CLIENT_ID,
+      clientSecret: CLIENT_SECRET,
+      hashSecret: HASH_SECRET,
+    } = __CREDENTIALS__;
 
     const { default: SparkMD5 } = await import("spark-md5");
 
@@ -69,8 +72,8 @@ export async function refreshToken(token: string): Promise<PixivAuthResponse> {
     const headers: Record<string, string> = {
       "X-Client-Time": time,
       "X-Client-Hash": hash,
-      "App-OS": "ios",
-      "App-OS-Version": "18.5",
+      "App-OS": __CREDENTIALS__.appOs,
+      "App-OS-Version": __CREDENTIALS__.appOsVersion,
       "User-Agent": PIXIV_USER_AGENT,
     };
 

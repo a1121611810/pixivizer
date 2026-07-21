@@ -1,5 +1,7 @@
 package io.pictelio.app;
 
+import io.pictelio.app.config.OAuthConfig;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
@@ -23,7 +25,7 @@ import java.util.Comparator;
 /**
  * 将 Pixiv 图片缓存在应用内部存储目录，使冷启动后无需重新下载。
  *
- * 缓存目录：context.getCacheDir()/pictelio-images/
+ * 缓存目录：context.getCacheDir()/{cacheDir}/
  * 淘汰策略：总大小超过 getMaxCacheBytes() 返回值时，删除最旧访问的文件
  * 文件名：Base64URL-safe 编码的 URL key（不含 padding）
  */
@@ -31,9 +33,6 @@ import java.util.Comparator;
 public class ImageCachePlugin extends Plugin {
 
     private static final String TAG = "ImageCachePlugin";
-    private static final String CACHE_DIR = "pictelio-images";
-    /** 默认最大缓存字节数：300 MB */
-    private static final long DEFAULT_MAX_CACHE_BYTES = 300L * 1024 * 1024;
 
     private long getMaxCacheBytes() {
         try {
@@ -46,11 +45,11 @@ public class ImageCachePlugin extends Plugin {
         } catch (Exception e) {
             Log.w(TAG, "Failed to read image_cache_disk_size, using default", e);
         }
-        return DEFAULT_MAX_CACHE_BYTES;
+        return OAuthConfig.CACHE_MAX_BYTES;
     }
 
     private File getCacheDir() {
-        File dir = new File(getContext().getCacheDir(), CACHE_DIR);
+        File dir = new File(getContext().getCacheDir(), OAuthConfig.CACHE_DIR);
         if (!dir.exists()) {
             dir.mkdirs();
         }

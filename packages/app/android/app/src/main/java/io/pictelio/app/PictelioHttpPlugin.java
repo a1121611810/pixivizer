@@ -1,5 +1,7 @@
 package io.pictelio.app;
 
+import io.pictelio.app.config.OAuthConfig;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -45,8 +47,8 @@ public class PictelioHttpPlugin extends Plugin {
             if (client != null) return client;
             client = new OkHttpClient.Builder()
                     .dns(new DohDns())
-                    .connectTimeout(15, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
+                    .connectTimeout(OAuthConfig.TIMEOUT_CONNECT, TimeUnit.MILLISECONDS)
+                    .readTimeout(OAuthConfig.TIMEOUT_READ, TimeUnit.MILLISECONDS)
                     .build();
         }
         return client;
@@ -54,23 +56,20 @@ public class PictelioHttpPlugin extends Plugin {
 
     // ---- DNS over HTTPS 解析 ----
 
-    /** Cloudflare DoH 端点，也可替换为 Google(8.8.8.8) 或阿里(dns.alidns.com) */
-    private static final String DOH_URL = "https://cloudflare-dns.com/dns-query?name=";
-
     static class DohDns implements Dns {
         private static final OkHttpClient dohClient = new OkHttpClient.Builder()
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .readTimeout(5, TimeUnit.SECONDS)
+                .connectTimeout(OAuthConfig.TIMEOUT_DNS_QUERY_CONNECT, TimeUnit.MILLISECONDS)
+                .readTimeout(OAuthConfig.TIMEOUT_DNS_QUERY_READ, TimeUnit.MILLISECONDS)
                 .build();
 
         @Override
         public List<InetAddress> lookup(String hostname) throws UnknownHostException {
-            if (!"app-api.pixiv.net".equals(hostname) && !"i.pximg.net".equals(hostname)) {
+            if (!isAllowedDohHost(hostname)) {
                 return Dns.SYSTEM.lookup(hostname);
             }
             try {
                 Request req = new Request.Builder()
-                        .url(DOH_URL + hostname + "&type=A")
+                        .url(OAuthConfig.DOH_URL + hostname + "&type=A")
                         .header("Accept", "application/dns-json")
                         .build();
                 Response resp = dohClient.newCall(req).execute();
@@ -84,6 +83,13 @@ public class PictelioHttpPlugin extends Plugin {
                 // DoH 失败，回退系统 DNS
             }
             return Dns.SYSTEM.lookup(hostname);
+        }
+
+        private static boolean isAllowedDohHost(String hostname) {
+            for (String h : OAuthConfig.ALLOWED_HOSTS) {
+                if (h.equals(hostname)) return true;
+            }
+            return false;
         }
 
         /** 从 DoH JSON 响应中提取第一个 A 记录的 IP */
@@ -103,10 +109,7 @@ public class PictelioHttpPlugin extends Plugin {
 
     /** 允许通过 PictelioHttp 请求的域名白名单 */
     static final Set<String> ALLOWED_HOSTS = Collections.unmodifiableSet(
-            new HashSet<>(Arrays.asList(
-                    "app-api.pixiv.net",
-                    "i.pximg.net"
-            ))
+            new HashSet<>(Arrays.asList(OAuthConfig.ALLOWED_HOSTS))
     );
 
     /**
@@ -154,7 +157,7 @@ public class PictelioHttpPlugin extends Plugin {
         if ("POST".equalsIgnoreCase(method) && body != null) {
             builder.post(RequestBody.create(
                     body,
-                    MediaType.parse("application/x-www-form-urlencoded")
+                    MediaType.parse(OAuthConfig.CONTENT_TYPE)
             ));
         } else if ("POST".equalsIgnoreCase(method)) {
             builder.post(RequestBody.create("", null));

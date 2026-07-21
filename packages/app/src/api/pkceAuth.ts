@@ -69,7 +69,7 @@ export function buildLoginUrl(codeChallenge: string): string {
     code_challenge_method: "S256",
     client: "pixiv-android",
   });
-  return `https://app-api.pixiv.net/web/v1/login?${params.toString()}`;
+  return `${__PUBLIC_CONFIG__.loginUrl}?${params.toString()}`;
 }
 
 /**
@@ -105,9 +105,11 @@ export async function exchangeCode(code: string, codeVerifier: string): Promise<
   // ── DEV-ONLY 分支 ──────────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (import.meta.env.DEV) {
-    const CLIENT_ID = "MOBrBDS8blbauoSck0ZfDbtuzpyT";
-    const CLIENT_SECRET = "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj";
-    const HASH_SECRET = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c";
+    const {
+      clientId: CLIENT_ID,
+      clientSecret: CLIENT_SECRET,
+      hashSecret: HASH_SECRET,
+    } = __CREDENTIALS__;
 
     const { default: SparkMD5 } = await import("spark-md5");
 
@@ -117,8 +119,8 @@ export async function exchangeCode(code: string, codeVerifier: string): Promise<
     const headers: Record<string, string> = {
       "X-Client-Time": time,
       "X-Client-Hash": hash,
-      "App-OS": "ios",
-      "App-OS-Version": "18.5",
+      "App-OS": __CREDENTIALS__.appOs,
+      "App-OS-Version": __CREDENTIALS__.appOsVersion,
       "User-Agent": PIXIV_USER_AGENT,
     };
 
@@ -128,7 +130,7 @@ export async function exchangeCode(code: string, codeVerifier: string): Promise<
       grant_type: "authorization_code",
       code,
       code_verifier: codeVerifier,
-      redirect_uri: "https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback",
+      redirect_uri: __CREDENTIALS__.redirectUri,
       get_secure_url: "1",
     }).toString();
 
