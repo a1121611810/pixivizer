@@ -230,6 +230,24 @@ export function rewriteUrl(path: string): string {
   return `${PIXIV_API_BASE}${path}`;
 }
 
+/** 用 AbortController 实现带超时的 fetch，同时支持外部 signal 取消 */
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  externalSignal?: AbortSignal,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15_000);
+  const onAbort = () => controller.abort();
+  externalSignal?.addEventListener("abort", onAbort);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+    externalSignal?.removeEventListener("abort", onAbort);
+  }
+}
+
 /**
  * 发送一个 HTTP 请求并返回 {status, data}。
  * 纯传输层：不重试、不退避、不处理认证刷新。
@@ -241,33 +259,44 @@ async function sendRequest(
   headers: Record<string, string>,
   signal?: AbortSignal,
 ): Promise<{ status: number; data: unknown }> {
-  // Web 模式用 AbortController 实现 15s 超时，同时支持外部 signal 取消
+  const REQUEST_TIMEOUT = 15_000;
 
   if (isNative) {
     if (method === "POST") headers["Content-Type"] = "application/x-www-form-urlencoded";
+
+    // 原生路径用 Promise.race 实现超时（CapacitorHttp/PictelioHttp 不支持 AbortController）
+    const withTimeout = <T>(promise: Promise<T>): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new TypeError("Request timeout")), REQUEST_TIMEOUT),
+        ),
+      ]);
+
     if (useDnsOverride()) {
-      const resp = await PictelioHttp.request({
-        url,
-        method,
-        headers,
-        body: method === "POST" && data ? new URLSearchParams(data).toString() : undefined,
-      });
+      const resp = await withTimeout(
+        PictelioHttp.request({
+          url,
+          method,
+          headers,
+          body: method === "POST" && data ? new URLSearchParams(data).toString() : undefined,
+        }),
+      );
       try {
         return { status: resp.status, data: JSON.parse(resp.data) };
       } catch {
         return { status: resp.status, data: resp.data };
       }
     } else if (method === "GET") {
-      const resp = await CapacitorHttp.request({
-        method: "GET",
-        url,
-        headers,
-        params: data as any,
-      });
+      const resp = await withTimeout(
+        CapacitorHttp.request({ method: "GET", url, headers, params: data as any }),
+      );
       return { status: resp.status, data: resp.data };
     } else {
       const body = data ? new URLSearchParams(data).toString() : "";
-      const resp = await CapacitorHttp.request({ method: "POST", url, headers, data: body });
+      const resp = await withTimeout(
+        CapacitorHttp.request({ method: "POST", url, headers, data: body }),
+      );
       return { status: resp.status, data: resp.data };
     }
   }
@@ -275,40 +304,18 @@ async function sendRequest(
   // Web 模式
   if (method === "GET") {
     const params = data ? "?" + new URLSearchParams(data).toString() : "";
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15_000);
-    // 外部 signal 也能取消请求
-    const onAbort = () => controller.abort();
-    signal?.addEventListener("abort", onAbort);
-    try {
-      const res = await fetch(url + params, { method: "GET", headers, signal: controller.signal });
-      return { status: res.status, data: await res.json() };
-    } finally {
-      clearTimeout(timeoutId);
-      signal?.removeEventListener("abort", onAbort);
-    }
+    const res = await fetchWithTimeout(url + params, { method: "GET", headers }, signal);
+    return { status: res.status, data: await res.json() };
   } else {
     const body = data ? new URLSearchParams(data).toString() : "";
     headers["Content-Type"] = "application/x-www-form-urlencoded";
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15_000);
-    // 外部 signal 也能取消请求
-    const onAbort = () => controller.abort();
-    signal?.addEventListener("abort", onAbort);
-    try {
-      const res = await fetch(url, { method: "POST", headers, body, signal: controller.signal });
-      const contentType = res.headers.get("content-type") || "";
-      if (contentType.includes("application/json")) {
-        return { status: res.status, data: await res.json() };
-      }
-      const text = await res.text().catch(() => "");
-      throw new Error(
-        `\u670d\u52a1\u5668\u8fd4\u56de\u975e JSON (HTTP ${res.status}): ${text.slice(0, 300)}`,
-      );
-    } finally {
-      clearTimeout(timeoutId);
-      signal?.removeEventListener("abort", onAbort);
+    const res = await fetchWithTimeout(url, { method: "POST", headers, body }, signal);
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      return { status: res.status, data: await res.json() };
     }
+    const text = await res.text().catch(() => "");
+    throw new Error(`服务器返回非 JSON (HTTP ${res.status}): ${text.slice(0, 300)}`);
   }
 }
 
@@ -323,14 +330,16 @@ async function refreshAuth(): Promise<void> {
   await refreshPromise;
 }
 
-/** 执行 HTTP 请求（不含去重层），含 401/400OAuth 自动刷新 */
+/** 执行 HTTP 请求（不含去重层），含 401/400OAuth 自动刷新（最多 1 次递归） */
 async function executeRequest<T>(
   method: "GET" | "POST",
   path: string,
   data?: Record<string, string>,
   signal?: AbortSignal,
+  /** 已刷新过一次，再次 401/400 不再递归，直接抛出 */
+  refreshed?: boolean,
 ): Promise<T> {
-  if (signal?.aborted) throw new DOMException("\u8bf7\u6c42\u5df2\u53d6\u6d88", "AbortError");
+  if (signal?.aborted) throw new DOMException("请求已取消", "AbortError");
   if (refreshPromise) await refreshPromise;
 
   const url = rewriteUrl(path);
@@ -342,19 +351,14 @@ async function executeRequest<T>(
 
   const result = await sendRequest(method, url, data, headers, signal);
 
-  // 401 → 刷新 token 后重试（最多一次递归）
-  if (result.status === 401 && onUnauthorized) {
+  // 401/400OAuth → 刷新 token 后重试（最多一次，refreshed 标志防止无限递归）
+  if (
+    !refreshed &&
+    (result.status === 401 || isOAuthTokenErrorResponse(result.status, result.data))
+  ) {
+    if (!onUnauthorized) throw classifyError(result.status, null, result.data);
     await refreshAuth();
-    return executeRequest<T>(method, path, data, signal);
-  }
-
-  // 400 OAuth → 同 401
-  if (isOAuthTokenErrorResponse(result.status, result.data)) {
-    if (onUnauthorized) {
-      await refreshAuth();
-      return executeRequest<T>(method, path, data, signal);
-    }
-    throw classifyError(result.status, null, result.data);
+    return executeRequest<T>(method, path, data, signal, true);
   }
 
   if (result.status >= 400) throw classifyError(result.status, null, result.data);
