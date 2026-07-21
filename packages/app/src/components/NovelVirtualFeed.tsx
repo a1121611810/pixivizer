@@ -8,6 +8,7 @@ import LoadingSpinner from "./LoadingSpinner";
 import ErrorDisplay from "./ErrorDisplay";
 import PullIndicator from "./PullIndicator";
 import type { PixivNovel, ApiError } from "../api/types";
+import { VIRTUAL_SCROLL_MARGIN } from "../primitives/rootMargins";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createComputedTextCard } from "../primitives/createComputedTextCard";
 import type { NovelLayoutMode } from "../stores/uiStore";
@@ -35,7 +36,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
   const mode = () => props.layoutMode ?? "list";
 
   const { attach: sentinelAttach } = createSentinelPaginator({
-    rootMargin: "0px 0px 30% 0px",
+    rootMargin: VIRTUAL_SCROLL_MARGIN,
     enabled: () => props.hasMore && !props.loading,
     onTrigger: () => props.onLoadMore(),
   });

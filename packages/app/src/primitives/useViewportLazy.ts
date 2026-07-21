@@ -1,4 +1,5 @@
 import { createSignal, createEffect, onMount, onCleanup } from "solid-js";
+import { LAZY_LOAD_MARGIN } from "./rootMargins";
 
 export interface ViewportLazyOptions {
   /** IntersectionObserver rootMargin，默认 "100px" */
@@ -38,7 +39,7 @@ export interface ViewportLazyResult {
  */
 export function createViewportLazy(options: ViewportLazyOptions = {}): ViewportLazyResult {
   const {
-    rootMargin = "100px",
+    rootMargin = LAZY_LOAD_MARGIN,
     initialVisible = false,
     externalVisible,
     skipObserver = false,

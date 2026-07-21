@@ -1,4 +1,5 @@
 import { onMount, onCleanup } from "solid-js";
+import { SENTINEL_MARGIN } from "./rootMargins";
 
 export interface SentinelPaginatorOptions {
   /**
@@ -55,7 +56,7 @@ export interface SentinelPaginatorResult {
 export function createSentinelPaginator(
   options: SentinelPaginatorOptions,
 ): SentinelPaginatorResult {
-  const { rootMargin = "200px", root, enabled, onTrigger } = options;
+  const { rootMargin = SENTINEL_MARGIN, root, enabled, onTrigger } = options;
 
   let el: HTMLDivElement | undefined;
 

@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 import PixivImage from "./PixivImage";
 import { createViewportLazy } from "../primitives/useViewportLazy";
+import { LAZY_LOAD_MARGIN } from "../primitives/rootMargins";
 
 interface Props {
   /** 用户设定质量的图片 URL（medium / large） */
@@ -22,7 +23,7 @@ interface Props {
  */
 const LazyDetailImage: Component<Props> = (props) => {
   const { everVisible, attach } = createViewportLazy({
-    rootMargin: "100px",
+    rootMargin: LAZY_LOAD_MARGIN,
     initialVisible:
       props.visiblePage !== undefined ? props.pageIndex <= props.visiblePage + 1 : false,
     externalVisible: () => {

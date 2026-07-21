@@ -2,6 +2,7 @@ import type { Component } from "solid-js";
 import ImageCard from "./ImageCard";
 import SkeletonCard from "./SkeletonCard";
 import type { PixivIllust } from "../api/types";
+import { LAZY_LOAD_MARGIN } from "../primitives/rootMargins";
 import { createViewportLazy } from "../primitives/useViewportLazy";
 import { parsePixivUrlDimensions } from "../utils/imageLoader";
 
@@ -38,7 +39,7 @@ function getSkeletonDimensions(illust: PixivIllust): { width: number; height: nu
  * 一旦变为可见则永久渲染（不回溯销毁），避免滚动抖动。
  */
 const LazyImageCard: Component<Props> = (props) => {
-  const { everVisible, attach } = createViewportLazy({ rootMargin: "100px" });
+  const { everVisible, attach } = createViewportLazy({ rootMargin: LAZY_LOAD_MARGIN });
 
   const skeletonDims = getSkeletonDimensions(props.illust);
 

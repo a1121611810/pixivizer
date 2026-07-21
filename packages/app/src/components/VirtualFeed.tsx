@@ -16,6 +16,7 @@ import PullIndicator from "./PullIndicator";
 import ErrorDisplay from "./ErrorDisplay";
 import type { PixivIllust, ApiError } from "../api/types";
 import type { LayoutMode } from "../primitives/types";
+import { VIRTUAL_SCROLL_MARGIN } from "../primitives/rootMargins";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { loadImage, checkImageCache } from "../utils/imageLoader";
 import { isImageHostEnabled } from "../stores/imageHostStore";
@@ -54,7 +55,7 @@ const CARD_INFO_HEIGHT = 140;
 
 const VirtualFeed: Component<Props> = (props) => {
   const { attach: sentinelAttach } = createSentinelPaginator({
-    rootMargin: "0px 0px 30% 0px",
+    rootMargin: VIRTUAL_SCROLL_MARGIN,
     enabled: () => props.hasMore && !props.loading,
     onTrigger: () => props.onLoadMore(),
   });
