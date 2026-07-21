@@ -3,7 +3,6 @@ import solid from "vite-plugin-solid";
 import UnoCSS from "unocss/vite";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import postcssPxToRem from "postcss-pxtorem";
 import pkg from "./package.json";
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
@@ -51,18 +50,6 @@ export default defineConfig({
     APP_VERSION: JSON.stringify(pkg.version),
     __CREDENTIALS__,
     __PUBLIC_CONFIG__,
-  },
-
-  css: {
-    postcss: {
-      plugins: [
-        postcssPxToRem({
-          rootValue: 16,
-          propList: ["font-size", "--fontSize*"],
-          minPixelValue: 2,
-        }),
-      ],
-    },
   },
 
   server: {
@@ -219,12 +206,12 @@ export default defineConfig({
           groups: [
             {
               name: "fluent-vendor",
-              test: /node_modules[/\\]@fluentui/,
+              test: /node_modules[\\/]@fluentui/,
               priority: 20,
             },
             {
               name: "tanstack-vendor",
-              test: /node_modules[/\\]@tanstack/,
+              test: /node_modules[\\/]@tanstack/,
               priority: 20,
             },
             {
