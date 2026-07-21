@@ -10,7 +10,6 @@ import {
   Match,
   For,
   onCleanup,
-  onMount,
   batch,
 } from "solid-js";
 import { useParams, useNavigate, useRouter, getRouteApi } from "@tanstack/solid-router";
@@ -21,6 +20,8 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import FluentIcon from "../components/ui/FluentIcon";
 import NovelSearchBar from "../components/NovelSearchBar";
 import { NOVEL_INTERACTIVE_MARGIN } from "../primitives/rootMargins";
+import { createScrollDirection } from "../primitives/createScrollDirection";
+import { createScrollPosition } from "@solid-primitives/scroll";
 import { createNovelSearch } from "../primitives/createNovelSearch";
 import { createNovelVirtualLayout } from "../primitives/createNovelVirtualLayout";
 import type { PixivNovel, SeriesNavigation } from "@/api/types";
@@ -56,7 +57,6 @@ import { recordVisit } from "../stores/historyStore";
 const routeApi = getRouteApi("/novel/$id");
 
 // ── Scroll-driven hide/show constants ──
-const HIDE_THRESHOLD = 30;
 const BOTTOM_THRESHOLD = 80;
 
 interface NovelProgress {
@@ -350,9 +350,6 @@ const NovelDetail: Component = () => {
 
   const [imageDimensions, setImageDimensions] = createSignal<NovelImageDimensions>({});
   const [footerHidden, setFooterHidden] = createSignal(false);
-  let lastScrollY = 0;
-  let accumulatedDelta = 0;
-  let scrollTicking = false;
 
   // 小说 ID 变化或图片映射重置时，清空已计算的内嵌图尺寸
   createEffect(() => {
@@ -592,57 +589,23 @@ const NovelDetail: Component = () => {
     }
   });
 
-  onMount(() => {
-    // ── Scroll-driven bottom toolbar hide/show ──
-    lastScrollY = window.scrollY;
-    accumulatedDelta = 0;
-    scrollTicking = false;
-
-    function onScroll() {
-      const currentY = window.scrollY;
-
-      // 底部区域：距页面底部不足 BOTTOM_THRESHOLD 时强制显示
-      const atBottom =
-        window.innerHeight + currentY >= document.documentElement.scrollHeight - BOTTOM_THRESHOLD;
-      if (atBottom) {
-        setFooterHidden(false);
-        accumulatedDelta = 0;
-        lastScrollY = currentY;
-        return;
-      }
-
-      const delta = currentY - lastScrollY;
-      lastScrollY = currentY;
-
-      // 程序化滚动（页面切换等），重置跟踪
-      if (Math.abs(delta) > 200) {
-        accumulatedDelta = 0;
-        return;
-      }
-
-      accumulatedDelta += delta;
-
-      if (accumulatedDelta > HIDE_THRESHOLD) {
-        setFooterHidden(true);
-        accumulatedDelta = 0;
-      } else if (accumulatedDelta < -HIDE_THRESHOLD) {
-        setFooterHidden(false);
-        accumulatedDelta = 0;
-      }
+  // ── Scroll-driven bottom toolbar hide/show ──
+  const { direction: scrollDirection, reset: resetScrollDirection } = createScrollDirection({
+    threshold: 30,
+    accumulate: true,
+  });
+  const scroll = createScrollPosition();
+  createEffect(() => {
+    const y = scroll.y;
+    const atBottom =
+      window.innerHeight + y >= document.documentElement.scrollHeight - BOTTOM_THRESHOLD;
+    if (atBottom) {
+      setFooterHidden(false);
+      return;
     }
-
-    function onScrollRaf() {
-      if (!scrollTicking) {
-        scrollTicking = true;
-        requestAnimationFrame(() => {
-          onScroll();
-          scrollTicking = false;
-        });
-      }
-    }
-
-    window.addEventListener("scroll", onScrollRaf, { passive: true });
-    onCleanup(() => window.removeEventListener("scroll", onScrollRaf));
+    const d = scrollDirection();
+    if (d === "down") setFooterHidden(true);
+    else if (d === "up") setFooterHidden(false);
   });
 
   function openSearch() {
@@ -660,8 +623,7 @@ const NovelDetail: Component = () => {
     closeSearch();
     scrollToTop();
     setFooterHidden(false);
-    accumulatedDelta = 0;
-    lastScrollY = window.scrollY;
+    resetScrollDirection();
   });
 
   const [showHeaderTitle, setShowHeaderTitle] = createSignal(false);

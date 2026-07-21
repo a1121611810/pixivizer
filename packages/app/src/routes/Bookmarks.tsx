@@ -9,9 +9,12 @@ import SettingsDrawer from "../components/SettingsDrawer";
 import IllustBookmarks from "./IllustBookmarks";
 import NovelBookmarks from "./NovelBookmarks";
 import { scrollToTop } from "../utils/scrollToTop";
+import { createScrollDrivenVisibility } from "../primitives/createScrollDrivenVisibility";
 
 const Bookmarks: Component = () => {
   const navigate = useNavigate();
+  const { visible: headerVisible, suppress: suppressHeaderVisibility } =
+    createScrollDrivenVisibility();
 
   onMount(() => {
     setCurrentTab("bookmarks");
@@ -22,7 +25,11 @@ const Bookmarks: Component = () => {
       <PageTransition>
         <div class="pb-16">
           <header
-            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4"
+            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+            classList={{
+              "translate-y-0": headerVisible(),
+              "-translate-y-full": !headerVisible(),
+            }}
             onDblClick={scrollToTop}
           >
             <h1
@@ -37,8 +44,11 @@ const Bookmarks: Component = () => {
             </h1>
           </header>
 
-          <Show when={contentType() === "illust"} fallback={<NovelBookmarks />}>
-            <IllustBookmarks />
+          <Show
+            when={contentType() === "illust"}
+            fallback={<NovelBookmarks suppressHeaderVisibility={suppressHeaderVisibility} />}
+          >
+            <IllustBookmarks suppressHeaderVisibility={suppressHeaderVisibility} />
           </Show>
         </div>
       </PageTransition>

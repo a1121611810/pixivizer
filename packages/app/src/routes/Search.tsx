@@ -4,7 +4,6 @@ import {
   createSignal,
   For,
   onCleanup,
-  onMount,
   Show,
   type Component,
 } from "solid-js";
@@ -14,6 +13,8 @@ import TagInput from "@/components/ui/TagInput";
 import { createSearchStore } from "@/stores/searchStore";
 import SearchResults from "@/components/SearchResults";
 import { createScrollRestore } from "@/primitives/createScrollRestore";
+import { createScrolledPast } from "@/primitives/createScrolledPast";
+import { createScrollDirection } from "@/primitives/createScrollDirection";
 import type { SearchScope, SearchSort } from "@/api/types";
 import PageTransition from "@/components/PageTransition";
 import { scrollToTop } from "@/utils/scrollToTop";
@@ -82,7 +83,8 @@ const Search: Component = () => {
   }
 
   // ── Back-to-top state & compact header state ──
-  const [showBackToTop, setShowBackToTop] = createSignal(false);
+  const BACK_TO_TOP_THRESHOLD = 300;
+  const showBackToTop = createScrolledPast(BACK_TO_TOP_THRESHOLD);
   const [showCompactHeader, setShowCompactHeader] = createSignal(false);
 
   // ── Scroll position restoration ──
@@ -92,35 +94,23 @@ const Search: Component = () => {
 
   onCleanup(() => scrollRestore.save());
 
-  // ── Scroll listener: back-to-top + compact header ──
-  let lastScrollY = 0;
+  // ── Scroll-driven compact header ──
   const SCROLL_HEADER_THRESHOLD = 150;
   const SCROLL_DIRECTION_DEADZONE = 10;
+  const pastHeaderThreshold = createScrolledPast(SCROLL_HEADER_THRESHOLD);
+  const { direction: scrollDirection } = createScrollDirection({
+    threshold: SCROLL_DIRECTION_DEADZONE,
+  });
 
-  onMount(() => {
-    const onScroll = () => {
-      const currentY = window.scrollY;
-
-      // Back-to-top
-      setShowBackToTop(currentY > 300);
-
-      // Compact header: show when scrolled past threshold AND scrolling up
-      if (
-        currentY > SCROLL_HEADER_THRESHOLD &&
-        lastScrollY - currentY > SCROLL_DIRECTION_DEADZONE
-      ) {
-        setShowCompactHeader(true);
-      } else if (
-        currentY <= SCROLL_HEADER_THRESHOLD ||
-        currentY - lastScrollY > SCROLL_DIRECTION_DEADZONE
-      ) {
-        setShowCompactHeader(false);
-      }
-
-      lastScrollY = currentY;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onCleanup(() => window.removeEventListener("scroll", onScroll));
+  createEffect(() => {
+    if (!pastHeaderThreshold()) {
+      setShowCompactHeader(false);
+      return;
+    }
+    const d = scrollDirection();
+    // Compact header: show when scrolled past threshold AND scrolling up
+    if (d === "up") setShowCompactHeader(true);
+    else if (d === "down") setShowCompactHeader(false);
   });
 
   // ── 从 URL word 参数同步到 tags + keyword ──

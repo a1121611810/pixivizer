@@ -29,6 +29,7 @@ import NovelFeedPage from "./NovelFeedPage";
 import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
 import { scrollToTop } from "../utils/scrollToTop";
+import { createScrollDrivenVisibility } from "../primitives/createScrollDrivenVisibility";
 
 interface Props {
   tab: Tab;
@@ -40,6 +41,8 @@ const TabFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
   const cached = isFeedCached(props.tab);
   const [isSwitchingSubTab, setIsSwitchingSubTab] = createSignal(false);
+  const { visible: headerVisible, suppress: suppressHeaderVisibility } =
+    createScrollDrivenVisibility();
   let abortController: AbortController | null = null;
 
   const filteredIllusts = createMemo<PixivIllust[]>(() => {
@@ -84,7 +87,11 @@ const TabFeedPage: Component<Props> = (props) => {
       <PageTransition>
         <div class="pb-16">
           <header
-            class="sticky top-0 z-20 surface-appbar h-12 flex items-center justify-between px-4"
+            class="sticky top-0 z-20 surface-appbar h-12 flex items-center justify-between px-4 transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+            classList={{
+              "translate-y-0": headerVisible(),
+              "-translate-y-full": !headerVisible(),
+            }}
             onDblClick={scrollToTop}
           >
             <h1
@@ -128,7 +135,10 @@ const TabFeedPage: Component<Props> = (props) => {
 
           {/* ── 关注页三层过滤 ── */}
           <Show when={props.tab === "follow" && contentType() === "illust"}>
-            <div class="sticky top-12 z-10 surface-appbar px-4 pb-2">
+            <div
+              class="sticky top-12 z-10 surface-appbar px-4 pb-2 transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+              classList={{ "translate-y-0": headerVisible(), "-translate-y-12": !headerVisible() }}
+            >
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
                 {[
                   { key: "all" as const, label: "全部" },
@@ -158,7 +168,10 @@ const TabFeedPage: Component<Props> = (props) => {
 
           {/* ── 推荐页子标签 ── */}
           <Show when={props.tab === "recommended" && contentType() === "illust"}>
-            <div class="sticky top-12 z-10 surface-appbar px-4 pb-2">
+            <div
+              class="sticky top-12 z-10 surface-appbar px-4 pb-2 transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+              classList={{ "translate-y-0": headerVisible(), "-translate-y-12": !headerVisible() }}
+            >
               <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1 gap-1">
                 {[
                   { key: "mixed" as RecommendSubTab, label: "综合" },
@@ -189,6 +202,7 @@ const TabFeedPage: Component<Props> = (props) => {
                         saveTabScroll(props.tab);
                         setRecommendSubTab(opt.key);
                         await ensureLoaded(abortController.signal);
+                        suppressHeaderVisibility();
                         window.scrollTo(0, getFeedScrollY(props.tab));
                       } finally {
                         setIsSwitchingSubTab(false);
@@ -202,7 +216,12 @@ const TabFeedPage: Component<Props> = (props) => {
             </div>
           </Show>
 
-          <Show when={contentType() === "illust"} fallback={<NovelFeedPage tab={props.tab} />}>
+          <Show
+            when={contentType() === "illust"}
+            fallback={
+              <NovelFeedPage tab={props.tab} suppressHeaderVisibility={suppressHeaderVisibility} />
+            }
+          >
             <VirtualFeed
               illusts={filteredIllusts()}
               loading={loading() || refreshing()}
@@ -214,6 +233,7 @@ const TabFeedPage: Component<Props> = (props) => {
               skipAnimation={cached}
               layoutMode={layoutMode()}
               scrollKey={props.tab}
+              suppressHeaderVisibility={suppressHeaderVisibility}
             />
           </Show>
         </div>

@@ -21,7 +21,11 @@ import { createSignal } from "solid-js";
 
 const r18Handler = () => refresh();
 
-const NovelBookmarks: Component = () => {
+interface Props {
+  suppressHeaderVisibility?: (durationMs?: number) => void;
+}
+
+const NovelBookmarks: Component<Props> = (props) => {
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = createSignal(false);
   const [sheetSeries, setSheetSeries] = createSignal<{
@@ -124,6 +128,7 @@ const NovelBookmarks: Component = () => {
         scrollKey="bookmarks"
         onSeriesClick={openSeriesSheet}
         layoutMode={novelLayoutMode()}
+        suppressHeaderVisibility={props.suppressHeaderVisibility}
       />
 
       <Show when={sheetSeries()}>

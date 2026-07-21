@@ -28,6 +28,7 @@ import { scrollToTop } from "../utils/scrollToTop";
 import ReportSheet from "../components/ReportSheet";
 import IllustTags from "../components/IllustTags";
 import CommentOverlay from "../components/CommentOverlay";
+import { createScrolledPast } from "../primitives/createScrolledPast";
 
 const routeApi = getRouteApi("/illust/$id");
 
@@ -39,7 +40,8 @@ const IllustDetail: Component = () => {
   const [viewerOpen, setViewerOpen] = createSignal(false);
   const [viewerStartPage, setViewerStartPage] = createSignal(0);
   const [currentVisiblePage, setCurrentVisiblePage] = createSignal(0);
-  const [showBackToTop, setShowBackToTop] = createSignal(false);
+  const BACK_TO_TOP_THRESHOLD = 300;
+  const showBackToTop = createScrolledPast(BACK_TO_TOP_THRESHOLD);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<ApiError | null>(null);
   const [bookmarking, setBookmarking] = createSignal(false);
@@ -337,17 +339,6 @@ const IllustDetail: Component = () => {
       containers.forEach((el) => pageObserver!.observe(el));
     });
   }
-
-  // Scroll listener — show back-to-top FAB after scrolling down
-  onMount(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 300);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    // Run once to set initial state
-    handleScroll();
-    onCleanup(() => window.removeEventListener("scroll", handleScroll));
-  });
 
   /** Parse Pixiv internal caption links and navigate in-app */
   function handleCaptionClick(e: MouseEvent) {

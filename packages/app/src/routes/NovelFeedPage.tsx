@@ -30,6 +30,7 @@ import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 
 interface Props {
   tab: Tab;
+  suppressHeaderVisibility?: (durationMs?: number) => void;
 }
 
 const NovelFeedPage: Component<Props> = (props) => {
@@ -105,6 +106,7 @@ const NovelFeedPage: Component<Props> = (props) => {
                       if (novelFollowTab() !== opt.key) {
                         saveTabScroll(props.tab);
                         setNovelFollowTab(opt.key);
+                        props.suppressHeaderVisibility?.();
                         window.scrollTo(0, getFeedScrollY(props.tab));
                       }
                     }}
@@ -128,6 +130,7 @@ const NovelFeedPage: Component<Props> = (props) => {
             scrollKey={props.tab}
             onSeriesClick={openSeriesSheet}
             layoutMode={novelLayoutMode()}
+            suppressHeaderVisibility={props.suppressHeaderVisibility}
           />
           <Show when={sheetSeries()}>
             {(s) => (

@@ -18,9 +18,12 @@ import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
+import { createScrollDrivenVisibility } from "../primitives/createScrollDrivenVisibility";
 const Feed: Component = () => {
   const navigate = useNavigate();
   const cached = isFeedCached();
+  const { visible: headerVisible, suppress: suppressHeaderVisibility } =
+    createScrollDrivenVisibility();
   let prevTab = currentTab();
 
   onMount(() => {
@@ -42,7 +45,13 @@ const Feed: Component = () => {
     <>
       <PageTransition>
         <div class="pb-16">
-          <header class="sticky top-0 z-20 surface-appbar h-12 flex items-center justify-between px-4">
+          <header
+            class="sticky top-0 z-20 surface-appbar h-12 flex items-center justify-between px-4 transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+            classList={{
+              "translate-y-0": headerVisible(),
+              "-translate-y-full": !headerVisible(),
+            }}
+          >
             <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
               Pictelio
             </h1>
@@ -74,6 +83,7 @@ const Feed: Component = () => {
             skipAnimation={cached}
             layoutMode={layoutMode()}
             scrollKey={cached ? currentTab() : undefined}
+            suppressHeaderVisibility={suppressHeaderVisibility}
           />
         </div>
       </PageTransition>

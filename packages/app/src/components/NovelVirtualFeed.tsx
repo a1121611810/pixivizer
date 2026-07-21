@@ -31,6 +31,8 @@ interface Props {
   onAuthorClick?: (userId: number) => void;
   scrollKey?: string;
   layoutMode?: NovelLayoutMode;
+  // 程序性滚动恢复期间抑制 header 显隐切换
+  suppressHeaderVisibility?: (durationMs?: number) => void;
 }
 
 const NovelVirtualFeed: Component<Props> = (props) => {
@@ -205,7 +207,8 @@ const NovelVirtualFeed: Component<Props> = (props) => {
   // ── Scroll restoration（显式恢复，见 ADR 0010） ──
   const scrollRestore = createVirtualScrollRestore({
     getVirtualizer: () => instance,
-    getState: () => (props.scrollKey ? (getNovelScrollState(props.scrollKey) ?? undefined) : undefined),
+    getState: () =>
+      props.scrollKey ? (getNovelScrollState(props.scrollKey) ?? undefined) : undefined,
     saveState: (state) => {
       if (props.scrollKey) {
         saveNovelScrollState(props.scrollKey, state);
@@ -264,6 +267,8 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     });
 
     // ── 滚动恢复：三层兜底（实现见 createVirtualScrollRestore） ──
+    // 恢复滚动前抑制 header 显隐，避免闪烁
+    props.suppressHeaderVisibility?.();
     scrollRestore.restoreScroll();
   });
 

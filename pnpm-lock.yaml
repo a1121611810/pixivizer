@@ -226,6 +226,12 @@ importers:
       '@fluentui/web-components':
         specifier: 3.0.2
         version: 3.0.2(@microsoft/fast-element@3.0.0)(@microsoft/focusgroup-polyfill@1.5.0)
+      '@solid-primitives/scheduled':
+        specifier: ^1.5.3
+        version: 1.5.3(solid-js@1.9.14)
+      '@solid-primitives/scroll':
+        specifier: ^2.1.6
+        version: 2.1.6(solid-js@1.9.14)
       '@tanstack/solid-db':
         specifier: ^0.2.30
         version: 0.2.30(solid-js@1.9.14)(typescript@6.0.3)
@@ -1630,6 +1636,11 @@ packages:
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
 
+  '@solid-primitives/event-listener@2.4.6':
+    resolution: {integrity: sha512-5I0YJcTVYIWoMmgBSROBZGcz+ymhew/pGTg2dHW74BUjFKsV8Li4bOZYl0YAGP4mHw5o4UBd9/BEesqBci3wxw==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
   '@solid-primitives/map@0.7.4':
     resolution: {integrity: sha512-zHWjQpcqxiXCuHb08GXJm3KnCTXOQNGMQu07CBOwtj9qCgjNUmwm5/UG+M2txQIPCbpY9rleAoOmEaQW4iaXMQ==}
     peerDependencies:
@@ -1637,6 +1648,26 @@ packages:
 
   '@solid-primitives/refs@1.1.4':
     resolution: {integrity: sha512-bLjwIs6ZPu8NQnuw04sU3Zc8qKSpbc0umUU/O4SHf6oWOdO4+dHY8vb1T7C4b/Tg103+9WGr6sEE0+NFlbaB/A==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/rootless@1.5.4':
+    resolution: {integrity: sha512-TOIZa1VUfVJ+9nkCcRajw3U4t9vBOP1HxX1WHNTbXq32mXwlqTvUnC4CRIilohcryBkT9u2ZkhUDSHRTaGp55g==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/scheduled@1.5.3':
+    resolution: {integrity: sha512-oNwLE6E6lxJAWrc8QXuwM0k2oU1BnANnkChwMw82aK1j3+mWGJkG1IFe5gCwbV+afYmjI76t9JJV3md/8tLw+g==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/scroll@2.1.6':
+    resolution: {integrity: sha512-0qXgveGKtmwLee4SxkEZhTxgGVu8p7Utpe1f1Y4zSKaJoIsIc+PqPFMMy3HjIvjfVOGeAtuVwHn+kxMkF+5VEg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/static-store@0.1.4':
+    resolution: {integrity: sha512-LgtVaVBtB7EbmS4+M0b8xY5Iq6pUWXBsIC4VgtrFKDGDdyCaDt88sHk0fUlx1Enxm/XZnZyLXJABRoa39RjJqA==}
     peerDependencies:
       solid-js: ^1.6.12
 
@@ -4811,12 +4842,38 @@ snapshots:
 
   '@shikijs/vscode-textmate@10.0.2': {}
 
+  '@solid-primitives/event-listener@2.4.6(solid-js@1.9.14)':
+    dependencies:
+      '@solid-primitives/utils': 6.4.1(solid-js@1.9.14)
+      solid-js: 1.9.14
+
   '@solid-primitives/map@0.7.4(solid-js@1.9.14)':
     dependencies:
       '@solid-primitives/trigger': 1.2.4(solid-js@1.9.14)
       solid-js: 1.9.14
 
   '@solid-primitives/refs@1.1.4(solid-js@1.9.14)':
+    dependencies:
+      '@solid-primitives/utils': 6.4.1(solid-js@1.9.14)
+      solid-js: 1.9.14
+
+  '@solid-primitives/rootless@1.5.4(solid-js@1.9.14)':
+    dependencies:
+      '@solid-primitives/utils': 6.4.1(solid-js@1.9.14)
+      solid-js: 1.9.14
+
+  '@solid-primitives/scheduled@1.5.3(solid-js@1.9.14)':
+    dependencies:
+      solid-js: 1.9.14
+
+  '@solid-primitives/scroll@2.1.6(solid-js@1.9.14)':
+    dependencies:
+      '@solid-primitives/event-listener': 2.4.6(solid-js@1.9.14)
+      '@solid-primitives/rootless': 1.5.4(solid-js@1.9.14)
+      '@solid-primitives/static-store': 0.1.4(solid-js@1.9.14)
+      solid-js: 1.9.14
+
+  '@solid-primitives/static-store@0.1.4(solid-js@1.9.14)':
     dependencies:
       '@solid-primitives/utils': 6.4.1(solid-js@1.9.14)
       solid-js: 1.9.14
@@ -7050,6 +7107,8 @@ time:
   '@fluentui/web-components@3.0.2': '2026-07-13T04:09:45.729Z'
   '@playwright/test@1.61.1': '2026-06-23T19:49:12.825Z'
   '@resvg/resvg-js@2.6.2': '2024-03-26T13:43:37.598Z'
+  '@solid-primitives/scheduled@1.5.3': '2026-02-21T23:06:15.746Z'
+  '@solid-primitives/scroll@2.1.6': '2026-07-04T20:38:40.812Z'
   '@solidjs/testing-library@0.8.10': '2024-09-25T13:24:08.486Z'
   '@tanstack/solid-db@0.2.30': '2026-07-16T21:41:40.407Z'
   '@tanstack/solid-query@5.101.2': '2026-06-27T20:31:44.420Z'

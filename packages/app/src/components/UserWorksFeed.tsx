@@ -19,6 +19,7 @@ interface Props {
   layoutMode?: LayoutMode;
   illustScrollState?: ScrollRestoreState;
   onIllustScrollStateChange?: (state: ScrollRestoreState) => void;
+  suppressHeaderVisibility?: (durationMs?: number) => void;
 }
 
 const UserWorksFeed: Component<Props> = (props) => {
@@ -48,6 +49,7 @@ const UserWorksFeed: Component<Props> = (props) => {
           layoutMode={props.layoutMode}
           initialScrollState={props.illustScrollState}
           onScrollStateChange={props.onIllustScrollStateChange}
+          suppressHeaderVisibility={props.suppressHeaderVisibility}
         />
       </div>
 
@@ -65,6 +67,7 @@ const UserWorksFeed: Component<Props> = (props) => {
             onNovelClick={props.onNovelClick}
             onLoadMore={props.onLoadMore}
             onRefresh={props.onRefresh}
+            suppressHeaderVisibility={props.suppressHeaderVisibility}
           />
         )}
       </div>

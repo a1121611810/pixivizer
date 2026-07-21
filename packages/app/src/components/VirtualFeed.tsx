@@ -42,6 +42,8 @@ interface Props {
   scrollKey?: string;
   initialScrollState?: ScrollRestoreState;
   onScrollStateChange?: (state: ScrollRestoreState) => void;
+  // 程序性滚动恢复期间抑制 header 显隐切换
+  suppressHeaderVisibility?: (durationMs?: number) => void;
 }
 
 const LAYOUT_COLUMNS: Record<LayoutMode, number> = {
@@ -163,7 +165,9 @@ const VirtualFeed: Component<Props> = (props) => {
   const scrollRestore = createVirtualScrollRestore({
     getVirtualizer: () => instance,
     getState: () =>
-      props.scrollKey ? (getFeedScrollState(props.scrollKey) ?? undefined) : props.initialScrollState,
+      props.scrollKey
+        ? (getFeedScrollState(props.scrollKey) ?? undefined)
+        : props.initialScrollState,
     saveState: (state) => {
       if (props.scrollKey) {
         saveFeedScrollState(props.scrollKey, state);
@@ -220,6 +224,8 @@ const VirtualFeed: Component<Props> = (props) => {
     onCleanup(() => cleanup?.());
 
     // ── 滚动恢复：三层兜底（实现见 createVirtualScrollRestore） ──
+    // 恢复滚动前抑制 header 显隐，避免闪烁
+    props.suppressHeaderVisibility?.();
     scrollRestore.restoreScroll();
   });
 

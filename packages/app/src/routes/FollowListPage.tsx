@@ -7,6 +7,7 @@ import SettingsDrawer from "../components/SettingsDrawer";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { SENTINEL_MARGIN } from "../primitives/rootMargins";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
+import { createScrollDrivenVisibility } from "../primitives/createScrollDrivenVisibility";
 import { scrollToTop } from "../utils/scrollToTop";
 import {
   users,
@@ -49,6 +50,7 @@ function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: stri
 const FollowListPage: Component<Props> = (props) => {
   const navigate = useNavigate();
   const router = useRouter();
+  const { visible: headerVisible } = createScrollDrivenVisibility();
 
   // 初始数据由路由 loader 加载；组件卸载时重置列表。
   onCleanup(() => {
@@ -67,7 +69,11 @@ const FollowListPage: Component<Props> = (props) => {
         <div class="pb-16">
           {/* Header */}
           <header
-            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3"
+            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3 transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+            classList={{
+              "translate-y-0": headerVisible(),
+              "-translate-y-full": !headerVisible(),
+            }}
             onDblClick={scrollToTop}
           >
             <fluent-button

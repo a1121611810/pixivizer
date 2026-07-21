@@ -18,7 +18,11 @@ import VirtualFeed from "../components/VirtualFeed";
 
 const r18Handler = () => refresh();
 
-const IllustBookmarks: Component = () => {
+interface Props {
+  suppressHeaderVisibility?: (durationMs?: number) => void;
+}
+
+const IllustBookmarks: Component<Props> = (props) => {
   const navigate = useNavigate();
 
   onMount(() => {
@@ -94,6 +98,7 @@ const IllustBookmarks: Component = () => {
         skipAnimation={true}
         layoutMode={layoutMode()}
         scrollKey="illust-bookmarks"
+        suppressHeaderVisibility={props.suppressHeaderVisibility}
       />
     </>
   );

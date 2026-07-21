@@ -1,7 +1,9 @@
-import { type Component, createEffect, createSignal, onMount, onCleanup } from "solid-js";
+import { type Component, createEffect, createSignal, onCleanup } from "solid-js";
 import { currentTab, setCurrentTab, autoHideNavBar } from "../stores/uiStore";
 import { useNavigate } from "@tanstack/solid-router";
 import FluentIcon, { type FluentIconName } from "./ui/FluentIcon";
+import { createScrolledPast } from "../primitives/createScrolledPast";
+import { createScrollDirection } from "../primitives/createScrollDirection";
 
 // ── Tab definitions ──
 type NavTab = "recommended" | "follow" | "bookmarks" | "history";
@@ -57,72 +59,37 @@ const NavBar: Component = () => {
   let swiped = false;
 
   // ── Scroll-driven compact/expand ──
-  let lastScrollY = 0;
   const HIDE_THRESHOLD = 20;
   const TOP_ZONE = 100;
-  let scrollTicking = false;
+  const { direction: scrollDirection, reset: resetScrollDirection } = createScrollDirection({
+    threshold: HIDE_THRESHOLD,
+  });
+  const pastTopZone = createScrolledPast(TOP_ZONE);
 
-  function onScroll() {
+  createEffect(() => {
     // 如果用户关闭了自动隐藏，始终展开
     if (!autoHideNavBar()) {
-      if (compact()) {
-        setCompact(false);
-      }
+      if (compact()) setCompact(false);
       return;
     }
-
-    const currentY = window.scrollY;
-
-    // TOP_ZONE 内始终展开
-    if (currentY < TOP_ZONE) {
-      if (compact()) {
-        setCompact(false);
-      }
-      lastScrollY = currentY;
-      return;
-    }
-
-    const delta = currentY - lastScrollY;
-    lastScrollY = currentY;
-
-    // 程序化跳转（如页面切换恢复滚动位置）跳过
-    if (Math.abs(delta) > 200) {
-      return;
-    }
-
-    // 直接根据滚动方向判断
-    if (delta >= HIDE_THRESHOLD && !compact()) {
-      setCompact(true);
-    } else if (delta <= -HIDE_THRESHOLD && compact()) {
+    // 顶部保护区内始终展开
+    if (!pastTopZone()) {
       setCompact(false);
+      return;
     }
-  }
-
-  function onScrollRaf() {
-    if (!scrollTicking) {
-      scrollTicking = true;
-      requestAnimationFrame(() => {
-        onScroll();
-        scrollTicking = false;
-      });
-    }
-  }
-
-  onMount(() => {
-    lastScrollY = window.scrollY;
-
-    window.addEventListener("scroll", onScrollRaf, { passive: true });
+    const d = scrollDirection();
+    if (d === "down") setCompact(true);
+    else if (d === "up") setCompact(false);
   });
 
   onCleanup(() => {
     clearTimeout(animTimer);
-    window.removeEventListener("scroll", onScrollRaf);
   });
 
   // Tab 切换时重置滚动跟踪
   createEffect(() => {
     currentTab();
-    lastScrollY = window.scrollY;
+    resetScrollDirection();
   });
 
   // ── 中心按钮触摸滑动检测 ──

@@ -19,12 +19,15 @@ import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
 import { layoutMode } from "../stores/uiStore";
 import { scrollToTop } from "../utils/scrollToTop";
+import { createScrollDrivenVisibility } from "../primitives/createScrollDrivenVisibility";
 
 const UserIllusts: Component = () => {
   const navigate = useNavigate();
   const router = useRouter();
   const params = useParams({ strict: false });
   const userId = () => Number(params().id);
+  const { visible: headerVisible, suppress: suppressHeaderVisibility } =
+    createScrollDrivenVisibility();
 
   // R18 开关切换时自动刷新
   onMount(() => {
@@ -53,7 +56,11 @@ const UserIllusts: Component = () => {
       <PageTransition>
         <div class="pb-16">
           <header
-            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3"
+            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3 transition-transform duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+            classList={{
+              "translate-y-0": headerVisible(),
+              "-translate-y-full": !headerVisible(),
+            }}
             onDblClick={scrollToTop}
           >
             <fluent-button
@@ -119,6 +126,7 @@ const UserIllusts: Component = () => {
               }
             }}
             layoutMode={layoutMode()}
+            suppressHeaderVisibility={suppressHeaderVisibility}
           />
         </div>
       </PageTransition>

@@ -7,6 +7,7 @@ import { Capacitor } from "@capacitor/core";
 import { unfollowUser, followUser } from "../api/illust";
 import { SENTINEL_MARGIN } from "../primitives/rootMargins";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
+import { createScrolledPast } from "../primitives/createScrolledPast";
 import { scrollToTop } from "../utils/scrollToTop";
 
 function AvatarFallback(props: { class?: string }) {
@@ -89,8 +90,8 @@ const PersonalCenter: Component<Props> = (props) => {
   const targetUserId = () => Number(props.userId || params().id || user()?.id || 0);
   const isSelf = () => targetUserId() === Number(user()?.id ?? 0);
   const displayUser = () => (isSelf() ? user() : viewedUser());
-  const [collapsed, setCollapsed] = createSignal(false);
   const COLLAPSE_THRESHOLD = 140;
+  const collapsed = createScrolledPast(COLLAPSE_THRESHOLD);
   const isNative = Capacitor.isNativePlatform();
   const [avatarDisplayUrl, setAvatarDisplayUrl] = createSignal("");
   const [profileAvatarErrored, setProfileAvatarErrored] = createSignal(false);
@@ -132,23 +133,6 @@ const PersonalCenter: Component<Props> = (props) => {
 
   onMount(() => {
     setCurrentTab("me");
-
-    // ── Scroll-driven header collapse ──
-    let scrollTicking = false;
-    function onScroll() {
-      setCollapsed(window.scrollY > COLLAPSE_THRESHOLD);
-    }
-    function onScrollRaf() {
-      if (!scrollTicking) {
-        scrollTicking = true;
-        requestAnimationFrame(() => {
-          onScroll();
-          scrollTicking = false;
-        });
-      }
-    }
-    window.addEventListener("scroll", onScrollRaf, { passive: true });
-    onCleanup(() => window.removeEventListener("scroll", onScrollRaf));
   });
 
   const { attach: sentinelAttach } = createSentinelPaginator({
