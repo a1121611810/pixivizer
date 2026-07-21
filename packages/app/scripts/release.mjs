@@ -399,147 +399,146 @@ async function main() {
   }
   console.log("");
 
-  // ── 3. 检查签名环境 ──
-  const keystorePassword = process.env.PICTELIO_KEYSTORE_PASSWORD;
-  const keyPassword = process.env.PICTELIO_KEY_PASSWORD;
-  const keystoreExists = await exists("android/app/pictelio-release.keystore");
-  const envErrors = [];
-  if (!keystorePassword) {
-    envErrors.push("缺少 PICTELIO_KEYSTORE_PASSWORD");
-  }
-  if (!keyPassword) {
-    envErrors.push("缺少 PICTELIO_KEY_PASSWORD");
-  }
-  if (!keystoreExists) {
-    envErrors.push("找不到 android/app/pictelio-release.keystore");
-  }
+  let completedSteps = [];
+  const step = (n, name, fn) => {
+    log(`▶ [${n}/8] ${name}...`);
+    return fn().then(
+      (r) => { completedSteps.push(n); ok(`[${n}/8] ${name} 完成`); return r; },
+      (e) => { throw Object.assign(e, { stepN: n, stepName: name }); },
+    );
+  };
 
-  if (envErrors.length > 0) {
-    console.error("环境错误：" + envErrors.join("；"));
-    console.error("请先在 ~/.zshrc 中设置 PICTELIO_KEYSTORE_PASSWORD 和 PICTELIO_KEY_PASSWORD");
-    process.exit(1);
-  }
-  ok("签名环境检查通过");
-  console.log("");
-
-  // ── 4. 更新版本号 ──
-  pkg.version = newVersion;
-  await writeText("package.json", JSON.stringify(pkg, null, 2) + "\n");
-  ok(`package.json 版本已更新为 ${newVersion}`);
-
-  await run("node", ["scripts/sync-android-version.mjs"]);
-  ok(`Android build.gradle 已同步 (versionCode: ${versionCode})`);
-
-  const changelogPath = `fastlane/metadata/android/en-US/changelogs/${versionCode}.txt`;
-  await mkdir(dirname(resolvePath(rootDir, changelogPath)), { recursive: true });
-  await writeText(changelogPath, changelog);
-  ok(`Changelog 已写入 ${changelogPath}`);
-
-  const verJson =
-    JSON.stringify(
-      {
-        version: newVersion,
-        url: `https://github.com/a1121611810/pixivizer/releases/tag/${tag}`,
-        changelog: changelog.slice(0, 200),
-      },
-      null,
-      2,
-    ) + "\n";
-  await mkdir(dirname(resolvePath(rootDir, "../../packages/website/version.json")), {
-    recursive: true,
+  await step(1, "检查签名环境", async () => {
+    const keystorePassword = process.env.PICTELIO_KEYSTORE_PASSWORD;
+    const keyPassword = process.env.PICTELIO_KEY_PASSWORD;
+    const keystoreExists = await exists("android/app/pictelio-release.keystore");
+    const envErrors = [];
+    if (!keystorePassword) envErrors.push("缺少 PICTELIO_KEYSTORE_PASSWORD");
+    if (!keyPassword) envErrors.push("缺少 PICTELIO_KEY_PASSWORD");
+    if (!keystoreExists) envErrors.push("找不到 android/app/pictelio-release.keystore");
+    if (envErrors.length > 0) {
+      console.error("[release] 环境错误：" + envErrors.join("；"));
+      console.error("[release] 请先在 ~/.zshrc 中设置 PICTELIO_KEYSTORE_PASSWORD 和 PICTELIO_KEY_PASSWORD");
+      process.exit(1);
+    }
   });
-  await writeText("../../packages/website/version.json", verJson);
-  await mkdir(dirname(resolvePath(rootDir, "../../website/version.json")), { recursive: true });
-  await writeText("../../website/version.json", verJson);
-  ok(`version.json 已更新 (${newVersion})`);
-  console.log("");
 
-  // ── 5. 构建 APK ──
-  const buildSteps = [
-    ["同步 Android 版本", "pnpm", ["run", "sync:android-version"]],
-    ["同步 OAuth 配置", "pnpm", ["run", "sync:credentials"]],
-    ["构建 Web 产物", "pnpm", ["run", "build"]],
-    ["同步 Capacitor 资源", "pnpm", ["run", "cap:sync"]],
-    [
-      "编译 Release APK",
-      "./gradlew",
-      ["assembleRelease"],
-      {
+  await step(2, "更新版本号", async () => {
+    pkg.version = newVersion;
+    await writeText("package.json", JSON.stringify(pkg, null, 2) + "\n");
+    await run("node", ["scripts/sync-android-version.mjs"]);
+    const changelogPath = `fastlane/metadata/android/en-US/changelogs/${versionCode}.txt`;
+    await mkdir(dirname(resolvePath(rootDir, changelogPath)), { recursive: true });
+    await writeText(changelogPath, changelog);
+    const verJson = JSON.stringify({ version: newVersion, url: `https://github.com/a1121611810/pixivizer/releases/tag/${tag}`, changelog: changelog.slice(0, 200) }, null, 2) + "\n";
+    await mkdir(dirname(resolvePath(rootDir, "../../packages/website/version.json")), { recursive: true });
+    await writeText("../../packages/website/version.json", verJson);
+    await mkdir(dirname(resolvePath(rootDir, "../../website/version.json")), { recursive: true });
+    await writeText("../../website/version.json", verJson);
+  });
+
+  await step(3, "构建 APK", async () => {
+    const buildSteps = [
+      ["同步 Android 版本", "pnpm", ["run", "sync:android-version"]],
+      ["同步 OAuth 配置", "pnpm", ["run", "sync:credentials"]],
+      ["构建 Web 产物", "pnpm", ["run", "build"]],
+      ["同步 Capacitor 资源", "pnpm", ["run", "cap:sync"]],
+      ["编译 Release APK", "./gradlew", ["assembleRelease"], {
         cwd: resolvePath(rootDir, "android"),
         stdio: "inherit",
         env: { ...process.env, GRADLE_USER_HOME: resolvePath(rootDir, "android", ".gradle") },
-      },
-    ],
-  ];
-  const buildStart = Date.now();
-  for (const [label, cmd, args, opts] of buildSteps) {
-    if (cmd === "./gradlew") {
-      const gradleOpts = opts || {};
-      try {
-        await runBuildStep(label, cmd, args, gradleOpts);
-      } catch {
-        const retryArgs = [...args, "--stacktrace"];
-        log("Gradle 构建失败，重试并输出详细堆栈...");
-        await runBuildStep(`${label}（详细堆栈）`, cmd, retryArgs, gradleOpts);
+      }],
+    ];
+    const buildStart = Date.now();
+    for (const [label, cmd, args, opts] of buildSteps) {
+      if (cmd === "./gradlew") {
+        try {
+          await runBuildStep(label, cmd, args, opts);
+        } catch {
+          log("Gradle 构建失败，重试并输出详细堆栈...");
+          await runBuildStep(`${label}（详细堆栈）`, cmd, [...args, "--stacktrace"], opts);
+        }
+      } else {
+        await runBuildStep(label, cmd, args, opts || {});
       }
-    } else {
-      await runBuildStep(label, cmd, args, opts || {});
     }
-  }
-  const buildTotal = ((Date.now() - buildStart) / 1000).toFixed(1);
-  ok(`APK 构建成功 (总耗时 ${buildTotal}s)`);
+    const buildTotal = ((Date.now() - buildStart) / 1000).toFixed(1);
+    const apkExists = await exists(apkPath);
+    if (!apkExists) throw new Error(`APK 未生成: ${apkPath}`);
+    log(`APK 构建耗时 ${buildTotal}s，产物: ${resolvePath(rootDir, apkPath)}`);
+  });
 
-  // ── 6. 验证 APK ──
-  const apkExists = await exists(apkPath);
-  if (!apkExists) {
-    console.error(`错误：APK 未生成 (${apkPath})`);
-    process.exit(1);
-  }
-  ok(`APK 就绪: ${resolvePath(rootDir, apkPath)}`);
-  console.log("");
+  await step(4, "Git 提交 + Tag", async () => {
+    await run("git", ["add", "-A"]);
+    await run("git", ["commit", "-m", `chore: bump version to ${newVersion}`, "-m", changelog]);
+    await run("git", ["tag", "-a", tag, "-m", title]);
+  });
 
-  // ── 7. Git 提交 + Tag ──
-  await run("git", ["add", "-A"]);
-  await run("git", ["commit", "-m", `chore: bump version to ${newVersion}`, "-m", changelog]);
-  await run("git", ["tag", "-a", tag, "-m", title]);
-  ok(`Git 已提交并打标签 ${tag}`);
-  console.log("");
+  await step(5, "推送到 GitHub", async () => {
+    let lastErr;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await run("git", ["push", "origin", "main", "--tags"]);
+        return;
+      } catch (e) {
+        lastErr = e;
+        if (attempt < 3) {
+          const delay = Math.min(1000 * 2 ** (attempt - 1), 4000);
+          log(`git push 失败（第 ${attempt} 次），${delay / 1000}s 后重试...`);
+          await new Promise((r) => setTimeout(r, delay));
+        }
+      }
+    }
+    throw lastErr;
+  });
 
-  // ── 8. 推送到 GitHub ──
-  log("推送到远程...");
-  await run("git", ["push", "origin", "main", "--tags"]);
-  ok("已推送到 GitHub");
-  console.log("");
+  await step(6, "创建 GitHub Release", async () => {
+    const apkAbs = resolvePath(rootDir, apkPath);
+    const repo = getRepoSlug();
+    let notesFile, tmpDir;
+    try {
+      tmpDir = await mkdtemp(resolvePath(tmpdir(), "pictelio-release-"));
+      notesFile = resolvePath(tmpDir, "release-notes.md");
+      await writeFile(notesFile, changelog, "utf-8");
 
-  // ── 9. 创建 GitHub Release 并上传 APK ──
-  log("创建 GitHub Release...");
-  const apkAbs = resolvePath(rootDir, apkPath);
-  const repo = getRepoSlug();
-
-  let notesFile;
-  let tmpDir;
-  try {
-    tmpDir = await mkdtemp(resolvePath(tmpdir(), "pictelio-release-"));
-    notesFile = resolvePath(tmpDir, "release-notes.md");
-    await writeFile(notesFile, changelog, "utf-8");
-
-    await new Promise((resolve, reject) => {
-      const child = execFile(
-        "gh",
-        ["release", "create", tag, "--repo", repo, "--title", title, "--notes-file", notesFile, apkAbs],
-        { cwd: rootDir, stdio: "inherit" },
-      );
-      child.on("error", reject);
-      child.on("close", (code) =>
-        code === 0 ? resolve() : reject(new Error(`gh release create exited with code ${code}`)),
-      );
-    });
-  } finally {
-    await unlink(notesFile).catch(() => {});
-    await rmdir(tmpDir).catch(() => {});
-  }
-
-  ok(`GitHub Release ${tag} 发布成功！`);
+      let lastErr;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          await new Promise((resolve, reject) => {
+            const child = execFile(
+              "gh",
+              ["release", "create", tag, "--repo", repo, "--title", title, "--notes-file", notesFile, apkAbs],
+              { cwd: rootDir, stdio: "inherit" },
+            );
+            child.on("error", reject);
+            child.on("close", (code) => code === 0 ? resolve() : reject(new Error(`exit code ${code}`)));
+          });
+          return;
+        } catch (e) {
+          lastErr = e;
+          if (e.message?.includes("already exists")) {
+            log("Release 已存在，尝试上传 APK 到已有 release...");
+            await new Promise((resolve, reject) => {
+              const child = execFile("gh", ["release", "upload", tag, "--repo", repo, "--clobber", apkAbs], { cwd: rootDir, stdio: "inherit" });
+              child.on("error", reject);
+              child.on("close", (code) => code === 0 ? resolve() : reject(new Error(`gh release upload exit code ${code}`)));
+            });
+            return;
+          }
+          if (attempt < 3) {
+            const delay = Math.min(1000 * 2 ** (attempt - 1), 4000);
+            log(`gh release create 失败（第 ${attempt} 次），${delay / 1000}s 后重试...`);
+            await new Promise((r) => setTimeout(r, delay));
+          }
+        }
+      }
+      if (lastErr) { lastErr.relTag = tag; lastErr.relTitle = title; }
+      throw lastErr;
+    } finally {
+      await unlink(notesFile).catch(() => {});
+      await rmdir(tmpDir).catch(() => {});
+    }
+  });
 
   console.log("");
   console.log("=".repeat(50));
@@ -553,9 +552,22 @@ async function main() {
 
 main().catch((error) => {
   console.error(`\n[release] ❌ 发布流程失败`);
-  console.error(`   ${error.message}`);
-  console.error(
-    `\n提示: 检查上方输出了解详细错误。如果问题持续，可以运行 pnpm run build:android:release 单独测试构建步骤。`,
-  );
+  if (error.stepName) {
+    console.error(`   失败步骤: [${error.stepN}/8] ${error.stepName}`);
+    console.error(`   错误: ${error.message}`);
+    if (error.stepN < 6) {
+      console.error(`\n   已完成的步骤: ${error.stepN - 1}/8`);
+      console.error(`   重试即可覆盖，git 尚未推送，无残留`);
+    } else if (error.stepN === 6) {
+      const repoKey = getRepoSlug();
+      console.error(`\n   已完成的步骤: 5/8`);
+      console.error(`   git 已推送但 GitHub Release 创建失败。手动恢复:`);
+      console.error(`     gh release create ${error.relTag || "vX.Y.Z"} --repo ${repoKey} --title "${error.relTitle || "Pictelio"}" --notes "见下方 changelog" packages/app/android/app/build/outputs/apk/release/app-release.apk`);
+      console.error(`   或如果 release 已存在但缺 APK:`);
+      console.error(`     gh release upload ${error.relTag || "vX.Y.Z"} --repo ${repoKey} --clobber packages/app/android/app/build/outputs/apk/release/app-release.apk`);
+    }
+  } else {
+    console.error(`   ${error.message}`);
+  }
   process.exit(1);
 });
