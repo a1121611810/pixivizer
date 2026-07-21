@@ -1,5 +1,5 @@
 {
-  "version": "3.11.1",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.11.1",
-  "changelog": "🐛 修复\n  fix: resolve test failures with proper mocks and browser mode support\n  fix: resolve 68 TypeScript type errors across 35 files\n🧹 杂项\n  chore: bump dependencies and add Fluent JSX type declarat"
+  "version": "3.12.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.12.0",
+  "changelog": "♻️ 重构\n  refactor(config): unify JS/Java config into single credentials.json5 source\n  refactor: extract sendRequest transport layer, delegate retry to TanStack Query\n🐛 修复\n  fix: clear native timeout "
 }
