@@ -1,5 +1,5 @@
 {
-  "version": "3.14.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.14.0",
-  "changelog": "✨ 新功能\n  feat(android): add WebView warmup on Application.onCreate"
+  "version": "3.15.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.15.0",
+  "changelog": "✨ 新功能\n  feat(scroll): unify scroll-driven UI visibility with @solid-primitives\n  feat(nav): migrate search entry from floating FAB to NavBar center button\n🐛 修复\n  fix(feed): restore novel feed scroll "
 }
