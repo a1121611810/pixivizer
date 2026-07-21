@@ -86,14 +86,22 @@ function runWithSpinner(label, cmd, argsArr, opts = {}) {
   }, 1000);
 
   return new Promise((resolve, reject) => {
-    const child = execFile(cmd, argsArr, { cwd: rootDir, stdio: ["pipe", "pipe", "pipe"], ...opts });
+    const child = execFile(cmd, argsArr, {
+      cwd: rootDir,
+      stdio: ["pipe", "pipe", "pipe"],
+      ...opts,
+    });
     child.stdout.on("data", (d) => process.stdout.write(d));
     child.stderr.on("data", (d) => {
       spinner.stop();
       process.stderr.write(d);
       spinner.start();
     });
-    child.on("error", (e) => { clearInterval(timer); spinner.stop(); reject(e); });
+    child.on("error", (e) => {
+      clearInterval(timer);
+      spinner.stop();
+      reject(e);
+    });
     child.on("close", (code) => {
       clearInterval(timer);
       const elapsed = ((Date.now() - start) / 1000).toFixed(1);
@@ -418,8 +426,14 @@ async function main() {
   const step = (n, name, fn) => {
     log(`▶ [${n}/6] ${name}...`);
     return fn().then(
-      (r) => { completedSteps.push(n); ok(`[${n}/6] ${name} 完成`); return r; },
-      (e) => { throw Object.assign(e, { stepN: n, stepName: name }); },
+      (r) => {
+        completedSteps.push(n);
+        ok(`[${n}/6] ${name} 完成`);
+        return r;
+      },
+      (e) => {
+        throw Object.assign(e, { stepN: n, stepName: name });
+      },
     );
   };
 
@@ -433,7 +447,9 @@ async function main() {
     if (!keystoreExists) envErrors.push("找不到 android/app/pictelio-release.keystore");
     if (envErrors.length > 0) {
       console.error("[release] 环境错误：" + envErrors.join("；"));
-      console.error("[release] 请先在 ~/.zshrc 中设置 PICTELIO_KEYSTORE_PASSWORD 和 PICTELIO_KEY_PASSWORD");
+      console.error(
+        "[release] 请先在 ~/.zshrc 中设置 PICTELIO_KEYSTORE_PASSWORD 和 PICTELIO_KEY_PASSWORD",
+      );
       process.exit(1);
     }
   });
@@ -445,8 +461,19 @@ async function main() {
     const changelogPath = `fastlane/metadata/android/en-US/changelogs/${versionCode}.txt`;
     await mkdir(dirname(resolvePath(rootDir, changelogPath)), { recursive: true });
     await writeText(changelogPath, changelog);
-    const verJson = JSON.stringify({ version: newVersion, url: `https://github.com/a1121611810/pixivizer/releases/tag/${tag}`, changelog: changelog.slice(0, 200) }, null, 2) + "\n";
-    await mkdir(dirname(resolvePath(rootDir, "../../packages/website/version.json")), { recursive: true });
+    const verJson =
+      JSON.stringify(
+        {
+          version: newVersion,
+          url: `https://github.com/a1121611810/pixivizer/releases/tag/${tag}`,
+          changelog: changelog.slice(0, 200),
+        },
+        null,
+        2,
+      ) + "\n";
+    await mkdir(dirname(resolvePath(rootDir, "../../packages/website/version.json")), {
+      recursive: true,
+    });
     await writeText("../../packages/website/version.json", verJson);
     await mkdir(dirname(resolvePath(rootDir, "../../website/version.json")), { recursive: true });
     await writeText("../../website/version.json", verJson);
@@ -457,10 +484,15 @@ async function main() {
       ["同步 OAuth 配置", "pnpm", ["run", "sync:credentials"]],
       ["构建 Web 产物", "pnpm", ["run", "build"]],
       ["同步 Capacitor 资源", "pnpm", ["run", "cap:sync"]],
-      ["编译 Release APK", "./gradlew", ["assembleRelease"], {
-        cwd: resolvePath(rootDir, "android"),
-        env: { ...process.env, GRADLE_USER_HOME: resolvePath(rootDir, "android", ".gradle") },
-      }],
+      [
+        "编译 Release APK",
+        "./gradlew",
+        ["assembleRelease"],
+        {
+          cwd: resolvePath(rootDir, "android"),
+          env: { ...process.env, GRADLE_USER_HOME: resolvePath(rootDir, "android", ".gradle") },
+        },
+      ],
     ];
     const total = buildSteps.length;
     for (let i = 0; i < total; i++) {
@@ -492,7 +524,12 @@ async function main() {
     let lastErr;
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        await runWithSpinner(`git push (第 ${attempt} 次)`, "git", ["push", "origin", "main", "--tags"]);
+        await runWithSpinner(`git push (第 ${attempt} 次)`, "git", [
+          "push",
+          "origin",
+          "main",
+          "--tags",
+        ]);
         return;
       } catch (e) {
         lastErr = e;
@@ -516,16 +553,26 @@ async function main() {
 
       // 预检：release 是否已存在
       let exists = false;
-      try { runOutput("gh", ["release", "view", tag, "--repo", repo]); exists = true; } catch {}
+      try {
+        runOutput("gh", ["release", "view", tag, "--repo", repo]);
+        exists = true;
+      } catch {}
 
       // 第一步：创建 Release（不传 APK，只需 API 调用，~1s）
       if (!exists) {
         for (let attempt = 1; attempt <= 3; attempt++) {
           try {
-            await runWithSpinner(
-              `gh release create (第 ${attempt} 次)`,
-              "gh", ["release", "create", tag, "--repo", repo, "--title", title, "--notes-file", notesFile],
-            );
+            await runWithSpinner(`gh release create (第 ${attempt} 次)`, "gh", [
+              "release",
+              "create",
+              tag,
+              "--repo",
+              repo,
+              "--title",
+              title,
+              "--notes-file",
+              notesFile,
+            ]);
             break;
           } catch (e) {
             if (attempt >= 3) {
@@ -544,7 +591,15 @@ async function main() {
       let uploadErr;
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          await runWithSpinner(`上传 APK (第 ${attempt} 次)`, "gh", ["release", "upload", tag, "--repo", repo, "--clobber", apkAbs]);
+          await runWithSpinner(`上传 APK (第 ${attempt} 次)`, "gh", [
+            "release",
+            "upload",
+            tag,
+            "--repo",
+            repo,
+            "--clobber",
+            apkAbs,
+          ]);
           uploadErr = null;
           break;
         } catch (e) {
@@ -592,7 +647,9 @@ main().catch((error) => {
       console.error(`\n   已完成的步骤: 5/6`);
       console.error(`   git 已推送但 GitHub Release 创建/上传失败。手动恢复:`);
       console.error(`     1. 创建 Release:`);
-      console.error(`        gh release create ${relTag} --repo ${repoKey} --title "${error.relTitle || `Pictelio ${relTag}`}" --notes "见下方 changelog"`);
+      console.error(
+        `        gh release create ${relTag} --repo ${repoKey} --title "${error.relTitle || `Pictelio ${relTag}`}" --notes "见下方 changelog"`,
+      );
       console.error(`     2. 上传 APK（若 release 已存在可跳过第 1 步）:`);
       console.error(`        gh release upload ${relTag} --repo ${repoKey} --clobber ${apkRel}`);
     }
