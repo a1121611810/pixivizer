@@ -60,17 +60,25 @@ const GridCard: Component<Props> = (props) => {
         {/* Badges — top-left */}
         <div class="absolute top-1 left-1 flex items-center gap-[var(--spacingHorizontalXXS)] pointer-events-none select-none z-1 flex-wrap">
           {props.illust.x_restrict === 1 && (
-            <fluent-badge appearance="filled" color="danger" style="font-size:10px">
+            <fluent-badge
+              appearance="filled"
+              color="danger"
+              style="font-size:var(--fontSizeBase100)"
+            >
               R-18
             </fluent-badge>
           )}
           {props.illust.x_restrict === 2 && (
-            <fluent-badge appearance="filled" color="warning" style="font-size:10px">
+            <fluent-badge
+              appearance="filled"
+              color="warning"
+              style="font-size:var(--fontSizeBase100)"
+            >
               R-18G
             </fluent-badge>
           )}
           {props.illust.illust_ai_type != null && props.illust.illust_ai_type > 1 && (
-            <fluent-badge appearance="filled" style="font-size:10px">
+            <fluent-badge appearance="filled" style="font-size:var(--fontSizeBase100)">
               {props.illust.illust_ai_type === 2 ? "AI" : "AI辅"}
             </fluent-badge>
           )}
@@ -78,7 +86,7 @@ const GridCard: Component<Props> = (props) => {
         {/* Multi-page indicator */}
         {props.illust.page_count > 1 && (
           <div class="absolute bottom-1 left-1">
-            <fluent-badge appearance="subtle" style="font-size:10px">
+            <fluent-badge appearance="subtle" style="font-size:var(--fontSizeBase100)">
               📄 {props.illust.page_count}
             </fluent-badge>
           </div>

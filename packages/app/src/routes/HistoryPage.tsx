@@ -453,7 +453,7 @@ const HistoryPage: Component = () => {
                           style={{
                             top: "2px",
                             left: "2px",
-                            "font-size": "9px",
+                            "font-size": "var(--fontSizeBase100)",
                             padding: "1px 3px",
                             background: "var(--colorDangerBackground)",
                             color: "var(--colorDangerForeground)",

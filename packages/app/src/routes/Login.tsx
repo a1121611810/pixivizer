@@ -153,7 +153,7 @@ const Login: Component = () => {
           <Show when={isNative}>
             <fluent-button
               appearance="primary"
-              style="width:100%;--block-size:50px;font-size:15px;font-weight:600"
+              style="width:100%;--block-size:50px;font-size:var(--fontSizeBase300);font-weight:600"
               disabled={submitting()}
               onClick={handleOAuthStart}
             >
@@ -163,7 +163,7 @@ const Login: Component = () => {
             <Show when={!showAdvanced}>
               <fluent-button
                 appearance="subtle"
-                style="width:100%;--block-size:50px;font-size:14px"
+                style="width:100%;--block-size:50px;font-size:var(--fontSizeBase300)"
                 onClick={() => setShowAdvanced(true)}
               >
                 使用 refresh_token
@@ -186,7 +186,7 @@ const Login: Component = () => {
               </Show>
               <fluent-button
                 appearance="primary"
-                style="width:100%;--block-size:50px;font-size:15px;font-weight:600"
+                style="width:100%;--block-size:50px;font-size:var(--fontSizeBase300);font-weight:600"
                 disabled={submitting() || !tokenInput().trim()}
                 onClick={handleSubmit}
               >
@@ -198,7 +198,7 @@ const Login: Component = () => {
           <Show when={!isNative && !showAdvanced}>
             <fluent-button
               appearance="primary"
-              style="width:100%;--block-size:50px;font-size:15px;font-weight:600"
+              style="width:100%;--block-size:50px;font-size:var(--fontSizeBase300);font-weight:600"
               onClick={() => setShowAdvanced(true)}
             >
               使用 refresh_token 登录

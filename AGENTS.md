@@ -10,7 +10,7 @@
 - **路由**: `/login` `/recommended` `/following` `/illust/$id` `/novel/$id` `/bookmarks` `/me` `/user/$id` `/user/$id/illusts` `/user/$id/following` `/user/$id/followers` `/history` `/about` `/image-host` `/image-cache` `/age-confirmation` `/debug`
 - **设计系统**: **强制** Microsoft Fluent Design System 2 — 所有视觉和交互决策基于 Fluent 令牌和规范（详见「Fluent Design 规范」章节）
 - **Pixiv API**: 自建 HTTP 客户端 (`src/api/client.ts` + `src/api/queryClient.ts`)，双模式（Web: fetch + Vite 代理 / Native: CapacitorHttp 直连 + `src/native/PictelioHttp.ts`），iOS OAuth 凭证策略（Android 已弃用），401 自动刷新 + 防死循环
-- **CSS 架构**: 分层加载 `reset.css` → `tokens.css` → `base.css` → `virtual:uno.css`；PostCSS `postcss-pxtorem` 自动转换字号为 rem；Fluent Web Components 主题同步
+- **CSS 架构**: 分层加载 `reset.css` → `tokens.css` → `base.css` → `virtual:uno.css`；字号通过 UnoCSS preflights 以流体 `clamp(rem + vw)` 定义（见 `uno.config.ts`），无需构建期转换；Fluent Web Components 主题同步
 - **构建工具**: 使用 `vite-plus`（内部封装 Vite + oxlint + oxfmt + vitest），通过 `vp` CLI 统一执行 dev/build/check/test/lint/fmt
 
 ## 代码智能规范（Code Intelligence）
@@ -267,7 +267,7 @@ packages/app/src/
 │   ├── reset.css       # modern-css-reset 定制
 │   ├── tokens.css      # Fluent Design System 2 设计令牌（颜色、间距、圆角、阴影、字体、动画曲线/时长）
 │   └── base.css        # 根样式、滚动条、选中色、动画关键帧、reduced-motion
-├── types/              # 环境类型声明（spark-md5、postcss-pxtorem、env）
+├── types/              # 环境类型声明（spark-md5、env）
 ├── stores/             # SolidJS 响应式状态（createSignal + createStore 导出）
 │   ├── authStore.ts    # 登录状态（isLoggedIn、user、token、自动恢复、onUnauthorized 处理器）
 │   ├── backGestureStore.ts # Android 返回手势状态管理
@@ -418,9 +418,11 @@ packages/app/src/
 
 ### 设计令牌
 
-- 颜色、间距、圆角、阴影、字体大小**必须**使用 `src/styles/tokens.css` 中定义的 CSS 变量
+- 颜色、间距、圆角、阴影、字体大小**必须**使用 `src/styles/tokens.css` 或 UnoCSS preflights 中定义的 CSS 变量
 - **禁止**硬编码具体值（`#xxx`、`rgb()`、`px`/`rem` 字面量）
-- 确需新增令牌时，来源必须是 [Fluent 2 官方设计令牌](https://fluent2.microsoft.design/design-tokens)，在 `src/styles/tokens.css` 的 `:root` 中声明后使用
+- 视觉令牌（颜色、间距、圆角、阴影）：在 `src/styles/tokens.css` 的 `:root` 中声明后使用
+- 排版令牌（`--fontSizeBase*`）：在 `uno.config.ts` 的 `preflights` 中以流体 `clamp(rem + vw)` 定义，构建期零转换
+- 确需新增令牌时，来源必须是 [Fluent 2 官方设计令牌](https://fluent2.microsoft.design/design-tokens)
 - UnoCSS shortcuts 统一在 `uno.config.ts` 中定义
 - `@fluentui/web-components` 的 `setTheme()` 在 `main.tsx` 中根据 `<html>` 的 `dark` class 实时同步亮/暗主题
 

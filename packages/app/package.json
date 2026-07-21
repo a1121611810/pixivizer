@@ -69,7 +69,6 @@
     "json5": "^2.2.3",
     "modern-css-reset": "^1.4.0",
     "playwright": "^1.61.1",
-    "postcss-pxtorem": "^6.1.0",
     "typescript": "^6.0.3",
     "unocss": "^66.7.5",
     "vite": "^8.1.5",

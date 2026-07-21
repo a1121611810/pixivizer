@@ -10,12 +10,7 @@
     "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
 
   /* ── Font sizes (Fluent type ramp) ── */
-  --fontSizeBase100: 10px; /* Caption 2 */
-  --fontSizeBase200: 12px; /* Caption 1 */
-  --fontSizeBase300: 14px; /* Body 1 */
-  --fontSizeBase400: 16px; /* Body 2 / Subtitle 2 */
-  --fontSizeBase500: 20px; /* Subtitle 1 */
-  --fontSizeBase600: 24px; /* Title 3 */
+  /* Note: --fontSizeBase100..600 are defined via UnoCSS preflights as fluid clamp(rem+vw) */
   --fontSizeHero700: clamp(24px, 1.2vw + 20px, 28px); /* Title 2 */
   --fontSizeHero800: clamp(28px, 1.5vw + 22px, 32px); /* Title 1 */
   --fontSizeHero900: clamp(32px, 2vw + 24px, 40px); /* Large Title */

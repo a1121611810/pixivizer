@@ -5,6 +5,22 @@ import { defineConfig, presetUno, presetIcons } from "unocss";
 export default defineConfig({
   presets: [presetUno(), presetIcons()],
 
+  // ── Fluent Design Typography Tokens (fluid clamp: rem for accessibility, vw for responsive) ──
+  preflights: [
+    {
+      getCSS: () => `
+        :root {
+          --fontSizeBase100: clamp(0.5rem, 0.5rem + 0.5vw, 0.75rem);
+          --fontSizeBase200: clamp(0.625rem, 0.625rem + 0.5vw, 0.875rem);
+          --fontSizeBase300: clamp(0.75rem, 0.75rem + 0.5vw, 1rem);
+          --fontSizeBase400: clamp(0.875rem, 0.875rem + 0.5vw, 1.125rem);
+          --fontSizeBase500: clamp(1rem, 1rem + 0.75vw, 1.5rem);
+          --fontSizeBase600: clamp(1.25rem, 1.25rem + 0.75vw, 1.75rem);
+        }
+      `,
+    },
+  ],
+
   // Safelist: 强制生成 NavBar 容器类（UnoCSS 提取器可能遗漏）
   safelist: [
     "floating-nav",

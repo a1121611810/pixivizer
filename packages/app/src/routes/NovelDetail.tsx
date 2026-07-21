@@ -948,7 +948,7 @@ const NovelDetail: Component = () => {
                     class="flex-shrink-0 whitespace-nowrap px-3 py-2 rounded-[var(--borderRadiusMedium)] bg-[var(--colorNeutralBackground2)] text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase200)] font-medium hover:bg-[var(--colorNeutralBackground3)] active:scale-95 transition-all appearance-none border-none outline-none cursor-pointer flex items-center gap-2"
                     onClick={() => setSettingsOpen(true)}
                   >
-                    <span class="font-bold tracking-tight" style="font-size:16px">
+                    <span class="font-bold tracking-tight" style="font-size:var(--fontSizeBase400)">
                       Aa
                     </span>
                     显示设置
