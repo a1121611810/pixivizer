@@ -38,8 +38,7 @@ const BlocklistSheet: Component<BlocklistSheetProps> = (props) => {
             appearance="subtle"
             aria-label="关闭"
             on:click={close}
-            class="w-8 h-8"
-            style="min-width:var(--spacingHorizontalXXL);padding:0"
+            class="w-8 h-8 p-0 min-w-8"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <path

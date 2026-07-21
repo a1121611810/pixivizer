@@ -199,7 +199,7 @@ const IllustDetail: Component = () => {
       "flex-direction": "column",
       "align-items": "center",
       "justify-content": "center",
-      gap: "var(--spacingHorizontalL)",
+      gap: "var(--spacingVerticalL)",
     });
     // 用 CSS 变量继承主题背景色
     mask.style.setProperty("background-color", "var(--colorOverlayBackground)");
@@ -761,7 +761,8 @@ const IllustDetail: Component = () => {
                       "text-white/85 hover:text-white": i !== currentVisiblePage(),
                     }}
                     style={{
-                      "text-shadow": i !== currentVisiblePage() ? "var(--elevation2)" : "none",
+                      "text-shadow":
+                        i !== currentVisiblePage() ? "0 1px 3px rgba(0,0,0,0.6)" : "none",
                     }}
                     onClick={() => scrollToPage(i)}
                     aria-label={`第 ${i + 1} 页`}
