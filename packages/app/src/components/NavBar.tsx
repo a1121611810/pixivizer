@@ -2,7 +2,6 @@ import { type Component, createEffect, createSignal, onMount, onCleanup } from "
 import { currentTab, setCurrentTab, autoHideNavBar } from "../stores/uiStore";
 import { useNavigate } from "@tanstack/solid-router";
 import FluentIcon, { type FluentIconName } from "./ui/FluentIcon";
-import PictelioIcon from "./PictelioIcon";
 
 // ── Tab definitions ──
 type NavTab = "recommended" | "follow" | "bookmarks" | "history";
@@ -150,13 +149,13 @@ const NavBar: Component = () => {
     }
   }
 
-  // ── 中心按钮点击：切换 compact 状态（滑动时不触发）──
+  // ── 中心按钮点击：导航到搜索页（滑动回顶时不触发）──
   function handleCenterClick() {
     if (swiped) {
       swiped = false;
       return;
     }
-    setCompact(!compact());
+    void navigate({ to: "/search" });
   }
 
   // ── Tab 导航 ──
@@ -192,16 +191,16 @@ const NavBar: Component = () => {
           ))}
         </div>
 
-        {/* 中心大圆按钮（项目 Logo） */}
+        {/* 中心大圆按钮（搜索入口） */}
         <button
           class="floating-nav-center"
           classList={{ "scroll-top-anim": scrollToTopAnim() }}
           onClick={handleCenterClick}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          aria-label={compact() ? "展开导航" : "收起导航"}
+          aria-label="搜索"
         >
-          <PictelioIcon size={36} />
+          <FluentIcon name="search" size={24} />
         </button>
 
         {/* 右侧按钮组：收藏 + 历史 */}

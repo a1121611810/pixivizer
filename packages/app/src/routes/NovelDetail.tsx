@@ -52,7 +52,6 @@ import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import { scrollToTop } from "../utils/scrollToTop";
 import { toApiError } from "../api/client";
 import { recordVisit } from "../stores/historyStore";
-import { setContentLoadingState } from "@/stores/uiStore";
 
 const routeApi = getRouteApi("/novel/$id");
 
@@ -269,12 +268,6 @@ const NovelDetail: Component = () => {
   const [novelNav, setNovelNav] = createSignal<SeriesNavigation | null>(null);
   const [detailLoading, setDetailLoading] = createSignal(false);
   const [detailError, setDetailError] = createSignal<ApiError | null>(null);
-
-  // 同步 detailLoading 到全局 contentLoading，控制 SearchFAB 等在加载时隐藏
-  createEffect(() => {
-    setContentLoadingState(detailLoading());
-  });
-  onCleanup(() => setContentLoadingState(false));
 
   function applyEntry(entry: NovelCacheEntry) {
     batch(() => {

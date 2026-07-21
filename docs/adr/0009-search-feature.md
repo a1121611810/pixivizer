@@ -4,7 +4,7 @@
 
 ## 状态
 
-提议
+提议（「搜索入口：FAB」一节已被 [ADR 0011](./0011-search-entry-into-navbar.md) 修订，FAB 已移除，入口迁移至 NavBar 中心钮）
 
 ## 上下文
 

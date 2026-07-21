@@ -165,11 +165,6 @@ export const setShowSettingsDrawer = (v: boolean) => setDrawerOpen(v);
 export const openSettingsDrawer = () => setDrawerOpen(true);
 export const closeSettingsDrawer = () => setDrawerOpen(false);
 
-// ── 全局内容加载状态（控制 SearchFAB 等在加载时隐藏）
-const [contentLoading, setContentLoading] = createSignal(false);
-export const isContentLoading = () => contentLoading();
-export const setContentLoadingState = (v: boolean) => setContentLoading(v);
-
 export const layoutMode = () => state.layoutMode;
 export const setLayoutMode = async (mode: LayoutMode): Promise<void> => {
   setState("layoutMode", mode);
