@@ -9,6 +9,7 @@ import {
 } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import type { PixivComment } from "../api/types";
+import { SHEET_LAZY_MARGIN } from "../primitives/rootMargins";
 import { user } from "../stores/authStore";
 import { resolveImageUrl } from "../utils/imageLoader";
 import {
@@ -114,7 +115,7 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
           loadMore();
         }
       },
-      { rootMargin: "200px" },
+      { rootMargin: SHEET_LAZY_MARGIN },
     );
     if (sentinelRef) {
       observer.observe(sentinelRef);
@@ -438,7 +439,7 @@ const CommentItem: Component<CommentItemProps> = (props) => {
         {/* Quote block for replies */}
         <Show when={parent()}>
           {(p) => (
-            <div class="mb-2 pl-2.5 border-l-[3px] border-[var(--colorBrandStroke1)] py-1">
+            <div class="mb-2 pl-2.5 border-l-[var(--strokeWidthThicker)] border-[var(--colorBrandStroke1)] py-1">
               <span class="[font-size:var(--fontSizeBase75)] text-[var(--colorBrandForeground1)] font-medium">
                 @{p().user.name}
               </span>

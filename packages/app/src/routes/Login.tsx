@@ -119,7 +119,7 @@ const Login: Component = () => {
 
           <h1
             style={{
-              "font-size": "32px",
+              "font-size": "var(--fontSizeHero900)",
               "font-weight": 700,
               color: "var(--colorNeutralForeground1)",
               "line-height": 1.2,

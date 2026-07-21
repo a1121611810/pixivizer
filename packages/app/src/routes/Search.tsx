@@ -340,7 +340,7 @@ const Search: Component = () => {
                   >
                     {opt.label}
                     {store.scope() === opt.value && (
-                      <span class="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--colorBrandStroke1)] rounded-full" />
+                      <span class="absolute bottom-0 left-0 right-0 h-[var(--strokeWidthThick)] bg-[var(--colorBrandStroke1)] rounded-full" />
                     )}
                   </button>
                 )}
@@ -423,7 +423,7 @@ const Search: Component = () => {
       {/* ── Back to top ── */}
       <Show when={showBackToTop()}>
         <button
-          class="fixed z-20 bottom-24 right-4 w-11 h-11 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorOverlaySurface)] backdrop-blur-[30px] backdrop-saturate-[125%] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorOverlaySurfaceHover)] active:scale-90 transition-all duration-[var(--durationFast)]"
+          class="fixed z-20 bottom-24 right-4 w-11 h-11 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorOverlaySurface)] backdrop-blur-[var(--backdropBlurDefault)] backdrop-saturate-[var(--backdropSaturateDefault)] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorOverlaySurfaceHover)] active:scale-90 transition-all duration-[var(--durationFast)]"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           aria-label="回顶"
         >

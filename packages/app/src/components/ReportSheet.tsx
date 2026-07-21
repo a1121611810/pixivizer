@@ -67,7 +67,8 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
               appearance="subtle"
               aria-label="关闭"
               on:click={close}
-              style="min-width:32px;width:32px;height:32px;padding:0"
+              class="w-8 h-8"
+              style="min-width:var(--spacingHorizontalXXL);padding:0"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path
@@ -79,7 +80,7 @@ const ReportSheet: Component<ReportSheetProps> = (props) => {
           </div>
 
           {/* Divider */}
-          <fluent-divider style="margin-inline:20px"></fluent-divider>
+          <fluent-divider style="margin-inline:var(--spacingHorizontalXL)"></fluent-divider>
 
           {/* Reason list */}
           <p class="px-5 pt-3 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">

@@ -245,7 +245,7 @@ const HistoryPage: Component = () => {
                 onClick={() => {
                   setSearchInput("");
                 }}
-                class="flex items-center justify-center min-w-10 min-h-10 appearance-none border-none outline-none cursor-pointer rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground2)] hover:text-[var(--colorNeutralForeground1)] active:scale-[0.95] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[2px] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)]"
+                class="flex items-center justify-center min-w-10 min-h-10 appearance-none border-none outline-none cursor-pointer rounded-[var(--borderRadiusSmall)] text-[var(--colorNeutralForeground2)] hover:bg-[var(--colorNeutralBackground2)] hover:text-[var(--colorNeutralForeground1)] active:scale-[0.95] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)]"
                 aria-label="清除搜索"
               >
                 <FluentIcon name="dismiss" size={16} />
@@ -283,7 +283,7 @@ const HistoryPage: Component = () => {
             <Show when={hasActiveFilters()}>
               <button
                 onClick={clearFilters}
-                class="ml-auto text-[var(--colorBrandForeground1)] [font-size:var(--fontSizeBase200)] font-medium appearance-none border-none bg-transparent cursor-pointer hover:underline active:opacity-70 focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+                class="ml-auto text-[var(--colorBrandForeground1)] [font-size:var(--fontSizeBase200)] font-medium appearance-none border-none bg-transparent cursor-pointer hover:underline active:opacity-70 focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
                 aria-label="清除筛选条件"
               >
                 清除筛选
@@ -344,7 +344,7 @@ const HistoryPage: Component = () => {
                     </span>
                     <button
                       onClick={clearFilters}
-                      class="text-[var(--colorBrandForeground1)] [font-size:var(--fontSizeBase200)] font-medium appearance-none border-none bg-transparent cursor-pointer hover:underline active:opacity-70 focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+                      class="text-[var(--colorBrandForeground1)] [font-size:var(--fontSizeBase200)] font-medium appearance-none border-none bg-transparent cursor-pointer hover:underline active:opacity-70 focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
                     >
                       清除筛选条件
                     </button>
@@ -433,10 +433,8 @@ const HistoryPage: Component = () => {
                   >
                     {/* Thumbnail */}
                     <div
-                      class="relative flex-shrink-0 rounded-[var(--borderRadiusMedium)] overflow-hidden"
+                      class="relative flex-shrink-0 w-10 h-10 rounded-[var(--borderRadiusMedium)] overflow-hidden"
                       style={{
-                        width: "40px",
-                        height: "40px",
                         background: "var(--colorNeutralBackground2)",
                       }}
                     >
@@ -451,8 +449,8 @@ const HistoryPage: Component = () => {
                         <span
                           class="absolute flex items-center justify-center rounded-[var(--borderRadiusSmall)]"
                           style={{
-                            top: "2px",
-                            left: "2px",
+                            top: "var(--strokeWidthThick)",
+                            left: "var(--strokeWidthThick)",
                             "font-size": "var(--fontSizeBase100)",
                             padding: "1px 3px",
                             background: "var(--colorDangerBackground)",

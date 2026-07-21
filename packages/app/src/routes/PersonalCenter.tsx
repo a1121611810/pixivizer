@@ -5,6 +5,7 @@ import { setCurrentTab } from "../stores/uiStore";
 import { resolveImageUrl, loadImage } from "../utils/imageLoader";
 import { Capacitor } from "@capacitor/core";
 import { unfollowUser, followUser } from "../api/illust";
+import { SENTINEL_MARGIN } from "../primitives/rootMargins";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { scrollToTop } from "../utils/scrollToTop";
 
@@ -151,7 +152,7 @@ const PersonalCenter: Component<Props> = (props) => {
   });
 
   const { attach: sentinelAttach } = createSentinelPaginator({
-    rootMargin: "200px",
+    rootMargin: SENTINEL_MARGIN,
     enabled: () => !loading(),
     onTrigger: () => {
       if (activeTab() === "following") {
@@ -185,7 +186,7 @@ const PersonalCenter: Component<Props> = (props) => {
               appearance="subtle"
               aria-label="返回"
               on:click={() => router.history.back()}
-              style="min-width:32px;width:32px;height:32px;padding:0"
+              class="w-8 h-8 p-0 min-w-8"
             >
               ←
             </fluent-button>
@@ -341,7 +342,7 @@ const PersonalCenter: Component<Props> = (props) => {
           </Show>
 
           {/* Segmented control — sticky below header */}
-          <div class="sticky top-12 z-10 px-4 py-3 bg-[var(--colorNeutralBackgroundAlpha)] backdrop-blur-[30px] backdrop-saturate-[125%]">
+          <div class="sticky top-12 z-10 px-4 py-3 bg-[var(--colorNeutralBackgroundAlpha)] backdrop-blur-[var(--backdropBlurDefault)] backdrop-saturate-[var(--backdropSaturateDefault)]">
             <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
               <button
                 classList={{

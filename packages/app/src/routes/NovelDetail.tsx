@@ -20,6 +20,7 @@ import ImageViewer from "@/components/ImageViewer";
 import LoadingSpinner from "../components/LoadingSpinner";
 import FluentIcon from "../components/ui/FluentIcon";
 import NovelSearchBar from "../components/NovelSearchBar";
+import { NOVEL_INTERACTIVE_MARGIN } from "../primitives/rootMargins";
 import { createNovelSearch } from "../primitives/createNovelSearch";
 import { createNovelVirtualLayout } from "../primitives/createNovelVirtualLayout";
 import type { PixivNovel, SeriesNavigation } from "@/api/types";
@@ -696,7 +697,7 @@ const NovelDetail: Component = () => {
     }
     const observer = new IntersectionObserver(
       ([entry]) => setShowHeaderTitle(!entry.isIntersecting),
-      { rootMargin: "-48px 0px 0px 0px" },
+      { rootMargin: NOVEL_INTERACTIVE_MARGIN },
     );
     observer.observe(el);
     onCleanup(() => observer.disconnect());
@@ -716,9 +717,8 @@ const NovelDetail: Component = () => {
           <button
             type="button"
             aria-label="返回"
+            class="flex items-center justify-center rounded-[var(--borderRadiusSmall)] bg-transparent border-none cursor-pointer text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all w-8 h-8 p-0 min-w-8"
             on:click={() => handleBack()}
-            class="flex items-center justify-center rounded-[var(--borderRadiusSmall)] bg-transparent border-none cursor-pointer text-[var(--colorNeutralForeground1)] hover:bg-[var(--colorNeutralBackground2)] active:scale-95 transition-all"
-            style="min-width:32px;width:32px;height:32px;padding:0"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor" />

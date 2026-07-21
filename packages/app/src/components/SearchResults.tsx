@@ -69,11 +69,11 @@ const SearchResults: Component<Props> = (props) => {
 
           <Show when={!props.hasMore && props.results.length > 0}>
             <div class="flex items-center gap-3 py-[var(--spacingVerticalXXL)]" role="separator">
-              <span class="flex-1 h-[1px] bg-[var(--colorNeutralStroke2)]" />
+              <span class="flex-1 h-[var(--strokeWidthThin)] bg-[var(--colorNeutralStroke2)]" />
               <span class="text-[var(--colorNeutralForeground4)] [font-size:var(--fontSizeBase200)] flex-shrink-0">
                 没有更多了
               </span>
-              <span class="flex-1 h-[1px] bg-[var(--colorNeutralStroke2)]" />
+              <span class="flex-1 h-[var(--strokeWidthThin)] bg-[var(--colorNeutralStroke2)]" />
             </div>
           </Show>
         </Show>

@@ -66,7 +66,7 @@ const OAuthWebView: Component<OAuthWebViewProps> = (props) => {
           class="flex items-center justify-between px-4 py-3"
           style={{
             "background-color": "var(--colorNeutralBackground1)",
-            "border-bottom": "1px solid var(--colorNeutralStroke2)",
+            "border-bottom": "var(--strokeWidthThin) solid var(--colorNeutralStroke2)",
           }}
         >
           <span

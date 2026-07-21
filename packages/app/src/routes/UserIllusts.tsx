@@ -59,8 +59,8 @@ const UserIllusts: Component = () => {
             <fluent-button
               appearance="subtle"
               aria-label="返回"
+              class="w-8 h-8 p-0 min-w-8"
               on:click={() => router.history.back()}
-              style="min-width:32px;width:32px;height:32px;padding:0"
             >
               ←
             </fluent-button>

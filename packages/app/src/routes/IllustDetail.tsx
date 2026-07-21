@@ -199,13 +199,13 @@ const IllustDetail: Component = () => {
       "flex-direction": "column",
       "align-items": "center",
       "justify-content": "center",
-      gap: "16px",
+      gap: "var(--spacingHorizontalL)",
     });
     // 用 CSS 变量继承主题背景色
     mask.style.setProperty("background-color", "var(--colorOverlayBackground)");
     mask.innerHTML = `
       <div style="width:48px;height:48px;border-radius:50%;
-                  border:2px solid transparent;border-top-color:var(--colorOverlayForeground);
+                  border:var(--strokeWidthThick) solid transparent;border-top-color:var(--colorOverlayForeground);
                   animation:spin 1s linear infinite"></div>
       <span style="color:var(--colorOverlayForeground);
                    font-size:var(--fontSizeHero800);
@@ -480,7 +480,7 @@ const IllustDetail: Component = () => {
                 appearance="subtle"
                 aria-label="返回"
                 on:click={() => router.history.back()}
-                style="min-width:32px;width:32px;height:32px;padding:0"
+                class="w-8 h-8 p-0 min-w-8"
               >
                 ←
               </fluent-button>
@@ -492,7 +492,7 @@ const IllustDetail: Component = () => {
                 on:click={() => setShowActionMenu((v) => !v)}
                 aria-label="更多"
                 aria-expanded={showActionMenu()}
-                style="min-width:32px;width:32px;height:32px;padding:0"
+                class="w-8 h-8 p-0 min-w-8"
               >
                 ⋮
               </fluent-button>
@@ -712,7 +712,7 @@ const IllustDetail: Component = () => {
             {/* ── Multi-page: back-to-top FAB ── */}
             {illust()!.page_count > 1 && (
               <button
-                class="rounded-[var(--borderRadiusCircular)] w-10 h-10 flex items-center justify-center text-[var(--colorOverlayForeground)] text-lg transition-all duration-[var(--durationFast)] bg-[var(--colorOverlaySurface)] backdrop-blur-[30px] backdrop-saturate-[125%] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] hover:bg-[var(--colorOverlaySurfaceHover)] active:bg-[var(--colorOverlaySurfaceHover)] active:scale-90 focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]"
+                class="rounded-[var(--borderRadiusCircular)] w-10 h-10 flex items-center justify-center text-[var(--colorOverlayForeground)] text-lg transition-all duration-[var(--durationFast)] bg-[var(--colorOverlaySurface)] backdrop-blur-[var(--backdropBlurDefault)] backdrop-saturate-[var(--backdropSaturateDefault)] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] hover:bg-[var(--colorOverlaySurfaceHover)] active:bg-[var(--colorOverlaySurfaceHover)] active:scale-90 focus-visible:[box-shadow:0_0_0_var(--strokeWidthThick)_var(--colorStrokeFocus2),0_0_0_calc(var(--strokeWidthThick)+var(--strokeWidthThin))_var(--colorStrokeFocus1)]"
                 style={{
                   position: "fixed",
                   bottom: "calc(var(--spacingVerticalXXL) + 64px)",
@@ -738,7 +738,7 @@ const IllustDetail: Component = () => {
             {/* ── Multi-page: staircase (right-side page strip) ── */}
             {illust()!.page_count > 1 && showDetailStairs() && (
               <nav
-                class="backdrop-blur-[30px] backdrop-saturate-[125%] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] rounded-[var(--borderRadiusXLarge)] flex flex-col items-center z-20"
+                class="backdrop-blur-[var(--backdropBlurDefault)] backdrop-saturate-[var(--backdropSaturateDefault)] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)] rounded-[var(--borderRadiusXLarge)] flex flex-col items-center z-20"
                 style={{
                   "background-color": "transparent",
                   position: "fixed",
@@ -754,17 +754,14 @@ const IllustDetail: Component = () => {
               >
                 {imageUrls().map((_, i) => (
                   <button
-                    class="flex items-center justify-center rounded-[var(--borderRadiusCircular)] [font-size:var(--fontSizeBase200)] font-medium transition-all duration-[var(--durationFast)]"
+                    class="flex items-center justify-center rounded-[var(--borderRadiusCircular)] [font-size:var(--fontSizeBase200)] font-medium transition-all duration-[var(--durationFast)] min-w-9 min-h-9"
                     classList={{
                       "bg-[var(--colorNeutralBackground1Selected)] text-[var(--colorNeutralForeground1)] font-semibold":
                         i === currentVisiblePage(),
                       "text-white/85 hover:text-white": i !== currentVisiblePage(),
                     }}
                     style={{
-                      "min-width": "36px",
-                      "min-height": "36px",
-                      "text-shadow":
-                        i !== currentVisiblePage() ? "0 1px 3px rgba(0,0,0,0.6)" : "none",
+                      "text-shadow": i !== currentVisiblePage() ? "var(--elevation2)" : "none",
                     }}
                     onClick={() => scrollToPage(i)}
                     aria-label={`第 ${i + 1} 页`}

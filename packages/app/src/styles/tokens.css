@@ -152,6 +152,10 @@
   --colorStrokeFocus1: #ffffff;
   --colorStrokeFocus2: #000000;
 
+  /* ── Glass effect (backdrop blur/saturate) ── */
+  --backdropBlurDefault: 30px;
+  --backdropSaturateDefault: 125%;
+
   /* ── Status colors ── */
   --colorStatusDangerBackground1: #c42b1c;
   --colorStatusDangerForeground1: #c42b1c;

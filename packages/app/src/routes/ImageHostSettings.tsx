@@ -179,8 +179,8 @@ const ImageHostSettings: Component = () => {
         <fluent-button
           appearance="subtle"
           aria-label="返回"
+          class="w-8 h-8 p-0 min-w-8"
           on:click={() => router.history.back()}
-          style="min-width:32px;width:32px;height:32px;padding:0"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
@@ -417,9 +417,9 @@ const ImageHostSettings: Component = () => {
                     <fluent-button
                       appearance="subtle"
                       aria-label="编辑"
+                      class="w-8 h-8 p-0 min-w-8"
                       on:click={() => openEdit(host)}
                       disabled={!imageHostState().masterEnabled}
-                      style="min-width:32px;width:32px;height:32px;padding:0"
                     >
                       <svg
                         width="18"
@@ -438,9 +438,9 @@ const ImageHostSettings: Component = () => {
                       <fluent-button
                         appearance="subtle"
                         aria-label="重置"
+                        class="w-8 h-8 p-0 min-w-8"
                         on:click={() => resetBuiltInHost(host.id)}
                         disabled={!imageHostState().masterEnabled}
-                        style="min-width:32px;width:32px;height:32px;padding:0"
                       >
                         <svg
                           width="18"

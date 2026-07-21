@@ -11,6 +11,7 @@ import { loadSeries, loadSeriesNext, type NovelSeriesDetailResponse } from "../a
 import type { PixivNovel } from "../api/types";
 import SeriesSheetItem from "./SeriesSheetItem";
 import LoadingSpinner from "./LoadingSpinner";
+import { SHEET_LAZY_MARGIN } from "../primitives/rootMargins";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { getSeries, setSeries } from "../stores/novelCache";
 
@@ -46,7 +47,7 @@ const SeriesSheet: Component<Props> = (props) => {
 
   const { attach: sentinelAttach } = createSentinelPaginator({
     root: scrollContainer,
-    rootMargin: "200px",
+    rootMargin: SHEET_LAZY_MARGIN,
     enabled: () => hasMore() && !loadingMore() && !loading(),
     onTrigger: () => loadMore(),
   });
@@ -277,7 +278,7 @@ const SeriesSheet: Component<Props> = (props) => {
             </button>
           </div>
 
-          <fluent-divider style="margin-inline:20px" />
+          <fluent-divider style="margin-inline:var(--spacingHorizontalXL)" />
 
           {/* ── Series metadata ── */}
           <div class="px-5 py-3">
@@ -302,7 +303,7 @@ const SeriesSheet: Component<Props> = (props) => {
             </Show>
           </div>
 
-          <fluent-divider style="margin-inline:20px" />
+          <fluent-divider style="margin-inline:var(--spacingHorizontalXL)" />
 
           {/* ── Content area ── */}
           <div class="min-h-[160px]">

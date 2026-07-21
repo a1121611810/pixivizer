@@ -89,7 +89,7 @@ const ReaderSettingsSheet: Component<Props> = (props) => {
             </button>
           </div>
 
-          <fluent-divider style="margin-inline:20px"></fluent-divider>
+          <fluent-divider style="margin-inline:var(--spacingHorizontalXL)"></fluent-divider>
 
           <div class="px-5 py-3 flex flex-col gap-5">
             {/* ── Font size ── */}

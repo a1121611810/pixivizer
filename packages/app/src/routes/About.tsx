@@ -105,7 +105,7 @@ const About: Component = () => {
             appearance="subtle"
             aria-label="返回"
             on:click={() => router.history.back()}
-            style="min-width:32px;width:32px;height:32px;padding:0"
+            class="w-8 h-8 p-0 min-w-8"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
@@ -200,7 +200,7 @@ const About: Component = () => {
                       inner
                     )}
                     {idx < arr.length - 1 && (
-                      <fluent-divider style="margin-inline:16px"></fluent-divider>
+                      <fluent-divider class="mx-[var(--spacingHorizontalL)]"></fluent-divider>
                     )}
                   </>
                 );

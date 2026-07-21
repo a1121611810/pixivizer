@@ -5,6 +5,7 @@ import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { SENTINEL_MARGIN } from "../primitives/rootMargins";
 import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { scrollToTop } from "../utils/scrollToTop";
 import {
@@ -55,7 +56,7 @@ const FollowListPage: Component<Props> = (props) => {
   });
 
   const { attach: sentinelAttach } = createSentinelPaginator({
-    rootMargin: "200px",
+    rootMargin: SENTINEL_MARGIN,
     enabled: () => !loading(),
     onTrigger: () => loadMore(),
   });
@@ -72,8 +73,8 @@ const FollowListPage: Component<Props> = (props) => {
             <fluent-button
               appearance="subtle"
               aria-label="返回"
+              class="w-8 h-8 p-0 min-w-8"
               on:click={() => router.history.back()}
-              style="min-width:32px;width:32px;height:32px;padding:0"
             >
               ←
             </fluent-button>

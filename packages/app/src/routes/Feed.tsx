@@ -50,7 +50,8 @@ const Feed: Component = () => {
               <fluent-button
                 appearance="subtle"
                 aria-label="设置"
-                style="min-width:32px;width:32px;height:32px;padding:0;pointer-events:none"
+                class="w-8 h-8 p-0 min-w-8"
+                style="pointer-events:none"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
