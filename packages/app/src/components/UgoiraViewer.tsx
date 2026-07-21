@@ -1,6 +1,5 @@
 import { createSignal, onMount, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
-import JSZip from "jszip";
 import { loadUgoiraMetadata } from "../api/illust";
 import PixivImage from "./PixivImage";
 
@@ -38,7 +37,8 @@ const UgoiraViewer: Component<Props> = (props) => {
       }
       const zipBlob = await zipResp.blob();
 
-      // 3. Extract frames
+      // 3. 解压帧（JSZip 按需加载，不随作品详情 chunk 一同打包）
+      const { default: JSZip } = await import("jszip");
       const zip = await JSZip.loadAsync(zipBlob);
       const extracted: Frame[] = [];
 
