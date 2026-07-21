@@ -211,7 +211,38 @@ export default defineConfig({
     },
   },
 
-  build: { target: "esnext" },
+  build: {
+    target: "esnext",
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "fluent-vendor",
+              test: /node_modules[/\\]@fluentui/,
+              priority: 20,
+            },
+            {
+              name: "tanstack-vendor",
+              test: /node_modules[/\\]@tanstack/,
+              priority: 20,
+            },
+            {
+              name: "vendor",
+              test: /node_modules/,
+              priority: 10,
+            },
+            {
+              name: "common",
+              minShareCount: 2,
+              minSize: 10000,
+              priority: 5,
+            },
+          ],
+        },
+      },
+    },
+  },
 
   // ── Vite+ lint / fmt 统一配置 ──────────────────────────────
   lint: {
