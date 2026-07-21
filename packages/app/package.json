@@ -50,6 +50,7 @@
     "@tanstack/solid-virtual": "^3.13.33",
     "comlink": "^4.4.2",
     "jszip": "^3.10.1",
+    "ora": "^9.4.1",
     "solid-js": "^1.9.14",
     "spark-md5": "^3.0.2"
   },

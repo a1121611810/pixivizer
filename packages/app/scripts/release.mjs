@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import process from "node:process";
 import { createInterface } from "node:readline";
+import ora from "ora";
 
 const rootDir = resolvePath(dirname(fileURLToPath(import.meta.url)), "..");
 const apkPath = "android/app/build/outputs/apk/release/app-release.apk";
@@ -41,22 +42,6 @@ function log(...m) {
 }
 function ok(...m) {
   console.log(`[release] ✅`, ...m);
-}
-
-async function runBuildStep(label, cmd, argsArr, opts = {}) {
-  log(`▶ ${label}...`);
-  const _start = Date.now();
-  try {
-    const elapsed = await run(cmd, argsArr, opts);
-    ok(`${label} 完成 (${elapsed}s)`);
-  } catch (error) {
-    console.error(`\n[release] ── 构建错误 ──────────────────────`);
-    console.error(`  步骤: ${label}`);
-    console.error(`  命令: ${cmd} ${argsArr.join(" ")}`);
-    console.error(`  原因: ${error.message}`);
-    console.error(`────────────────────────────────────────\n`);
-    throw error;
-  }
 }
 
 function readText(path) {
@@ -88,6 +73,36 @@ function run(cmd, argsArr, opts = {}) {
         resolve(elapsed);
       } else {
         reject(new Error(`"${label}" 失败 (退出码 ${code}, 耗时 ${elapsed}s)`));
+      }
+    });
+  });
+}
+
+function runWithSpinner(label, cmd, argsArr, opts = {}) {
+  const spinner = ora({ text: label, color: "cyan" }).start();
+  const start = Date.now();
+  const timer = setInterval(() => {
+    spinner.text = `${label} ⏱ ${((Date.now() - start) / 1000).toFixed(0)}s`;
+  }, 1000);
+
+  return new Promise((resolve, reject) => {
+    const child = execFile(cmd, argsArr, { cwd: rootDir, stdio: ["pipe", "pipe", "pipe"], ...opts });
+    child.stdout.on("data", (d) => process.stdout.write(d));
+    child.stderr.on("data", (d) => {
+      spinner.stop();
+      process.stderr.write(d);
+      spinner.start();
+    });
+    child.on("error", (e) => { clearInterval(timer); spinner.stop(); reject(e); });
+    child.on("close", (code) => {
+      clearInterval(timer);
+      const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+      if (code === 0) {
+        spinner.succeed(`${label} (${elapsed}s)`);
+        resolve(elapsed);
+      } else {
+        spinner.fail(`${label} 失败 (退出码 ${code}, ${elapsed}s)`);
+        reject(new Error(`"${cmd} ${argsArr.join(" ")}" 失败 (退出码 ${code}, 耗时 ${elapsed}s)`));
       }
     });
   });
@@ -401,9 +416,9 @@ async function main() {
 
   let completedSteps = [];
   const step = (n, name, fn) => {
-    log(`▶ [${n}/8] ${name}...`);
+    log(`▶ [${n}/6] ${name}...`);
     return fn().then(
-      (r) => { completedSteps.push(n); ok(`[${n}/8] ${name} 完成`); return r; },
+      (r) => { completedSteps.push(n); ok(`[${n}/6] ${name} 完成`); return r; },
       (e) => { throw Object.assign(e, { stepN: n, stepName: name }); },
     );
   };
@@ -439,33 +454,32 @@ async function main() {
 
   await step(3, "构建 APK", async () => {
     const buildSteps = [
-      ["同步 Android 版本", "pnpm", ["run", "sync:android-version"]],
       ["同步 OAuth 配置", "pnpm", ["run", "sync:credentials"]],
       ["构建 Web 产物", "pnpm", ["run", "build"]],
       ["同步 Capacitor 资源", "pnpm", ["run", "cap:sync"]],
       ["编译 Release APK", "./gradlew", ["assembleRelease"], {
         cwd: resolvePath(rootDir, "android"),
-        stdio: "inherit",
         env: { ...process.env, GRADLE_USER_HOME: resolvePath(rootDir, "android", ".gradle") },
       }],
     ];
-    const buildStart = Date.now();
-    for (const [label, cmd, args, opts] of buildSteps) {
+    const total = buildSteps.length;
+    for (let i = 0; i < total; i++) {
+      const [label, cmd, args, opts] = buildSteps[i];
+      const subLabel = `[${i + 1}/${total}] ${label}`;
       if (cmd === "./gradlew") {
         try {
-          await runBuildStep(label, cmd, args, opts);
+          await runWithSpinner(subLabel, cmd, args, opts);
         } catch {
           log("Gradle 构建失败，重试并输出详细堆栈...");
-          await runBuildStep(`${label}（详细堆栈）`, cmd, [...args, "--stacktrace"], opts);
+          await runWithSpinner(`${subLabel}（详细堆栈）`, cmd, [...args, "--stacktrace"], opts);
         }
       } else {
-        await runBuildStep(label, cmd, args, opts || {});
+        await runWithSpinner(subLabel, cmd, args, opts || {});
       }
     }
-    const buildTotal = ((Date.now() - buildStart) / 1000).toFixed(1);
     const apkExists = await exists(apkPath);
     if (!apkExists) throw new Error(`APK 未生成: ${apkPath}`);
-    log(`APK 构建耗时 ${buildTotal}s，产物: ${resolvePath(rootDir, apkPath)}`);
+    log(`APK 构建完成，产物: ${resolvePath(rootDir, apkPath)}`);
   });
 
   await step(4, "Git 提交 + Tag", async () => {
@@ -478,13 +492,12 @@ async function main() {
     let lastErr;
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        await run("git", ["push", "origin", "main", "--tags"]);
+        await runWithSpinner(`git push (第 ${attempt} 次)`, "git", ["push", "origin", "main", "--tags"]);
         return;
       } catch (e) {
         lastErr = e;
         if (attempt < 3) {
           const delay = Math.min(1000 * 2 ** (attempt - 1), 4000);
-          log(`git push 失败（第 ${attempt} 次），${delay / 1000}s 后重试...`);
           await new Promise((r) => setTimeout(r, delay));
         }
       }
@@ -504,25 +517,16 @@ async function main() {
       let lastErr;
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          await new Promise((resolve, reject) => {
-            const child = execFile(
-              "gh",
-              ["release", "create", tag, "--repo", repo, "--title", title, "--notes-file", notesFile, apkAbs],
-              { cwd: rootDir, stdio: "inherit" },
-            );
-            child.on("error", reject);
-            child.on("close", (code) => code === 0 ? resolve() : reject(new Error(`exit code ${code}`)));
-          });
+          await runWithSpinner(
+            `gh release create (第 ${attempt} 次)`,
+            "gh", ["release", "create", tag, "--repo", repo, "--title", title, "--notes-file", notesFile, apkAbs],
+          );
           return;
         } catch (e) {
           lastErr = e;
           if (e.message?.includes("already exists")) {
             log("Release 已存在，尝试上传 APK 到已有 release...");
-            await new Promise((resolve, reject) => {
-              const child = execFile("gh", ["release", "upload", tag, "--repo", repo, "--clobber", apkAbs], { cwd: rootDir, stdio: "inherit" });
-              child.on("error", reject);
-              child.on("close", (code) => code === 0 ? resolve() : reject(new Error(`gh release upload exit code ${code}`)));
-            });
+            await runWithSpinner("gh release upload", "gh", ["release", "upload", tag, "--repo", repo, "--clobber", apkAbs]);
             return;
           }
           if (attempt < 3) {
@@ -553,14 +557,14 @@ async function main() {
 main().catch((error) => {
   console.error(`\n[release] ❌ 发布流程失败`);
   if (error.stepName) {
-    console.error(`   失败步骤: [${error.stepN}/8] ${error.stepName}`);
+    console.error(`   失败步骤: [${error.stepN}/6] ${error.stepName}`);
     console.error(`   错误: ${error.message}`);
     if (error.stepN < 6) {
-      console.error(`\n   已完成的步骤: ${error.stepN - 1}/8`);
+      console.error(`\n   已完成的步骤: ${error.stepN - 1}/6`);
       console.error(`   重试即可覆盖，git 尚未推送，无残留`);
     } else if (error.stepN === 6) {
       const repoKey = getRepoSlug();
-      console.error(`\n   已完成的步骤: 5/8`);
+      console.error(`\n   已完成的步骤: 5/6`);
       console.error(`   git 已推送但 GitHub Release 创建失败。手动恢复:`);
       console.error(`     gh release create ${error.relTag || "vX.Y.Z"} --repo ${repoKey} --title "${error.relTitle || "Pictelio"}" --notes "见下方 changelog" packages/app/android/app/build/outputs/apk/release/app-release.apk`);
       console.error(`   或如果 release 已存在但缺 APK:`);
