@@ -22,10 +22,11 @@
  *   PICTELIO_KEY_PASSWORD        - key 密码（必须）
  */
 
-import { readFile, writeFile, stat, mkdir } from "node:fs/promises";
+import { readFile, writeFile, stat, mkdir, mkdtemp, unlink, rmdir } from "node:fs/promises";
 import { execFile, execFileSync } from "node:child_process";
 import { resolve as resolvePath, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
 import process from "node:process";
 import { createInterface } from "node:readline";
 
@@ -602,33 +603,35 @@ async function main() {
   if (!dryRun) {
     log("创建 GitHub Release...");
     const apkAbs = resolvePath(rootDir, apkPath);
-    const child = execFile(
-      "gh",
-      [
-        "release",
-        "create",
-        tag,
-        "--repo",
-        runOutput("git", ["remote", "get-url", "origin"])
-          .replace(/\.git$/u, "")
-          .replace(/.*github\.com[/u:]/u, "")
-          .replace(/\.git$/u, ""),
-        "--title",
-        title,
-        "--notes-file",
-        "-",
-        apkAbs,
-      ],
-      { cwd: rootDir, stdio: ["pipe", "inherit", "inherit"] },
-    );
-    child.stdin.write(changelog);
-    child.stdin.end();
-    await new Promise((resolve, reject) => {
-      child.on("error", reject);
-      child.on("close", (code) =>
-        code === 0 ? resolve() : reject(new Error(`gh release create exited with code ${code}`)),
-      );
-    });
+    const repo = runOutput("git", ["remote", "get-url", "origin"])
+      .replace(/\.git$/u, "")
+      .replace(/.*github\.com[/u:]/u, "")
+      .replace(/\.git$/u, "");
+
+    // 临时文件存放 release notes，避免 --notes-file - 的 stdin 管道竞争
+    let notesFile;
+    let tmpDir;
+    try {
+      tmpDir = await mkdtemp(resolvePath(tmpdir(), "pictelio-release-"));
+      notesFile = resolvePath(tmpDir, "release-notes.md");
+      await writeFile(notesFile, changelog, "utf-8");
+
+      await new Promise((resolve, reject) => {
+        const child = execFile(
+          "gh",
+          ["release", "create", tag, "--repo", repo, "--title", title, "--notes-file", notesFile, apkAbs],
+          { cwd: rootDir, stdio: "inherit" },
+        );
+        child.on("error", reject);
+        child.on("close", (code) =>
+          code === 0 ? resolve() : reject(new Error(`gh release create exited with code ${code}`)),
+        );
+      });
+    } finally {
+      await unlink(notesFile).catch(() => {});
+      await rmdir(tmpDir).catch(() => {});
+    }
+
     ok(`GitHub Release ${tag} 发布成功！`);
   } else {
     log(`[dry-run] 将执行: gh release create ${tag} --title "${title}" --notes ... + 上传 APK`);
