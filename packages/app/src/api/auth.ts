@@ -119,6 +119,6 @@ export async function exchangeCodeForToken(
   code: string,
   codeVerifier: string,
 ): Promise<PixivAuthResponse> {
-  const { exchangeCode } = await import("./pkceAuth");
+  const { exchangeCode } = await import("./pkceExchange");
   return exchangeCode(code, codeVerifier);
 }
