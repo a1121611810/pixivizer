@@ -1,5 +1,5 @@
 {
-  "version": "3.12.6",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.12.6",
-  "changelog": "🐛 修复\n  fix(virtual-scroll): 恢复返回时 Feed 的滚动位置"
+  "version": "3.13.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.13.0",
+  "changelog": "🐛 修复\n  fix: correct text-shadow token misuse and minor spacing issues\n♻️ 重构\n  refactor: unify IntersectionObserver rootMargin constants\n  refactor: extract Pictelio logo SVG into shared component\n  r"
 }
