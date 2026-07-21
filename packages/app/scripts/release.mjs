@@ -514,30 +514,53 @@ async function main() {
       notesFile = resolvePath(tmpDir, "release-notes.md");
       await writeFile(notesFile, changelog, "utf-8");
 
-      let lastErr;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          await runWithSpinner(
-            `gh release create (第 ${attempt} 次)`,
-            "gh", ["release", "create", tag, "--repo", repo, "--title", title, "--notes-file", notesFile, apkAbs],
-          );
-          return;
-        } catch (e) {
-          lastErr = e;
-          if (e.message?.includes("already exists")) {
-            log("Release 已存在，尝试上传 APK 到已有 release...");
-            await runWithSpinner("gh release upload", "gh", ["release", "upload", tag, "--repo", repo, "--clobber", apkAbs]);
-            return;
-          }
-          if (attempt < 3) {
+      // 预检：release 是否已存在
+      let exists = false;
+      try { runOutput("gh", ["release", "view", tag, "--repo", repo]); exists = true; } catch {}
+
+      // 第一步：创建 Release（不传 APK，只需 API 调用，~1s）
+      if (!exists) {
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            await runWithSpinner(
+              `gh release create (第 ${attempt} 次)`,
+              "gh", ["release", "create", tag, "--repo", repo, "--title", title, "--notes-file", notesFile],
+            );
+            break;
+          } catch (e) {
+            if (attempt >= 3) {
+              e.relTag = tag;
+              e.relTitle = title;
+              throw e;
+            }
             const delay = Math.min(1000 * 2 ** (attempt - 1), 4000);
-            log(`gh release create 失败（第 ${attempt} 次），${delay / 1000}s 后重试...`);
+            log(`gh release create 失败，${delay / 1000}s 后重试...`);
             await new Promise((r) => setTimeout(r, delay));
           }
         }
       }
-      if (lastErr) { lastErr.relTag = tag; lastErr.relTitle = title; }
-      throw lastErr;
+
+      // 第二步：上传 APK（单独步骤，慢但可重试）
+      let uploadErr;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          await runWithSpinner(`上传 APK (第 ${attempt} 次)`, "gh", ["release", "upload", tag, "--repo", repo, "--clobber", apkAbs]);
+          uploadErr = null;
+          break;
+        } catch (e) {
+          uploadErr = e;
+          if (attempt < 3) {
+            const delay = Math.min(1000 * 2 ** (attempt - 1), 4000);
+            log(`APK 上传失败（第 ${attempt} 次），${delay / 1000}s 后重试...`);
+            await new Promise((r) => setTimeout(r, delay));
+          }
+        }
+      }
+      if (uploadErr) {
+        uploadErr.relTag = tag;
+        uploadErr.relTitle = title;
+        throw uploadErr;
+      }
     } finally {
       await unlink(notesFile).catch(() => {});
       await rmdir(tmpDir).catch(() => {});
@@ -564,11 +587,14 @@ main().catch((error) => {
       console.error(`   重试即可覆盖，git 尚未推送，无残留`);
     } else if (error.stepN === 6) {
       const repoKey = getRepoSlug();
+      const relTag = error.relTag || "vX.Y.Z";
+      const apkRel = "packages/app/android/app/build/outputs/apk/release/app-release.apk";
       console.error(`\n   已完成的步骤: 5/6`);
-      console.error(`   git 已推送但 GitHub Release 创建失败。手动恢复:`);
-      console.error(`     gh release create ${error.relTag || "vX.Y.Z"} --repo ${repoKey} --title "${error.relTitle || "Pictelio"}" --notes "见下方 changelog" packages/app/android/app/build/outputs/apk/release/app-release.apk`);
-      console.error(`   或如果 release 已存在但缺 APK:`);
-      console.error(`     gh release upload ${error.relTag || "vX.Y.Z"} --repo ${repoKey} --clobber packages/app/android/app/build/outputs/apk/release/app-release.apk`);
+      console.error(`   git 已推送但 GitHub Release 创建/上传失败。手动恢复:`);
+      console.error(`     1. 创建 Release:`);
+      console.error(`        gh release create ${relTag} --repo ${repoKey} --title "${error.relTitle || `Pictelio ${relTag}`}" --notes "见下方 changelog"`);
+      console.error(`     2. 上传 APK（若 release 已存在可跳过第 1 步）:`);
+      console.error(`        gh release upload ${relTag} --repo ${repoKey} --clobber ${apkRel}`);
     }
   } else {
     console.error(`   ${error.message}`);
