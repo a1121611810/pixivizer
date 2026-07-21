@@ -7,6 +7,7 @@ import { PIXIV_USER_AGENT } from "./userAgent";
 // ─── 端点 ───
 const PIXIV_API_BASE = "https://app-api.pixiv.net";
 const PIXIV_AUTH_URL = "https://oauth.secure.pixiv.net/auth/token";
+const REQUEST_TIMEOUT_MS = 15_000;
 
 // ─── 平台检测 ───
 const isNative = Capacitor.isNativePlatform();
@@ -237,7 +238,9 @@ async function fetchWithTimeout(
   externalSignal?: AbortSignal,
 ): Promise<Response> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15_000);
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  // 处理 signal 在检查与监听之间的竞态
+  if (externalSignal?.aborted) controller.abort();
   const onAbort = () => controller.abort();
   externalSignal?.addEventListener("abort", onAbort);
   try {
@@ -259,19 +262,21 @@ async function sendRequest(
   headers: Record<string, string>,
   signal?: AbortSignal,
 ): Promise<{ status: number; data: unknown }> {
-  const REQUEST_TIMEOUT = 15_000;
-
   if (isNative) {
     if (method === "POST") headers["Content-Type"] = "application/x-www-form-urlencoded";
 
     // 原生路径用 Promise.race 实现超时（CapacitorHttp/PictelioHttp 不支持 AbortController）
-    const withTimeout = <T>(promise: Promise<T>): Promise<T> =>
-      Promise.race([
+    const withTimeout = <T>(promise: Promise<T>): Promise<T> => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const result = Promise.race([
         promise,
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new TypeError("Request timeout")), REQUEST_TIMEOUT),
-        ),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new TypeError("Request timeout")), REQUEST_TIMEOUT_MS);
+        }),
       ]);
+      result.finally(() => clearTimeout(timer));
+      return result;
+    };
 
     if (useDnsOverride()) {
       const resp = await withTimeout(
