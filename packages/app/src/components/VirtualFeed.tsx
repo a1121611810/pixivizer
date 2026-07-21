@@ -26,6 +26,7 @@ import {
   getFeedScrollState,
   type ScrollRestoreState,
 } from "../stores/feedStore";
+import { createVirtualScrollRestore } from "../primitives/createVirtualScrollRestore";
 
 interface Props {
   illusts: PixivIllust[];
@@ -158,12 +159,18 @@ const VirtualFeed: Component<Props> = (props) => {
     return columnWidth() / aspectRatio + CARD_INFO_HEIGHT;
   };
 
-  // ── Scroll restoration ──
-  const savedState = createMemo(() => {
-    if (props.scrollKey) {
-      return getFeedScrollState(props.scrollKey);
-    }
-    return props.initialScrollState;
+  // ── Scroll restoration（显式恢复，见 ADR 0010） ──
+  const scrollRestore = createVirtualScrollRestore({
+    getVirtualizer: () => instance,
+    getState: () =>
+      props.scrollKey ? (getFeedScrollState(props.scrollKey) ?? undefined) : props.initialScrollState,
+    saveState: (state) => {
+      if (props.scrollKey) {
+        saveFeedScrollState(props.scrollKey, state);
+      } else {
+        props.onScrollStateChange?.(state);
+      }
+    },
   });
 
   // ── TanStack Virtual: native Virtualizer + Solid reactive bindings ──
@@ -181,8 +188,8 @@ const VirtualFeed: Component<Props> = (props) => {
     observeElementRect: observeWindowRect,
     observeElementOffset: observeWindowOffset,
     scrollToFn: windowScroll,
-    initialOffset: savedState()?.offset,
-    initialMeasurementsCache: savedState()?.snapshot ?? [],
+    initialOffset: scrollRestore.initialOffset,
+    initialMeasurementsCache: scrollRestore.initialMeasurementsCache,
   } as any);
 
   createEffect(() => {
@@ -212,33 +219,8 @@ const VirtualFeed: Component<Props> = (props) => {
     setTotalSize(instance.getTotalSize());
     onCleanup(() => cleanup?.());
 
-    // ── 滚动恢复：三层兜底 ──
-    // 与 _willUpdate 内部的隐式 _scrollToOffset 解耦，
-    // 确保布局就绪后独立恢复滚动位置，不依赖 Virtualizer 内部时机。
-    const savedOffset = savedState()?.offset;
-    if (savedOffset != null && savedOffset > 0) {
-      // ① 主路径：同步 scrollTo，强制浏览器立即布局
-      window.scrollTo({ top: savedOffset });
-
-      // ② 兜底：若 scrollHeight 不足导致 scrollY 被 clamp，
-      //    通过 ResizeObserver 监听 document 生长后重试
-      if (window.scrollY < savedOffset) {
-        let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
-        const ro = new ResizeObserver(() => {
-          window.scrollTo({ top: savedOffset });
-          if (window.scrollY >= savedOffset) {
-            ro.disconnect();
-            clearTimeout(fallbackTimer);
-          }
-        });
-        ro.observe(document.documentElement);
-        fallbackTimer = setTimeout(() => ro.disconnect(), 500);
-        onCleanup(() => {
-          ro.disconnect();
-          clearTimeout(fallbackTimer);
-        });
-      }
-    }
+    // ── 滚动恢复：三层兜底（实现见 createVirtualScrollRestore） ──
+    scrollRestore.restoreScroll();
   });
 
   createEffect(() => {
@@ -258,21 +240,6 @@ const VirtualFeed: Component<Props> = (props) => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
     });
-  });
-
-  // ── 组件卸载时保存 scroll state ──
-  onCleanup(() => {
-    const snapshot = instance.takeSnapshot();
-    const offset = window.scrollY;
-    if (snapshot.length === 0 && offset <= 0) {
-      return;
-    }
-    const state: ScrollRestoreState = { snapshot, offset, version: 1 };
-    if (props.scrollKey) {
-      saveFeedScrollState(props.scrollKey, state);
-    } else {
-      props.onScrollStateChange?.(state);
-    }
   });
 
   // ── Skeleton layout for initial loading state ──

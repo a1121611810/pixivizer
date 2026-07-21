@@ -19,7 +19,6 @@ import {
   refresh,
   saveTabScroll,
   getFeedScrollY,
-  isNovelCached,
   novelFollowTab,
   setNovelFollowTab,
 } from "../stores/novelStore";
@@ -35,7 +34,6 @@ interface Props {
 
 const NovelFeedPage: Component<Props> = (props) => {
   const navigate = useNavigate();
-  const cached = isNovelCached(props.tab);
 
   const [sheetOpen, setSheetOpen] = createSignal(false);
   const [sheetSeries, setSheetSeries] = createSignal<{
@@ -127,7 +125,7 @@ const NovelFeedPage: Component<Props> = (props) => {
             onAuthorClick={(id) => void navigate({ to: `/user/${id}` })}
             onLoadMore={fetchMore}
             onRefresh={refresh}
-            scrollKey={cached ? props.tab : undefined}
+            scrollKey={props.tab}
             onSeriesClick={openSeriesSheet}
             layoutMode={novelLayoutMode()}
           />

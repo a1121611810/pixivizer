@@ -13,6 +13,7 @@ import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
 import { createComputedTextCard } from "../primitives/createComputedTextCard";
 import type { NovelLayoutMode } from "../stores/uiStore";
 import { saveNovelScrollState, getNovelScrollState } from "../stores/novelStore";
+import { createVirtualScrollRestore } from "../primitives/createVirtualScrollRestore";
 import { observeWindowRect, observeWindowOffset, windowScroll } from "@tanstack/solid-virtual";
 import type { VirtualItem } from "@tanstack/solid-virtual";
 
@@ -201,12 +202,15 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     return Math.max(COVER_HEIGHT, infoHeight) + 20;
   };
 
-  // ── Scroll restoration (saved state from store) ──
-  const savedState = createMemo(() => {
-    if (!props.scrollKey) {
-      return undefined;
-    }
-    return getNovelScrollState(props.scrollKey);
+  // ── Scroll restoration（显式恢复，见 ADR 0010） ──
+  const scrollRestore = createVirtualScrollRestore({
+    getVirtualizer: () => instance,
+    getState: () => (props.scrollKey ? (getNovelScrollState(props.scrollKey) ?? undefined) : undefined),
+    saveState: (state) => {
+      if (props.scrollKey) {
+        saveNovelScrollState(props.scrollKey, state);
+      }
+    },
   });
 
   // ── TanStack Virtual: native Virtualizer + Solid reactive bindings ──
@@ -224,8 +228,8 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     observeElementRect: observeWindowRect,
     observeElementOffset: observeWindowOffset,
     scrollToFn: windowScroll,
-    initialOffset: savedState()?.offset,
-    initialMeasurementsCache: savedState()?.snapshot ?? [],
+    initialOffset: scrollRestore.initialOffset,
+    initialMeasurementsCache: scrollRestore.initialMeasurementsCache,
   });
 
   // Sync count/lanes changes back to the virtualizer
@@ -258,6 +262,9 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     onCleanup(() => {
       cleanup?.();
     });
+
+    // ── 滚动恢复：三层兜底（实现见 createVirtualScrollRestore） ──
+    scrollRestore.restoreScroll();
   });
 
   // Scroll listener + resize for window mode
@@ -316,21 +323,6 @@ const NovelVirtualFeed: Component<Props> = (props) => {
   };
 
   void _virtualizer;
-
-  // ── 保存 scroll state ──
-  onCleanup(() => {
-    if (props.scrollKey) {
-      const snapshot = instance.takeSnapshot();
-      const offset = window.scrollY;
-      if (snapshot.length > 0 || offset > 0) {
-        saveNovelScrollState(props.scrollKey, {
-          snapshot,
-          offset,
-          version: 1,
-        });
-      }
-    }
-  });
 
   return (
     <div
