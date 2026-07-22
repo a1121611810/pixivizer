@@ -4,6 +4,7 @@ import { listQuality } from "../stores/uiStore";
 import PixivImage from "./PixivImage";
 import HeartBurstEffect from "./HeartBurstEffect";
 import IllustTags from "./IllustTags";
+import SkeletonShimmer from "./SkeletonShimmer";
 import { resolveImageUrl } from "../utils/imageLoader";
 import { useCardInteractions } from "../primitives/useCardInteractions";
 
@@ -71,20 +72,31 @@ const ImageCard: Component<Props> = (props) => {
     onPointerLeave,
   } = useCardInteractions(props.illust);
   const [ugoiraHeight] = createSignal(Math.round(h() * 0.75));
+  const [thumbLoaded, setThumbLoaded] = createSignal(false);
   const [mainLoaded, setMainLoaded] = createSignal(false);
 
   return (
     <div class="image-card" onClick={() => props.onClick(props.illust.id)}>
       <div class="relative overflow-hidden rounded-[var(--borderRadiusMedium)]">
-        {/* Blur-up placeholder */}
+        {/* Skeleton overlay — 图片结构已渲染但缩略图尚未加载成功时占位 */}
+        <SkeletonShimmer
+          class="absolute inset-0 z-0 pointer-events-none transition-opacity duration-[var(--durationUltraSlow)] ease-[var(--curveEasyEase)]"
+          classList={{ "opacity-0": thumbLoaded() }}
+        />
+        {/* Blur-up thumbnail */}
         <img
           src={resolveImageUrl(props.illust.image_urls.square_medium)}
           alt=""
-          class="absolute inset-0 w-full h-full object-cover blur-lg scale-110 pointer-events-none transition-opacity duration-500"
+          class="absolute inset-0 w-full h-full object-cover blur-lg scale-110 pointer-events-none transition-opacity duration-[var(--durationUltraSlow)] ease-[var(--curveEasyEase)] z-1"
           classList={{ "opacity-0": mainLoaded() }}
+          onLoad={() => setThumbLoaded(true)}
+          onError={() => setThumbLoaded(true)}
         />
         {isUgoira() ? (
-          <div style={{ "aspect-ratio": `${w()} / ${ugoiraHeight()}` }} class="overflow-hidden">
+          <div
+            style={{ "aspect-ratio": `${w()} / ${ugoiraHeight()}` }}
+            class="overflow-hidden z-2 relative"
+          >
             <PixivImage
               src={img()}
               alt={props.illust.title}
@@ -93,6 +105,7 @@ const ImageCard: Component<Props> = (props) => {
               loading="lazy"
               class="w-full h-full object-cover object-top"
               onLoad={() => setMainLoaded(true)}
+              hideLoadingPlaceholder
             />
           </div>
         ) : (
@@ -102,8 +115,9 @@ const ImageCard: Component<Props> = (props) => {
             width={w()}
             height={h()}
             loading="lazy"
-            class="w-full h-auto block"
+            class="w-full h-auto block relative z-2"
             onLoad={() => setMainLoaded(true)}
+            hideLoadingPlaceholder
           />
         )}
         {isUgoira() && (

@@ -12,6 +12,8 @@ interface PixivImageProps {
   draggable?: boolean;
   onClick?: (e: MouseEvent) => void;
   onLoad?: (e: Event) => void;
+  /** 是否隐藏组件自带的 loading 占位骨架，由调用方自行管理 loading 状态 */
+  hideLoadingPlaceholder?: boolean;
 }
 
 const PixivImage: Component<PixivImageProps> = (props) => {
@@ -61,12 +63,14 @@ const PixivImage: Component<PixivImageProps> = (props) => {
           class={`bg-[var(--colorNeutralBackground2)] flex flex-col items-center justify-center gap-1 ${props.class || ""}`}
           style={{ ...sizingStyle, ...(typeof props.style === "object" ? props.style : {}) }}
         >
-          <span class="text-[var(--colorNeutralForeground3)] text-xs">⚠</span>
+          <span class="text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase100)]">
+            ⚠
+          </span>
           <span class="text-[var(--colorNeutralForegroundDisabled)] [font-size:var(--fontSizeBase100)]">
             加载失败
           </span>
         </div>
-      ) : (
+      ) : props.hideLoadingPlaceholder ? null : (
         <div
           class={`flex flex-col items-center justify-center gap-1.5 ${props.class || ""}`}
           style={{

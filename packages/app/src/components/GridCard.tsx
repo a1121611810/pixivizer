@@ -1,8 +1,9 @@
-import { type Component } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import type { PixivIllust } from "../api/types";
 import { listQuality } from "../stores/uiStore";
 import PixivImage from "./PixivImage";
 import HeartBurstEffect from "./HeartBurstEffect";
+import SkeletonShimmer from "./SkeletonShimmer";
 import { resolveImageUrl } from "../utils/imageLoader";
 import { useCardInteractions } from "../primitives/useCardInteractions";
 
@@ -36,6 +37,9 @@ const GridCard: Component<Props> = (props) => {
     onPointerLeave,
   } = useCardInteractions(props.illust);
 
+  const [thumbLoaded, setThumbLoaded] = createSignal(false);
+  const [mainLoaded, setMainLoaded] = createSignal(false);
+
   return (
     <div
       class="image-card h-full flex flex-col cursor-pointer"
@@ -43,11 +47,19 @@ const GridCard: Component<Props> = (props) => {
     >
       {/* Thumbnail — fixed height, object-cover cropped */}
       <div class="relative flex-1 overflow-hidden rounded-[var(--borderRadiusMedium)] min-h-0">
+        {/* Skeleton overlay — 图片结构已渲染但缩略图尚未加载成功时占位 */}
+        <SkeletonShimmer
+          class="absolute inset-0 z-0 pointer-events-none transition-opacity duration-[var(--durationUltraSlow)] ease-[var(--curveEasyEase)]"
+          classList={{ "opacity-0": thumbLoaded() }}
+        />
         {/* Blur-up placeholder */}
         <img
           src={resolveImageUrl(props.illust.image_urls.square_medium)}
           alt=""
-          class="absolute inset-0 w-full h-full object-cover blur-lg scale-110 pointer-events-none"
+          class="absolute inset-0 w-full h-full object-cover blur-lg scale-110 pointer-events-none z-1 transition-opacity duration-[var(--durationUltraSlow)] ease-[var(--curveEasyEase)]"
+          classList={{ "opacity-0": mainLoaded() }}
+          onLoad={() => setThumbLoaded(true)}
+          onError={() => setThumbLoaded(true)}
         />
         <PixivImage
           src={img()}
@@ -55,7 +67,9 @@ const GridCard: Component<Props> = (props) => {
           width={props.illust.width}
           height={props.illust.height}
           loading="lazy"
-          class="absolute inset-0 w-full h-full object-cover"
+          class="absolute inset-0 w-full h-full object-cover z-2"
+          onLoad={() => setMainLoaded(true)}
+          hideLoadingPlaceholder
         />
         {/* Badges — top-left */}
         <div class="absolute top-1 left-1 flex items-center gap-[var(--spacingHorizontalXXS)] pointer-events-none select-none z-1 flex-wrap">
