@@ -12,6 +12,34 @@ vi.mock("@capacitor/core", () => ({
   registerPlugin: <T>(_pluginName: string): T => ({}) as T,
 }));
 
+// ── Define public config for browser tests ──
+globalThis.__PUBLIC_CONFIG__ = {
+  userAgent: "PixivIOSApp/7.18.3 (iOS 18.5; iPhone15,4)",
+  appOs: "ios",
+  appOsVersion: "18.5",
+  authUrl: "https://oauth.secure.pixiv.net/auth/token",
+  apiBaseUrl: "https://app-api.pixiv.net",
+  loginUrl: "https://app-api.pixiv.net/web/v1/login",
+  redirectUri: "https://app-api.pixiv.net/web/v1/users/auth/pixiv/callback",
+  imageCdnUrl: "https://i.pximg.net",
+  referer: "https://app-api.pixiv.net/",
+  contentType: "application/x-www-form-urlencoded",
+  timeout: {
+    connect: 15000,
+    read: 30000,
+    overrides: {
+      imageProxy: { connect: 10000, read: 15000 },
+      dnsQuery: { connect: 5000, read: 5000 },
+      oauthDialog: { read: 120000 },
+    },
+  },
+  minWebviewVersion: 85,
+  cacheDir: "pictelio-images",
+  cacheMaxBytes: 314572800,
+  dohUrl: "https://cloudflare-dns.com/dns-query?name=",
+  allowedHosts: ["app-api.pixiv.net", "i.pximg.net"],
+};
+
 vi.mock("@capacitor/preferences", () => ({
   Preferences: {
     get: () => Promise.resolve({ value: null }),
