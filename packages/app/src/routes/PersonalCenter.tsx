@@ -116,9 +116,36 @@ const PersonalCenter: Component<Props> = (props) => {
                 when={profile()}
                 fallback={
                   <div class="flex flex-col items-center pt-6">
-                    <div class="w-[120px] h-[120px] rounded-[var(--borderRadiusCircular)] shimmer-gradient" />
-                    <div class="mt-3 h-5 w-32 shimmer-gradient rounded" />
-                    <div class="mt-1 h-4 w-20 shimmer-gradient rounded" />
+                    <div
+                      class="w-[120px] h-[120px] rounded-[var(--borderRadiusCircular)]"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+                        "background-size": "200% 100%",
+                        animation:
+                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+                      }}
+                    />
+                    <div
+                      class="mt-3 h-5 w-32 rounded"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+                        "background-size": "200% 100%",
+                        animation:
+                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+                      }}
+                    />
+                    <div
+                      class="mt-1 h-4 w-20 rounded"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+                        "background-size": "200% 100%",
+                        animation:
+                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+                      }}
+                    />
                   </div>
                 }
               >
