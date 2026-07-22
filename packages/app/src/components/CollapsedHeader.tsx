@@ -8,8 +8,7 @@ import { scrollToTop } from "../utils/scrollToTop";
 
 interface Props {
   visible: boolean;
-  /** 用于 AvatarFallback 的 class */
-  avatarClass?: string;
+  onBack?: () => void;
 }
 
 function AvatarFallback(props: { class?: string }) {
@@ -72,7 +71,7 @@ const CollapsedHeader: Component<Props> = (props) => {
         appearance="subtle"
         aria-label="返回"
         class="w-8 h-8 p-0 min-w-8"
-        on:click={() => router.history.back()}
+        on:click={() => (props.onBack ? props.onBack() : router.history.back())}
       >
         ←
       </fluent-button>
