@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/solid-router";
 import { user } from "../stores/authStore";
 import { profile, viewedUser } from "../stores/userStore";
 import { followUser, unfollowUser } from "../api/illust";
+import { openSettingsDrawer } from "../stores/uiStore";
 import { Capacitor } from "@capacitor/core";
 import { resolveImageUrl, loadImage } from "../utils/imageLoader";
 
@@ -197,7 +198,7 @@ const ProfileCard: Component<Props> = (props) => {
         >
           <button
             class="inline-flex items-center justify-center gap-[var(--spacingHorizontalXS)] rounded-[var(--borderRadiusMedium)] font-semibold [font-size:var(--fontSizeBase200)] min-h-8 px-[var(--spacingHorizontalM)] border border-[var(--colorNeutralStroke2)] bg-transparent text-[var(--colorNeutralForeground2)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] active:scale-[0.97] select-none cursor-pointer hover:bg-[var(--colorNeutralBackground1Hover)] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
-            onClick={() => {}}
+            onClick={() => openSettingsDrawer()}
           >
             编辑资料
           </button>
