@@ -68,6 +68,8 @@ const novelQuery = createRoot(() =>
         getNextPageParam: (lastPage: { next_url: string | null }) => lastPage.next_url ?? undefined,
         initialPageParam: undefined as string | undefined,
         enabled: !!isActive,
+        // 切换 content type 时保留旧数据，避免全页面闪烁
+        placeholderData: (previousData: any) => previousData,
       };
     },
     () => queryClient,
