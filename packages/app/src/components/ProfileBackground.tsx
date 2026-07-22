@@ -1,7 +1,6 @@
 import { type Component } from "solid-js";
 
 interface Props {
-  userId: number;
   class?: string;
 }
 

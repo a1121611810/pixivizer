@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup, createSignal, createEffect, Show } from "solid-js";
+import { type Component, onMount, onCleanup, Show } from "solid-js";
 import { useNavigate, useParams } from "@tanstack/solid-router";
 import { user } from "../stores/authStore";
 import { setCurrentTab, layoutMode } from "../stores/uiStore";
@@ -39,8 +39,6 @@ const PersonalCenter: Component<Props> = (props) => {
 
   const scroll = createScrollPosition();
   const COLLAPSE_THRESHOLD = 140;
-  const [collapsed, setCollapsed] = createSignal(false);
-
   //── 视差偏移：Layer 1 背景慢速移动 ──
   const parallaxOffset = () => Math.min(scroll.y * 0.3, 200);
 
@@ -53,13 +51,8 @@ const PersonalCenter: Component<Props> = (props) => {
   };
 
   //── Collapsed header 显隐 ──
-  const { suppress: suppressHeaderVisibility } = createScrollDrivenVisibility({
-    topGuard: COLLAPSE_THRESHOLD,
-  });
-
-  createEffect(() => {
-    setCollapsed(scroll.y > COLLAPSE_THRESHOLD);
-  });
+  const { visible: headerVisible, suppress: suppressHeaderVisibility } =
+    createScrollDrivenVisibility({ topGuard: COLLAPSE_THRESHOLD });
 
   onMount(() => {
     setCurrentTab("me");
@@ -98,7 +91,7 @@ const PersonalCenter: Component<Props> = (props) => {
               "z-index": 0,
             }}
           >
-            <ProfileBackground userId={targetUserId()} />
+            <ProfileBackground />
           </div>
 
           {/* ═══ Main content wrapper ═══ */}
@@ -112,7 +105,43 @@ const PersonalCenter: Component<Props> = (props) => {
                 "pointer-events": cardProgress() < 0.1 ? "none" : "auto",
               }}
             >
-              <Show when={profile()}>
+              <Show
+                when={profile()}
+                fallback={
+                  <div class="flex flex-col items-center pt-6">
+                    <div
+                      class="w-[120px] h-[120px] rounded-[var(--borderRadiusCircular)]"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+                        "background-size": "200% 100%",
+                        animation:
+                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+                      }}
+                    />
+                    <div
+                      class="mt-3 h-5 w-32 rounded"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+                        "background-size": "200% 100%",
+                        animation:
+                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+                      }}
+                    />
+                    <div
+                      class="mt-1 h-4 w-20 rounded"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+                        "background-size": "200% 100%",
+                        animation:
+                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+                      }}
+                    />
+                  </div>
+                }
+              >
                 <ProfileCard targetUserId={targetUserId()} isSelf={isSelf()} />
               </Show>
             </div>
@@ -190,7 +219,7 @@ const PersonalCenter: Component<Props> = (props) => {
       </PageTransition>
 
       {/* ═══ Collapsed Header ═══ */}
-      <CollapsedHeader visible={collapsed()} />
+      <CollapsedHeader visible={headerVisible()} />
 
       <SettingsDrawer />
       <NavBar />
