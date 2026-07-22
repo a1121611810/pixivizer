@@ -14,7 +14,13 @@ vi.mock("@/stores/authStore", () => ({
 }));
 
 vi.mock("@/stores/userStore", () => ({
-  profile: () => ({ total_illusts: 100, total_manga: 50, total_novels: 30, total_follow_users: 200, total_mypixiv_users: 300 }),
+  profile: () => ({
+    total_illusts: 100,
+    total_manga: 50,
+    total_novels: 30,
+    total_follow_users: 200,
+    total_mypixiv_users: 300,
+  }),
   viewedUser: () => null,
   loadProfile: vi.fn(),
   loadFollowing: vi.fn(),
@@ -22,26 +28,61 @@ vi.mock("@/stores/userStore", () => ({
 }));
 
 vi.mock("@/stores/userIllustsStore", () => ({
-  illusts: () => [], novels: () => [], nextUrl: () => null,
-  loading: () => false, error: () => null, contentType: () => "illust",
-  load: vi.fn(), loadMore: vi.fn(), saveScrollPosition: vi.fn(),
+  illusts: () => [],
+  novels: () => [],
+  nextUrl: () => null,
+  loading: () => false,
+  error: () => null,
+  contentType: () => "illust",
+  load: vi.fn(),
+  loadMore: vi.fn(),
+  saveScrollPosition: vi.fn(),
 }));
 
 vi.mock("@/stores/uiStore", () => {
   // All exports from uiStore that are used by dependent modules
   const fns: Record<string, unknown> = {};
   const keys = [
-    "setCurrentTab", "currentTab", "layoutMode", "useDnsOverride", "setUseDnsOverride",
-    "showSettingsDrawer", "closeSettingsDrawer", "theme", "setThemePersisted",
-    "listQuality", "setListQuality", "detailQuality", "setDetailQuality",
-    "showR18", "setShowR18", "showR18G", "setShowR18G",
-    "ageConfirmed", "isAdult", "setAgeConfirmation",
-    "autoCheckUpdate", "setAutoCheckUpdate",
-    "hasUpdate", "setHasUpdate", "isCheckingUpdate", "setIsCheckingUpdate",
-    "latestVersion", "setLatestVersion", "checkCompleted", "setCheckCompleted",
-    "setLatestReleaseUrl", "resetUiStore", "openSettingsDrawer", "closeSettingsDrawer",
-    "imageCachePrefetch", "autoHideNavBar", "showBookmarkBadge",
-    "resolvedTheme", "imageQuality", "setImageQuality",
+    "setCurrentTab",
+    "currentTab",
+    "layoutMode",
+    "useDnsOverride",
+    "setUseDnsOverride",
+    "showSettingsDrawer",
+    "closeSettingsDrawer",
+    "theme",
+    "setThemePersisted",
+    "listQuality",
+    "setListQuality",
+    "detailQuality",
+    "setDetailQuality",
+    "showR18",
+    "setShowR18",
+    "showR18G",
+    "setShowR18G",
+    "ageConfirmed",
+    "isAdult",
+    "setAgeConfirmation",
+    "autoCheckUpdate",
+    "setAutoCheckUpdate",
+    "hasUpdate",
+    "setHasUpdate",
+    "isCheckingUpdate",
+    "setIsCheckingUpdate",
+    "latestVersion",
+    "setLatestVersion",
+    "checkCompleted",
+    "setCheckCompleted",
+    "setLatestReleaseUrl",
+    "resetUiStore",
+    "openSettingsDrawer",
+    "closeSettingsDrawer",
+    "imageCachePrefetch",
+    "autoHideNavBar",
+    "showBookmarkBadge",
+    "resolvedTheme",
+    "imageQuality",
+    "setImageQuality",
   ];
   for (const k of keys) fns[k] = vi.fn();
   // Signals that return specific values

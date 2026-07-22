@@ -4,12 +4,7 @@ import { user } from "../stores/authStore";
 import { setCurrentTab, layoutMode } from "../stores/uiStore";
 import { createScrollPosition } from "@solid-primitives/scroll";
 
-import {
-  profile,
-  error as userError,
-  loadProfile,
-  loadFollowing,
-} from "../stores/userStore";
+import { profile, error as userError, loadProfile, loadFollowing } from "../stores/userStore";
 import {
   illusts,
   novels,
@@ -58,8 +53,9 @@ const PersonalCenter: Component<Props> = (props) => {
   };
 
   //── Collapsed header 显隐 ──
-  const { suppress: suppressHeaderVisibility } =
-    createScrollDrivenVisibility({ topGuard: COLLAPSE_THRESHOLD });
+  const { suppress: suppressHeaderVisibility } = createScrollDrivenVisibility({
+    topGuard: COLLAPSE_THRESHOLD,
+  });
 
   createEffect(() => {
     setCollapsed(scroll.y > COLLAPSE_THRESHOLD);

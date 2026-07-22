@@ -13,7 +13,10 @@ function AvatarFallback(props: { class?: string }) {
       class={`flex items-center justify-center bg-[var(--colorNeutralBackground2)] ${props.class || ""}`}
     >
       <svg
-        width="60%" height="60%" viewBox="0 0 24 24" fill="none"
+        width="60%"
+        height="60%"
+        viewBox="0 0 24 24"
+        fill="none"
         class="text-[var(--colorNeutralForegroundDisabled)]"
       >
         <circle cx="12" cy="8" r="4" fill="currentColor" />
@@ -56,7 +59,9 @@ const ProfileCard: Component<Props> = (props) => {
     }
     setErrored(false);
     if (isNative) {
-      loadImage(src).then((r) => setAvatarUrl(r.url)).catch(() => {});
+      loadImage(src)
+        .then((r) => setAvatarUrl(r.url))
+        .catch(() => {});
     } else {
       setAvatarUrl(resolveImageUrl(src));
     }
@@ -127,7 +132,9 @@ const ProfileCard: Component<Props> = (props) => {
           <span class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
             {fmtNum(totalWorks())}
           </span>
-          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">作品</span>
+          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">
+            作品
+          </span>
         </button>
         <button
           class="flex flex-col items-center gap-0.5 px-4 py-2 rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
@@ -137,7 +144,9 @@ const ProfileCard: Component<Props> = (props) => {
           <span class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
             {fmtNum(profile()?.total_follow_users)}
           </span>
-          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">关注</span>
+          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">
+            关注
+          </span>
         </button>
         <button
           class="flex flex-col items-center gap-0.5 px-4 py-2 rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
@@ -147,7 +156,9 @@ const ProfileCard: Component<Props> = (props) => {
           <span class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
             {fmtNum(profile()?.total_mypixiv_users)}
           </span>
-          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">粉丝</span>
+          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">
+            粉丝
+          </span>
         </button>
       </div>
 

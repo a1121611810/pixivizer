@@ -16,9 +16,7 @@ describe("ProfileBackground", () => {
   });
 
   it("accepts and applies additional class names", () => {
-    const { container } = render(() => (
-      <ProfileBackground userId={123} class="fixed" />
-    ));
+    const { container } = render(() => <ProfileBackground userId={123} class="fixed" />);
     const div = container.firstElementChild as HTMLElement;
     expect(div.classList.contains("fixed")).toBe(true);
   });

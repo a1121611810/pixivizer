@@ -6,9 +6,7 @@ import ProfileCard from "@/components/ProfileCard";
 
 describe("ProfileCard", () => {
   it("renders the acrylic card container with surface-glass class", () => {
-    const { container } = render(() => (
-      <ProfileCard targetUserId={1} isSelf={true} />
-    ));
+    const { container } = render(() => <ProfileCard targetUserId={1} isSelf={true} />);
     const cards = container.querySelectorAll(".surface-glass");
     expect(cards.length).toBeGreaterThanOrEqual(1);
   });
@@ -29,9 +27,7 @@ describe("ProfileCard", () => {
   });
 
   it("renders stat items for 作品, 关注, and 粉丝", () => {
-    const { container } = render(() => (
-      <ProfileCard targetUserId={1} isSelf={true} />
-    ));
+    const { container } = render(() => <ProfileCard targetUserId={1} isSelf={true} />);
     // Find stat label spans specifically
     const allElements = container.querySelectorAll("span");
     const labels = Array.from(allElements).map((el) => el.textContent);
@@ -41,9 +37,7 @@ describe("ProfileCard", () => {
   });
 
   it("renders an avatar container (120px) with fallback SVG", () => {
-    const { container } = render(() => (
-      <ProfileCard targetUserId={1} isSelf={true} />
-    ));
+    const { container } = render(() => <ProfileCard targetUserId={1} isSelf={true} />);
     const avatarContainer = container.querySelector(".w-\\[120px\\]");
     expect(avatarContainer).not.toBeNull();
     // SVG fallback should be present when no user data

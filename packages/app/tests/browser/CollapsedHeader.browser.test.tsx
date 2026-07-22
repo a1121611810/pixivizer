@@ -19,16 +19,13 @@ describe("CollapsedHeader", () => {
 
     // Should have the hidden classes
     expect(
-      header!.classList.contains("opacity-0") &&
-        header!.classList.contains("pointer-events-none")
+      header!.classList.contains("opacity-0") && header!.classList.contains("pointer-events-none"),
     ).toBe(true);
   });
 
   it("calls onBack when back button is clicked", () => {
     const onBack = vi.fn();
-    const { container } = render(() => (
-      <CollapsedHeader visible={true} onBack={onBack} />
-    ));
+    const { container } = render(() => <CollapsedHeader visible={true} onBack={onBack} />);
     const backButton = container.querySelector("fluent-button");
     expect(backButton).not.toBeNull();
     backButton!.click();
