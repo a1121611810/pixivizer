@@ -206,7 +206,7 @@ packages/app/src/
 └── utils/              # 工具函数
     ├── createDedupedRequest.ts # 去重请求工具
     ├── html.ts               # HTML 处理工具
-    ├── imageLoader.ts        # 图片加载与缓存（LRU、预加载、CDN URL 构建）
+    ├── imageLoader.ts        # 图片加载与缓存（L1 已加载标记集合、预加载、CDN URL 构建）
     ├── novelBlocks.ts        # 小说段落解析工具
     ├── novelImageDimensions.ts # 小说内嵌图片尺寸提取
     ├── r18Filter.ts          # R18/R18G 内容过滤

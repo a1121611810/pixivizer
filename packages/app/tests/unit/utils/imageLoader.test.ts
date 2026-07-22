@@ -284,5 +284,72 @@ describe("loadImage", () => {
 
       vi.unstubAllGlobals();
     });
+
+    it("injectCacheEntry 单参调用即可登记 key", async () => {
+      const { injectCacheEntry, checkImageCache } = await load();
+
+      injectCacheEntry("https://i.pximg.net/test/warm.jpg");
+
+      expect(checkImageCache("https://i.pximg.net/test/warm.jpg")).toMatch(/^\/pixiv-img\//u);
+    });
+
+    it("checkImageCache 命中时刷新 LRU 访问顺序（而非 FIFO）", async () => {
+      const { loadImage, checkImageCache, getLruOrderForTest } = await load();
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockImplementation(() =>
+          Promise.resolve(new Response(new Blob(["x"], { type: "image/jpeg" }), { status: 200 })),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+
+      await loadImage("https://i.pximg.net/test/a.jpg");
+      await loadImage("https://i.pximg.net/test/b.jpg");
+
+      // 访问 a —— a 应该被挪到最新位置
+      checkImageCache("https://i.pximg.net/test/a.jpg");
+
+      expect(getLruOrderForTest()).toEqual([
+        "https://i.pximg.net/test/b.jpg",
+        "https://i.pximg.net/test/a.jpg",
+      ]);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("重复写入同一 key 不产生重复条目", async () => {
+      const { loadImage, injectCacheEntry, getLruOrderForTest } = await load();
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockImplementation(() =>
+          Promise.resolve(new Response(new Blob(["x"], { type: "image/jpeg" }), { status: 200 })),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+
+      // 模拟预热 + 正常加载写同一 key（修复前 totalBytes 会虚增 2 倍）
+      injectCacheEntry("https://i.pximg.net/test/dup.jpg");
+      await loadImage("https://i.pximg.net/test/dup.jpg");
+
+      const keys = getLruOrderForTest().filter((k) => k === "https://i.pximg.net/test/dup.jpg");
+      expect(keys).toHaveLength(1);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("超出 MAX_CACHE_ENTRIES 时淘汰最旧条目", async () => {
+      const { injectCacheEntry, checkImageCache, getCacheSize, getLruOrderForTest } = await load();
+
+      // 注：MAX_CACHE_ENTRIES = 10000，全量跑太慢。此测试通过缩小规模验证逻辑。
+      // 直接注入 10001 个 key 验证淘汰语义。
+      for (let i = 0; i <= 10_000; i++) {
+        injectCacheEntry(`https://i.pximg.net/test/evict-${i}.jpg`);
+      }
+
+      // 第 0 个应已被淘汰，第 1 个及之后保留
+      expect(getCacheSize()).toBe(10_000);
+      expect(checkImageCache("https://i.pximg.net/test/evict-0.jpg")).toBeUndefined();
+      expect(checkImageCache("https://i.pximg.net/test/evict-10000.jpg")).toBeTruthy();
+      // 最旧的是 evict-1
+      expect(getLruOrderForTest()[0]).toBe("https://i.pximg.net/test/evict-1.jpg");
+    }, 15_000);
   });
 });

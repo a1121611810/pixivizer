@@ -15,82 +15,68 @@ function getImageCache(): ImageCachePlugin | null {
   return imageCacheImpl;
 }
 
-// ─── LRU 图片缓存 ───
+// ─── LRU 已加载标记集合 ───
+//
+// 设计说明（三层缓存中的 L1）：
+//   L1 本集合 —— 只记"URL 已加载过"，不持有 Blob 本体。
+//   L2 浏览器/WebView HTTP 缓存 —— <img> 实际渲染走 /pixiv-img/ 代理 URL，位图由 WebView 管理。
+//   L3 Android 磁盘缓存（ImageCachePlugin）—— 跨进程存活，冷启动预热本集合的 key。
+//
+// 历史上 L1 曾缓存 200MB Blob + blobUrl，但所有消费方都只拿代理 URL，
+// Blob 本体从未被读取，纯属内存驻留（含重复写入泄漏）。因此退化为纯 key 集合。
 
-interface CacheEntry {
-  blob: Blob;
-  blobUrl: string;
-  lastAccess: number;
-  /** 缓存插入时的 blob.size 快照，避免频繁访问 size getter */
-  byteSize: number;
-}
+/** 最大条目数（Pixiv 原图 URL ~100 字符，1 万条约 1-2MB 字符串内存） */
+const MAX_CACHE_ENTRIES = 10_000;
+/** key → 插入序号。Map 迭代序即插入序，重复 set 不挪位，需 delete+set 刷新。 */
+const loadedKeys = new Map<string, number>();
+let insertCounter = 0;
 
-/** 最大缓存字节数（约 200MB） */
-const MAX_CACHE_BYTES = 200 * 1024 * 1024;
-let totalBytes = 0;
-const cache = new Map<string, CacheEntry>();
-
-/** 找出最旧条目并从缓存中移除 */
-function evictOldest() {
-  let oldestKey = "";
-  let oldestTime = Infinity;
-  for (const [k, v] of cache) {
-    if (v.lastAccess < oldestTime) {
-      oldestTime = v.lastAccess;
-      oldestKey = k;
+/** 写入/刷新一个 key，并将其挪到最新位置；超上限时淘汰最旧条目 */
+function cacheSet(key: string) {
+  if (loadedKeys.has(key)) {
+    loadedKeys.delete(key);
+  } else if (loadedKeys.size >= MAX_CACHE_ENTRIES) {
+    // Map 迭代序即插入序，第一个 key 就是最旧的
+    const oldestKey = loadedKeys.keys().next().value;
+    if (oldestKey !== undefined) {
+      loadedKeys.delete(oldestKey);
     }
   }
-  if (!oldestKey) {
-    return;
-  }
-  const old = cache.get(oldestKey);
-  if (old) {
-    totalBytes -= old.byteSize;
-    URL.revokeObjectURL(old.blobUrl);
-    cache.delete(oldestKey);
-  }
+  loadedKeys.set(key, ++insertCounter);
 }
 
-/** 从缓存获取持久 Blob URL，同时更新 LRU 访问时间 */
-/** 同步检查缓存中是否存在指定图片（不触发加载），命中时返回代理 URL。
+/** 同步检查图片是否已加载过（不触发加载），命中时返回代理 URL 并刷新 LRU 位置。
  * 代理 URL 走浏览器 HTTP 缓存（0ms，不产生 blob: 条目），
  * 而 blob: URL 需 0.5ms 的 createObjectURL + 跨语言边界解码开销。 */
 export function checkImageCache(originalUrl: string): string | undefined {
-  if (cache.get(originalUrl)) {
+  if (loadedKeys.has(originalUrl)) {
+    cacheSet(originalUrl); // 刷新到最新位置，避免热图被 FIFO 误淘汰
     return resolveImageUrl(originalUrl);
   }
   return undefined;
 }
 
-/** 存入缓存，创建持久 Blob URL；超出容量或字节预算时淘汰并释放最旧条目 */
-function cacheSet(key: string, blob: Blob) {
-  while (totalBytes + blob.size > MAX_CACHE_BYTES) {
-    evictOldest();
-  }
-  const blobUrl = URL.createObjectURL(blob);
-  totalBytes += blob.size;
-  cache.set(key, { blob, blobUrl, lastAccess: Date.now(), byteSize: blob.size });
-}
-
 /**
- * 公开 API：将下载完成的 Blob 注入 LRU 缓存。
- * 用于 App.tsx 启动时从磁盘缓存预热。
+ * 公开 API：标记某个 URL 的图片已在磁盘缓存中存在。
+ * 用于 warmCacheFromDisk 启动预热——只登记 key，不再把 Blob 解码进内存。
  */
-export function injectCacheEntry(key: string, blob: Blob): void {
-  cacheSet(key, blob);
+export function injectCacheEntry(key: string): void {
+  cacheSet(key);
 }
 
-/** 清空缓存，释放所有 Blob URL */
+/** 清空已加载标记（"清除本地数据"时调用） */
 export function clearImageCache() {
-  for (const entry of cache.values()) {
-    URL.revokeObjectURL(entry.blobUrl);
-  }
-  cache.clear();
+  loadedKeys.clear();
 }
 
-/** 获取缓存大小 */
+/** 获取缓存条目数 */
 export function getCacheSize(): number {
-  return cache.size;
+  return loadedKeys.size;
+}
+
+/** 测试专用：返回当前 LRU 顺序（最旧在前，frozen 防外部修改）。生产代码请勿使用。 */
+export function getLruOrderForTest(): readonly string[] {
+  return Object.freeze([...loadedKeys.keys()]);
 }
 
 // ─── URL 尺寸解析 ───
@@ -196,7 +182,7 @@ export function loadImage(originalUrl: string): Promise<LoadedImage> {
   }
 
   // 1. 检查缓存 — 无需异步操作，直接代理 URL 走浏览器缓存
-  if (cache.has(originalUrl)) {
+  if (loadedKeys.has(originalUrl)) {
     return Promise.resolve({ url: resolveImageUrl(originalUrl), cleanup: () => {} });
   }
 
@@ -231,8 +217,8 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
       try {
         const cached = await imageCache!.getImage({ key: originalUrl });
         if (cached?.base64) {
-          const decoded = await base64ToBlob(cached.base64);
-          cacheSet(originalUrl, decoded);
+          // 磁盘缓存命中：只登记 key，不再 base64 解码进内存（省掉整张图的内存峰值）
+          cacheSet(originalUrl);
           return { url: resolveImageUrl(originalUrl), cleanup: () => {} };
         }
       } catch (error) {
@@ -255,8 +241,8 @@ async function loadImageInner(originalUrl: string): Promise<LoadedImage> {
       blob = await fetchWeb(targetUrl, originalUrl);
     }
 
-    // 存入缓存（cacheSet 创建持久 Blob URL 供内部使用）
-    cacheSet(originalUrl, blob);
+    // 登记已加载标记（Blob 本体交给浏览器 HTTP 缓存，不进 L1）
+    cacheSet(originalUrl);
 
     // 返回代理 URL（不走 blob: URL，避免 Network 面板条目 + 0.5ms 开销）
     return {
@@ -311,7 +297,7 @@ export async function loadImageWithProgress(
   }
 
   // 1. 缓存命中 — 直接返回代理 URL（走浏览器 HTTP 缓存，0ms，无 blob: 条目）
-  if (cache.has(originalUrl)) {
+  if (loadedKeys.has(originalUrl)) {
     onProgress({ loaded: 0, total: 0, percent: 100 });
     return { url: resolveImageUrl(originalUrl), cleanup: () => {}, durationMs: 0 };
   }
@@ -335,8 +321,8 @@ export async function loadImageWithProgress(
     const proxyUrl = toWebProxyUrl(targetUrl);
     const blob = await loadWithProgressWeb(proxyUrl, onProgress);
 
-    // 4. 存入缓存
-    cacheSet(originalUrl, blob);
+    // 4. 登记已加载标记
+    cacheSet(originalUrl);
 
     const durationMs = Math.round(performance.now() - startTime);
 
@@ -448,7 +434,7 @@ async function raceFetch<T>(
   }
 }
 
-// ─── Blob ↔ Base64 工具（用于 ImageCache 插件） ───
+// ─── Blob → Base64 工具（用于 ImageCache 插件写盘） ───
 
 /** 将 Blob 转为 Base64 字符串 */
 function blobToBase64(blob: Blob): Promise<string> {
@@ -468,20 +454,10 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-/** 将 Base64 字符串还原为 Blob（同步，无 data: URL fetch） */
-function base64ToBlob(base64: string, mimeType: string = "image/jpeg"): Blob {
-  const binaryStr = atob(base64);
-  const bytes = new Uint8Array(binaryStr.length);
-  for (let i = 0; i < binaryStr.length; i++) {
-    bytes[i] = binaryStr.charCodeAt(i);
-  }
-  return new Blob([bytes], { type: mimeType });
-}
-
 // ─── 磁盘缓存预热 ───
 
 /**
- * 启动时从 Android 文件缓存读取最近使用的图片，预填到 LRU 缓存。
+ * 启动时从 Android 文件缓存读取最近使用的 key，登记到 L1 已加载集合。
  * 仅在 Native 平台生效；Web 平台无操作。
  *
  * 在 App.tsx onMount 中调用，与 auth 初始化并行执行。
@@ -493,26 +469,19 @@ export async function warmCacheFromDisk(): Promise<void> {
   }
 
   try {
-    const cache = getImageCache();
-    const { keys } = await cache!.getCachedKeys();
+    const imageCache = getImageCache();
+    const { keys } = await imageCache!.getCachedKeys();
     if (!keys || keys.length === 0) {
       return;
     }
 
-    // 取最近 50 张，并行加载到 LRU
+    // 取最近 50 张，同步登记到 L1（只读 key，不解码图片本体）
     const recentKeys = keys.slice(-50);
-    const results = await Promise.allSettled(
-      recentKeys.map(async (key: string) => {
-        const cached = await cache!.getImage({ key });
-        if (cached?.base64) {
-          const blob = await base64ToBlob(cached.base64);
-          injectCacheEntry(key, blob);
-        }
-      }),
-    );
+    for (const key of recentKeys) {
+      injectCacheEntry(key);
+    }
 
-    const loaded = results.filter((r) => r.status === "fulfilled").length;
-    console.log(`[ImageCache] Warmup: loaded ${loaded}/${recentKeys.length} entries`);
+    console.log(`[ImageCache] Warmup: registered ${recentKeys.length}/${keys.length} entries`);
   } catch (error) {
     // 预热失败不阻塞启动
     console.warn("[ImageCache] Warmup failed", error);
