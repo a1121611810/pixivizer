@@ -8,7 +8,7 @@ import {
 } from "@tanstack/solid-virtual";
 import type { VirtualItem } from "@tanstack/solid-virtual";
 import type { ApiError } from "../api/types";
-import { createSentinelPaginator } from "./createSentinelPaginator";
+import { createSentinel } from "@/primitives/visibility";
 import { VIRTUAL_SCROLL_MARGIN } from "./rootMargins";
 
 // ─── Constants ───
@@ -125,7 +125,7 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
   }
 
   // ── Sentinel paginator ──
-  const { attach: sentinelAttach } = createSentinelPaginator({
+  const { attach: sentinelAttach } = createSentinel({
     rootMargin: VIRTUAL_SCROLL_MARGIN,
     enabled: () => config.hasMore() && !config.loading(),
     onTrigger: () => config.onLoadMore(),

@@ -6,7 +6,7 @@ import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { SENTINEL_MARGIN } from "../primitives/rootMargins";
-import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
+import { createSentinel } from "@/primitives/visibility";
 import { createScrollDrivenVisibility } from "../primitives/createScrollDrivenVisibility";
 import { scrollToTop } from "../utils/scrollToTop";
 import {
@@ -57,7 +57,7 @@ const FollowListPage: Component<Props> = (props) => {
     reset();
   });
 
-  const { attach: sentinelAttach } = createSentinelPaginator({
+  const { attach: sentinelAttach } = createSentinel({
     rootMargin: SENTINEL_MARGIN,
     enabled: () => !loading(),
     onTrigger: () => loadMore(),

@@ -13,6 +13,7 @@ export default defineConfig({
       "@capacitor/preferences",
       "@capacitor/app",
       "@capacitor/device",
+      "@solid-primitives/intersection-observer",
     ],
   },
   test: {

@@ -6,7 +6,7 @@ import { resolveImageUrl, loadImage } from "../utils/imageLoader";
 import { Capacitor } from "@capacitor/core";
 import { unfollowUser, followUser } from "../api/illust";
 import { SENTINEL_MARGIN } from "../primitives/rootMargins";
-import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
+import { createSentinel } from "@/primitives/visibility";
 import { createScrolledPast } from "../primitives/createScrolledPast";
 import { scrollToTop } from "../utils/scrollToTop";
 
@@ -135,7 +135,7 @@ const PersonalCenter: Component<Props> = (props) => {
     setCurrentTab("me");
   });
 
-  const { attach: sentinelAttach } = createSentinelPaginator({
+  const { attach: sentinelAttach } = createSentinel({
     rootMargin: SENTINEL_MARGIN,
     enabled: () => !loading(),
     onTrigger: () => {

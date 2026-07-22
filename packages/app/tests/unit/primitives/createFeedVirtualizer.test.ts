@@ -31,15 +31,13 @@ vi.mock("@tanstack/solid-virtual", () => ({
 }));
 
 const mockSentinelAttach = vi.fn();
-vi.mock("@/primitives/createSentinelPaginator", () => ({
-  createSentinelPaginator: vi.fn(() => ({
-    attach: mockSentinelAttach,
-  })),
+vi.mock("@/primitives/visibility", () => ({
+  createSentinel: vi.fn(() => ({ attach: mockSentinelAttach })),
 }));
 
 // Import after mocks are set up
 import { createFeedVirtualizer } from "@/primitives/createFeedVirtualizer";
-import { createSentinelPaginator } from "@/primitives/createSentinelPaginator";
+import { createSentinel } from "@/primitives/visibility";
 import { Virtualizer as MockedVirtualizer } from "@tanstack/solid-virtual";
 
 // Stub global browser APIs — must be done before any test runs
@@ -297,10 +295,10 @@ describe("createFeedVirtualizer", () => {
   });
 
   describe("sentinel paginator", () => {
-    it("creates a sentinel paginator with correct rootMargin", () => {
+    it("creates a sentinel with correct rootMargin", () => {
       runWithRoot(() => createFeedVirtualizer(createMockConfig()));
 
-      expect(vi.mocked(createSentinelPaginator)).toHaveBeenCalledWith(
+      expect(vi.mocked(createSentinel)).toHaveBeenCalledWith(
         expect.objectContaining({
           rootMargin: "0px 0px 30% 0px",
         }),
@@ -319,7 +317,7 @@ describe("createFeedVirtualizer", () => {
 
       runWithRoot(() => createFeedVirtualizer(config));
 
-      const opts = vi.mocked(createSentinelPaginator).mock.calls[0][0];
+      const opts = vi.mocked(createSentinel).mock.calls[0][0];
       expect(typeof opts.enabled).toBe("function");
       expect(typeof opts.onTrigger).toBe("function");
 

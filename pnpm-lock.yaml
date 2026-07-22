@@ -226,6 +226,9 @@ importers:
       '@fluentui/web-components':
         specifier: 3.0.2
         version: 3.0.2(@microsoft/fast-element@3.0.0)(@microsoft/focusgroup-polyfill@1.5.0)
+      '@solid-primitives/intersection-observer':
+        specifier: ^2.2.5
+        version: 2.2.5(solid-js@1.9.14)
       '@solid-primitives/scheduled':
         specifier: ^1.5.3
         version: 1.5.3(solid-js@1.9.14)
@@ -1638,6 +1641,11 @@ packages:
 
   '@solid-primitives/event-listener@2.4.6':
     resolution: {integrity: sha512-5I0YJcTVYIWoMmgBSROBZGcz+ymhew/pGTg2dHW74BUjFKsV8Li4bOZYl0YAGP4mHw5o4UBd9/BEesqBci3wxw==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/intersection-observer@2.2.5':
+    resolution: {integrity: sha512-mhlQETWaS4jjVBBmfFUsUSih5eSqVdYD7bDAjwmhxEAy1bydKTiaCn8g3ARQB1jM/92qyxTcOvTCpPoMIOkaPA==}
     peerDependencies:
       solid-js: ^1.6.12
 
@@ -4847,6 +4855,11 @@ snapshots:
       '@solid-primitives/utils': 6.4.1(solid-js@1.9.14)
       solid-js: 1.9.14
 
+  '@solid-primitives/intersection-observer@2.2.5(solid-js@1.9.14)':
+    dependencies:
+      '@solid-primitives/utils': 6.4.1(solid-js@1.9.14)
+      solid-js: 1.9.14
+
   '@solid-primitives/map@0.7.4(solid-js@1.9.14)':
     dependencies:
       '@solid-primitives/trigger': 1.2.4(solid-js@1.9.14)
@@ -7107,6 +7120,7 @@ time:
   '@fluentui/web-components@3.0.2': '2026-07-13T04:09:45.729Z'
   '@playwright/test@1.61.1': '2026-06-23T19:49:12.825Z'
   '@resvg/resvg-js@2.6.2': '2024-03-26T13:43:37.598Z'
+  '@solid-primitives/intersection-observer@2.2.5': '2026-07-04T20:38:32.907Z'
   '@solid-primitives/scheduled@1.5.3': '2026-02-21T23:06:15.746Z'
   '@solid-primitives/scroll@2.1.6': '2026-07-04T20:38:40.812Z'
   '@solidjs/testing-library@0.8.10': '2024-09-25T13:24:08.486Z'

@@ -17,7 +17,7 @@ import ErrorDisplay from "./ErrorDisplay";
 import type { PixivIllust, ApiError } from "../api/types";
 import type { LayoutMode } from "../primitives/types";
 import { VIRTUAL_SCROLL_MARGIN } from "../primitives/rootMargins";
-import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
+import { createSentinel } from "@/primitives/visibility";
 import { loadImage, checkImageCache } from "../utils/imageLoader";
 import { isImageHostEnabled } from "../stores/imageHostStore";
 import { imageCachePrefetch } from "../stores/uiStore";
@@ -57,7 +57,7 @@ const VERTICAL_GAP = 12;
 const CARD_INFO_HEIGHT = 140;
 
 const VirtualFeed: Component<Props> = (props) => {
-  const { attach: sentinelAttach } = createSentinelPaginator({
+  const { attach: sentinelAttach } = createSentinel({
     rootMargin: VIRTUAL_SCROLL_MARGIN,
     enabled: () => props.hasMore && !props.loading,
     onTrigger: () => props.onLoadMore(),

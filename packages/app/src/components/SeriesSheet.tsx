@@ -12,7 +12,7 @@ import type { PixivNovel } from "../api/types";
 import SeriesSheetItem from "./SeriesSheetItem";
 import LoadingSpinner from "./LoadingSpinner";
 import { SHEET_LAZY_MARGIN } from "../primitives/rootMargins";
-import { createSentinelPaginator } from "../primitives/createSentinelPaginator";
+import { createSentinel } from "@/primitives/visibility";
 import { getSeries, setSeries } from "../stores/novelCache";
 
 interface Props {
@@ -45,7 +45,7 @@ const SeriesSheet: Component<Props> = (props) => {
 
   let abortController: AbortController | null = null;
 
-  const { attach: sentinelAttach } = createSentinelPaginator({
+  const { attach: sentinelAttach } = createSentinel({
     root: scrollContainer,
     rootMargin: SHEET_LAZY_MARGIN,
     enabled: () => hasMore() && !loadingMore() && !loading(),

@@ -22,6 +22,7 @@ import NovelSearchBar from "../components/NovelSearchBar";
 import { NOVEL_INTERACTIVE_MARGIN } from "../primitives/rootMargins";
 import { createScrollDirection } from "../primitives/createScrollDirection";
 import { createScrollPosition } from "@solid-primitives/scroll";
+import { createVisibilityObserver } from "@solid-primitives/intersection-observer";
 import { createNovelSearch } from "../primitives/createNovelSearch";
 import { createNovelVirtualLayout } from "../primitives/createNovelVirtualLayout";
 import type { PixivNovel, SeriesNavigation } from "@/api/types";
@@ -626,8 +627,11 @@ const NovelDetail: Component = () => {
     resetScrollDirection();
   });
 
-  const [showHeaderTitle, setShowHeaderTitle] = createSignal(false);
   const [titleEl, setTitleEl] = createSignal<HTMLHeadingElement | undefined>();
+  const titleVisible = createVisibilityObserver({ rootMargin: NOVEL_INTERACTIVE_MARGIN })(() =>
+    titleEl(),
+  );
+  const showHeaderTitle = createMemo(() => !titleVisible());
   const [imageViewerOpen, setImageViewerOpen] = createSignal(false);
   const [imageViewerIndex, setImageViewerIndex] = createSignal(0);
 
@@ -643,20 +647,6 @@ const NovelDetail: Component = () => {
 
   const imageBlockList = createMemo(() => getImageBlocks(blocks()));
   const imageViewerUrls = createMemo(() => imageBlockList().map((block) => block.urls.original));
-
-  // IntersectionObserver: 检测原始标题元素是否滚出 header 区域
-  createEffect(() => {
-    const el = titleEl();
-    if (!el) {
-      return;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => setShowHeaderTitle(!entry.isIntersecting),
-      { rootMargin: NOVEL_INTERACTIVE_MARGIN },
-    );
-    observer.observe(el);
-    onCleanup(() => observer.disconnect());
-  });
 
   return (
     <PageTransition>

@@ -8,6 +8,7 @@ import {
   onCleanup,
 } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
+import { createSentinel } from "@/primitives/visibility";
 import type { PixivComment } from "../api/types";
 import { SHEET_LAZY_MARGIN } from "../primitives/rootMargins";
 import { user } from "../stores/authStore";
@@ -85,7 +86,6 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
   });
 
   // 分页哨兵
-  let sentinelRef: HTMLDivElement | undefined;
   let inputRef: HTMLInputElement | undefined;
 
   async function loadMore() {
@@ -105,22 +105,10 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
     }
   }
 
-  createEffect(() => {
-    if (!props.isOpen) {
-      return;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && nextUrl() && !loadingMore()) {
-          loadMore();
-        }
-      },
-      { rootMargin: SHEET_LAZY_MARGIN },
-    );
-    if (sentinelRef) {
-      observer.observe(sentinelRef);
-    }
-    onCleanup(() => observer.disconnect());
+  const { attach: sentinelAttach } = createSentinel({
+    rootMargin: SHEET_LAZY_MARGIN,
+    enabled: () => nextUrl() !== null && !loadingMore(),
+    onTrigger: () => void loadMore(),
   });
 
   // 发表/回复
@@ -298,7 +286,7 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
               </For>
 
               {/* Sentinel for pagination */}
-              <div ref={sentinelRef!}>
+              <div ref={sentinelAttach}>
                 <Show when={loadingMore()}>
                   <div class="flex justify-center py-4">
                     <div class="spinner w-5 h-5" />

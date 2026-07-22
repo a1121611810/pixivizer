@@ -1,12 +1,5 @@
-import {
-  type Component,
-  Show,
-  createSignal,
-  onMount,
-  onCleanup,
-  createEffect,
-  createMemo,
-} from "solid-js";
+import { type Component, Show, createSignal, onCleanup, createEffect, createMemo } from "solid-js";
+import { createIntersectionObserver } from "@solid-primitives/intersection-observer";
 import { useNavigate, useRouter, getRouteApi } from "@tanstack/solid-router";
 import { addBookmark, deleteBookmark, followUser, unfollowUser } from "../api/illust";
 import { ApiErrorType, type ApiError } from "../api/types";
@@ -53,6 +46,8 @@ const IllustDetail: Component = () => {
   const [showActionMenu, setShowActionMenu] = createSignal(false);
   const [showComments, setShowComments] = createSignal(false);
   const [toastMessage, setToastMessage] = createSignal<string | null>(null);
+  const [pageRefs, setPageRefs] = createSignal<Map<number, HTMLElement>>(new Map());
+  const pageElements = createMemo(() => Array.from(pageRefs().values()));
   const isBlockedAuthor = createMemo(() => {
     const i = illust();
     return i ? isBlocked(i.user.id) : false;
@@ -186,6 +181,31 @@ const IllustDetail: Component = () => {
   let savedScrollBeforeViewer = 0;
   let viewerMaskRemover: (() => void) | null = null;
 
+  createIntersectionObserver(
+    pageElements,
+    (entries) => {
+      let best: { index: number; ratio: number } | null = null;
+      for (const entry of entries) {
+        if (entry.intersectionRatio > 0) {
+          const idx = Number((entry.target as HTMLElement).dataset.pageIndex);
+          if (!Number.isNaN(idx) && entry.intersectionRatio > (best?.ratio ?? 0)) {
+            best = { index: idx, ratio: entry.intersectionRatio };
+          }
+        }
+      }
+      if (best && !ignorePageObserver) {
+        setCurrentVisiblePage(best.index);
+      }
+    },
+    { threshold: [0, 0.25, 0.5, 0.75] },
+  );
+
+  // 组件卸载时确保移除即时注入的过渡遮罩，避免 DOM 泄漏
+  onCleanup(() => {
+    viewerMaskRemover?.();
+    viewerMaskRemover = null;
+  });
+
   // Open/close viewer; registered with overlay stack for back-button handling
   function openViewer(startPage = 0) {
     savedScrollBeforeViewer = window.scrollY;
@@ -224,7 +244,7 @@ const IllustDetail: Component = () => {
     setViewerOpen(false);
   }
 
-  // 查看器关闭后：移除即时遮罩 + 恢复滚动位置 + 重新观察多图 DOM
+  // 查看器关闭后：移除即时遮罩 + 恢复滚动位置
   createEffect(() => {
     if (!viewerOpen() && !loading() && illust()) {
       requestAnimationFrame(() => {
@@ -234,21 +254,8 @@ const IllustDetail: Component = () => {
 
         // 恢复之前保存的滚动位置
         window.scrollTo(0, savedScrollBeforeViewer);
-
-        // 多图：重新观察 LazyDetailImage DOM 元素
-        if (illust()!.page_count > 1) {
-          connectPageObserver();
-        }
       });
     }
-  });
-
-  onMount(() => {
-    onCleanup(() => {
-      // 组件卸载时确保过渡遮罩被移除
-      viewerMaskRemover?.();
-      viewerMaskRemover = null;
-    });
   });
 
   // 将查看器状态注册到 overlay 栈，供系统返回手势统一处理
@@ -295,50 +302,12 @@ const IllustDetail: Component = () => {
     }
     if (d.illust) {
       setIllust(d.illust);
+      setPageRefs(new Map());
       recordVisit(d.illust, "illust");
       setIsFollowed(d.illust.user.is_followed ?? false);
-      // Multi-page: start observing page visibility for staircase after DOM renders
-      if (d.illust.page_count > 1) {
-        requestAnimationFrame(() => connectPageObserver());
-      }
       setLoading(false);
     }
   });
-
-  // IntersectionObserver — track which page is currently visible for staircase.
-  // Created in onMount for cleanup tracking; observe() is called after data loads.
-  let pageObserver: IntersectionObserver | null = null;
-  onMount(() => {
-    pageObserver = new IntersectionObserver(
-      (entries) => {
-        let best: { index: number; ratio: number } | null = null;
-        for (const entry of entries) {
-          if (entry.intersectionRatio > 0) {
-            const idx = Number((entry.target as HTMLElement).dataset.pageIndex);
-            if (!Number.isNaN(idx) && entry.intersectionRatio > (best?.ratio ?? 0)) {
-              best = { index: idx, ratio: entry.intersectionRatio };
-            }
-          }
-        }
-        if (best && !ignorePageObserver) {
-          setCurrentVisiblePage(best.index);
-        }
-      },
-      { threshold: [0, 0.25, 0.5, 0.75] },
-    );
-    onCleanup(() => pageObserver?.disconnect());
-  });
-
-  /** Start observing LazyDetailImage containers — call after data renders */
-  function connectPageObserver() {
-    if (!pageObserver) {
-      return;
-    }
-    requestAnimationFrame(() => {
-      const containers = document.querySelectorAll("[data-page-index]");
-      containers.forEach((el) => pageObserver!.observe(el));
-    });
-  }
 
   /** Parse Pixiv internal caption links and navigate in-app */
   function handleCaptionClick(e: MouseEvent) {
@@ -539,15 +508,30 @@ const IllustDetail: Component = () => {
                   const q = detailQuality();
                   const src = q === "medium" ? page.image_urls.medium : page.image_urls.large;
                   return (
-                    <LazyDetailImage
-                      src={src}
-                      pageIndex={i}
-                      totalPages={illust()!.page_count}
-                      onClick={() => openViewer(i)}
-                      visiblePage={currentVisiblePage()}
-                      width={illust()!.width}
-                      height={illust()!.height}
-                    />
+                    <div
+                      ref={(el) => {
+                        setPageRefs((prev) => {
+                          const next = new Map(prev);
+                          if (el) {
+                            next.set(i, el);
+                          } else {
+                            next.delete(i);
+                          }
+                          return next;
+                        });
+                      }}
+                      data-page-index={i}
+                    >
+                      <LazyDetailImage
+                        src={src}
+                        pageIndex={i}
+                        totalPages={illust()!.page_count}
+                        onClick={() => openViewer(i)}
+                        visiblePage={currentVisiblePage()}
+                        width={illust()!.width}
+                        height={illust()!.height}
+                      />
+                    </div>
                   );
                 })}
               </div>

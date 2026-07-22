@@ -348,14 +348,16 @@ packages/app/src/
 │   ├── createNovelSearch.ts      # 小说正文搜索匹配（字符索引）
 │   ├── createNovelTextLayout.ts  # 小说正文纯文本布局（pretext）
 │   ├── createNovelVirtualLayout.ts # 小说正文虚拟化窗口管理
-│   ├── createSentinelPaginator.ts # 哨兵元素无限加载分页器
 │   ├── imageSize.worker.ts       # Web Worker 图片尺寸计算（替代旧的 masonryWorker）
 │   ├── isPretextSupported.ts     # pretext 运行环境检测
 │   ├── measureText.ts            # 文本测量工具
 │   ├── novelTextLayoutCache.ts   # 小说布局结果 LRU 缓存
 │   ├── types.ts                 # 布局类型定义
 │   ├── useContainerWidth.ts      # 容器宽度响应式 Hook
-│   └── useViewportLazy.ts        # 视口可见性 Hook
+│   └── visibility/               # 可见性/哨兵原语
+│       ├── everVisible.ts        # 一次性可见性（基于 @solid-primitives/intersection-observer）
+│       ├── index.ts              # 导出
+│       └── sentinel.ts           # 哨兵分页原语（基于 @solid-primitives/intersection-observer）
 ├── services/           # 服务封装
 │   ├── backGestureService.ts # Android 返回手势动画服务
 │   ├── imageHostService.ts # 自定义图片托管服务

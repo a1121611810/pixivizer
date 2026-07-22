@@ -1,6 +1,6 @@
-import type { Component } from "solid-js";
+import { createSignal, createMemo, type Component } from "solid-js";
 import PixivImage from "./PixivImage";
-import { createViewportLazy } from "../primitives/useViewportLazy";
+import { createEverVisible } from "@/primitives/visibility";
 import { LAZY_LOAD_MARGIN } from "../primitives/rootMargins";
 
 interface Props {
@@ -22,23 +22,21 @@ interface Props {
  * 其余保持在 aspect-ratio 占位状态。无 visiblePage 时退回到 IntersectionObserver 兜底。
  */
 const LazyDetailImage: Component<Props> = (props) => {
-  const { everVisible, attach } = createViewportLazy({
-    rootMargin: LAZY_LOAD_MARGIN,
-    initialVisible:
-      props.visiblePage !== undefined ? props.pageIndex <= props.visiblePage + 1 : false,
-    externalVisible: () => {
-      const vp = props.visiblePage;
-      if (vp === undefined) {
-        return false;
-      }
-      return props.pageIndex <= vp + 1;
-    },
-    skipObserver: props.visiblePage !== undefined,
+  const [ref, setRef] = createSignal<HTMLDivElement>();
+  const preloaded = createMemo(() => {
+    const vp = props.visiblePage;
+    return vp !== undefined && props.pageIndex <= vp + 1;
   });
+  const ioVisible = createEverVisible({
+    rootMargin: LAZY_LOAD_MARGIN,
+    skipObserver: props.visiblePage !== undefined,
+  })(() => ref());
+
+  const everVisible = createMemo(() => preloaded() || ioVisible());
 
   return (
     <div
-      ref={attach}
+      ref={setRef}
       class="relative cursor-pointer"
       data-page-index={props.pageIndex}
       onClick={props.onClick}
