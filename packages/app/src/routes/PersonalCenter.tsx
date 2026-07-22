@@ -1,234 +1,460 @@
-import { type Component, onMount, onCleanup, createSignal, createEffect, Show } from "solid-js";
-import { useNavigate, useParams } from "@tanstack/solid-router";
+import { type Component, onMount, onCleanup, createSignal, Show, createEffect } from "solid-js";
+import { useNavigate, useParams, useRouter } from "@tanstack/solid-router";
 import { user } from "../stores/authStore";
-import { setCurrentTab, layoutMode } from "../stores/uiStore";
-import { createScrollPosition } from "@solid-primitives/scroll";
+import { setCurrentTab } from "../stores/uiStore";
+import { resolveImageUrl, loadImage } from "../utils/imageLoader";
+import { Capacitor } from "@capacitor/core";
+import { unfollowUser, followUser } from "../api/illust";
+import { SENTINEL_MARGIN } from "../primitives/rootMargins";
+import { createSentinel } from "@/primitives/visibility";
+import { createScrolledPast } from "../primitives/createScrolledPast";
+import { scrollToTop } from "../utils/scrollToTop";
 
-import { profile, error as userError, loadProfile, loadFollowing } from "../stores/userStore";
+function AvatarFallback(props: { class?: string }) {
+  return (
+    <div
+      class={`flex items-center justify-center bg-[var(--colorNeutralBackground2)] ${props.class || ""}`}
+    >
+      <svg
+        width="60%"
+        height="60%"
+        viewBox="0 0 24 24"
+        fill="none"
+        class="text-[var(--colorNeutralForegroundDisabled)]"
+      >
+        <circle cx="12" cy="8" r="4" fill="currentColor" />
+        <path d="M5 21c0-4 3.1-7 7-7s7 3 7 7" fill="currentColor" />
+      </svg>
+    </div>
+  );
+}
+
+function avatarUrl(urls: { medium?: string; px_50x50?: string; px_170x170?: string }): string {
+  const src = urls.medium || urls.px_170x170 || urls.px_50x50 || "";
+  return resolveImageUrl(src);
+}
+
+const shimmerStyle = {
+  background:
+    "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
+  "background-size": "200% 100%",
+  animation: "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
+};
+
+function Shimmer(props: { class?: string; style?: Record<string, string | number> }) {
+  return <div class={props.class || ""} style={{ ...shimmerStyle, ...props.style }} />;
+}
+
 import {
-  illusts,
-  novels,
-  nextUrl,
+  profile,
+  viewedUser,
+  followingList,
+  followersList,
   loading,
   error,
-  contentType,
-  load,
-  loadMore,
-  saveScrollPosition,
-} from "../stores/userIllustsStore";
-
-import ProfileBackground from "../components/ProfileBackground";
-import ProfileCard from "../components/ProfileCard";
-import CollapsedHeader from "../components/CollapsedHeader";
-import UserWorksFeed from "../components/UserWorksFeed";
+  activeTab,
+  loadProfile,
+  loadFollowing,
+  loadMoreFollowing,
+  loadMoreFollowers,
+  loadFollowers,
+  toggleUserFollow,
+  switchTab,
+} from "../stores/userStore";
+import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
 import SettingsDrawer from "../components/SettingsDrawer";
-import NavBar from "../components/NavBar";
+import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorDisplay from "../components/ErrorDisplay";
-import { createScrollDrivenVisibility } from "../primitives/createScrollDrivenVisibility";
 
 interface Props {
   userId?: string;
 }
 
+function fmtNum(n: number | undefined): string {
+  if (n == null) {
+    return "—";
+  }
+  if (n >= 10_000) {
+    return `${(n / 10_000).toFixed(1)}万`;
+  }
+  return String(n);
+}
+
+const list = () => (activeTab() === "following" ? followingList() : followersList());
+
 const PersonalCenter: Component<Props> = (props) => {
   const navigate = useNavigate();
+  const router = useRouter();
   const params = useParams({ strict: false });
   const targetUserId = () => Number(props.userId || params().id || user()?.id || 0);
   const isSelf = () => targetUserId() === Number(user()?.id ?? 0);
-
-  const scroll = createScrollPosition();
+  const displayUser = () => (isSelf() ? user() : viewedUser());
   const COLLAPSE_THRESHOLD = 140;
-  const [collapsed, setCollapsed] = createSignal(false);
-
-  //── 视差偏移：Layer 1 背景慢速移动 ──
-  const parallaxOffset = () => Math.min(scroll.y * 0.3, 200);
-
-  //── 信息卡透明度：60–140px 区间渐变 ──
-  const cardProgress = () => {
-    const y = scroll.y;
-    if (y < 60) return 1;
-    if (y >= COLLAPSE_THRESHOLD) return 0;
-    return 1 - (y - 60) / (COLLAPSE_THRESHOLD - 60);
-  };
-
-  //── Collapsed header 显隐 ──
-  const { suppress: suppressHeaderVisibility } = createScrollDrivenVisibility({
-    topGuard: COLLAPSE_THRESHOLD,
-  });
+  const collapsed = createScrolledPast(COLLAPSE_THRESHOLD);
+  const isNative = Capacitor.isNativePlatform();
+  const [avatarDisplayUrl, setAvatarDisplayUrl] = createSignal("");
+  const [profileAvatarErrored, setProfileAvatarErrored] = createSignal(false);
 
   createEffect(() => {
-    setCollapsed(scroll.y > COLLAPSE_THRESHOLD);
+    const u = displayUser();
+    if (!u) {
+      setAvatarDisplayUrl("");
+      return;
+    }
+    const src =
+      u.profile_image_urls.medium ||
+      u.profile_image_urls.px_170x170 ||
+      u.profile_image_urls.px_50x50 ||
+      "";
+    console.log(
+      src,
+      !!u.profile_image_urls.medium,
+      !!u.profile_image_urls.px_170x170,
+      !!u.profile_image_urls.px_50x50,
+    );
+    if (!src) {
+      setAvatarDisplayUrl("");
+      setProfileAvatarErrored(false);
+      return;
+    }
+    setProfileAvatarErrored(false);
+    if (isNative) {
+      loadImage(src)
+        .then((r) => {
+          setAvatarDisplayUrl(r.url);
+        })
+        .catch((_err) => {});
+    } else {
+      const url = resolveImageUrl(src);
+      setAvatarDisplayUrl(url);
+    }
   });
 
   onMount(() => {
     setCurrentTab("me");
   });
 
-  //── Tab 切换 ──
-  function handleTabSwitch(type: "illust" | "manga" | "novel") {
-    saveScrollPosition(window.scrollY);
-    load(targetUserId(), type);
-  }
-
-  //── 首次加载 ──
-  onMount(() => {
-    const uid = targetUserId();
-    if (uid) {
-      loadProfile(uid);
-      loadFollowing(uid);
-      load(uid, contentType());
-    }
+  const { attach: sentinelAttach } = createSentinel({
+    rootMargin: SENTINEL_MARGIN,
+    enabled: () => !loading(),
+    onTrigger: () => {
+      if (activeTab() === "following") {
+        loadMoreFollowing();
+      } else {
+        loadMoreFollowers();
+      }
+    },
   });
 
-  onCleanup(() => {
-    saveScrollPosition(window.scrollY);
+  // R18 开关切换时自动刷新关注列表
+  onMount(() => {
+    const handler = () => {
+      const uid = targetUserId();
+      loadFollowing(uid);
+    };
+    window.addEventListener("r18Changed", handler);
+    onCleanup(() => window.removeEventListener("r18Changed", handler));
   });
 
   return (
     <>
       <PageTransition>
-        <div class="relative min-h-screen pb-16">
-          {/* ═══ Layer 1: Background ═══ */}
-          <div
-            class="fixed"
-            style={{
-              transform: `translateY(${parallaxOffset()}px)`,
-              height: "55vh",
-              "z-index": 0,
-            }}
+        <div class="pb-16">
+          {/* Header */}
+          <header
+            class="sticky top-0 z-20 surface-appbar h-12 flex items-center px-4 gap-3"
+            onDblClick={scrollToTop}
           >
-            <ProfileBackground userId={targetUserId()} />
-          </div>
-
-          {/* ═══ Main content wrapper ═══ */}
-          <div class="relative z-10">
-            {/* ═══ Layer 3: Profile Card ═══ */}
-            <div
-              class="pt-12 px-4 transition-all duration-[var(--durationSlow)] ease-[var(--curveEasyEase)]"
-              style={{
-                opacity: cardProgress(),
-                transform: `scale(${0.85 + cardProgress() * 0.15}) translateY(${(1 - cardProgress()) * -20}px)`,
-                "pointer-events": cardProgress() < 0.1 ? "none" : "auto",
-              }}
+            <fluent-button
+              appearance="subtle"
+              aria-label="返回"
+              on:click={() => router.history.back()}
+              class="w-8 h-8 p-0 min-w-8"
             >
-              <Show
-                when={profile()}
-                fallback={
-                  <div class="flex flex-col items-center pt-6">
-                    <div
-                      class="w-[120px] h-[120px] rounded-[var(--borderRadiusCircular)]"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
-                        "background-size": "200% 100%",
-                        animation:
-                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
-                      }}
-                    />
-                    <div
-                      class="mt-3 h-5 w-32 rounded"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
-                        "background-size": "200% 100%",
-                        animation:
-                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
-                      }}
-                    />
-                    <div
-                      class="mt-1 h-4 w-20 rounded"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
-                        "background-size": "200% 100%",
-                        animation:
-                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
-                      }}
-                    />
-                  </div>
-                }
+              ←
+            </fluent-button>
+
+            <span class="relative flex-1 min-w-0 h-full flex items-center">
+              {/* 收起态：小头像 + 名称 (absolute overlay) */}
+              <span
+                class="absolute inset-0 flex items-center gap-2 min-w-0 transition-opacity duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                style={{
+                  opacity: collapsed() ? "1" : "0",
+                  "pointer-events": collapsed() ? "auto" : "none",
+                }}
+                aria-hidden={!collapsed()}
               >
-                <ProfileCard targetUserId={targetUserId()} isSelf={isSelf()} />
-              </Show>
-            </div>
-
-            {/* ═══ Layer 4: Content Section ═══ */}
-            <div class="relative z-20 mt-4">
-              {/* Segmented control */}
-              <div class="px-4 py-3">
-                <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
-                  <button
-                    classList={{
-                      "segmented-item-active": contentType() === "illust",
-                      "segmented-item-inactive": contentType() !== "illust",
-                    }}
-                    onClick={() => handleTabSwitch("illust")}
-                  >
-                    插画
-                  </button>
-                  <button
-                    classList={{
-                      "segmented-item-active": contentType() === "manga",
-                      "segmented-item-inactive": contentType() !== "manga",
-                    }}
-                    onClick={() => handleTabSwitch("manga")}
-                  >
-                    漫画
-                  </button>
-                  <button
-                    classList={{
-                      "segmented-item-active": contentType() === "novel",
-                      "segmented-item-inactive": contentType() !== "novel",
-                    }}
-                    onClick={() => handleTabSwitch("novel")}
-                  >
-                    小说
-                  </button>
+                <div class="relative w-6 h-6 flex-shrink-0">
+                  <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
+                  <Show when={displayUser()}>
+                    <Show when={!profileAvatarErrored() && avatarDisplayUrl()}>
+                      <img
+                        src={avatarDisplayUrl()}
+                        alt={displayUser()!.name}
+                        class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover"
+                        onError={() => setProfileAvatarErrored(true)}
+                      />
+                    </Show>
+                  </Show>
                 </div>
-              </div>
+                <span class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
+                  {displayUser()?.name}
+                </span>
+              </span>
 
-              {/* Works feed */}
-              <div class="px-4">
-                <Show when={userError()}>
-                  <ErrorDisplay
-                    error={userError()!}
-                    onRetry={() => {
-                      const uid = targetUserId();
-                      if (uid) loadProfile(uid);
-                    }}
+              {/* 展开态：标题 */}
+              <span
+                class="transition-opacity duration-[var(--durationNormal)] ease-[var(--curveEasyEase)]"
+                style={{
+                  opacity: collapsed() ? "0" : "1",
+                  "pointer-events": collapsed() ? "none" : "auto",
+                }}
+                aria-hidden={collapsed()}
+              >
+                <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
+                  个人中心
+                </h1>
+              </span>
+            </span>
+          </header>
+
+          <Show
+            when={displayUser()}
+            fallback={
+              /* Profile skeleton */
+              <div class="flex flex-col items-center px-4 pt-6 pb-3">
+                <Shimmer class="w-20 h-20 rounded-[var(--borderRadiusCircular)]" />
+                <Shimmer class="mt-2 h-5 rounded w-24" />
+                <Shimmer class="mt-1 h-4 rounded w-16" />
+              </div>
+            }
+          >
+            {/* User info */}
+            <div class="flex flex-col items-center px-4 pt-6 pb-3">
+              <div class="relative w-20 h-20">
+                <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)] ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]" />
+                <Show when={!profileAvatarErrored() && avatarDisplayUrl()}>
+                  <img
+                    src={avatarDisplayUrl()}
+                    alt={displayUser()!.name}
+                    class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover ring-[var(--strokeWidthThin)] ring-[var(--colorNeutralStroke1)]"
+                    onError={() => setProfileAvatarErrored(true)}
                   />
                 </Show>
-
-                <UserWorksFeed
-                  contentType={contentType()}
-                  illusts={illusts()}
-                  novels={novels()}
-                  loading={loading()}
-                  error={error()}
-                  hasMore={nextUrl() !== null}
-                  onIllustClick={(id) => void navigate({ to: `/illust/${id}` })}
-                  onNovelClick={(id) => void navigate({ to: `/novel/${id}` })}
-                  onLoadMore={loadMore}
-                  onRefresh={async () => {
-                    const uid = targetUserId();
-                    if (uid) {
-                      await load(uid, contentType(), true);
+              </div>
+              <h2 class="mt-2 [font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+                {displayUser()!.name}
+              </h2>
+              <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)]">
+                @{displayUser()!.account}
+              </p>
+              {!isSelf() && (
+                <button
+                  class="inline-flex items-center justify-center gap-[var(--spacingHorizontalXS)] rounded-[var(--borderRadiusMedium)] font-semibold [font-size:var(--fontSizeBase200)] min-h-8 px-[var(--spacingHorizontalM)] border transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] active:scale-[0.97] select-none cursor-pointer focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)] mt-2"
+                  classList={{
+                    "bg-[var(--colorBrandBackground)] text-white border-[var(--colorBrandBackground)] hover:bg-[var(--colorBrandBackgroundHover)] active:bg-[var(--colorBrandBackgroundPressed)]":
+                      !(viewedUser()?.is_followed ?? false),
+                    "bg-transparent text-[var(--colorNeutralForeground2)] border-[var(--colorNeutralStroke2)] hover:text-[var(--colorStatusDangerForeground1)] hover:border-[var(--colorStatusDangerForeground1)]":
+                      viewedUser()?.is_followed ?? false,
+                  }}
+                  onClick={async () => {
+                    const vu = viewedUser();
+                    if (!vu) {
+                      return;
+                    }
+                    const prev = vu.is_followed ?? false;
+                    vu.is_followed = !prev;
+                    // Trigger reactive update
+                    loadProfile(vu.id);
+                    try {
+                      if (prev) {
+                        await unfollowUser(vu.id);
+                      } else {
+                        await followUser(vu.id);
+                      }
+                    } catch {
+                      vu.is_followed = prev;
+                      loadProfile(vu.id);
                     }
                   }}
-                  layoutMode={layoutMode()}
-                  suppressHeaderVisibility={suppressHeaderVisibility}
-                />
+                >
+                  {viewedUser()?.is_followed ? "已关注" : "关注"}
+                </button>
+              )}
+            </div>
+
+            {/* Stats card */}
+            <div class="px-4 pb-4">
+              <div class="surface-card rounded-[var(--borderRadiusMedium)] px-4 py-3 flex">
+                <div
+                  class="flex-1 text-center cursor-pointer rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
+                  onClick={() => void navigate({ to: `/user/${targetUserId()}/illusts` })}
+                  role="button"
+                  tabindex="0"
+                  aria-label="查看作品"
+                >
+                  <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+                    {fmtNum(
+                      (profile()?.total_illusts ?? 0) +
+                        (profile()?.total_manga ?? 0) +
+                        (profile()?.total_novels ?? 0),
+                    )}
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-0.5">
+                    作品
+                  </p>
+                </div>
+                <div class="flex-1 text-center">
+                  <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+                    {fmtNum(profile()?.total_follow_users)}
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-0.5">
+                    关注
+                  </p>
+                </div>
+                <div class="flex-1 text-center">
+                  <p class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
+                    {fmtNum(profile()?.total_mypixiv_users)}
+                  </p>
+                  <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] mt-0.5">
+                    粉丝
+                  </p>
+                </div>
               </div>
             </div>
+          </Show>
+
+          {/* Segmented control — sticky below header */}
+          <div class="sticky top-12 z-10 px-4 py-3 bg-[var(--colorNeutralBackgroundAlpha)] backdrop-blur-[var(--backdropBlurDefault)] backdrop-saturate-[var(--backdropSaturateDefault)]">
+            <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
+              <button
+                classList={{
+                  "segmented-item-active": activeTab() === "following",
+                  "segmented-item-inactive": activeTab() !== "following",
+                }}
+                onClick={() => switchTab("following")}
+              >
+                关注中
+              </button>
+              <button
+                classList={{
+                  "segmented-item-active": activeTab() === "followers",
+                  "segmented-item-inactive": activeTab() !== "followers",
+                }}
+                onClick={() => switchTab("followers")}
+              >
+                粉丝
+              </button>
+            </div>
+          </div>
+
+          {/* User list */}
+          <div class="px-4 flex flex-col" style={{ gap: "var(--spacingVerticalS)" }}>
+            {error() && (
+              <ErrorDisplay
+                error={error()!}
+                onRetry={() => {
+                  const uid = targetUserId();
+                  loadFollowing(uid);
+                  loadFollowers();
+                }}
+              />
+            )}
+
+            {list().map((preview) => (
+              <div
+                class="surface-card rounded-[var(--borderRadiusMedium)] p-3 transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none"
+                onClick={() => void navigate({ to: `/user/${preview.user.id}` })}
+              >
+                <div class="flex items-center gap-3">
+                  <div class="relative w-10 h-10 flex-shrink-0">
+                    <AvatarFallback class="absolute inset-0 rounded-[var(--borderRadiusCircular)]" />
+                    <img
+                      src={avatarUrl(preview.user.profile_image_urls)}
+                      alt={preview.user.name}
+                      class="absolute inset-0 w-full h-full rounded-[var(--borderRadiusCircular)] object-cover"
+                      onError={(e) => ((e.target as HTMLElement).style.display = "none")}
+                    />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
+                      {preview.user.name}
+                    </p>
+                    <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] truncate">
+                      @{preview.user.account}
+                    </p>
+                  </div>
+                  {!isSelf() && (
+                    <button
+                      class="inline-flex items-center justify-center min-h-[40px] font-semibold [font-size:var(--fontSizeBase100)] cursor-pointer select-none transition-colors duration-[var(--durationFast)] ease-[var(--curveEasyEase)] active:scale-[0.95] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)] appearance-none border-none bg-transparent p-0 px-[var(--spacingHorizontalS)] flex-shrink-0"
+                      classList={{
+                        "text-[var(--colorBrandForeground1)] hover:text-[var(--colorBrandForeground1Hover)]":
+                          !preview.user.is_followed,
+                        "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerForeground2)]":
+                          preview.user.is_followed,
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleUserFollow(preview, activeTab());
+                      }}
+                      aria-label={preview.user.is_followed ? "取消关注" : "关注"}
+                    >
+                      {preview.user.is_followed ? "已关注" : "关注"}
+                    </button>
+                  )}
+                </div>
+                {preview.illusts && preview.illusts.length > 0 && (
+                  <div class="flex gap-1.5 mt-2">
+                    {preview.illusts.slice(0, 3).map((illust) => (
+                      <img
+                        src={resolveImageUrl(illust.image_urls.square_medium)}
+                        alt={illust.title}
+                        class="h-12 aspect-square rounded-[var(--borderRadiusSmall)] object-cover"
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {loading() && list().length === 0 && (
+              <div class="flex flex-col" style={{ gap: "var(--spacingVerticalS)" }}>
+                {Array.from({ length: 5 }).map(() => (
+                  <div class="surface-card rounded-[var(--borderRadiusMedium)] p-3">
+                    <div class="flex items-center gap-3">
+                      <Shimmer class="w-10 h-10 rounded-[var(--borderRadiusCircular)] flex-shrink-0" />
+                      <div class="flex-1 flex flex-col gap-1.5">
+                        <Shimmer class="h-4 rounded w-24" />
+                        <Shimmer class="h-3 rounded w-16" />
+                      </div>
+                    </div>
+                    <div class="flex gap-1.5 mt-2">
+                      <Shimmer class="h-12 aspect-square rounded-[var(--borderRadiusSmall)]" />
+                      <Shimmer class="h-12 aspect-square rounded-[var(--borderRadiusSmall)]" />
+                      <Shimmer class="h-12 aspect-square rounded-[var(--borderRadiusSmall)]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {loading() && <LoadingSpinner text="加载中..." />}
+
+            {!loading() && list().length === 0 && !error() && (
+              <p class="text-[var(--colorNeutralForeground2)] text-center py-8 [font-size:var(--fontSizeBase300)]">
+                {activeTab() === "following" ? "还没有关注任何人" : "还没有粉丝"}
+              </p>
+            )}
+
+            <div ref={sentinelAttach} class="h-1" />
           </div>
         </div>
       </PageTransition>
 
-      {/* ═══ Collapsed Header ═══ */}
-      <CollapsedHeader visible={collapsed()} />
-
       <SettingsDrawer />
+
       <NavBar />
     </>
   );
