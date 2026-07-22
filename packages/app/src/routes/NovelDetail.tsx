@@ -11,6 +11,7 @@ import {
   For,
   onCleanup,
   batch,
+  untrack,
 } from "solid-js";
 import { useParams, useNavigate, useRouter, getRouteApi } from "@tanstack/solid-router";
 import { resolveImageUrl } from "../utils/imageLoader";
@@ -624,7 +625,7 @@ const NovelDetail: Component = () => {
     closeSearch();
     scrollToTop();
     setFooterHidden(false);
-    resetScrollDirection();
+    untrack(() => resetScrollDirection());
   });
 
   const [titleEl, setTitleEl] = createSignal<HTMLHeadingElement | undefined>();

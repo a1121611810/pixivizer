@@ -226,7 +226,8 @@ export function createNovelVirtualLayout(
       setVTotalSize(0);
       return;
     }
-    const sm = containerEl() ? containerEl()!.getBoundingClientRect().top : 0;
+    const sm = containerEl() ? containerEl()!.offsetTop : 0;
+    const spacing = paragraphSpacing();
     // Directly set scrollRect — skip _didMount which may not exist or may override
     if (typeof window !== "undefined") {
       (instance as any).scrollRect = { width: window.innerWidth, height: window.innerHeight };
@@ -235,7 +236,7 @@ export function createNovelVirtualLayout(
       count: layouts.length,
       estimateSize: (i: number) => layouts[i]?.height ?? 0,
       overscan: DEFAULT_OVERSCAN,
-      gap: 0,
+      gap: spacing,
       getItemKey: (i: number) => i,
       getScrollElement: () => (typeof window !== "undefined" ? window : null),
       observeElementRect: observeWindowRect,
@@ -245,14 +246,6 @@ export function createNovelVirtualLayout(
     } as any);
     instance.measure();
     const items = instance.getVirtualItems();
-    if (typeof window !== "undefined") {
-      console.log("[DEBUG-v6m] setVItems:", {
-        layouts: layouts.length,
-        items: items.length,
-        totalSize: instance.getTotalSize(),
-        scrollRect: (instance as any).scrollRect,
-      });
-    }
     setVItems([...items] as any);
     setVTotalSize(instance.getTotalSize());
   });
@@ -278,7 +271,10 @@ export function createNovelVirtualLayout(
   const virtualizer = {
     getVirtualItems: () => vItems(),
     getTotalSize: () => vTotalSize(),
-    scrollToOffset: (o: number) => window.scrollTo({ top: o, behavior: "auto" as ScrollBehavior }),
+    scrollToOffset: (o: number) => {
+      const scrollMargin = containerEl()?.offsetTop ?? 0;
+      window.scrollTo({ top: scrollMargin + o, behavior: "auto" as ScrollBehavior });
+    },
     get scrollOffset() {
       return window.scrollY;
     },
@@ -301,12 +297,14 @@ export function createNovelVirtualLayout(
     const charOffset =
       textLayout.getOffsetByCharIndex(paragraphIndex, charIndex) - textParagraph.offset;
     const offset = block.offset + charOffset;
-    window.scrollTo({ top: offset, behavior: "auto" });
+    const scrollMargin = containerEl()?.offsetTop ?? 0;
+    window.scrollTo({ top: scrollMargin + offset, behavior: "auto" });
   }
 
   const currentCharIndex = createMemo(() => {
     const layouts = blockLayouts();
-    const st = window.scrollY;
+    const scrollMargin = containerEl()?.offsetTop ?? 0;
+    const st = window.scrollY - scrollMargin;
     const textLayout = textLayoutResult();
 
     let target: BlockLayout | undefined;
