@@ -1,8 +1,65 @@
 // @vitest-environment browser
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@solidjs/testing-library";
+import { render, screen, fireEvent } from "@solidjs/testing-library";
 import "@/styles/tokens.css";
 import ProfileCard from "@/components/ProfileCard";
+
+const mockNavigate = vi.hoisted(() => vi.fn());
+const mockOpenSettingsDrawer = vi.hoisted(() => vi.fn());
+
+vi.mock("@/utils/r18Filter", () => ({
+  filterUserPreviews: (items: any[]) => items,
+  filterFeedIllusts: (items: any[]) => items,
+  filterNovels: (items: any[]) => items,
+}));
+
+vi.mock("@/stores/uiStore", () => ({
+  openSettingsDrawer: mockOpenSettingsDrawer,
+  useDnsOverride: () => false,
+  showSettingsDrawer: () => false,
+  closeSettingsDrawer: vi.fn(),
+  theme: () => "system",
+  resolvedTheme: () => "light",
+  setThemePersisted: vi.fn(),
+  listQuality: () => "medium",
+  setListQuality: vi.fn(),
+  detailQuality: () => "large",
+  setDetailQuality: vi.fn(),
+  showR18: () => true,
+  showR18G: () => true,
+  setShowR18: vi.fn(),
+  setShowR18G: vi.fn(),
+  ageConfirmed: () => true,
+  isAdult: () => true,
+  setAgeConfirmation: vi.fn(),
+  autoCheckUpdate: () => false,
+  hasUpdate: () => false,
+  isCheckingUpdate: () => false,
+  latestVersion: () => "",
+  checkCompleted: () => false,
+  setAutoCheckUpdate: vi.fn(),
+  setHasUpdate: vi.fn(),
+  setIsCheckingUpdate: vi.fn(),
+  setLatestReleaseUrl: vi.fn(),
+  setLatestVersion: vi.fn(),
+  setCheckCompleted: vi.fn(),
+  resetUiStore: vi.fn(),
+  imageCachePrefetch: () => false,
+  autoHideNavBar: () => false,
+  showBookmarkBadge: () => false,
+  currentTab: () => "me",
+  setCurrentTab: vi.fn(),
+  layoutMode: () => "waterfall",
+}));
+
+vi.mock("@tanstack/solid-router", () => ({
+  useNavigate: () => mockNavigate,
+  useLocation: () => () => ({ pathname: "/" }),
+  useParams: () => ({}),
+  useRouter: () => ({ history: { back: vi.fn() } }),
+  getRouteApi: () => ({ useLoaderData: () => () => undefined }),
+  useBeforeLeave: () => {},
+}));
 
 describe("ProfileCard", () => {
   it("renders the acrylic card container with surface-glass class", () => {
@@ -43,5 +100,32 @@ describe("ProfileCard", () => {
     // SVG fallback should be present when no user data
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();
+  });
+
+  it("calls openSettingsDrawer when clicking 编辑资料 button", () => {
+    render(() => <ProfileCard targetUserId={1} isSelf={true} />);
+    const buttons = screen.getAllByRole("button");
+    const editBtn = buttons.find((b) => b.textContent?.includes("编辑资料"));
+    expect(editBtn).not.toBeUndefined();
+    fireEvent.click(editBtn!);
+    expect(mockOpenSettingsDrawer).toHaveBeenCalledTimes(1);
+  });
+
+  it("navigates to /user/{id}/illusts when clicking 作品 stat", () => {
+    render(() => <ProfileCard targetUserId={1} isSelf={true} />);
+    const buttons = screen.getAllByRole("button");
+    const worksBtn = buttons.find((b) => b.getAttribute("aria-label") === "查看作品");
+    expect(worksBtn).not.toBeUndefined();
+    fireEvent.click(worksBtn!);
+    expect(mockNavigate).toHaveBeenCalledWith({ to: "/user/1/illusts" });
+  });
+
+  it("navigates to /user/{id}/following when clicking 关注 stat", () => {
+    render(() => <ProfileCard targetUserId={1} isSelf={true} />);
+    const buttons = screen.getAllByRole("button");
+    const followingBtn = buttons.find((b) => b.getAttribute("aria-label") === "查看关注");
+    expect(followingBtn).not.toBeUndefined();
+    fireEvent.click(followingBtn!);
+    expect(mockNavigate).toHaveBeenCalledWith({ to: "/user/1/following" });
   });
 });
