@@ -15,291 +15,18 @@
 
 ## 代码智能规范（Code Intelligence）
 
-本项目使用 [CodeGraph](https://github.com/colbymchenry/codegraph) 作为默认代码理解工具。它基于本地预索引的代码知识图谱，提供符号定位、调用链追踪、影响分析、框架路由识别等能力，不只是「代码搜索」。
+本项目使用 CodeGraph 作为默认代码理解工具（通过 `mcp__codegraph__*` MCP 前缀访问）。
+项目已通过 `reasonix.toml` 配置 `--path`，调用 CodeGraph 工具时**不要**手动传 `projectPath`。
 
-> 如果 `.codegraph/` 索引尚未生成，在项目根目录运行以下命令初始化：
-> ```bash
-> codegraph init
-> ```
+完整的 CodeGraph 使用规范（工具列表、参数速查、调用示例、索引维护、降级方案）保存在
+全局 memory `mcp-codegraph-usage.md` 中，所有项目通用。
 
-### 默认原则
-
-- **任何涉及"理解代码结构、定位符号、追踪调用链、分析影响范围"的任务，默认优先使用 CodeGraph 系列工具（`codegraph_*`，通过 `mcp__codegraph__` MCP 前缀访问）。**
-- CodeGraph 是默认工具，不是搜索失败后的兜底工具。
-- 项目已通过 `reasonix.toml` 配置 `--path`，调用 CodeGraph 工具时**不要**手动传 `projectPath`。
-
-### 工具列表与典型使用场景
-
-| 场景 | 首选工具 | 说明 |
-|------|----------|------|
-| 接到功能或 Bug 任务，不确定入口 | `codegraph_context` | 任何"how does X work"/架构/bug 问题首选，返回相关上下文与源码 |
-| 按名称快速定位符号 | `codegraph_search` | 搜索函数、组件、变量、路由等 |
-| 两个符号之间的调用路径 | `codegraph_trace` | 追踪 A 到 B 的调用链，返回每跳的代码体 |
-| 一次性获取多个相关符号的源码 | `codegraph_explore` | 探索组件/函数依赖的 store、service、子组件等 |
-| 单个符号详情，含调用链 | `codegraph_node` | 读取某个方法/组件/类型的完整源码及行号 |
-| 重构前影响分析 | `codegraph_impact` | 分析修改某符号会影响哪些文件/页面 |
-| 查找调用者 | `codegraph_callers` | 查找谁调用了指定符号 |
-| 查找被调用者 | `codegraph_callees` | 查找指定符号内部调用了谁 |
-| 文件级代码浏览 | `codegraph_files` | 查看索引文件树或按模式定位文件 |
-| 索引健康检查 | `codegraph_status` | 检查索引是否就绪、文件/节点/边数量 |
-
-### 工具调用示例
-
-所有示例均通过 MCP 工具调用执行，工具名前缀为 `mcp__codegraph__`（如 `mcp__codegraph__codegraph_context`）。因本项目已通过 `reasonix.toml` 配置 `--path`，示例中**省略 `projectPath`**。
-
-#### `codegraph_context`（PRIMARY TOOL）
-
-参数：`task`（必填）、`maxNodes`（默认 20）、`includeCode`（默认 true）。
-
-```json
-{
-  "task": "登录态自动恢复逻辑从哪里开始？涉及哪些 store 和 API 调用？",
-  "maxNodes": 20,
-  "includeCode": true
-}
-```
-
-#### `codegraph_search`
-
-参数：`query`（必填）、`kind`（可选：function/method/class/interface/type/variable/route/component）、`limit`（默认 10）。
-
-```json
-{
-  "query": "handleLogin",
-  "kind": "function",
-  "limit": 10
-}
-```
-
-#### `codegraph_trace`
-
-参数：`from`（必填）、`to`（必填）。
-
-```json
-{
-  "from": "handleLogin",
-  "to": "PixivApiClient.request"
-}
-```
-
-#### `codegraph_explore`
-
-参数：`query`（必填）、`maxFiles`（默认 12）。
-
-```json
-{
-  "query": "ImageCard dependencies store",
-  "maxFiles": 12
-}
-```
-
-#### `codegraph_node`
-
-参数：`symbol`（必填）、`includeCode`（默认 false）。
-
-```json
-{
-  "symbol": "PixivApiClient.request",
-  "includeCode": true
-}
-```
-
-#### `codegraph_impact`
-
-参数：`symbol`（必填）、`depth`（默认 2）。
-
-```json
-{
-  "symbol": "authStore",
-  "depth": 2
-}
-```
-
-#### `codegraph_callers` / `codegraph_callees`
-
-参数：`symbol`（必填）、`limit`（默认 20）。
-
-```json
-{
-  "symbol": "PixivApiClient.request",
-  "limit": 20
-}
-```
-
-#### `codegraph_files`
-
-参数：`path`（可选）、`pattern`（可选）、`format`（tree/flat/grouped，默认 tree）、`includeMetadata`（默认 true）、`maxDepth`（可选）。
-
-```json
-{
-  "path": "src/api",
-  "format": "tree",
-  "includeMetadata": true
-}
-```
-
-#### `codegraph_status`
-
-参数：无（本项目通过 `reasonix.toml` 已配置路径）。
-
-```json
-{}
-```
-
-### 索引维护
-
-- **初始化**：若 `.codegraph/` 索引不存在或损坏，在项目根目录执行：
-  ```bash
-  codegraph init
-  ```
-- **更新**：文件大幅改动、新增/删除大量模块、或发现 CodeGraph 返回结果缺失/过期时，重新运行 `codegraph init` 重建索引。
-- **验证**：调用 `codegraph_status` 检查索引是否就绪，关注 `Files indexed`、`Total nodes`、`Total edges` 等关键指标。
-
-### 结果解读速查
-
-- **`Files indexed`**：被索引的文件数量。数量异常下降通常意味着索引范围配置变更或文件被排除。
-- **`Total nodes`**：图中符号节点总数，包括函数、组件、变量、路由、类等。
-- **`Total edges`**：符号间关系（调用、引用、导入、继承等）总数。
-- **`Nodes by Kind`**：按 `component`、`function`、`route`、`import`、`variable` 等类型统计的节点数量，帮助快速判断索引覆盖度。
-- **返回中的 `node`**：通常表示一个符号（函数、组件、类等），包含名称、路径、行号、源码片段等信息。
-- **返回中的 `edge`**：表示两个符号之间的关系，例如 `calls`（调用）、`imports`（导入）、`references`（引用）等。
-
-### projectPath 说明
-
-本项目已通过 `reasonix.toml` 配置 `--path`，因此：
-- 调用 CodeGraph 工具时**始终不传** `projectPath`。
-- 如果 `reasonix.toml` 未配置或需要查询其他项目，则通过向上查找 `.codegraph/` 目录确定项目根目录后显式传入。
-
-### 禁止的默认行为
-
-- 未经 CodeGraph 尝试，直接用 `Grep` / `Glob` / `Bash find` 进行大规模代码探索。
-- 用 `Grep` 手动拼凑调用链（应使用 `codegraph_trace`）。
-- 用 `Read` 顺序打开多个文件来"摸索"架构（应先用 `codegraph_context` / `codegraph_explore`）。
-
-### 允许的降级方案
-
-以下情况允许优先使用普通工具：
-
-1. **CodeGraph 不可用**：`.codegraph/` 索引未生成、返回空结果、或文件类型未被 CodeGraph 支持。
-2. **已知路径的完整文件读取**：任务已明确需要读取 `src/api/client.ts` 等具体文件，直接用 `Read` 更高效。
-3. **非代码文本搜索**：搜索日志、配置文件、依赖版本、文档等（如查 `package.json` 中的某个字段）。
-4. **简单列举文件**：使用 `Glob` 列出符合明确模式的文件（如 `src/components/**/*.tsx`）。
-5. **小范围精准定位**：已知符号名且在单个文件中，用 `Grep` 比 CodeGraph 更快（如查某个工具函数在哪定义）。
-6. **中文语义搜索**：当任务描述是中文业务术语（如"登录页面"、"收藏按钮"），而 CodeGraph 返回空或不相关结果时，改用任何可用的低成本定位手段（文本搜索、文件名模式匹配等）找到入口文件或符号名，然后再切回 CodeGraph 做调用链、影响面、依赖分析。不要反复用不同中文词组尝试 CodeGraph。
+> 如果 `.codegraph/` 索引尚未生成，在项目根目录运行：`codegraph init`
 
 ## 文档查询规范（Documentation Query）
 
-本项目使用 Context7 MCP 作为库/框架文档查询的默认入口，MDN 专项处理浏览器标准 API，`web_fetch` 作为兜底。
-
-### 默认原则
-
-- **任何第三方库/框架的 API 文档、使用指南、配置说明，默认优先使用 Context7 工具（`mcp__context7__*`）。**
-- **浏览器标准 API（HTML、CSS、JS 标准 API、Web API 语法与兼容性）优先使用 MDN 工具（`mcp__mdn__*`）。**
-- Context7 是文档查询的默认工具，不是搜索失败后的兜底工具。
-- 仅当 Context7 和 MDN 都不支持目标查询时，才使用 `web_fetch` 搜索官方文档。
-
-### 优先级决策链
-
-| 场景 | 第一优先 | 第二优先 | 第三优先 |
-|------|---------|---------|---------|
-| 库/框架文档（SolidJS、TanStack、Capacitor、Vite 等） | `mcp__context7__*` | `web_fetch`（官网） | — |
-| 浏览器标准 API（`fetch`、`Headers`、`Promise`、CSS 属性等） | `mcp__mdn__*` | `web_fetch`（MDN 页面） | — |
-| 其他技术文档（非库/非浏览器标准） | `mcp__context7__*` 尝试 | `web_fetch`（官方文档） | — |
-
-### Context7 使用流程
-
-Context7 采用两步查询模式：
-
-1. **`resolve-library-id`**：将库名称解析为 Context7 兼容的库 ID（格式 `/org/project`）。一次不匹配时，允许用不同的名称变体尝试一次（最多 2 次调用）。仍失败则按降级策略处理。
-2. **`query-docs`**：使用已解析的库 ID 查询具体问题。每次调用应限定在单个概念上，多个独立概念分别调用。
-
-#### 参数说明
-
-- **`resolve-library-id`**：传 `libraryName`（库的官方名称，带正确标点，如 `"SolidJS"`、`"TanStack Router"`、`"Capacitor"`）和 `query`（具体要查的问题，用于排序结果相关度）。
-- **`query-docs`**：传 `libraryId`（从上一步获得的 ID，如 `/solidjs/solid`）和 `query`（单一概念的问题描述）。
-
-### 降级策略
-
-当 Context7 无法提供服务时，按以下路径降级：
-
-1. `resolve-library-id` 两次尝试均未找到匹配 → 判断是否属于浏览器标准 API（HTML/CSS/JS 原生 API）：是则转 MDN，否则转 `web_fetch` 搜索官方文档
-2. `query-docs` 返回的内容与问题不相关 → 转 `web_fetch` 搜索官方文档
-3. MDN 查不到的浏览器 API → `web_fetch` 搜索（MDN 页面优先）
-4. Context7 或 MDN 工具本身不可用（MCP 服务器未响应）→ 跳过，直接 `web_fetch`
-
-### 禁止的默认行为
-
-- 未经 Context7 尝试，直接用 `web_fetch` 查第三方库文档。
-- 用 `web_fetch` 搜索可在 Context7 中直接查到的库文档。
-- 对同一问题重复调用 `resolve-library-id` 超过 2 次。
-- 在单个 `query-docs` 调用中放入多个独立概念（应在 Context7 中分别查询或回退到 `web_fetch`）。
-
-### 工具调用示例
-
-所有示例均通过 MCP 工具调用执行，工具名前缀为 `mcp__context7__`（如 `mcp__context7__resolve-library-id`）。
-
-#### 正常路径：查 SolidJS 组件创建方式
-
-```json
-// Step 1: 解析库 ID
-// 工具: mcp__context7__resolve-library-id
-{
-  "libraryName": "SolidJS",
-  "query": "component creation syntax"
-}
-
-// Step 2: 查询文档（假设返回 ID /solidjs/solid）
-// 工具: mcp__context7__query-docs
-{
-  "libraryId": "/solidjs/solid",
-  "query": "How to create a component with JSX"
-}
-```
-
-#### 回退路径：查不支持的库
-
-```json
-// 工具: mcp__context7__resolve-library-id
-{
-  "libraryName": "obscure-library-name",
-  "query": "basic usage"
-}
-// 未匹配 → 尝试变体名称
-{
-  "libraryName": "obscure-lib",
-  "query": "basic usage"
-}
-// 仍失败 → 判断不是浏览器标准 API → 回退到 web_fetch
-// 工具: web_fetch
-// URL: 该库的官方文档
-```
-
-#### 浏览器标准 API 查询
-
-浏览器标准 API 不经过 Context7，直接使用 MDN 工具：
-
-```json
-// 工具: mcp__mdn__search
-{
-  "query": "Headers fetch metadata"
-}
-
-// 或工具: mcp__mdn__get-doc
-{
-  "path": "/en-US/docs/Web/API/Headers"
-}
-
-// 或工具: mcp__mdn__get-compat
-{
-  "key": "api.Headers"
-}
-```
-
-### 索引/可用性说明
-
-- Context7 的库覆盖范围由远端服务决定，无需本地索引。
-- 如果 Context7 工具不可用（MCP 服务器未启动），直接回退到 `web_fetch`。
-- MDN 工具同理，无本地依赖。
+文档查询遵循明确的优先级链：Context7 → MDN → `web_fetch`。
+完整的规范（优先级决策链、使用流程、降级策略、调用示例）保存在全局 memory `mcp-doc-query.md` 中，所有项目通用。
 
 ## 命令
 
@@ -658,16 +385,16 @@ packages/app/src/
 
 ## 注意事项
 
-- **代码智能规范**：涉及代码理解、调用链追踪、影响分析时，默认优先使用 CodeGraph，详见上方「代码智能规范」章节。
-- **文档查询规范**：查询第三方库/框架文档、浏览器标准 API 或技术资料时，遵循「文档查询规范」章节的优先级链（Context7 → MDN → `web_fetch`），详见上方「文档查询规范」章节。
+- **代码智能规范**：涉及代码理解、调用链追踪、影响分析时，默认优先使用 CodeGraph，详见上方「代码智能规范」章节和全局 memory `mcp-codegraph-usage.md`。
+- **文档查询规范**：查询第三方库/框架文档、浏览器标准 API 或技术资料时，遵循优先级链（Context7 → MDN → `web_fetch`），详见全局 memory `mcp-doc-query.md`。
 - **路由数据规则**：路由级异步数据统一通过 `@tanstack/solid-router` 的 `loader` 获取；组件内局部异步仍使用 `createSignal` + `createEffect` + 手动 fetch（带 AbortController）。`createResource` 不用于路由组件。
 
 ## 任务完成前自检
 
-- **代码理解优先性**：本次任务若涉及代码结构、调用链、影响范围分析，是否优先使用了 CodeGraph 工具？
-- **Fallback 合理性**：若未使用 CodeGraph，是否属于已列出的允许例外之一（CodeGraph 不可用、已知路径文件读取、非代码文本搜索、简单文件列举、小范围精准定位、中文语义搜索）？
-- **索引健康**：如果 CodeGraph 返回结果异常（缺失符号、调用链断裂），是否检查了索引状态（`codegraph_status`）并考虑重建索引？
-- **文档查询优先性**：本次任务若涉及查询第三方库/框架 API 或浏览器标准 API，是否遵循了「文档查询规范」的优先级链（Context7 → MDN → `web_fetch`）？
+- **代码理解优先性**：涉及代码结构、调用链、影响范围分析时，是否优先使用了 CodeGraph？
+- **Fallback 合理性**：未用 CodeGraph 时，是否属于全局 memory `mcp-codegraph-usage.md` 中列出的允许例外之一？
+- **索引健康**：CodeGraph 返回异常时，是否检查了 `codegraph_status` 并考虑重建索引？
+- **文档查询优先性**：涉及库/框架/浏览器 API 查询时，是否遵循了 `mcp-doc-query.md` 中的优先级链？
 
 ## Notes
 
