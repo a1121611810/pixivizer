@@ -116,9 +116,9 @@ const PersonalCenter: Component<Props> = (props) => {
                 when={profile()}
                 fallback={
                   <div class="flex flex-col items-center pt-6">
-                    <div class="w-[120px] h-[120px] rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralBackground2)] shimmer" />
-                    <div class="mt-3 h-5 w-32 shimmer rounded" />
-                    <div class="mt-1 h-4 w-20 shimmer rounded" />
+                    <div class="w-[120px] h-[120px] rounded-[var(--borderRadiusCircular)] shimmer-gradient" />
+                    <div class="mt-3 h-5 w-32 shimmer-gradient rounded" />
+                    <div class="mt-1 h-4 w-20 shimmer-gradient rounded" />
                   </div>
                 }
               >
