@@ -7,17 +7,13 @@ import { openSettingsDrawer } from "../stores/uiStore";
 import { Capacitor } from "@capacitor/core";
 import { resolveImageUrl, loadImage } from "../utils/imageLoader";
 
-// ── Helper: 头像回退 ──
 function AvatarFallback(props: { class?: string }) {
   return (
     <div
       class={`flex items-center justify-center bg-[var(--colorNeutralBackground2)] ${props.class || ""}`}
     >
       <svg
-        width="60%"
-        height="60%"
-        viewBox="0 0 24 24"
-        fill="none"
+        width="60%" height="60%" viewBox="0 0 24 24" fill="none"
         class="text-[var(--colorNeutralForegroundDisabled)]"
       >
         <circle cx="12" cy="8" r="4" fill="currentColor" />
@@ -27,7 +23,6 @@ function AvatarFallback(props: { class?: string }) {
   );
 }
 
-// ── Helper: 格式化数字 ──
 function fmtNum(n: number | undefined): string {
   if (n == null) return "—";
   if (n >= 10_000) return `${(n / 10_000).toFixed(1)}万`;
@@ -47,9 +42,7 @@ const ProfileCard: Component<Props> = (props) => {
   const [following, setFollowing] = createSignal(false);
 
   const displayUser = () => (props.isSelf ? user() : viewedUser());
-  const p = profile;
 
-  //── 头像加载 ──
   createEffect(() => {
     const u = displayUser();
     if (!u) {
@@ -63,20 +56,16 @@ const ProfileCard: Component<Props> = (props) => {
     }
     setErrored(false);
     if (isNative) {
-      loadImage(src)
-        .then((r) => setAvatarUrl(r.url))
-        .catch(() => {});
+      loadImage(src).then((r) => setAvatarUrl(r.url)).catch(() => {});
     } else {
       setAvatarUrl(resolveImageUrl(src));
     }
   });
 
-  //── 关注状态同步 ──
   createEffect(() => {
     setFollowing(viewedUser()?.is_followed ?? false);
   });
 
-  //── 关注/取消关注 ──
   async function handleToggleFollow() {
     const vu = viewedUser();
     if (!vu) return;
@@ -94,7 +83,9 @@ const ProfileCard: Component<Props> = (props) => {
   }
 
   const totalWorks = () =>
-    (p()?.total_illusts ?? 0) + (p()?.total_manga ?? 0) + (p()?.total_novels ?? 0);
+    (profile()?.total_illusts ?? 0) +
+    (profile()?.total_manga ?? 0) +
+    (profile()?.total_novels ?? 0);
 
   return (
     <div class="surface-glass rounded-[var(--borderRadiusLarge)] px-[var(--spacingHorizontalXXL)] py-[var(--spacingVerticalXXL)] flex flex-col items-center gap-3 relative z-10">
@@ -128,52 +119,35 @@ const ProfileCard: Component<Props> = (props) => {
 
       {/* Stats row */}
       <div class="flex gap-4 w-full justify-center mt-1">
-        {/* 作品 */}
         <button
           class="flex flex-col items-center gap-0.5 px-4 py-2 rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
-          onClick={() => {
-            if (props.isSelf && user()) {
-              void navigate({ to: `/user/${user()!.id}/illusts` });
-            } else {
-              void navigate({ to: `/user/${props.targetUserId}/illusts` });
-            }
-          }}
+          onClick={() => void navigate({ to: `/user/${props.targetUserId}/illusts` })}
           aria-label="查看作品"
         >
           <span class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
             {fmtNum(totalWorks())}
           </span>
-          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">
-            作品
-          </span>
+          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">作品</span>
         </button>
-
-        {/* 关注 */}
         <button
           class="flex flex-col items-center gap-0.5 px-4 py-2 rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
           onClick={() => void navigate({ to: `/user/${props.targetUserId}/following` })}
           aria-label="查看关注"
         >
           <span class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
-            {fmtNum(p()?.total_follow_users)}
+            {fmtNum(profile()?.total_follow_users)}
           </span>
-          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">
-            关注
-          </span>
+          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">关注</span>
         </button>
-
-        {/* 粉丝 */}
         <button
           class="flex flex-col items-center gap-0.5 px-4 py-2 rounded-[var(--borderRadiusMedium)] transition-all duration-[var(--durationFast)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.97] focus-visible:outline focus-visible:outline-offset-[var(--strokeWidthThin)] focus-visible:outline-[var(--colorStrokeFocus2)]"
           onClick={() => void navigate({ to: `/user/${props.targetUserId}/followers` })}
           aria-label="查看粉丝"
         >
           <span class="[font-size:var(--fontSizeBase500)] font-semibold text-[var(--colorNeutralForeground1)]">
-            {fmtNum(p()?.total_mypixiv_users)}
+            {fmtNum(profile()?.total_mypixiv_users)}
           </span>
-          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">
-            粉丝
-          </span>
+          <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)]">粉丝</span>
         </button>
       </div>
 
