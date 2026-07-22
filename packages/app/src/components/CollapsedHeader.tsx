@@ -17,10 +17,7 @@ function AvatarFallback(props: { class?: string }) {
       class={`flex items-center justify-center bg-[var(--colorNeutralBackground2)] ${props.class || ""}`}
     >
       <svg
-        width="60%"
-        height="60%"
-        viewBox="0 0 24 24"
-        fill="none"
+        width="60%" height="60%" viewBox="0 0 24 24" fill="none"
         class="text-[var(--colorNeutralForegroundDisabled)]"
       >
         <circle cx="12" cy="8" r="4" fill="currentColor" />
@@ -50,9 +47,7 @@ const CollapsedHeader: Component<Props> = (props) => {
     }
     setErrored(false);
     if (isNative) {
-      loadImage(src)
-        .then((r) => setAvatarUrl(r.url))
-        .catch(() => {});
+      loadImage(src).then((r) => setAvatarUrl(r.url)).catch(() => {});
     } else {
       setAvatarUrl(resolveImageUrl(src));
     }
