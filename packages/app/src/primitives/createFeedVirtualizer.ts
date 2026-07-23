@@ -19,7 +19,7 @@ const GAP = 12;
 
 // ─── Types ───
 
-export type PullPhase = "idle" | "pulling" | "refresh-ready" | "refreshing";
+export type PullPhase = "idle" | "pulling" | "refresh-ready" | "refreshing" | "settings-ready";
 
 export interface FeedVirtualizerConfig<T> {
   /** Reactive list of items to virtualize */
@@ -42,6 +42,22 @@ export interface FeedVirtualizerConfig<T> {
   getItemKey: (index: number) => string | number;
   /** Optional custom empty state text */
   emptyText?: string;
+  // ── 增强字段 ──
+  /** Optional second pull threshold for settings navigation */
+  settingsThreshold?: number;
+  /** Called when pull exceeds settingsThreshold (two-stage pull) */
+  onNavigateToSettings?: () => void;
+  /** Optional scroll restoration state (initialOffset + measurements) */
+  scrollRestore?: {
+    initialOffset: number;
+    initialMeasurementsCache: VirtualItem[];
+  };
+  /** Called after virtualizer is mounted and ready (for scroll restoration) */
+  onReady?: () => void;
+  /** Optional callback to suppress header visibility during scroll restoration */
+  suppressHeaderVisibility?: (durationMs?: number) => void;
+  /** Lane assignment mode for multi-column layouts (coverWall uses "measured") */
+  laneAssignmentMode?: "measured" | "estimate";
 }
 
 export interface FeedVirtualizerResult {
@@ -59,28 +75,22 @@ export interface FeedVirtualizerResult {
   pullPhase: Accessor<PullPhase>;
   /** Current pull distance in pixels */
   pullDistance: Accessor<number>;
-  /** Expose the raw virtualizer instance for advanced use (e.g. scroll restoration) */
+  /** Expose the raw virtualizer instance for advanced use */
   getVirtualizer: () => Virtualizer<Window, HTMLElement>;
+  /** Measure element for dynamic height (used by NovelVirtualFeed) */
+  measureElement: (el: HTMLElement) => void;
 }
 
 // ─── Hook ───
 
-/**
- * Shared virtual scrolling primitive used by both VirtualFeed and NovelVirtualFeed.
- *
- * Encapsulates:
- * - Pull-to-refresh (touch event handling)
- * - Sentinel pagination (IntersectionObserver + load-more)
- * - TanStack Virtualizer lifecycle (creation, sync, mount, scroll/resize listeners)
- * - Container width tracking via ResizeObserver
- */
 export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): FeedVirtualizerResult {
   // ── Pull-to-refresh state ──
   const [pullDistance, setPullDistance] = createSignal(0);
   const [pullPhase, setPullPhase] = createSignal<PullPhase>("idle");
   let touchStartY = 0;
+  const maxPull = config.settingsThreshold ? config.settingsThreshold * 1.5 : MAX_PULL;
 
-  // Reset pull state when refresh completes (loading transitions true→false)
+  // Reset pull state when refresh completes
   createEffect(
     on(
       () => config.loading(),
@@ -108,13 +118,24 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
       setPullPhase("idle");
       return;
     }
-    const damped = Math.min(deltaY * 0.5, MAX_PULL);
+    const damped = Math.min(deltaY * 0.5, maxPull);
     setPullDistance(damped);
-    setPullPhase(damped >= PULL_THRESHOLD ? "refresh-ready" : "pulling");
+    const st = config.settingsThreshold;
+    if (st && damped >= st) {
+      setPullPhase("settings-ready");
+    } else if (damped >= PULL_THRESHOLD) {
+      setPullPhase("refresh-ready");
+    } else {
+      setPullPhase("pulling");
+    }
   }
 
   function handleTouchEnd() {
-    if (pullPhase() === "refresh-ready") {
+    if (pullPhase() === "settings-ready") {
+      setPullDistance(0);
+      setPullPhase("idle");
+      config.onNavigateToSettings?.();
+    } else if (pullPhase() === "refresh-ready") {
       setPullPhase("refreshing");
       setPullDistance(PULL_THRESHOLD * 0.6);
       config.onRefresh();
@@ -137,7 +158,6 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
   function onContainerRef(el: HTMLDivElement) {
     if (!el) return;
     setContainerWidth(el.clientWidth);
-
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
         setContainerWidth(entry.contentRect.width);
@@ -151,12 +171,13 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
   const [virtualItems, setVirtualItems] = createSignal<VirtualItem[]>([]);
   const [totalSize, setTotalSize] = createSignal(0);
 
-  // Create estimateSize closure that delegates to config
-  const estimateSize = (index: number) => config.estimateSize(index);
+  const estimateSizeFn = (index: number) => config.estimateSize(index);
 
+  const sr = config.scrollRestore;
+  const laneMode = config.laneAssignmentMode;
   const instance = new Virtualizer<Window, HTMLElement>({
     count: config.items().length,
-    estimateSize,
+    estimateSize: estimateSizeFn,
     lanes: config.lanes(),
     overscan: 2,
     gap: GAP,
@@ -165,8 +186,9 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
     observeElementRect: observeWindowRect,
     observeElementOffset: observeWindowOffset,
     scrollToFn: windowScroll,
-    initialOffset: 0,
-    initialMeasurementsCache: [],
+    initialOffset: sr?.initialOffset ?? 0,
+    initialMeasurementsCache: sr?.initialMeasurementsCache ?? [],
+    laneAssignmentMode: laneMode,
   });
 
   // Sync options when items/count/lanes change
@@ -175,7 +197,7 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
     const cc = config.lanes();
     instance.setOptions({
       count,
-      estimateSize,
+      estimateSize: estimateSizeFn,
       lanes: cc,
       overscan: 2,
       gap: GAP,
@@ -184,6 +206,7 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
       observeElementRect: observeWindowRect,
       observeElementOffset: observeWindowOffset,
       scrollToFn: windowScroll,
+      laneAssignmentMode: laneMode,
     } as any);
     instance.measure();
     setVirtualItems([...instance.getVirtualItems()] as VirtualItem[]);
@@ -197,6 +220,10 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
     setVirtualItems([...instance.getVirtualItems()] as VirtualItem[]);
     setTotalSize(instance.getTotalSize());
     onCleanup(() => cleanup?.());
+
+    // Scroll restoration ready callback
+    config.suppressHeaderVisibility?.();
+    config.onReady?.();
   });
 
   // Scroll + resize listeners for window mode
@@ -219,11 +246,15 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
     });
   });
 
+  // measureElement — delegates to the virtualizer instance
+  function measureElement(el: HTMLElement) {
+    instance.measureElement(el);
+  }
+
   // ── Result ──
 
   return {
     containerRef: (el: HTMLDivElement) => {
-      // Set up touch events on the container
       if (!el) return;
       el.addEventListener("touchstart", handleTouchStart, { passive: true });
       el.addEventListener("touchmove", handleTouchMove, { passive: true });
@@ -237,5 +268,6 @@ export function createFeedVirtualizer<T>(config: FeedVirtualizerConfig<T>): Feed
     pullPhase,
     pullDistance,
     getVirtualizer: () => instance,
+    measureElement,
   };
 }

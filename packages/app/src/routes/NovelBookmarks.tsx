@@ -12,7 +12,6 @@ import {
   setBookmarkRestrict,
   saveTabScroll,
 } from "../stores/novelStore";
-import { user } from "../stores/authStore";
 import NovelVirtualFeed from "../components/NovelVirtualFeed";
 import SeriesSheet from "../components/SeriesSheet";
 import { novelLayoutMode } from "../stores/uiStore";
@@ -77,7 +76,6 @@ const NovelBookmarks: Component<Props> = (props) => {
   });
 
   createEffect(() => {
-    const _u = user();
     // Track restrict changes
     bookmarkRestrict();
     ensureLoaded();

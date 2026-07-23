@@ -1,12 +1,5 @@
-import { createSignal, createEffect, For, createMemo, onCleanup, onMount } from "solid-js";
+import { createEffect, For, createMemo } from "solid-js";
 import type { Component } from "solid-js";
-import {
-  Virtualizer,
-  observeWindowRect,
-  observeWindowOffset,
-  windowScroll,
-} from "@tanstack/solid-virtual";
-import type { VirtualItem } from "@tanstack/solid-virtual";
 import ImageCard from "./ImageCard";
 import LazyImageCard from "./LazyImageCard";
 import SkeletonCard from "./SkeletonCard";
@@ -16,8 +9,7 @@ import PullIndicator from "./PullIndicator";
 import ErrorDisplay from "./ErrorDisplay";
 import type { PixivIllust, ApiError } from "../api/types";
 import type { LayoutMode } from "../primitives/types";
-import { VIRTUAL_SCROLL_MARGIN } from "../primitives/rootMargins";
-import { createSentinel } from "@/primitives/visibility";
+import { createFeedVirtualizer } from "../primitives/createFeedVirtualizer";
 import { loadImage, checkImageCache } from "../utils/imageLoader";
 import { isImageHostEnabled } from "../stores/imageHostStore";
 import { imageCachePrefetch } from "../stores/uiStore";
@@ -43,7 +35,6 @@ interface Props {
   scrollKey?: string;
   initialScrollState?: ScrollRestoreState;
   onScrollStateChange?: (state: ScrollRestoreState) => void;
-  // 程序性滚动恢复期间抑制 header 显隐切换
   suppressHeaderVisibility?: (durationMs?: number) => void;
 }
 
@@ -56,122 +47,28 @@ const LAYOUT_COLUMNS: Record<LayoutMode, number> = {
 const GAP = 12;
 const VERTICAL_GAP = 12;
 const CARD_INFO_HEIGHT = 140;
+const PULL_THRESHOLD_SETTINGS = 120;
+const SKELETON_ITEM_HEIGHT = 300;
 
 const VirtualFeed: Component<Props> = (props) => {
-  const { attach: sentinelAttach } = createSentinel({
-    rootMargin: VIRTUAL_SCROLL_MARGIN,
-    enabled: () => props.hasMore && !props.loading,
-    onTrigger: () => props.onLoadMore(),
-  });
-
-  // ── Pull-to-refresh state ──
-  const PULL_THRESHOLD_REFRESH = 60;
-  const PULL_THRESHOLD_SETTINGS = 120;
-  const MAX_PULL = 180;
-  const [pullDistance, setPullDistance] = createSignal(0);
-  const [pullPhase, setPullPhase] = createSignal<
-    "idle" | "pulling" | "refresh-ready" | "refreshing" | "settings-ready"
-  >("idle");
-  let touchStartY = 0;
-
-  createEffect(() => {
-    if (pullPhase() === "refreshing" && !props.loading) {
-      setPullDistance(0);
-      setPullPhase("idle");
-    }
-  });
-
-  function handleTouchStart(e: TouchEvent) {
-    if (props.loading) {
-      return;
-    }
-    if (window.scrollY > 5) {
-      return;
-    }
-    touchStartY = e.touches[0].clientY;
-    setPullPhase("pulling");
-  }
-
-  function handleTouchMove(e: TouchEvent) {
-    if (pullPhase() === "idle" || pullPhase() === "refreshing") {
-      return;
-    }
-    const deltaY = e.touches[0].clientY - touchStartY;
-    if (deltaY < 0) {
-      setPullDistance(0);
-      setPullPhase("idle");
-      return;
-    }
-    const damped = Math.min(deltaY * 0.5, MAX_PULL);
-    setPullDistance(damped);
-    if (damped >= PULL_THRESHOLD_SETTINGS) {
-      setPullPhase("settings-ready");
-    } else if (damped >= PULL_THRESHOLD_REFRESH) {
-      setPullPhase("refresh-ready");
-    } else {
-      setPullPhase("pulling");
-    }
-  }
-
-  function handleTouchEnd() {
-    if (pullPhase() === "settings-ready") {
-      setPullDistance(0);
-      setPullPhase("idle");
-      props.onNavigateToSettings?.();
-    } else if (pullPhase() === "refresh-ready") {
-      setPullPhase("refreshing");
-      setPullDistance(PULL_THRESHOLD_REFRESH * 0.6);
-      props.onRefresh();
-    } else {
-      setPullDistance(0);
-      setPullPhase("idle");
-    }
-  }
-
-  // ── Container width ──
-  const [containerWidth, setContainerWidth] = createSignal(0);
-
-  function onContainerRef(el: HTMLDivElement) {
-    if (!el) {
-      return;
-    }
-    setContainerWidth(el.clientWidth);
-
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width);
-      }
-    });
-    ro.observe(el);
-  }
-
-  // ── Layout config ──
   const layoutMode = createMemo(() => props.layoutMode ?? "waterfall");
   const columnCount = createMemo(() => LAYOUT_COLUMNS[layoutMode()]);
-  const columnWidth = createMemo(() => {
-    const cc = columnCount();
-    const cw = containerWidth();
-    return cw > 0 ? (cw - GAP * (cc - 1)) / cc : 150;
-  });
 
-  // ── estimateSize ──
   const estimateSize = (index: number) => {
     const ill = props.illusts[index];
-    if (!ill) {
-      return 200;
-    }
+    if (!ill) return 200;
     const mode = layoutMode();
-    if (mode === "grid") {
-      return 200 + CARD_INFO_HEIGHT;
-    }
+    if (mode === "grid") return 200 + CARD_INFO_HEIGHT;
     const effH = ill.type === "ugoira" ? Math.round(ill.height * 0.75) : ill.height;
     const aspectRatio = effH > 0 ? ill.width / effH : 1;
-    return columnWidth() / aspectRatio + CARD_INFO_HEIGHT;
+    return cw() / aspectRatio + CARD_INFO_HEIGHT;
   };
 
-  // ── Scroll restoration（显式恢复，见 ADR 0010） ──
+  // ── Scroll restoration ──
+  let feedVirtualizer!: ReturnType<typeof createFeedVirtualizer<PixivIllust>>;
+
   const scrollRestore = createVirtualScrollRestore({
-    getVirtualizer: () => instance,
+    getVirtualizer: () => feedVirtualizer.getVirtualizer(),
     getState: () =>
       props.scrollKey
         ? (getFeedScrollState(props.scrollKey) ?? undefined)
@@ -185,79 +82,39 @@ const VirtualFeed: Component<Props> = (props) => {
     },
   });
 
-  // ── TanStack Virtual: native Virtualizer + Solid reactive bindings ──
-  const [virtualItems, setVirtualItems] = createSignal<VirtualItem[]>([]);
-  const [totalSize, setTotalSize] = createSignal(0);
-
-  const instance = new Virtualizer<Window, HTMLElement>({
-    count: props.illusts.length,
+  feedVirtualizer = createFeedVirtualizer<PixivIllust>({
+    items: () => props.illusts,
+    loading: () => props.loading,
+    error: () => props.error,
+    hasMore: () => props.hasMore,
+    onLoadMore: () => props.onLoadMore(),
+    onRefresh: () => Promise.resolve(props.onRefresh()),
+    lanes: columnCount,
     estimateSize,
-    lanes: columnCount(),
-    overscan: 2,
-    gap: VERTICAL_GAP,
-    getItemKey: (i: number) => props.illusts[i]?.id ?? i,
-    getScrollElement: () => (typeof window !== "undefined" ? window : null),
-    observeElementRect: observeWindowRect,
-    observeElementOffset: observeWindowOffset,
-    scrollToFn: windowScroll,
-    initialOffset: scrollRestore.initialOffset,
-    initialMeasurementsCache: scrollRestore.initialMeasurementsCache,
-  } as any);
+    getItemKey: (i) => props.illusts[i]?.id ?? i,
+    emptyText: props.emptyText,
+    settingsThreshold: PULL_THRESHOLD_SETTINGS,
+    onNavigateToSettings: props.onNavigateToSettings,
+    scrollRestore: {
+      initialOffset: scrollRestore.initialOffset ?? 0,
+      initialMeasurementsCache: scrollRestore.initialMeasurementsCache,
+    },
+    onReady: () => {
+      scrollRestore.restoreScroll();
+    },
+    suppressHeaderVisibility: (d) => props.suppressHeaderVisibility?.(d),
+  });
 
-  createEffect(() => {
-    const count = props.illusts.length;
+  const cw = createMemo(() => {
     const cc = columnCount();
-    instance.setOptions({
-      count,
-      estimateSize,
-      lanes: cc,
-      overscan: 2,
-      gap: VERTICAL_GAP,
-      getItemKey: (i: number) => props.illusts[i]?.id ?? i,
-      getScrollElement: () => (typeof window !== "undefined" ? window : null),
-      observeElementRect: observeWindowRect,
-      observeElementOffset: observeWindowOffset,
-      scrollToFn: windowScroll,
-    } as any);
-    instance.measure();
-    setVirtualItems([...instance.getVirtualItems()] as any);
-    setTotalSize(instance.getTotalSize());
+    const cww = feedVirtualizer.containerWidth();
+    return cww > 0 ? (cww - GAP * (cc - 1)) / cc : 150;
   });
 
-  onMount(() => {
-    const cleanup = instance._didMount();
-    instance._willUpdate();
-    setVirtualItems([...instance.getVirtualItems()] as any);
-    setTotalSize(instance.getTotalSize());
-    onCleanup(() => cleanup?.());
-
-    // ── 滚动恢复：三层兜底（实现见 createVirtualScrollRestore） ──
-    // 恢复滚动前抑制 header 显隐，避免闪烁
-    props.suppressHeaderVisibility?.();
-    scrollRestore.restoreScroll();
-  });
-
-  createEffect(() => {
-    const onScroll = () => {
-      instance._willUpdate();
-      setVirtualItems([...instance.getVirtualItems()] as any);
-      setTotalSize(instance.getTotalSize());
-    };
-    const onResize = () => {
-      instance._willUpdate();
-      setVirtualItems([...instance.getVirtualItems()] as any);
-      setTotalSize(instance.getTotalSize());
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    onCleanup(() => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-    });
-  });
+  const { containerRef, sentinelAttach, virtualItems, totalSize, pullDistance, pullPhase } =
+    feedVirtualizer;
 
   // ── Skeleton layout for initial loading state ──
-  const SKELETON_ITEM_HEIGHT = 300;
   const skeletonCount = createMemo(() => {
     const cc = columnCount();
     const rows = Math.ceil(window.innerHeight / SKELETON_ITEM_HEIGHT) + 1;
@@ -266,14 +123,13 @@ const VirtualFeed: Component<Props> = (props) => {
 
   function skeletonStyle(i: number) {
     const cc = columnCount();
-    const cw = columnWidth();
     const col = i % cc;
     const row = Math.floor(i / cc);
     return {
       position: "absolute" as const,
       top: `${row * (SKELETON_ITEM_HEIGHT + VERTICAL_GAP)}px`,
-      left: `${col * (cw + GAP)}px`,
-      width: `${cw}px`,
+      left: `${col * (cw() + GAP)}px`,
+      width: `${cw()}px`,
       height: `${SKELETON_ITEM_HEIGHT}px`,
     };
   }
@@ -281,44 +137,28 @@ const VirtualFeed: Component<Props> = (props) => {
   // ── Scroll prediction: prefetch images just outside visible window ──
   createEffect(() => {
     const items = virtualItems();
-    if (items.length === 0) {
-      return;
-    }
-    if (isImageHostEnabled()) {
-      return;
-    }
-    if (!imageCachePrefetch()) {
-      return;
-    }
+    if (items.length === 0) return;
+    if (isImageHostEnabled()) return;
+    if (!imageCachePrefetch()) return;
     const illustsList = props.illusts;
     const lastIdx = items[items.length - 1].index;
     const preloadEnd = Math.min(lastIdx + 10, illustsList.length);
     for (let i = lastIdx + 1; i < preloadEnd; i++) {
       const ill = illustsList[i];
-      if (!ill) {
-        break;
-      }
+      if (!ill) break;
       const url = ill.image_urls.medium || ill.image_urls.large;
-      if (url) {
-        if (!checkImageCache(url)) {
-          loadImage(url).catch(() => {});
-        }
+      if (url && !checkImageCache(url)) {
+        loadImage(url).catch(() => {});
       }
     }
   });
 
   return (
-    <div
-      ref={onContainerRef}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      class="px-3"
-    >
+    <div ref={containerRef} class="px-3">
       <PullIndicator
         zone={pullPhase()}
         distance={pullDistance()}
-        refreshThreshold={PULL_THRESHOLD_REFRESH}
+        refreshThreshold={60}
         settingsThreshold={PULL_THRESHOLD_SETTINGS}
       />
 
@@ -354,16 +194,14 @@ const VirtualFeed: Component<Props> = (props) => {
         <For each={virtualItems()}>
           {(vItem) => {
             const illust = props.illusts[vItem.index];
-            if (!illust) {
-              return null;
-            }
+            if (!illust) return null;
             return (
               <div
                 style={{
                   position: "absolute",
                   top: 0,
-                  left: `${(vItem.lane ?? 0) * (columnWidth() + GAP)}px`,
-                  width: `${columnWidth()}px`,
+                  left: `${(vItem.lane ?? 0) * (cw() + GAP)}px`,
+                  width: `${cw()}px`,
                   height: `${vItem.size}px`,
                   transform: `translateY(${vItem.start}px)`,
                 }}
