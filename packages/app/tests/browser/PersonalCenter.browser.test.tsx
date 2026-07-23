@@ -3,10 +3,10 @@ import { describe, it, expect, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
 import "@/styles/tokens.css";
 
-// Mock sub-components with deep deps
-vi.mock("@/components/SettingsDrawer", () => ({ default: () => null }));
-vi.mock("@/components/NavBar", () => ({ default: () => null }));
-vi.mock("@/components/ErrorDisplay", () => ({ default: () => null }));
+vi.mock("@/utils/imageLoader", () => ({
+  resolveImageUrl: (url: string) => url,
+  loadImage: vi.fn(),
+}));
 
 // Mock stores used by the component tree
 vi.mock("@/stores/authStore", () => ({
@@ -22,32 +22,17 @@ vi.mock("@/stores/userStore", () => ({
     total_mypixiv_users: 300,
   }),
   viewedUser: () => null,
+  error: () => null,
   loadProfile: vi.fn(),
   loadFollowing: vi.fn(),
-  error: () => null,
-}));
-vi.mock("@/stores/userIllustsStore", () => ({
-  illusts: () => [],
-  novels: () => [],
-  nextUrl: () => null,
-  loading: () => false,
-  error: () => null,
-  contentType: () => "illust",
-  load: vi.fn(),
-  loadMore: vi.fn(),
-  saveScrollPosition: vi.fn(),
 }));
 vi.mock("@/stores/uiStore", () => ({
   setCurrentTab: vi.fn(),
   currentTab: () => "me",
-  layoutMode: () => "waterfall",
   useDnsOverride: () => false,
-  showSettingsDrawer: () => false,
-  closeSettingsDrawer: vi.fn(),
   theme: () => "system",
   ageConfirmed: () => true,
   isAdult: () => true,
-  openSettingsDrawer: vi.fn(),
   listQuality: () => "medium",
   setListQuality: vi.fn(),
   detailQuality: () => "large",
@@ -71,6 +56,20 @@ vi.mock("@/stores/uiStore", () => ({
   imageCachePrefetch: () => false,
   autoHideNavBar: () => false,
   showBookmarkBadge: () => false,
+  resolvedTheme: () => "light",
+}));
+
+const navigateFn = vi.fn();
+
+// Outlet 组件：测试环境中渲染空占位
+const OutletMock = () => null;
+
+vi.mock("@tanstack/solid-router", () => ({
+  useNavigate: () => navigateFn,
+  useParams: () => () => ({}),
+  useRouter: () => ({ history: { back: vi.fn() } }),
+  useLocation: () => () => ({ pathname: "/me" }),
+  Outlet: OutletMock,
 }));
 
 describe("PersonalCenter", () => {
@@ -85,10 +84,107 @@ describe("PersonalCenter", () => {
     expect(container.querySelector(".min-h-screen")).not.toBeNull();
   });
 
-  it("contains PageTransition wrapper", async () => {
+  it("renders back button", async () => {
     const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
     const { container } = render(() => <PersonalCenter />);
-    // Verify the component tree mounts without error
-    expect(container.innerHTML.length).toBeGreaterThan(0);
+    const backBtn = container.querySelector('[aria-label="返回"]');
+    expect(backBtn).not.toBeNull();
+  });
+
+  it("renders search bar", async () => {
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { findByText } = render(() => <PersonalCenter />);
+    const searchText = await findByText("搜索");
+    expect(searchText).not.toBeNull();
+  });
+
+  it("renders user info card with nickname", async () => {
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { findByText } = render(() => <PersonalCenter />);
+    const nick = await findByText("TestUser");
+    expect(nick).not.toBeNull();
+  });
+
+  it("renders menu group: 我的作品, 我的收藏, 我的关注, 我的粉丝", async () => {
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { findByText } = render(() => <PersonalCenter />);
+    expect(await findByText("我的作品")).not.toBeNull();
+    expect(await findByText("我的收藏")).not.toBeNull();
+    expect(await findByText("我的关注")).not.toBeNull();
+    expect(await findByText("我的粉丝")).not.toBeNull();
+  });
+
+  it("renders settings menu item", async () => {
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { findByText } = render(() => <PersonalCenter />);
+    expect(await findByText("设置")).not.toBeNull();
+  });
+
+  it("does NOT render content type tabs (插画/漫画/小说)", async () => {
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { container } = render(() => <PersonalCenter />);
+    const buttons = container.querySelectorAll("button");
+    const tabLabels = ["插画", "漫画", "小说"];
+    for (const btn of buttons) {
+      for (const label of tabLabels) {
+        expect(btn.textContent).not.toContain(label);
+      }
+    }
+  });
+
+  it("does NOT render old pill-style tab switch container", async () => {
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { container } = render(() => <PersonalCenter />);
+    const buttons = container.querySelectorAll("button");
+    const hasTabPills = Array.from(buttons).some(
+      (btn) => btn.textContent?.includes("插画") && btn.textContent?.includes("漫画"),
+    );
+    expect(hasTabPills).toBe(false);
+  });
+
+  //── 导航诊断：点击菜单项应调用 navigate ──
+  it("clicking '我的作品' calls navigate with /user/1/illusts", async () => {
+    navigateFn.mockClear();
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { findByText } = render(() => <PersonalCenter />);
+    const el = await findByText("我的作品");
+    el.click();
+    expect(navigateFn).toHaveBeenCalledWith({ to: "/user/1/illusts" });
+  });
+
+  it("clicking '我的关注' calls navigate with /user/1/following", async () => {
+    navigateFn.mockClear();
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { findByText } = render(() => <PersonalCenter />);
+    const el = await findByText("我的关注");
+    el.click();
+    expect(navigateFn).toHaveBeenCalledWith({ to: "/user/1/following" });
+  });
+
+  it("clicking '我的粉丝' calls navigate with /user/1/followers", async () => {
+    navigateFn.mockClear();
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { findByText } = render(() => <PersonalCenter />);
+    const el = await findByText("我的粉丝");
+    el.click();
+    expect(navigateFn).toHaveBeenCalledWith({ to: "/user/1/followers" });
+  });
+
+  it("clicking '我的收藏' calls navigate with /bookmarks", async () => {
+    navigateFn.mockClear();
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { findByText } = render(() => <PersonalCenter />);
+    const el = await findByText("我的收藏");
+    el.click();
+    expect(navigateFn).toHaveBeenCalledWith({ to: "/bookmarks" });
+  });
+
+  it("clicking '设置' calls navigate with /settings", async () => {
+    navigateFn.mockClear();
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { findByText } = render(() => <PersonalCenter />);
+    const el = await findByText("设置");
+    el.click();
+    expect(navigateFn).toHaveBeenCalledWith({ to: "/settings" });
   });
 });

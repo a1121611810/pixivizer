@@ -1,13 +1,16 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
 
-// Only mock the modules that are causing import chain failures in node environment
-vi.mock("@/components/SettingsDrawer", () => ({ default: () => null }));
-vi.mock("@/components/NavBar", () => ({ default: () => null }));
-vi.mock("@/components/PageTransition", () => ({
-  default: (props: any) => props.children,
+vi.mock("@capacitor/core", () => ({
+  Capacitor: { isNativePlatform: () => false },
 }));
 
+vi.mock("@/utils/imageLoader", () => ({
+  resolveImageUrl: (url: string) => url,
+  loadImage: vi.fn(),
+}));
+
+// Mock stores used by the component tree
 vi.mock("@/stores/authStore", () => ({
   user: () => ({ id: 1, name: "TestUser", account: "test", profile_image_urls: {} }),
   isLoggedIn: () => true,
@@ -22,34 +25,18 @@ vi.mock("@/stores/userStore", () => ({
     total_mypixiv_users: 300,
   }),
   viewedUser: () => null,
+  error: () => null,
   loadProfile: vi.fn(),
   loadFollowing: vi.fn(),
-  error: () => null,
-}));
-
-vi.mock("@/stores/userIllustsStore", () => ({
-  illusts: () => [],
-  novels: () => [],
-  nextUrl: () => null,
-  loading: () => false,
-  error: () => null,
-  contentType: () => "illust",
-  load: vi.fn(),
-  loadMore: vi.fn(),
-  saveScrollPosition: vi.fn(),
 }));
 
 vi.mock("@/stores/uiStore", () => {
-  // All exports from uiStore that are used by dependent modules
   const fns: Record<string, unknown> = {};
   const keys = [
     "setCurrentTab",
     "currentTab",
-    "layoutMode",
     "useDnsOverride",
     "setUseDnsOverride",
-    "showSettingsDrawer",
-    "closeSettingsDrawer",
     "theme",
     "setThemePersisted",
     "listQuality",
@@ -75,8 +62,6 @@ vi.mock("@/stores/uiStore", () => {
     "setCheckCompleted",
     "setLatestReleaseUrl",
     "resetUiStore",
-    "openSettingsDrawer",
-    "closeSettingsDrawer",
     "imageCachePrefetch",
     "autoHideNavBar",
     "showBookmarkBadge",
@@ -85,11 +70,8 @@ vi.mock("@/stores/uiStore", () => {
     "setImageQuality",
   ];
   for (const k of keys) fns[k] = vi.fn();
-  // Signals that return specific values
   fns.currentTab = () => "me";
-  fns.layoutMode = () => "waterfall";
   fns.useDnsOverride = () => false;
-  fns.showSettingsDrawer = () => false;
   fns.theme = () => "system";
   fns.resolvedTheme = () => "light";
   fns.listQuality = () => "medium";
@@ -109,19 +91,12 @@ vi.mock("@/stores/uiStore", () => {
   return fns;
 });
 
-// Also mock the SolidJS primitives that need DOM
-vi.mock("@solid-primitives/scroll", () => ({
-  createScrollPosition: () => ({ y: 0 }),
-}));
-
-vi.mock("@/primitives/createScrollDrivenVisibility", () => ({
-  createScrollDrivenVisibility: () => ({ visible: () => true, suppress: vi.fn() }),
-}));
-
 vi.mock("@tanstack/solid-router", () => ({
   useNavigate: () => vi.fn(),
   useParams: () => () => ({}),
   useRouter: () => ({ history: { back: vi.fn() } }),
+  useLocation: () => () => ({ pathname: "/me" }),
+  Outlet: () => null,
 }));
 
 describe("PersonalCenter module", () => {

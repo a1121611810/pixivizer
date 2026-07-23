@@ -1,229 +1,234 @@
-import { type Component, onMount, onCleanup, Show } from "solid-js";
-import { useNavigate, useParams } from "@tanstack/solid-router";
-import { user } from "../stores/authStore";
-import { setCurrentTab, layoutMode } from "../stores/uiStore";
-import { createScrollPosition } from "@solid-primitives/scroll";
-
-import { profile, error as userError, loadProfile, loadFollowing } from "../stores/userStore";
-import {
-  illusts,
-  novels,
-  nextUrl,
-  loading,
-  error,
-  contentType,
-  load,
-  loadMore,
-  saveScrollPosition,
-} from "../stores/userIllustsStore";
-
-import ProfileBackground from "../components/ProfileBackground";
-import ProfileCard from "../components/ProfileCard";
-import CollapsedHeader from "../components/CollapsedHeader";
-import UserWorksFeed from "../components/UserWorksFeed";
-import PageTransition from "../components/PageTransition";
-import SettingsDrawer from "../components/SettingsDrawer";
-import NavBar from "../components/NavBar";
-import ErrorDisplay from "../components/ErrorDisplay";
-import { createScrollDrivenVisibility } from "../primitives/createScrollDrivenVisibility";
+import { type Component, onMount, Show, createSignal, createEffect } from "solid-js";
+import { useNavigate, useParams, useRouter, useLocation, Outlet } from "@tanstack/solid-router";
+import { Capacitor } from "@capacitor/core";
+import { user } from "@/stores/authStore";
+import { setCurrentTab } from "@/stores/uiStore";
+import { profile, viewedUser, loadProfile, loadFollowing } from "@/stores/userStore";
+import { resolveImageUrl, loadImage } from "@/utils/imageLoader";
+import FluentIcon from "@/components/ui/FluentIcon";
 
 interface Props {
   userId?: string;
 }
 
+const isNative = Capacitor.isNativePlatform();
+
+/** 为 role="button" 的 div 提供键盘激活（Enter/Space） */
+function handleKeyDown(e: KeyboardEvent, action: () => void) {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    action();
+  }
+}
+
 const PersonalCenter: Component<Props> = (props) => {
   const navigate = useNavigate();
+  const router = useRouter();
   const params = useParams({ strict: false });
+  const location = useLocation();
   const targetUserId = () => Number(props.userId || params().id || user()?.id || 0);
-  const isSelf = () => targetUserId() === Number(user()?.id ?? 0);
+  const displayUser = () => viewedUser() || user();
+  // 判断是否在子路由（/user/$id/illusts、/user/$id/following、/user/$id/followers）
+  // 如果在子路由，只渲染 <Outlet /> 让子页面显示；否则渲染个人中心主页内容
+  const isRootUserPage = () => /^\/(?:me|user\/\d+)$/.test(location().pathname);
+  const totalWorks = () =>
+    (profile()?.total_illusts ?? 0) +
+    (profile()?.total_manga ?? 0) +
+    (profile()?.total_novels ?? 0);
 
-  const scroll = createScrollPosition();
-  const COLLAPSE_THRESHOLD = 140;
-  //── 视差偏移：Layer 1 背景慢速移动 ──
-  const parallaxOffset = () => Math.min(scroll.y * 0.3, 200);
+  //── 头像加载 ──
+  const [avatarUrl, setAvatarUrl] = createSignal("");
+  const [avatarErrored, setAvatarErrored] = createSignal(false);
 
-  //── 信息卡透明度：60–140px 区间渐变 ──
-  const cardProgress = () => {
-    const y = scroll.y;
-    if (y < 60) return 1;
-    if (y >= COLLAPSE_THRESHOLD) return 0;
-    return 1 - (y - 60) / (COLLAPSE_THRESHOLD - 60);
-  };
-
-  //── Collapsed header 显隐 ──
-  const { visible: headerVisible, suppress: suppressHeaderVisibility } =
-    createScrollDrivenVisibility({ topGuard: COLLAPSE_THRESHOLD });
+  createEffect(() => {
+    const u = displayUser();
+    if (!u) {
+      setAvatarUrl("");
+      return;
+    }
+    const src = u.profile_image_urls.px_50x50 || u.profile_image_urls.medium || "";
+    if (!src) {
+      setAvatarUrl("");
+      return;
+    }
+    setAvatarErrored(false);
+    if (isNative) {
+      loadImage(src)
+        .then((r) => setAvatarUrl(r.url))
+        .catch(() => setAvatarErrored(true));
+    } else {
+      setAvatarUrl(resolveImageUrl(src));
+    }
+  });
 
   onMount(() => {
     setCurrentTab("me");
-  });
-
-  //── Tab 切换 ──
-  function handleTabSwitch(type: "illust" | "manga" | "novel") {
-    saveScrollPosition(window.scrollY);
-    load(targetUserId(), type);
-  }
-
-  //── 首次加载 ──
-  onMount(() => {
     const uid = targetUserId();
     if (uid) {
       loadProfile(uid);
       loadFollowing(uid);
-      load(uid, contentType());
     }
   });
 
-  onCleanup(() => {
-    saveScrollPosition(window.scrollY);
-  });
-
   return (
-    <>
-      <PageTransition>
-        <div class="relative min-h-screen pb-16">
-          {/* ═══ Layer 1: Background ═══ */}
-          <div
-            class="fixed"
-            style={{
-              transform: `translateY(${parallaxOffset()}px)`,
-              height: "55vh",
-              "z-index": 0,
-            }}
+    <Show when={isRootUserPage()} fallback={<Outlet />}>
+      <div class="min-h-screen" style={{ "background-color": "var(--pageCardBg)" }}>
+        {/* 顶部栏：返回按钮 + 搜索入口 */}
+        <div class="flex items-center justify-between px-4 pt-3">
+          <fluent-button
+            appearance="subtle"
+            aria-label="返回"
+            on:click={() => router.history.back()}
+            class="w-10 h-10 p-0 min-w-10"
           >
-            <ProfileBackground />
+            ←
+          </fluent-button>
+
+          <div
+            class="flex items-center gap-1.5 rounded-full bg-[var(--pageCardSearchBg)] px-4 py-2 cursor-pointer active:scale-[0.97] transition-transform focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+            onClick={() => void navigate({ to: "/search" })}
+            onKeyDown={(e) => handleKeyDown(e, () => navigate({ to: "/search" }))}
+            role="button"
+            tabindex="0"
+            aria-label="搜索"
+          >
+            <FluentIcon name="search" size={16} />
+            <span class="text-sm text-[var(--pageCardTextSecondary)]">搜索</span>
           </div>
+        </div>
 
-          {/* ═══ Main content wrapper ═══ */}
-          <div class="relative z-10">
-            {/* ═══ Layer 3: Profile Card ═══ */}
-            <div
-              class="pt-12 px-4 transition-all duration-[var(--durationSlow)] ease-[var(--curveEasyEase)]"
-              style={{
-                opacity: cardProgress(),
-                transform: `scale(${0.85 + cardProgress() * 0.15}) translateY(${(1 - cardProgress()) * -20}px)`,
-                "pointer-events": cardProgress() < 0.1 ? "none" : "auto",
-              }}
-            >
-              <Show
-                when={profile()}
-                fallback={
-                  <div class="flex flex-col items-center pt-6">
-                    <div
-                      class="w-[120px] h-[120px] rounded-[var(--borderRadiusCircular)]"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
-                        "background-size": "200% 100%",
-                        animation:
-                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
-                      }}
-                    />
-                    <div
-                      class="mt-3 h-5 w-32 rounded"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
-                        "background-size": "200% 100%",
-                        animation:
-                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
-                      }}
-                    />
-                    <div
-                      class="mt-1 h-4 w-20 rounded"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, var(--colorNeutralBackground2) 25%, var(--colorNeutralBackground1) 50%, var(--colorNeutralBackground2) 75%)",
-                        "background-size": "200% 100%",
-                        animation:
-                          "fluent-shimmer var(--durationSlower) var(--curveEasyEase) infinite",
-                      }}
-                    />
-                  </div>
-                }
-              >
-                <ProfileCard targetUserId={targetUserId()} isSelf={isSelf()} />
-              </Show>
-            </div>
-
-            {/* ═══ Layer 4: Content Section ═══ */}
-            <div class="relative z-20 mt-4">
-              {/* Segmented control */}
-              <div class="px-4 py-3">
-                <div class="flex bg-[var(--colorNeutralBackground2)] rounded-[var(--borderRadiusMedium)] p-1.5 gap-1">
-                  <button
-                    classList={{
-                      "segmented-item-active": contentType() === "illust",
-                      "segmented-item-inactive": contentType() !== "illust",
-                    }}
-                    onClick={() => handleTabSwitch("illust")}
-                  >
-                    插画
-                  </button>
-                  <button
-                    classList={{
-                      "segmented-item-active": contentType() === "manga",
-                      "segmented-item-inactive": contentType() !== "manga",
-                    }}
-                    onClick={() => handleTabSwitch("manga")}
-                  >
-                    漫画
-                  </button>
-                  <button
-                    classList={{
-                      "segmented-item-active": contentType() === "novel",
-                      "segmented-item-inactive": contentType() !== "novel",
-                    }}
-                    onClick={() => handleTabSwitch("novel")}
-                  >
-                    小说
-                  </button>
+        {/* 用户信息卡片 */}
+        <div class="px-4 mt-4">
+          <div class="bg-[var(--pageCardSurface)] rounded-[var(--pageCardRadius)] p-5 flex items-center gap-4 shadow-[var(--pageCardShadow)]">
+            <Show
+              when={!avatarErrored() && avatarUrl()}
+              fallback={
+                <div class="w-14 h-14 rounded-full bg-[var(--colorBrandBackground)] flex items-center justify-center text-white [font-size:var(--fontSizeBase500)] font-semibold flex-shrink-0">
+                  {displayUser()?.name?.charAt(0) || "P"}
                 </div>
-              </div>
-
-              {/* Works feed */}
-              <div class="px-4">
-                <Show when={userError()}>
-                  <ErrorDisplay
-                    error={userError()!}
-                    onRetry={() => {
-                      const uid = targetUserId();
-                      if (uid) loadProfile(uid);
-                    }}
-                  />
-                </Show>
-
-                <UserWorksFeed
-                  contentType={contentType()}
-                  illusts={illusts()}
-                  novels={novels()}
-                  loading={loading()}
-                  error={error()}
-                  hasMore={nextUrl() !== null}
-                  onIllustClick={(id) => void navigate({ to: `/illust/${id}` })}
-                  onNovelClick={(id) => void navigate({ to: `/novel/${id}` })}
-                  onLoadMore={loadMore}
-                  onRefresh={async () => {
-                    const uid = targetUserId();
-                    if (uid) {
-                      await load(uid, contentType(), true);
-                    }
-                  }}
-                  layoutMode={layoutMode()}
-                  suppressHeaderVisibility={suppressHeaderVisibility}
-                />
+              }
+            >
+              <img
+                src={avatarUrl()}
+                alt={displayUser()?.name ?? ""}
+                class="w-14 h-14 rounded-full object-cover flex-shrink-0"
+                onError={() => setAvatarErrored(true)}
+              />
+            </Show>
+            <div class="flex-1 min-w-0">
+              <div class="text-lg font-bold text-[var(--pageCardTextPrimary)] truncate font-sans">
+                {displayUser()?.name || "Pictelio"}
               </div>
             </div>
           </div>
         </div>
-      </PageTransition>
 
-      {/* ═══ Collapsed Header ═══ */}
-      <CollapsedHeader visible={headerVisible()} />
+        {/* 功能菜单卡片组 */}
+        <div class="px-4 mt-4">
+          <div class="bg-[var(--pageCardSurface)] rounded-[var(--pageCardRadius)] shadow-[var(--pageCardShadow)]">
+            {/* 我的作品 */}
+            <div
+              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+              onClick={() => void navigate({ to: `/user/${targetUserId()}/illusts` })}
+              onKeyDown={(e) =>
+                handleKeyDown(e, () => navigate({ to: `/user/${targetUserId()}/illusts` }))
+              }
+              role="button"
+              tabindex="0"
+              aria-label="我的作品"
+            >
+              <FluentIcon name="image" size={22} />
+              <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
+                我的作品
+              </span>
+              <span class="text-sm text-[var(--pageCardTextSecondary)] mr-1">{totalWorks()}</span>
+              <FluentIcon name="chevronRight" size={16} />
+            </div>
 
-      <SettingsDrawer />
-      <NavBar />
-    </>
+            {/* 我的收藏 */}
+            <div
+              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+              onClick={() => void navigate({ to: "/bookmarks" })}
+              onKeyDown={(e) => handleKeyDown(e, () => navigate({ to: "/bookmarks" }))}
+              role="button"
+              tabindex="0"
+              aria-label="我的收藏"
+            >
+              <FluentIcon name="bookmark" size={22} />
+              <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
+                我的收藏
+              </span>
+              <span class="text-sm text-[var(--pageCardTextSecondary)] mr-1">
+                {profile()?.total_illust_bookmarks_public ?? 0}
+              </span>
+              <FluentIcon name="chevronRight" size={16} />
+            </div>
+
+            {/* 我的关注 */}
+            <div
+              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+              onClick={() => void navigate({ to: `/user/${targetUserId()}/following` })}
+              onKeyDown={(e) =>
+                handleKeyDown(e, () => navigate({ to: `/user/${targetUserId()}/following` }))
+              }
+              role="button"
+              tabindex="0"
+              aria-label="我的关注"
+            >
+              <FluentIcon name="people" size={22} />
+              <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
+                我的关注
+              </span>
+              <span class="text-sm text-[var(--pageCardTextSecondary)] mr-1">
+                {profile()?.total_follow_users ?? 0}
+              </span>
+              <FluentIcon name="chevronRight" size={16} />
+            </div>
+
+            {/* 我的粉丝 */}
+            <div
+              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+              onClick={() => void navigate({ to: `/user/${targetUserId()}/followers` })}
+              onKeyDown={(e) =>
+                handleKeyDown(e, () => navigate({ to: `/user/${targetUserId()}/followers` }))
+              }
+              role="button"
+              tabindex="0"
+              aria-label="我的粉丝"
+            >
+              <FluentIcon name="people" size={22} />
+              <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
+                我的粉丝
+              </span>
+              <span class="text-sm text-[var(--pageCardTextSecondary)] mr-1">
+                {profile()?.total_mypixiv_users ?? 0}
+              </span>
+              <FluentIcon name="chevronRight" size={16} />
+            </div>
+          </div>
+        </div>
+
+        {/* 设置卡片 */}
+        <div class="px-4 mt-3">
+          <div class="bg-[var(--pageCardSurface)] rounded-[var(--pageCardRadius)] shadow-[var(--pageCardShadow)]">
+            <div
+              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+              onClick={() => void navigate({ to: "/settings" })}
+              onKeyDown={(e) => handleKeyDown(e, () => navigate({ to: "/settings" }))}
+              role="button"
+              tabindex="0"
+              aria-label="设置"
+            >
+              <FluentIcon name="settings" size={22} />
+              <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
+                设置
+              </span>
+              <FluentIcon name="chevronRight" size={16} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </Show>
   );
 };
 
