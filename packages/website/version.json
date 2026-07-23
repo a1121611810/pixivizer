@@ -1,5 +1,5 @@
 {
-  "version": "3.16.1",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.16.1",
-  "changelog": "🐛 修复\n  fix(search-store): 添加缺失的 toSorted 方法，修复搜索页崩溃"
+  "version": "3.16.2",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.16.2",
+  "changelog": "🐛 修复\n  fix(startup): keep loading overlay visible through full init sequence\n  fix(novel-card): make cover responsive with clamp(80px,20vw,128px)\n  fix(virtual): ensure data-index attribute is set be"
 }
