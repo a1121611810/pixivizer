@@ -63,6 +63,7 @@ const NovelDetail = lazy(() => import("@/routes/NovelDetail"));
 const HistoryPage = lazy(() => import("@/routes/HistoryPage"));
 const Search = lazy(() => import("@/routes/Search"));
 const LayoutSettings = lazy(() => import("@/routes/LayoutSettings"));
+const Settings = lazy(() => import("@/routes/Settings"));
 
 const rootRoute = createRootRoute({ component: RootLayout });
 
@@ -200,6 +201,12 @@ const layoutSettingsRoute = createRoute({
   component: asRoute(LayoutSettings),
 });
 
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "settings",
+  component: asRoute(Settings),
+});
+
 const ageConfirmationRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "age-confirmation",
@@ -266,6 +273,7 @@ const routeTree = rootRoute.addChildren([
   imageHostRoute,
   imageCacheRoute,
   layoutSettingsRoute,
+  settingsRoute,
   ageConfirmationRoute,
   userRoute.addChildren([userIllustsRoute, userFollowingRoute, userFollowersRoute]),
   catchAllRoute,

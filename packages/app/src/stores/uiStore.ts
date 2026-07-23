@@ -1,4 +1,3 @@
-import { createSignal } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { Preferences } from "@capacitor/preferences";
 
@@ -158,12 +157,6 @@ export const setThemePersisted = async (newTheme: Theme): Promise<void> => {
   }
 };
 
-// ── Drawer 开关
-const [drawerOpen, setDrawerOpen] = createSignal(false);
-export const showSettingsDrawer = () => drawerOpen();
-export const setShowSettingsDrawer = (v: boolean) => setDrawerOpen(v);
-export const openSettingsDrawer = () => setDrawerOpen(true);
-export const closeSettingsDrawer = () => setDrawerOpen(false);
 
 export const layoutMode = () => state.layoutMode;
 export const setLayoutMode = async (mode: LayoutMode): Promise<void> => {
