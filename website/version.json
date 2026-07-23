@@ -1,5 +1,5 @@
 {
-  "version": "3.15.0",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.15.0",
-  "changelog": "✨ 新功能\n  feat(scroll): unify scroll-driven UI visibility with @solid-primitives\n  feat(nav): migrate search entry from floating FAB to NavBar center button\n🐛 修复\n  fix(feed): restore novel feed scroll "
+  "version": "3.16.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.16.0",
+  "changelog": "Personal Center 重构 — Fluent Layers 设计体系，菜单导航布局替代瀑布流\n独立设置页面 — 从抽屉面板迁移为独立路由页面\n二段下拉刷新 — 下拉刷新超 120px 进入设置页\n页面风格主题 — 新增卡牌/扁平布局模式切换\n小说修复 — 修复正文不能滚动、虚拟列表尺寸实时测量\n图片性能 — L1 缓存从 Blob LRU 降级为标记集合，低内存零开销\nUserIllus"
 }
