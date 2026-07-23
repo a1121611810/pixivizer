@@ -37,8 +37,7 @@ export default defineConfig({
     page: "min-h-screen bg-[var(--colorNeutralBackground3)] text-[var(--colorNeutralForeground1)]",
 
     // ── Surfaces ──
-    "surface-card":
-      "bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] border border-[var(--colorNeutralStroke2)]",
+    "surface-card": "shadow-[var(--pageCardShadow,var(--elevation2))]",
     "surface-card-elevated":
       "bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] border border-[var(--colorNeutralStroke2)] shadow-[var(--elevation4)]",
     "surface-flyout":
@@ -95,8 +94,6 @@ export default defineConfig({
     "scroll-top-anim": "animate-[scroll-top-pulse_600ms_var(--curveEasyEase)]",
 
     // ── History page ──
-    "history-entry-card":
-      "surface-card cursor-pointer transition-colors duration-[var(--durationFast)] hover:bg-[var(--colorNeutralBackground2)] active:scale-[0.985] focus-visible:outline-2 focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-offset-2",
     "history-delete-btn":
       "min-w-10 min-h-10 flex items-center justify-center flex-shrink-0 rounded-[var(--borderRadiusSmall)] bg-transparent border-none text-[var(--colorNeutralForeground4)] cursor-pointer transition-colors duration-[var(--durationFast)] hover:text-[var(--colorDangerForeground)] hover:bg-[var(--colorDangerBackground)] active:scale-90",
     "history-clear-btn":

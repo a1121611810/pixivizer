@@ -101,7 +101,7 @@ const FollowListPage: Component<Props> = (props) => {
             <For each={users()}>
               {(preview, index) => (
                 <div
-                  class="surface-card rounded-[var(--borderRadiusMedium)] p-3 transition-all duration-[var(--durationFast)] ease-[var(--curveEasyEase)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none"
+                  class="surface-card p-3 hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer select-none"
                   onClick={() => void navigate({ to: `/user/${preview.user.id}` })}
                 >
                   <div class="flex items-center gap-3">
@@ -162,7 +162,7 @@ const FollowListPage: Component<Props> = (props) => {
               <div class="flex flex-col" style={{ gap: "var(--spacingVerticalS)" }}>
                 {/* 骨架屏 */}
                 {Array.from({ length: 5 }).map(() => (
-                  <div class="surface-card rounded-[var(--borderRadiusMedium)] p-3">
+                  <div class="surface-card p-3">
                     <div class="flex items-center gap-3">
                       <div class="w-10 h-10 rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralBackground2)] flex-shrink-0" />
                       <div class="flex-1 flex flex-col gap-1.5">

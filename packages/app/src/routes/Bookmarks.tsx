@@ -61,8 +61,7 @@ const Bookmarks: Component = () => {
                 classList={{
                   "bg-[var(--colorNeutralBackground1)] text-[var(--colorNeutralForeground1)] shadow-[var(--elevation2)]":
                     contentType() === "novel",
-                  "bg-transparent text-[var(--colorNeutralForeground2)]":
-                    contentType() !== "novel",
+                  "bg-transparent text-[var(--colorNeutralForeground2)]": contentType() !== "novel",
                 }}
                 onClick={() => setContentType("novel")}
               >

@@ -410,7 +410,7 @@ const HistoryPage: Component = () => {
 
                 return (
                   <div
-                    class="history-entry-card flex items-center gap-3 p-2.5 pr-3 mt-2"
+                    class="surface-card flex items-center gap-[var(--spacingHorizontalM)] p-[var(--spacingHorizontalM)] mt-[var(--spacingVerticalM)] hover:bg-[var(--colorNeutralBackground1Hover)] active:scale-[0.98] cursor-pointer focus-visible:outline-2 focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-offset-2 transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)]"
                     onClick={() => {
                       if (e.type === "illust") {
                         void navigate({ to: "/illust/$id", params: { id: String(e.id) } });
@@ -453,8 +453,8 @@ const HistoryPage: Component = () => {
                             left: "var(--strokeWidthThick)",
                             "font-size": "var(--fontSizeBase100)",
                             padding: "1px 3px",
-                            background: "var(--colorDangerBackground)",
-                            color: "var(--colorDangerForeground)",
+                            background: "var(--colorStatusDangerBackground2)",
+                            color: "var(--colorStatusDangerForeground1)",
                             "font-weight": "var(--fontWeightBold)",
                           }}
                         >

@@ -144,7 +144,7 @@ const About: Component = () => {
             <p class="px-5 py-2 [font-size:var(--fontSizeBase200)] font-semibold text-[var(--colorNeutralForeground2)] uppercase tracking-wide">
               {section.title}
             </p>
-            <div class="mx-4 rounded-[var(--borderRadiusLarge)] bg-[var(--colorNeutralBackground1)] overflow-hidden">
+            <div class="mx-4 surface-card">
               {section.rows.map((row, idx, arr) => {
                 const inner = (
                   <div

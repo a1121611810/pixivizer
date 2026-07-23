@@ -76,7 +76,7 @@ const ImageCard: Component<Props> = (props) => {
   const [mainLoaded, setMainLoaded] = createSignal(false);
 
   return (
-    <div class="image-card" onClick={() => props.onClick(props.illust.id)}>
+    <div class="image-card surface-card" onClick={() => props.onClick(props.illust.id)}>
       <div class="relative overflow-hidden rounded-[var(--borderRadiusMedium)]">
         {/* Skeleton overlay — 图片结构已渲染但缩略图尚未加载成功时占位 */}
         <SkeletonShimmer
@@ -151,7 +151,7 @@ const ImageCard: Component<Props> = (props) => {
         {/* Bookmark heart — 右下角 */}
         <div class="absolute bottom-[var(--spacingVerticalXS)] right-[var(--spacingHorizontalXS)]">
           <button
-            class="min-w-9 min-h-9 flex items-center justify-center rounded-full bg-[var(--colorOverlaySurface)] backdrop-blur-sm text-sm transition-all active:scale-90 select-none border-none cursor-pointer"
+            class="min-w-10 min-h-10 flex items-center justify-center rounded-full bg-[var(--colorOverlaySurface)] backdrop-blur-sm text-sm transition-all active:scale-90 select-none border-none cursor-pointer"
             classList={{
               "text-[var(--colorStatusDangerForeground1)]": bookmarked(),
               "text-[var(--colorNeutralForegroundOnBrand)] hover:text-[var(--colorStatusDangerBackground1)]":

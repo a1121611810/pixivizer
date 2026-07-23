@@ -1,9 +1,6 @@
 import { createSignal } from "solid-js";
 import { getUserDetail } from "../api/user";
-import {
-  type PixivProfile,
-  type PixivUser,
-} from "../api/types";
+import { type PixivProfile, type PixivUser } from "../api/types";
 import { user } from "./authStore";
 
 const [profile, setProfile] = createSignal<PixivProfile | null>(null);
@@ -12,10 +9,7 @@ const [viewedUser, setViewedUser] = createSignal<PixivUser | null>(null);
 // 缓存已加载的用户数据，避免返回时重复请求
 const profileCache = new Map<number, { profile: PixivProfile; user: PixivUser }>();
 
-export {
-  profile,
-  viewedUser,
-};
+export { profile, viewedUser };
 
 export async function loadProfile(userId?: number, forceRefresh?: boolean) {
   const id = userId ?? user()?.id;

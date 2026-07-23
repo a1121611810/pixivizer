@@ -367,10 +367,7 @@ const VirtualFeed: Component<Props> = (props) => {
                   height: `${vItem.size}px`,
                   transform: `translateY(${vItem.start}px)`,
                 }}
-                class="bg-[var(--colorNeutralBackground1)] rounded-[var(--borderRadiusMedium)] shadow-[var(--elevation2)]"
-                classList={{
-                  "overflow-hidden": layoutMode() === "grid",
-                }}
+                class="surface-card"
               >
                 {layoutMode() === "grid" ? (
                   <GridCard illust={illust} onClick={props.onIllustClick} />

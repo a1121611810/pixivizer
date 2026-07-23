@@ -154,21 +154,21 @@ const PersonalCenter: Component<Props> = (props) => {
             </div>
 
             <Show when={isCurrentUser()}>
-            {/* 我的收藏 */}
-            <div
-              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
-              onClick={() => void navigate({ to: "/bookmarks" })}
-              onKeyDown={(e) => handleKeyDown(e, () => navigate({ to: "/bookmarks" }))}
-              role="button"
-              tabIndex={0}
-              aria-label="我的收藏"
-            >
-              <FluentIcon name="bookmark" size={22} />
-              <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
-                我的收藏
-              </span>
-              <FluentIcon name="chevronRight" size={16} />
-            </div>
+              {/* 我的收藏 */}
+              <div
+                class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+                onClick={() => void navigate({ to: "/bookmarks" })}
+                onKeyDown={(e) => handleKeyDown(e, () => navigate({ to: "/bookmarks" }))}
+                role="button"
+                tabIndex={0}
+                aria-label="我的收藏"
+              >
+                <FluentIcon name="bookmark" size={22} />
+                <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
+                  我的收藏
+                </span>
+                <FluentIcon name="chevronRight" size={16} />
+              </div>
             </Show>
 
             {/* 我的关注 */}
@@ -229,25 +229,25 @@ const PersonalCenter: Component<Props> = (props) => {
         </div>
 
         <Show when={isCurrentUser()}>
-        {/* 设置卡片 */}
-        <div class="px-4 mt-3">
-          <div class="bg-[var(--pageCardSurface)] rounded-[var(--pageCardRadius)] shadow-[var(--pageCardShadow)]">
-            <div
-              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
-              onClick={() => void navigate({ to: "/settings" })}
-              onKeyDown={(e) => handleKeyDown(e, () => navigate({ to: "/settings" }))}
-              role="button"
-              tabIndex={0}
-              aria-label="设置"
-            >
-              <FluentIcon name="settings" size={22} />
-              <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
-                设置
-              </span>
-              <FluentIcon name="chevronRight" size={16} />
+          {/* 设置卡片 */}
+          <div class="px-4 mt-3">
+            <div class="bg-[var(--pageCardSurface)] rounded-[var(--pageCardRadius)] shadow-[var(--pageCardShadow)]">
+              <div
+                class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+                onClick={() => void navigate({ to: "/settings" })}
+                onKeyDown={(e) => handleKeyDown(e, () => navigate({ to: "/settings" }))}
+                role="button"
+                tabIndex={0}
+                aria-label="设置"
+              >
+                <FluentIcon name="settings" size={22} />
+                <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
+                  设置
+                </span>
+                <FluentIcon name="chevronRight" size={16} />
+              </div>
             </div>
           </div>
-        </div>
         </Show>
       </div>
     </Show>

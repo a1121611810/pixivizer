@@ -92,7 +92,7 @@ const NovelCard: Component<Props> = (props) => {
 
   return (
     <div
-      class="surface-card overflow-hidden cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)]"
+      class="surface-card cursor-pointer active:scale-[0.98]"
       onClick={() => props.onClick(props.novel.id)}
     >
       <div class="flex gap-[var(--spacingHorizontalM)] p-[var(--spacingHorizontalM)]">
@@ -163,7 +163,7 @@ const NovelCard: Component<Props> = (props) => {
         {/* Bookmark button */}
         <div class="flex-shrink-0 self-start">
           <button
-            class="min-w-9 min-h-9 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralBackground2)] text-sm transition-all active:scale-90 select-none border-none cursor-pointer hover:bg-[var(--colorNeutralBackground3)]"
+            class="min-w-10 min-h-10 flex items-center justify-center rounded-[var(--borderRadiusCircular)] bg-[var(--colorNeutralBackground2)] text-sm transition-all active:scale-90 select-none border-none cursor-pointer hover:bg-[var(--colorNeutralBackground3)]"
             classList={{
               "text-[var(--colorStatusDangerForeground1)]": bookmarked(),
               "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorStatusDangerBackground1)]":
@@ -256,7 +256,7 @@ export const NovelCoverCard: Component<Props> = (props) => {
 
   return (
     <div
-      class="relative surface-card overflow-hidden cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] flex flex-col h-full"
+      class="relative surface-card cursor-pointer active:scale-[0.98] flex flex-col h-full"
       onClick={() => props.onClick(props.novel.id)}
     >
       {/* Cover image — square, fills card width */}
@@ -286,7 +286,7 @@ export const NovelCoverCard: Component<Props> = (props) => {
         {/* Bookmark button — 右下角 */}
         <div class="absolute bottom-[var(--spacingVerticalXS)] right-[var(--spacingHorizontalXS)] z-1">
           <button
-            class="min-w-9 min-h-9 flex items-center justify-center rounded-full bg-[var(--colorOverlaySurface)] backdrop-blur-sm text-sm transition-all active:scale-90 select-none border-none cursor-pointer"
+            class="min-w-10 min-h-10 flex items-center justify-center rounded-full bg-[var(--colorOverlaySurface)] backdrop-blur-sm text-sm transition-all active:scale-90 select-none border-none cursor-pointer"
             classList={{
               "text-[var(--colorStatusDangerForeground1)]": bookmarked(),
               "text-[var(--colorNeutralForegroundOnBrand)] hover:text-[var(--colorStatusDangerBackground1)]":

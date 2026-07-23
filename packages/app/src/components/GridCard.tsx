@@ -42,7 +42,7 @@ const GridCard: Component<Props> = (props) => {
 
   return (
     <div
-      class="image-card h-full flex flex-col cursor-pointer"
+      class="image-card surface-card h-full flex flex-col cursor-pointer"
       onClick={() => props.onClick(props.illust.id)}
     >
       {/* Thumbnail — fixed height, object-cover cropped */}
@@ -108,7 +108,7 @@ const GridCard: Component<Props> = (props) => {
         {/* Bookmark heart — bottom-right */}
         <div class="absolute bottom-1 right-1">
           <button
-            class="w-6 h-6 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-xs transition-all active:scale-90 select-none"
+            class="min-w-10 min-h-10 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-xs transition-all active:scale-90 select-none"
             classList={{
               "text-red-400": bookmarked(),
               "text-white/70 hover:text-red-300": !bookmarked(),
