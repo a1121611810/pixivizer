@@ -281,7 +281,12 @@ const NovelVirtualFeed: Component<Props> = (props) => {
             }
             return (
               <div
-                ref={instance.measureElement}
+                ref={(el) => {
+                  if (el) {
+                    el.setAttribute("data-index", String(vItem.index));
+                    instance.measureElement(el);
+                  }
+                }}
                 data-index={vItem.index}
                 style={{
                   position: "absolute",
