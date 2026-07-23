@@ -20,6 +20,8 @@ export interface SearchStoreState {
   scope: () => SearchScope;
   /** Sort order */
   sort: () => SearchSort;
+  /** Sort order (alias, used by Search.tsx) */
+  toSorted: () => SearchSort;
   /** Merged search results (illust + novel combined) */
   results: () => SearchResultItem[];
   /** Whether a search request is in flight */
@@ -281,6 +283,7 @@ export function createSearchStore(): SearchStoreState {
     keyword,
     scope,
     sort,
+    toSorted: sort,
     results,
     hasMore,
     loading,

@@ -50,6 +50,39 @@ describe("searchStore", () => {
     });
   });
 
+  it("toSorted returns the same value as sort", () => {
+    createRoot((dispose) => {
+      const store = createSearchStore();
+      expect(store.toSorted()).toBe(store.sort());
+      store.setSort("popular_desc");
+      expect(store.toSorted()).toBe(store.sort());
+      dispose();
+    });
+  });
+
+  it("implements all methods and properties used by Search.tsx", () => {
+    createRoot((dispose) => {
+      const store = createSearchStore();
+      // Search.tsx uses all these members — this test acts as an interface
+      // contract check to prevent missing-method regressions like the
+      // "store.toSorted is not a function" bug.
+      expect(typeof store.keyword).toBe("function");
+      expect(typeof store.scope).toBe("function");
+      expect(typeof store.sort).toBe("function");
+      expect(typeof store.toSorted).toBe("function");
+      expect(typeof store.results).toBe("function");
+      expect(typeof store.loading).toBe("function");
+      expect(typeof store.error).toBe("function");
+      expect(typeof store.hasMore).toBe("function");
+      expect(typeof store.setKeyword).toBe("function");
+      expect(typeof store.setScope).toBe("function");
+      expect(typeof store.setSort).toBe("function");
+      expect(typeof store.executeSearch).toBe("function");
+      expect(typeof store.loadMore).toBe("function");
+      dispose();
+    });
+  });
+
   it("executeSearch does nothing with empty keyword", async () => {
     await createRoot(async (dispose) => {
       const store = createSearchStore();
