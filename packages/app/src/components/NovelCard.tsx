@@ -96,8 +96,8 @@ const NovelCard: Component<Props> = (props) => {
       onClick={() => props.onClick(props.novel.id)}
     >
       <div class="flex gap-[var(--spacingHorizontalM)] p-[var(--spacingHorizontalM)]">
-        {/* Cover image — fixed 128px square */}
-        <div class="relative w-[128px] h-[128px] flex-shrink-0 rounded-[var(--borderRadiusSmall)] overflow-hidden">
+        {/* Cover image — responsive square (clamp 80px–128px) */}
+        <div class="relative w-[clamp(80px,20vw,128px)] aspect-square flex-shrink-0 rounded-[var(--borderRadiusSmall)] overflow-hidden">
           <img
             src={resolveImageUrl(props.novel.image_urls.square_medium)}
             alt={props.novel.title}

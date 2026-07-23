@@ -102,4 +102,15 @@ describe("NovelCard", () => {
     ));
     expect(container.textContent).toContain("12,345字");
   });
+
+  it("uses responsive cover sizing instead of fixed 128px", () => {
+    const { container } = render(() => <NovelCard novel={createNovel()} onClick={vi.fn()} />);
+    const html = container.innerHTML;
+    // 固定 128px 尺寸应该不再存在
+    expect(html).not.toContain("w-[128px]");
+    expect(html).not.toContain("h-[128px]");
+    // 封面容器应使用响应式尺寸（精确匹配，避免误中 line-clamp）
+    expect(html).toContain("w-[clamp(80px,20vw,128px)]");
+    expect(html).toContain("aspect-square");
+  });
 });
