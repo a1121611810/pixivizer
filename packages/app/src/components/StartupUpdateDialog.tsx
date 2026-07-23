@@ -39,7 +39,7 @@ const StartupUpdateDialog: Component = () => {
 
   return (
     <Show when={showUpdateDialog()}>
-      <fluent-dialog open on:close={handleDismiss} aria-label="发现新版本">
+      <fluent-dialog open modal on:close={handleDismiss} aria-label="发现新版本">
         <h3
           slot="title"
           class="text-[var(--colorNeutralForeground1)] [font-size:var(--fontSizeBase500)] font-semibold"

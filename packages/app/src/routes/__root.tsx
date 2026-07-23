@@ -46,6 +46,11 @@ import { loadPageStyleThemePreference } from "@/stores/themeStore";
 
 const StartupUpdateDialog = lazy(() => import("@/components/StartupUpdateDialog"));
 
+/** 启动后检查更新的延迟时间（ms），确保页面渲染完成后再弹窗 */
+const STARTUP_CHECK_DELAY_MS = 500;
+/** "再按一次退出应用" toast 的显示时长（ms） */
+const EXIT_HINT_DURATION_MS = 2000;
+
 const RootLayout: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -71,6 +76,33 @@ const RootLayout: Component = () => {
     }
   });
 
+  /**
+   * 启动后检查更新（延迟执行，不阻塞首次渲染）。
+   * 在 onMount 中的启动流程完成后调用。
+   */
+  async function runStartupUpdateCheck(): Promise<void> {
+    setIsCheckingUpdate(true);
+    try {
+      const result = await checkForUpdate();
+      setHasUpdate(result.hasUpdate);
+      setLatestVersion(result.latestVersion);
+      setLatestReleaseUrl(result.latestReleaseUrl);
+      setLatestChangelog(result.latestChangelog);
+      if (
+        result.hasUpdate &&
+        result.latestVersion &&
+        result.latestVersion !== lastDismissedVersion()
+      ) {
+        setShowUpdateDialog(true);
+      }
+    } catch (error) {
+      console.warn("[App] Startup update check failed", error);
+    } finally {
+      setIsCheckingUpdate(false);
+      setCheckCompleted(true);
+    }
+  }
+
   onMount(async () => {
     // Disable browser native scroll restoration — we manage scroll ourselves via stores + restoreScrollTop.
     // Without this, window.history.go(-1) triggers popstate and the browser may fight our scroll restoration.
@@ -82,7 +114,7 @@ const RootLayout: Component = () => {
     const onExitHint = () => {
       setShowExitHint(true);
       clearTimeout(exitHintTimer);
-      exitHintTimer = setTimeout(() => setShowExitHint(false), 2000);
+      exitHintTimer = setTimeout(() => setShowExitHint(false), EXIT_HINT_DURATION_MS);
     };
     window.addEventListener("exitHint", onExitHint);
 
@@ -118,33 +150,6 @@ const RootLayout: Component = () => {
     // 后台预热 LRU 缓存（从 Android 文件系统读取最近图片，不阻塞启动流程）
     warmCacheFromDisk();
 
-    // Background update check on startup if toggle is enabled.
-    // The result is stored in uiStore so StartupUpdateDialog can render it.
-    // IsCheckingUpdate/checkCompleted are kept in sync so the Settings drawer
-    // Can show the version indicator ("v3.5.1 ✅") after a startup check.
-    if (autoCheckUpdate()) {
-      setIsCheckingUpdate(true);
-      try {
-        const result = await checkForUpdate();
-        setHasUpdate(result.hasUpdate);
-        setLatestVersion(result.latestVersion);
-        setLatestReleaseUrl(result.latestReleaseUrl);
-        setLatestChangelog(result.latestChangelog);
-        if (
-          result.hasUpdate &&
-          result.latestVersion &&
-          result.latestVersion !== lastDismissedVersion()
-        ) {
-          setShowUpdateDialog(true);
-        }
-      } catch (error) {
-        console.warn("[App] Startup update check failed", error);
-      } finally {
-        setIsCheckingUpdate(false);
-        setCheckCompleted(true);
-      }
-    }
-
     // Register native back gesture handler. Overlay closure is handled by backGestureStore
     // Once components push overlays in Phase 5; for now the service closes top overlay if any.
     unregisterBackGesture = await registerBackGesture({
@@ -179,6 +184,12 @@ const RootLayout: Component = () => {
       }
     } finally {
       setIsLoading(false);
+      // 启动后延迟检查更新 — 确保页面渲染完成后再弹窗
+      if (autoCheckUpdate()) {
+        setTimeout(() => {
+          runStartupUpdateCheck();
+        }, STARTUP_CHECK_DELAY_MS);
+      }
     }
   });
 
