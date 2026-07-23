@@ -1,6 +1,7 @@
 // @vitest-environment browser
 import { describe, it, expect, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
+import { useParams, useLocation } from "@tanstack/solid-router";
 import "@/styles/tokens.css";
 
 vi.mock("@/utils/imageLoader", () => ({
@@ -22,9 +23,7 @@ vi.mock("@/stores/userStore", () => ({
     total_mypixiv_users: 300,
   }),
   viewedUser: () => null,
-  error: () => null,
   loadProfile: vi.fn(),
-  loadFollowing: vi.fn(),
 }));
 vi.mock("@/stores/uiStore", () => ({
   setCurrentTab: vi.fn(),
@@ -152,22 +151,22 @@ describe("PersonalCenter", () => {
     expect(navigateFn).toHaveBeenCalledWith({ to: "/user/1/illusts" });
   });
 
-  it("clicking '我的关注' calls navigate with /user/1/following", async () => {
+  it("clicking '我的关注' calls navigate with /following", async () => {
     navigateFn.mockClear();
     const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
     const { findByText } = render(() => <PersonalCenter />);
     const el = await findByText("我的关注");
     el.click();
-    expect(navigateFn).toHaveBeenCalledWith({ to: "/user/1/following" });
+    expect(navigateFn).toHaveBeenCalledWith({ to: "/following" });
   });
 
-  it("clicking '我的粉丝' calls navigate with /user/1/followers", async () => {
+  it("clicking '我的粉丝' calls navigate with /my/followers", async () => {
     navigateFn.mockClear();
     const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
     const { findByText } = render(() => <PersonalCenter />);
     const el = await findByText("我的粉丝");
     el.click();
-    expect(navigateFn).toHaveBeenCalledWith({ to: "/user/1/followers" });
+    expect(navigateFn).toHaveBeenCalledWith({ to: "/my/followers" });
   });
 
   it("clicking '我的收藏' calls navigate with /bookmarks", async () => {
@@ -186,5 +185,31 @@ describe("PersonalCenter", () => {
     const el = await findByText("设置");
     el.click();
     expect(navigateFn).toHaveBeenCalledWith({ to: "/settings" });
+  });
+
+  it("renders 'TA 的关注' and hides '我的收藏' when viewing another user", async () => {
+    // 模拟查看他人（/user/999），覆盖 useParams 和 useLocation mock
+    const mockUseParams = vi.fn(() => ({ id: "999" }));
+    const mockUseLocation = vi.fn(() => ({ pathname: "/user/999" }));
+    vi.mocked(useParams).mockImplementation(() => mockUseParams);
+    vi.mocked(useLocation).mockImplementation(() => mockUseLocation);
+    const PersonalCenter = (await import("@/routes/PersonalCenter")).default;
+    const { container, findByText, queryByText } = render(() => <PersonalCenter />);
+    // 应显示 TA 的作品 / TA 的关注 / TA 的粉丝
+    expect(await findByText("TA 的作品")).not.toBeNull();
+    expect(await findByText("TA 的关注")).not.toBeNull();
+    expect(await findByText("TA 的粉丝")).not.toBeNull();
+    // 应隐藏收藏和设置
+    expect(queryByText("我的收藏")).toBeNull();
+    expect(queryByText("设置")).toBeNull();
+
+    // 粉丝导航应指向 /user/$id/followers
+    const followersBtn = await findByText("TA 的粉丝");
+    followersBtn.click();
+    expect(navigateFn).toHaveBeenCalledWith({ to: "/user/999/followers" });
+
+    // 恢复 mock
+    vi.mocked(useParams).mockRestore();
+    vi.mocked(useLocation).mockRestore();
   });
 });

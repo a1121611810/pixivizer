@@ -17,7 +17,7 @@ import {
 import { loadNovelEntry, peekEntry, getEntry } from "@/stores/novelCache";
 import { setCurrentTab } from "@/stores/uiStore";
 import { load as loadUserIllusts, contentType } from "@/stores/userIllustsStore";
-import { loadProfile, loadFollowing } from "@/stores/userStore";
+import { loadProfile } from "@/stores/userStore";
 import { toApiError } from "./api/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -169,8 +169,7 @@ const meRoute = createRoute({
     setCurrentTab("me");
     const uid = user()?.id;
     if (uid) {
-      await loadProfile(uid);
-      await loadFollowing(uid);
+      await loadProfile(uid, true);
     }
     return {};
   },
@@ -219,8 +218,7 @@ const userRoute = createRoute({
   loader: async ({ params }) => {
     setCurrentTab("me");
     const uid = Number(params.id);
-    await loadProfile(uid);
-    await loadFollowing(uid);
+    await loadProfile(uid, uid === user()?.id);
     return { userId: uid };
   },
   component: asRoute(PersonalCenter),
@@ -252,6 +250,20 @@ const userFollowersRoute = createRoute({
   component: () => <FollowListPage mode="followers" />,
 });
 
+const myFollowersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "my/followers",
+  loader: async () => {
+    const uid = user()?.id;
+    if (!uid) return {};
+    resetFollowList();
+    await loadFollowList("followers", uid);
+    await loadProfile(uid, true);
+    return {};
+  },
+  component: () => <FollowListPage mode="followers" />,
+});
+
 const catchAllRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "$",
@@ -276,6 +288,7 @@ const routeTree = rootRoute.addChildren([
   settingsRoute,
   ageConfirmationRoute,
   userRoute.addChildren([userIllustsRoute, userFollowingRoute, userFollowersRoute]),
+  myFollowersRoute,
   catchAllRoute,
 ]);
 

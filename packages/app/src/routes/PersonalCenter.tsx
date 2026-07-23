@@ -3,7 +3,7 @@ import { useNavigate, useParams, useRouter, useLocation, Outlet } from "@tanstac
 import { Capacitor } from "@capacitor/core";
 import { user } from "@/stores/authStore";
 import { setCurrentTab } from "@/stores/uiStore";
-import { profile, viewedUser, loadProfile, loadFollowing } from "@/stores/userStore";
+import { profile, viewedUser, loadProfile } from "@/stores/userStore";
 import { resolveImageUrl, loadImage } from "@/utils/imageLoader";
 import FluentIcon from "@/components/ui/FluentIcon";
 
@@ -26,8 +26,17 @@ const PersonalCenter: Component<Props> = (props) => {
   const router = useRouter();
   const params = useParams({ strict: false });
   const location = useLocation();
-  const targetUserId = () => Number(props.userId || params().id || user()?.id || 0);
+  const targetUserId = () => {
+    // /me 路由一定指向当前登录用户，不依赖可能残留的 params().id
+    if (location().pathname === "/me") return user()?.id ?? 0;
+    return Number(props.userId || params().id || user()?.id || 0);
+  };
   const displayUser = () => viewedUser() || user();
+  const isCurrentUser = () => {
+    // /me 路由一定是自己的个人中心（不依赖 params().id）
+    if (location().pathname === "/me") return true;
+    return targetUserId() === user()?.id;
+  };
   // 判断是否在子路由（/user/$id/illusts、/user/$id/following、/user/$id/followers）
   // 如果在子路由，只渲染 <Outlet /> 让子页面显示；否则渲染个人中心主页内容
   const isRootUserPage = () => /^\/(?:me|user\/\d+)$/.test(location().pathname);
@@ -66,13 +75,12 @@ const PersonalCenter: Component<Props> = (props) => {
     const uid = targetUserId();
     if (uid) {
       loadProfile(uid);
-      loadFollowing(uid);
     }
   });
 
   return (
     <Show when={isRootUserPage()} fallback={<Outlet />}>
-      <div class="min-h-screen" style={{ "background-color": "var(--pageCardBg)" }}>
+      <div class="min-h-screen bg-[var(--pageCardBg)]">
         {/* 顶部栏：返回按钮 + 搜索入口 */}
         <div class="flex items-center justify-between px-4 pt-3">
           <fluent-button
@@ -85,11 +93,11 @@ const PersonalCenter: Component<Props> = (props) => {
           </fluent-button>
 
           <div
-            class="flex items-center gap-1.5 rounded-full bg-[var(--pageCardSearchBg)] px-4 py-2 cursor-pointer active:scale-[0.97] transition-transform focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+            class="flex items-center gap-1.5 rounded-full bg-[var(--pageCardSearchBg)] px-4 py-2 cursor-pointer active:scale-[0.97] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[var(--strokeWidthThick)] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
             onClick={() => void navigate({ to: "/search" })}
             onKeyDown={(e) => handleKeyDown(e, () => navigate({ to: "/search" }))}
             role="button"
-            tabindex="0"
+            tabIndex={0}
             aria-label="搜索"
           >
             <FluentIcon name="search" size={16} />
@@ -103,7 +111,7 @@ const PersonalCenter: Component<Props> = (props) => {
             <Show
               when={!avatarErrored() && avatarUrl()}
               fallback={
-                <div class="w-14 h-14 rounded-full bg-[var(--colorBrandBackground)] flex items-center justify-center text-white [font-size:var(--fontSizeBase500)] font-semibold flex-shrink-0">
+                <div class="w-14 h-14 rounded-full bg-[var(--colorBrandBackground)] flex items-center justify-center text-[var(--colorNeutralForegroundInverted)] [font-size:var(--fontSizeBase500)] font-semibold flex-shrink-0">
                   {displayUser()?.name?.charAt(0) || "P"}
                 </div>
               }
@@ -128,56 +136,63 @@ const PersonalCenter: Component<Props> = (props) => {
           <div class="bg-[var(--pageCardSurface)] rounded-[var(--pageCardRadius)] shadow-[var(--pageCardShadow)]">
             {/* 我的作品 */}
             <div
-              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
               onClick={() => void navigate({ to: `/user/${targetUserId()}/illusts` })}
               onKeyDown={(e) =>
                 handleKeyDown(e, () => navigate({ to: `/user/${targetUserId()}/illusts` }))
               }
               role="button"
-              tabindex="0"
-              aria-label="我的作品"
+              tabIndex={0}
+              aria-label={isCurrentUser() ? "我的作品" : "TA 的作品"}
             >
               <FluentIcon name="image" size={22} />
               <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
-                我的作品
+                {isCurrentUser() ? "我的作品" : "TA 的作品"}
               </span>
               <span class="text-sm text-[var(--pageCardTextSecondary)] mr-1">{totalWorks()}</span>
               <FluentIcon name="chevronRight" size={16} />
             </div>
 
+            <Show when={isCurrentUser()}>
             {/* 我的收藏 */}
             <div
-              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
               onClick={() => void navigate({ to: "/bookmarks" })}
               onKeyDown={(e) => handleKeyDown(e, () => navigate({ to: "/bookmarks" }))}
               role="button"
-              tabindex="0"
+              tabIndex={0}
               aria-label="我的收藏"
             >
               <FluentIcon name="bookmark" size={22} />
               <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
                 我的收藏
               </span>
-              <span class="text-sm text-[var(--pageCardTextSecondary)] mr-1">
-                {profile()?.total_illust_bookmarks_public ?? 0}
-              </span>
               <FluentIcon name="chevronRight" size={16} />
             </div>
+            </Show>
 
             {/* 我的关注 */}
             <div
-              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
-              onClick={() => void navigate({ to: `/user/${targetUserId()}/following` })}
+              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] border-b border-[var(--pageCardBorder)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+              onClick={() =>
+                void navigate({
+                  to: isCurrentUser() ? "/following" : `/user/${targetUserId()}/following`,
+                })
+              }
               onKeyDown={(e) =>
-                handleKeyDown(e, () => navigate({ to: `/user/${targetUserId()}/following` }))
+                handleKeyDown(e, () =>
+                  navigate({
+                    to: isCurrentUser() ? "/following" : `/user/${targetUserId()}/following`,
+                  }),
+                )
               }
               role="button"
-              tabindex="0"
-              aria-label="我的关注"
+              tabIndex={0}
+              aria-label={isCurrentUser() ? "我的关注" : "TA 的关注"}
             >
               <FluentIcon name="people" size={22} />
               <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
-                我的关注
+                {isCurrentUser() ? "我的关注" : "TA 的关注"}
               </span>
               <span class="text-sm text-[var(--pageCardTextSecondary)] mr-1">
                 {profile()?.total_follow_users ?? 0}
@@ -187,36 +202,42 @@ const PersonalCenter: Component<Props> = (props) => {
 
             {/* 我的粉丝 */}
             <div
-              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
-              onClick={() => void navigate({ to: `/user/${targetUserId()}/followers` })}
+              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+              onClick={() =>
+                void navigate({
+                  to: isCurrentUser() ? "/my/followers" : `/user/${targetUserId()}/followers`,
+                })
+              }
               onKeyDown={(e) =>
-                handleKeyDown(e, () => navigate({ to: `/user/${targetUserId()}/followers` }))
+                handleKeyDown(e, () =>
+                  navigate({
+                    to: isCurrentUser() ? "/my/followers" : `/user/${targetUserId()}/followers`,
+                  }),
+                )
               }
               role="button"
-              tabindex="0"
-              aria-label="我的粉丝"
+              tabIndex={0}
+              aria-label={isCurrentUser() ? "我的粉丝" : "TA 的粉丝"}
             >
               <FluentIcon name="people" size={22} />
               <span class="flex-1 text-base font-medium text-[var(--pageCardTextPrimary)] font-sans">
-                我的粉丝
-              </span>
-              <span class="text-sm text-[var(--pageCardTextSecondary)] mr-1">
-                {profile()?.total_mypixiv_users ?? 0}
+                {isCurrentUser() ? "我的粉丝" : "TA 的粉丝"}
               </span>
               <FluentIcon name="chevronRight" size={16} />
             </div>
           </div>
         </div>
 
+        <Show when={isCurrentUser()}>
         {/* 设置卡片 */}
         <div class="px-4 mt-3">
           <div class="bg-[var(--pageCardSurface)] rounded-[var(--pageCardRadius)] shadow-[var(--pageCardShadow)]">
             <div
-              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
+              class="flex items-center px-5 py-4 gap-3 cursor-pointer active:scale-[0.98] transition-transform duration-[var(--durationFast)] ease-[var(--curveEasyEase)] focus-visible:outline focus-visible:outline-[length:var(--strokeWidthThick)] focus-visible:outline-offset-[-2px] focus-visible:outline-[color:var(--colorStrokeFocus2)]"
               onClick={() => void navigate({ to: "/settings" })}
               onKeyDown={(e) => handleKeyDown(e, () => navigate({ to: "/settings" }))}
               role="button"
-              tabindex="0"
+              tabIndex={0}
               aria-label="设置"
             >
               <FluentIcon name="settings" size={22} />
@@ -227,6 +248,7 @@ const PersonalCenter: Component<Props> = (props) => {
             </div>
           </div>
         </div>
+        </Show>
       </div>
     </Show>
   );

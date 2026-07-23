@@ -25,9 +25,7 @@ vi.mock("@/stores/userStore", () => ({
     total_mypixiv_users: 300,
   }),
   viewedUser: () => null,
-  error: () => null,
   loadProfile: vi.fn(),
-  loadFollowing: vi.fn(),
 }));
 
 vi.mock("@/stores/uiStore", () => {
