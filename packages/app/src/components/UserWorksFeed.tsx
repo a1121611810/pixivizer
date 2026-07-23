@@ -1,4 +1,4 @@
-import { type Component, createSignal, createEffect } from "solid-js";
+import { type Component } from "solid-js";
 import type { PixivIllust, PixivNovel, ApiError, ContentType } from "../api/types";
 import type { LayoutMode } from "../primitives/types";
 import type { ScrollRestoreState } from "../stores/feedStore";
@@ -23,14 +23,6 @@ interface Props {
 }
 
 const UserWorksFeed: Component<Props> = (props) => {
-  // Lazy-mount NovelVirtualFeed only on first switch to novel, then keep alive
-  const [novelMounted, setNovelMounted] = createSignal(false);
-  createEffect(() => {
-    if (props.contentType === "novel") {
-      setNovelMounted(true);
-    }
-  });
-
   return (
     <>
       {/* Illust/manga feed: always mounted, hidden via CSS when novel */}
@@ -53,23 +45,21 @@ const UserWorksFeed: Component<Props> = (props) => {
         />
       </div>
 
-      {/* Novel feed: mounted once on first switch, then kept alive */}
+      {/* Novel feed: always mounted, hidden via CSS when not novel */}
       <div
         data-feed-type="novel"
         style={{ display: props.contentType === "novel" ? "block" : "none" }}
       >
-        {novelMounted() && (
-          <NovelVirtualFeed
-            novels={props.novels}
-            loading={props.loading}
-            error={props.error}
-            hasMore={props.hasMore}
-            onNovelClick={props.onNovelClick}
-            onLoadMore={props.onLoadMore}
-            onRefresh={props.onRefresh}
-            suppressHeaderVisibility={props.suppressHeaderVisibility}
-          />
-        )}
+        <NovelVirtualFeed
+          novels={props.novels}
+          loading={props.loading}
+          error={props.error}
+          hasMore={props.hasMore}
+          onNovelClick={props.onNovelClick}
+          onLoadMore={props.onLoadMore}
+          onRefresh={props.onRefresh}
+          suppressHeaderVisibility={props.suppressHeaderVisibility}
+        />
       </div>
     </>
   );
