@@ -36,6 +36,7 @@ interface Props {
   onIllustClick: (id: number) => void;
   onLoadMore: () => void;
   onRefresh: () => Promise<void> | void;
+  onNavigateToSettings?: () => void;
   emptyText?: string;
   skipAnimation?: boolean;
   layoutMode?: LayoutMode;
@@ -64,11 +65,12 @@ const VirtualFeed: Component<Props> = (props) => {
   });
 
   // ── Pull-to-refresh state ──
-  const PULL_THRESHOLD = 60;
-  const MAX_PULL = 100;
+  const PULL_THRESHOLD_REFRESH = 60;
+  const PULL_THRESHOLD_SETTINGS = 120;
+  const MAX_PULL = 180;
   const [pullDistance, setPullDistance] = createSignal(0);
   const [pullPhase, setPullPhase] = createSignal<
-    "idle" | "pulling" | "refresh-ready" | "refreshing"
+    "idle" | "pulling" | "refresh-ready" | "refreshing" | "settings-ready"
   >("idle");
   let touchStartY = 0;
 
@@ -102,7 +104,9 @@ const VirtualFeed: Component<Props> = (props) => {
     }
     const damped = Math.min(deltaY * 0.5, MAX_PULL);
     setPullDistance(damped);
-    if (damped >= PULL_THRESHOLD) {
+    if (damped >= PULL_THRESHOLD_SETTINGS) {
+      setPullPhase("settings-ready");
+    } else if (damped >= PULL_THRESHOLD_REFRESH) {
       setPullPhase("refresh-ready");
     } else {
       setPullPhase("pulling");
@@ -110,9 +114,13 @@ const VirtualFeed: Component<Props> = (props) => {
   }
 
   function handleTouchEnd() {
-    if (pullPhase() === "refresh-ready") {
+    if (pullPhase() === "settings-ready") {
+      setPullDistance(0);
+      setPullPhase("idle");
+      props.onNavigateToSettings?.();
+    } else if (pullPhase() === "refresh-ready") {
       setPullPhase("refreshing");
-      setPullDistance(PULL_THRESHOLD * 0.6);
+      setPullDistance(PULL_THRESHOLD_REFRESH * 0.6);
       props.onRefresh();
     } else {
       setPullDistance(0);
@@ -310,7 +318,8 @@ const VirtualFeed: Component<Props> = (props) => {
       <PullIndicator
         zone={pullPhase()}
         distance={pullDistance()}
-        refreshThreshold={PULL_THRESHOLD}
+        refreshThreshold={PULL_THRESHOLD_REFRESH}
+        settingsThreshold={PULL_THRESHOLD_SETTINGS}
       />
 
       {props.error && <ErrorDisplay error={props.error} onRetry={() => props.onRefresh()} />}

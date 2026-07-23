@@ -341,6 +341,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
         zone={pullPhase()}
         distance={pullDistance()}
         refreshThreshold={PULL_THRESHOLD}
+        settingsThreshold={120}
       />
 
       {props.error && <ErrorDisplay error={props.error} onRetry={() => props.onRefresh()} />}
