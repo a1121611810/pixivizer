@@ -1,12 +1,4 @@
-import {
-  type Component,
-  Show,
-  For,
-  createSignal,
-  createEffect,
-  createMemo,
-  onCleanup,
-} from "solid-js";
+import { type Component, Show, For, createSignal, createEffect, onCleanup } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
 import { createSentinel } from "@/primitives/visibility";
 import type { PixivComment } from "../api/types";
@@ -14,18 +6,15 @@ import { SHEET_LAZY_MARGIN } from "../primitives/rootMargins";
 import { user } from "../stores/authStore";
 import { resolveImageUrl } from "../utils/imageLoader";
 import {
-  loadIllustRootComments,
-  loadIllustRootCommentsNext,
-  postIllustComment,
-  deleteIllustComment,
-  loadNovelRootComments,
-  loadNovelRootCommentsNext,
-  postNovelComment,
-  deleteNovelComment,
+  type CommentContentType,
+  loadRootComments,
+  loadRootCommentsNext,
+  postComment,
+  deleteComment,
 } from "../api/comment";
 
 interface CommentOverlayProps {
-  type: "illust" | "novel";
+  type: CommentContentType;
   targetId: number;
   isOpen: boolean;
   onClose: () => void;
@@ -44,21 +33,6 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
   const [posting, setPosting] = createSignal(false);
   const [deletingId, setDeletingId] = createSignal<number | null>(null);
 
-  // 根据 type 选择对应的 API 函数
-  const api = createMemo(() => {
-    const isIllust = props.type === "illust";
-    return {
-      loadRoot: isIllust ? loadIllustRootComments : loadNovelRootComments,
-      loadRootNext: isIllust ? loadIllustRootCommentsNext : loadNovelRootCommentsNext,
-      post: isIllust
-        ? (comment: string, parentId?: number) =>
-            postIllustComment(props.targetId, comment, parentId)
-        : (comment: string, parentId?: number) =>
-            postNovelComment(props.targetId, comment, parentId),
-      del: isIllust ? deleteIllustComment : deleteNovelComment,
-    };
-  });
-
   // 首次数据加载
   createEffect(() => {
     if (!props.isOpen) {
@@ -66,11 +40,11 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
     }
     const ac = new AbortController();
     setError(null);
+    setHasLoaded(false);
     setRootComments([]);
     setNextUrl(null);
 
-    api()
-      .loadRoot(props.targetId, ac.signal)
+    loadRootComments(props.type, props.targetId, ac.signal)
       .then((res) => {
         setRootComments(res.comments);
         setNextUrl(res.next_url);
@@ -95,7 +69,7 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
     }
     setLoadingMore(true);
     try {
-      const res = await api().loadRootNext(url);
+      const res = await loadRootCommentsNext(url);
       setRootComments((prev) => [...prev, ...res.comments]);
       setNextUrl(res.next_url);
     } catch {
@@ -120,11 +94,11 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
     setPosting(true);
     setPostError(null);
     try {
-      await api().post(text, replyingTo()?.id);
+      await postComment(props.type, props.targetId, text, replyingTo()?.id);
       setInputText("");
       setReplyingTo(null);
       // 刷新评论列表
-      const res = await api().loadRoot(props.targetId);
+      const res = await loadRootComments(props.type, props.targetId);
       setRootComments(res.comments);
     } catch {
       setPostError("发送失败，请重试");
@@ -159,7 +133,7 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
   async function handleDelete(commentId: number) {
     setDeletingId(commentId);
     try {
-      await api().del(commentId);
+      await deleteComment(props.type, commentId);
       setRootComments((prev) => prev.filter((c) => c.id !== commentId));
     } catch {
       setError("删除失败");

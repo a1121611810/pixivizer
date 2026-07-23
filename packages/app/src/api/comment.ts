@@ -1,102 +1,96 @@
 import { apiClient } from "./client";
 import type { PixivCommentRootResponse, PixivCommentReplyResponse } from "./types";
 
-export function loadIllustRootComments(
-  illustId: number,
+/** 评论内容类型：插画或小说 */
+export type CommentContentType = "illust" | "novel";
+
+// ── 端点映射表（编译时常量，as const 防篡改）──
+
+const COMMENT_ROOTS: Record<CommentContentType, string> = {
+  illust: "/v3/illust/comments",
+  novel: "/v1/novel/comments",
+} as const;
+
+const COMMENT_REPLIES: Record<CommentContentType, string> = {
+  illust: "/v2/illust/comment/replies",
+  novel: "/v2/novel/comment/replies",
+} as const;
+
+const COMMENT_POST: Record<CommentContentType, string> = {
+  illust: "/v1/illust/comment/add",
+  novel: "/v1/novel/comment/add",
+} as const;
+
+const COMMENT_DELETE: Record<CommentContentType, string> = {
+  illust: "/v1/illust/comment/delete",
+  novel: "/v1/novel/comment/delete",
+} as const;
+
+/** ID 参数名映射 */
+const ID_PARAM: Record<CommentContentType, "illust_id" | "novel_id"> = {
+  illust: "illust_id",
+  novel: "novel_id",
+} as const;
+
+/** 评论最大长度（与 Pixiv API 一致） */
+export const MAX_COMMENT_LENGTH = 2000;
+
+// ── 导出函数 ──
+
+export function loadRootComments(
+  type: CommentContentType,
+  targetId: number,
   signal?: AbortSignal,
 ): Promise<PixivCommentRootResponse> {
   return apiClient.get<PixivCommentRootResponse>(
-    "/v3/illust/comments",
-    { illust_id: String(illustId), include_total_comments: "true" },
+    COMMENT_ROOTS[type],
+    { [ID_PARAM[type]]: String(targetId), include_total_comments: "true" },
     signal,
   );
 }
 
-export function loadIllustRootCommentsNext(
+export function loadRootCommentsNext(
   url: string,
   signal?: AbortSignal,
 ): Promise<PixivCommentRootResponse> {
   return apiClient.get<PixivCommentRootResponse>(url, undefined, signal);
 }
 
-export function loadIllustReplies(
+export function loadReplies(
+  type: CommentContentType,
   commentId: number,
   signal?: AbortSignal,
 ): Promise<PixivCommentReplyResponse> {
   return apiClient.get<PixivCommentReplyResponse>(
-    "/v2/illust/comment/replies",
+    COMMENT_REPLIES[type],
     { comment_id: String(commentId) },
     signal,
   );
 }
 
-export function postIllustComment(
-  illustId: number,
+export function postComment(
+  type: CommentContentType,
+  targetId: number,
   comment: string,
   parentCommentId?: number,
 ): Promise<void> {
+  if (comment.length > MAX_COMMENT_LENGTH) {
+    return Promise.reject(
+      new Error(`Comment exceeds maximum length of ${MAX_COMMENT_LENGTH} characters`),
+    );
+  }
   const body: Record<string, string> = {
-    illust_id: String(illustId),
+    [ID_PARAM[type]]: String(targetId),
     comment,
   };
   if (parentCommentId != null) {
     body.parent_comment_id = String(parentCommentId);
   }
-  return apiClient.post("/v1/illust/comment/add", body);
+  return apiClient.post(COMMENT_POST[type], body);
 }
 
-export function deleteIllustComment(commentId: number): Promise<void> {
-  return apiClient.post("/v1/illust/comment/delete", {
-    comment_id: String(commentId),
-  });
-}
-
-export function loadNovelRootComments(
-  novelId: number,
-  signal?: AbortSignal,
-): Promise<PixivCommentRootResponse> {
-  return apiClient.get<PixivCommentRootResponse>(
-    "/v1/novel/comments",
-    { novel_id: String(novelId), include_total_comments: "true" },
-    signal,
-  );
-}
-
-export function loadNovelRootCommentsNext(
-  url: string,
-  signal?: AbortSignal,
-): Promise<PixivCommentRootResponse> {
-  return apiClient.get<PixivCommentRootResponse>(url, undefined, signal);
-}
-
-export function loadNovelReplies(
-  commentId: number,
-  signal?: AbortSignal,
-): Promise<PixivCommentReplyResponse> {
-  return apiClient.get<PixivCommentReplyResponse>(
-    "/v2/novel/comment/replies",
-    { comment_id: String(commentId) },
-    signal,
-  );
-}
-
-export function postNovelComment(
-  novelId: number,
-  comment: string,
-  parentCommentId?: number,
-): Promise<void> {
-  const body: Record<string, string> = {
-    novel_id: String(novelId),
-    comment,
-  };
-  if (parentCommentId != null) {
-    body.parent_comment_id = String(parentCommentId);
-  }
-  return apiClient.post("/v1/novel/comment/add", body);
-}
-
-export function deleteNovelComment(commentId: number): Promise<void> {
-  return apiClient.post("/v1/novel/comment/delete", {
+export function deleteComment(type: CommentContentType, commentId: number): Promise<void> {
+  return apiClient.post(COMMENT_DELETE[type], {
     comment_id: String(commentId),
   });
 }
