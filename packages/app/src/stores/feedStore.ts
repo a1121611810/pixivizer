@@ -1,88 +1,160 @@
-import { createStore, produce } from "solid-js/store";
-import { batch, createEffect, createRoot } from "solid-js";
-import { loadRecommended, loadFollow, loadNext } from "../api/illust";
-import type { PixivIllust, ContentType, ApiError } from "../api/types";
+import { createRoot } from "solid-js";
+import { createInfiniteQuery } from "@tanstack/solid-query";
+import { loadRecommended, loadFollow } from "../api/illust";
+import type { PixivIllust, ApiError } from "../api/types";
 import { currentTab } from "./uiStore";
 import { filterFeedIllusts } from "../utils/r18Filter";
-import { toApiError, pickBestErrorType } from "../api/client";
+import { apiClient } from "../api/client";
+import { queryClient } from "../api/queryClient";
+import { normalizeQueryError } from "../api/normalizeQueryError";
 import { scrollRestoreGlobal } from "../primitives/createScrollRestore";
 import type { ScrollRestoreState } from "../primitives/createScrollRestore";
 
 export type RecommendSubTab = "mixed" | "illust" | "manga";
 
-// ── 按数据源级别的请求锁 ──
-// 用于防止切换子标签后同一数据源被重复刷新。
-// 例如 "全部" 下拉刷新包含 follow_public + follow_private，
-// 若请求中切换到 "非公开" 再下拉刷新，会与正在进行的请求冲突。
-// 此 Set 跟踪当前正在刷新的数据源键名，refresh() 启动前检查。
-const pendingRefreshKeys = new Set<string>();
+// ── Sub-tab signals (kept for backward compatibility) ──
+import { createSignal, batch } from "solid-js";
 
-/**
- * 根据当前标签和子标签，返回此 refresh 会覆盖的数据源键名列表。
- * 用于检查请求锁：若任一键已在 pendingRefreshKeys 中，则跳过此次刷新。
- */
-function getRefreshSourceKeys(tab: string): string[] {
-  if (tab === "follow") {
-    // FetchFollow 始终同时加载 public + private
-    return ["follow_public", "follow_private"];
-  }
-  if (tab === "recommended") {
-    const subTab = state.recommendSubTab;
-    if (subTab === "mixed") {
-      // FetchMixed 同时加载 illust + manga
-      return ["recommended_illust", "recommended_manga"];
-    }
-    // 单一子标签只加载对应数据源
-    return [`recommended_${subTab === "illust" ? "illust" : "manga"}`];
-  }
-  return [];
-}
+const [followTabState, setFollowTab] = createSignal<"all" | "public" | "private">("all");
+const [recommendSubTabState, setRecommendSubTabRaw] = createSignal<RecommendSubTab>("mixed");
 
-// ── Store: reactive UI-facing state ──
-const [state, setState] = createStore({
-  illusts: [] as PixivIllust[],
-  nextUrl: null as string | null,
-  loading: false,
-  refreshing: false,
-  error: null as ApiError | null,
-  followTab: "all" as "all" | "public" | "private",
-  recommendSubTab: "mixed" as RecommendSubTab,
-});
+export const followTab = followTabState;
+export { setFollowTab };
+export const recommendSubTab = recommendSubTabState;
 
-// ── Tab cache (non-reactive data store) ──
-// Caches raw API data per tab so tab switching doesn't re-fetch.
-// Follow-specific keys used:
-//   TabIllusts["follow_public"], tabNextUrl["follow_public"]
-//   TabIllusts["follow_private"], tabNextUrl["follow_private"]
-// Recommended sub-tab keys:
-//   TabIllusts["recommended_mixed"], tabIllusts["recommended_illust"], tabIllusts["recommended_manga"]
-export type { ScrollRestoreState };
-
-const tabIllusts: Record<string, PixivIllust[]> = {};
-const tabNextUrl: Record<string, string | null> = {};
-const tabLoaded: Record<string, boolean> = {};
-
-// ── Backward-compatible exports ──
-
-export const illusts = () => state.illusts;
-export const nextUrl = () => state.nextUrl;
-export const loading = () => state.loading;
-export const refreshing = () => state.refreshing;
-export const error = () => state.error;
-export const followTab = () => state.followTab;
-export const setFollowTab = (t: "all" | "public" | "private") => setState("followTab", t);
-export const recommendSubTab = () => state.recommendSubTab;
 export function setRecommendSubTab(t: RecommendSubTab) {
   batch(() => {
-    setState("recommendSubTab", t);
-    setState("error", null);
+    setRecommendSubTabRaw(t);
   });
 }
 
-/**
- * 合并两个已按 create_date 降序排列的数组，保持全局时间降序。
- * 用于「全部」视图下合并 public + private 两路数据。
- */
+// ── TQ Infinite Queries ──
+// 每个数据源一个独立查询，enable 由当前 tab + 子标签控制
+
+function onFollowTab(...allowed: ("all" | "public" | "private")[]) {
+  return () => currentTab() === "follow" && allowed.includes(followTabState());
+}
+
+function onRecommendedSubTab(...allowed: RecommendSubTab[]) {
+  return () => currentTab() === "recommended" && allowed.includes(recommendSubTabState());
+}
+
+// Query 1: follow_public
+const followPublicQuery = createRoot(() =>
+  createInfiniteQuery(
+    () => ({
+      queryKey: ["feed", "follow_public"] as const,
+      queryFn: ({ pageParam, signal }) => {
+        if (pageParam) {
+          return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(
+            pageParam as string,
+            undefined,
+            signal,
+          );
+        }
+        return loadFollow("public", signal);
+      },
+      getNextPageParam: (last) => last.next_url ?? undefined,
+      initialPageParam: undefined as string | undefined,
+      enabled: onFollowTab("all", "public")(),
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+    }),
+    () => queryClient,
+  ),
+);
+
+// Query 2: follow_private
+const followPrivateQuery = createRoot(() =>
+  createInfiniteQuery(
+    () => ({
+      queryKey: ["feed", "follow_private"] as const,
+      queryFn: ({ pageParam, signal }) => {
+        if (pageParam) {
+          return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(
+            pageParam as string,
+            undefined,
+            signal,
+          );
+        }
+        return loadFollow("private", signal);
+      },
+      getNextPageParam: (last) => last.next_url ?? undefined,
+      initialPageParam: undefined as string | undefined,
+      enabled: onFollowTab("all", "private")(),
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+    }),
+    () => queryClient,
+  ),
+);
+
+// Query 3: recommended_illust
+const recommendedIllustQuery = createRoot(() =>
+  createInfiniteQuery(
+    () => ({
+      queryKey: ["feed", "recommended_illust"] as const,
+      queryFn: ({ pageParam, signal }) => {
+        if (pageParam) {
+          return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(
+            pageParam as string,
+            undefined,
+            signal,
+          );
+        }
+        return loadRecommended("illust", signal);
+      },
+      getNextPageParam: (last) => last.next_url ?? undefined,
+      initialPageParam: undefined as string | undefined,
+      enabled: onRecommendedSubTab("mixed", "illust")(),
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+    }),
+    () => queryClient,
+  ),
+);
+
+// Query 4: recommended_manga
+const recommendedMangaQuery = createRoot(() =>
+  createInfiniteQuery(
+    () => ({
+      queryKey: ["feed", "recommended_manga"] as const,
+      queryFn: ({ pageParam, signal }) => {
+        if (pageParam) {
+          return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(
+            pageParam as string,
+            undefined,
+            signal,
+          );
+        }
+        return loadRecommended("manga", signal);
+      },
+      getNextPageParam: (last) => last.next_url ?? undefined,
+      initialPageParam: undefined as string | undefined,
+      enabled: onRecommendedSubTab("mixed", "manga")(),
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+    }),
+    () => queryClient,
+  ),
+);
+
+// ── Helper: flatten TQ pages → array ──
+
+function flattenIllusts(query: { data?: { pages: { illusts: PixivIllust[] }[] } }): PixivIllust[] {
+  if (!query.data?.pages) return [];
+  return query.data.pages.flatMap((p) => p.illusts);
+}
+
+// ── Helper: get next_url from a query's last page ──
+
+function getLastNextUrl(query: { data?: { pages: { next_url: string | null }[] } }): string | null {
+  if (!query.data?.pages?.length) return null;
+  return query.data.pages[query.data.pages.length - 1].next_url ?? null;
+}
+
+// ── Merge helpers ──
+
 function mergeAndSort(a: PixivIllust[], b: PixivIllust[]): PixivIllust[] {
   const result: PixivIllust[] = [];
   let i = 0,
@@ -98,314 +170,256 @@ function mergeAndSort(a: PixivIllust[], b: PixivIllust[]): PixivIllust[] {
   return result;
 }
 
-/**
- * 根据当前 followTab 和双缓存计算出当前视图应展示的作品列表。
- * 全部 → mergeAndSort(public, private) 后 filterFeedIllusts
- * 公开 → filterFeedIllusts(tabIllusts["follow_public"])
- * 非公开 → filterFeedIllusts(tabIllusts["follow_private"])
- */
-export function computeFollowIllusts(): PixivIllust[] {
-  const tab = currentTab();
-  if (tab !== "follow") {
-    return filterFeedIllusts(tabIllusts[tab] ?? []);
-  }
-  const fTab = state.followTab;
-  if (fTab === "public") {
-    return filterFeedIllusts(tabIllusts["follow_public"] ?? []);
-  }
-  if (fTab === "private") {
-    return filterFeedIllusts(tabIllusts["follow_private"] ?? []);
-  }
-  // "all" — merge both sources
-  const pub = tabIllusts["follow_public"] ?? [];
-  const priv = tabIllusts["follow_private"] ?? [];
-  if (pub.length === 0) {
-    return filterFeedIllusts(priv);
-  }
-  if (priv.length === 0) {
-    return filterFeedIllusts(pub);
-  }
-  return filterFeedIllusts(mergeAndSort(pub, priv));
-}
-
-const byCreateDateDesc = (a: PixivIllust, b: PixivIllust) =>
-  b.create_date.localeCompare(a.create_date);
-
-/**
- * 计算综合推荐：合并插画源和漫画源，按 create_date 降序排序后过滤。
- * 合并时按 illust.id 去重，避免 Pixiv API 两端返回同一作品导致的重复。
- */
-export function computeMixedIllusts(): PixivIllust[] {
-  const illust = tabIllusts["recommended_illust"] ?? [];
-  const manga = tabIllusts["recommended_manga"] ?? [];
-  // 同一作品可能在 illust 和 manga 中都出现，需按 id 去重
+function removeDuplicates(illusts: PixivIllust[]): PixivIllust[] {
   const seen = new Set<number>();
-  const combined: PixivIllust[] = [];
-  const pushIfNotDuplicate = (item: PixivIllust) => {
-    if (!seen.has(item.id)) {
-      seen.add(item.id);
-      combined.push(item);
-    }
-  };
-  // ToSorted() is ES2023; use copied arrays + sort() for older runtimes.
-  const sortedIllust = [...illust].sort(byCreateDateDesc); // oxlint-disable-line unicorn/no-array-sort
-  const sortedManga = [...manga].sort(byCreateDateDesc); // oxlint-disable-line unicorn/no-array-sort
-  // 按时间降序合并（归并），同时去重
-  let i = 0,
-    j = 0;
-  while (i < sortedIllust.length && j < sortedManga.length) {
-    if (sortedIllust[i].create_date >= sortedManga[j].create_date) {
-      pushIfNotDuplicate(sortedIllust[i++]);
-    } else {
-      pushIfNotDuplicate(sortedManga[j++]);
-    }
-  }
-  while (i < sortedIllust.length) {
-    pushIfNotDuplicate(sortedIllust[i++]);
-  }
-  while (j < sortedManga.length) {
-    pushIfNotDuplicate(sortedManga[j++]);
-  }
-  return filterFeedIllusts(combined);
+  return illusts.filter((i) => {
+    if (seen.has(i.id)) return false;
+    seen.add(i.id);
+    return true;
+  });
 }
 
-// Recompute illusts when follow tab changes (filter tabs have no effect otherwise)
-createRoot(() => {
-  createEffect(() => {
-    const tab = currentTab();
-    if (tab === "follow") {
-      batch(() => {
-        setState("illusts", computeFollowIllusts());
-      });
-    }
-  });
-});
+// ── Derived state ──
 
-// Recompute illusts when recommended sub-tab changes
-// (caller must have loaded the underlying source data first)
-createRoot(() => {
-  createEffect(() => {
-    const tab = currentTab();
-    const subTab = recommendSubTab();
-    if (tab === "recommended") {
-      batch(() => {
-        if (subTab === "mixed") {
-          setState("illusts", computeMixedIllusts());
-          setState(
-            "nextUrl",
-            tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
-          );
-        } else {
-          const sourceKey = subTab === "illust" ? "recommended_illust" : "recommended_manga";
-          setState("illusts", filterFeedIllusts(tabIllusts[sourceKey] ?? []));
-          setState("nextUrl", tabNextUrl[sourceKey] || null);
-        }
-      });
-    }
-  });
-});
-
-// ── Actions ──
-
-export async function ensureLoaded(signal?: AbortSignal): Promise<void> {
+/** 当前活跃的查询列表（取决于 tab + 子标签） */
+function activeQueries(): (typeof followPublicQuery)[] {
   const tab = currentTab();
   if (tab === "follow") {
-    // Follow tab: show cached data if available
-    const pubCached = tabIllusts["follow_public"] !== undefined;
-    const privCached = tabIllusts["follow_private"] !== undefined;
-    if (pubCached || privCached) {
-      setState("illusts", computeFollowIllusts());
-      setState(
-        "nextUrl",
-        tab === "follow"
-          ? (state.followTab === "public"
-              ? tabNextUrl["follow_public"]
-              : state.followTab === "private"
-                ? tabNextUrl["follow_private"]
-                : tabNextUrl["follow_public"] || tabNextUrl["follow_private"]) || null
-          : tabNextUrl[tab] || null,
+    const ft = followTabState();
+    if (ft === "public") return [followPublicQuery];
+    if (ft === "private") return [followPrivateQuery];
+    return [followPublicQuery, followPrivateQuery];
+  }
+  if (tab === "recommended") {
+    const st = recommendSubTabState();
+    if (st === "illust") return [recommendedIllustQuery];
+    if (st === "manga") return [recommendedMangaQuery];
+    return [recommendedIllustQuery, recommendedMangaQuery];
+  }
+  return [];
+}
+
+export const illusts = (): PixivIllust[] => {
+  const tab = currentTab();
+  if (tab === "follow") {
+    const ft = followTabState();
+    if (ft === "public") return filterFeedIllusts(flattenIllusts(followPublicQuery));
+    if (ft === "private") return filterFeedIllusts(flattenIllusts(followPrivateQuery));
+    const pub = flattenIllusts(followPublicQuery);
+    const priv = flattenIllusts(followPrivateQuery);
+    if (pub.length === 0) return filterFeedIllusts(priv);
+    if (priv.length === 0) return filterFeedIllusts(pub);
+    return filterFeedIllusts(mergeAndSort(pub, priv));
+  }
+  if (tab === "recommended") {
+    const st = recommendSubTabState();
+    if (st === "illust") return filterFeedIllusts(flattenIllusts(recommendedIllustQuery));
+    if (st === "manga") return filterFeedIllusts(flattenIllusts(recommendedMangaQuery));
+    // Mixed: merge + deduplicate
+    const illust = flattenIllusts(recommendedIllustQuery);
+    const manga = flattenIllusts(recommendedMangaQuery);
+    if (illust.length === 0) return filterFeedIllusts(manga);
+    if (manga.length === 0) return filterFeedIllusts(illust);
+    return filterFeedIllusts(
+      removeDuplicates(
+        mergeAndSort(
+          [...illust].sort((a, b) => b.create_date.localeCompare(a.create_date)),
+          [...manga].sort((a, b) => b.create_date.localeCompare(a.create_date)),
+        ),
+      ),
+    );
+  }
+  return [];
+};
+
+export const nextUrl = (): string | null => {
+  const tab = currentTab();
+  if (tab === "follow") {
+    const ft = followTabState();
+    if (ft === "public") return getLastNextUrl(followPublicQuery);
+    if (ft === "private") return getLastNextUrl(followPrivateQuery);
+    return getLastNextUrl(followPublicQuery) || getLastNextUrl(followPrivateQuery);
+  }
+  if (tab === "recommended") {
+    const st = recommendSubTabState();
+    if (st === "illust") return getLastNextUrl(recommendedIllustQuery);
+    if (st === "manga") return getLastNextUrl(recommendedMangaQuery);
+    return getLastNextUrl(recommendedIllustQuery) || getLastNextUrl(recommendedMangaQuery);
+  }
+  return null;
+};
+
+export const loading = (): boolean => {
+  return activeQueries().some((q) => q.isFetching);
+};
+
+export const refreshing = (): boolean => {
+  return activeQueries().some((q) => q.isFetching);
+};
+
+// ── Error state: pick most specific error from active queries ──
+
+const ERROR_TYPE_PRIORITY = [
+  "PROXY",
+  "NETWORK",
+  "UNAUTHORIZED",
+  "RATE_LIMIT",
+  "SERVER",
+  "UNKNOWN",
+] as const;
+
+function pickBestError(...errors: (ApiError | null)[]): ApiError | null {
+  const filtered = errors.filter((e): e is ApiError => e !== null);
+  if (filtered.length === 0) return null;
+  for (const priority of ERROR_TYPE_PRIORITY) {
+    const match = filtered.find((e) => e.type === priority);
+    if (match) return match;
+  }
+  return filtered[0];
+}
+
+export const error = (): ApiError | null => {
+  const qs = activeQueries();
+  const errs = qs.map((q) => normalizeQueryError(q.error));
+  // 双源模式下（mixed/all），仅当全部数据源都失败时才显示错误
+  // 单源模式下，有错就显示
+  if (qs.length <= 1) return pickBestError(...errs);
+  const allFailed = errs.length > 0 && errs.every((e) => e !== null);
+  return allFailed ? pickBestError(...errs) : null;
+};
+
+// ── Tab cache helpers (backward-compatible) ──
+
+export function isFeedCached(tab?: string): boolean {
+  const t = tab ?? currentTab();
+  if (t === "follow") {
+    return (
+      (followPublicQuery.data?.pages?.length ?? 0) > 0 ||
+      (followPrivateQuery.data?.pages?.length ?? 0) > 0
+    );
+  }
+  if (t === "recommended") {
+    const st = recommendSubTabState();
+    if (st === "mixed") {
+      return (
+        (recommendedIllustQuery.data?.pages?.length ?? 0) > 0 ||
+        (recommendedMangaQuery.data?.pages?.length ?? 0) > 0
       );
     }
-    if (!tabLoaded[tab]) {
-      if (!pubCached && !privCached) {
-        setState("illusts", []);
-      }
-      await fetchFollow(signal);
-      tabLoaded[tab] = true;
-    }
-    return;
+    if (st === "illust") return (recommendedIllustQuery.data?.pages?.length ?? 0) > 0;
+    if (st === "manga") return (recommendedMangaQuery.data?.pages?.length ?? 0) > 0;
   }
-
-  // Recommended tab with sub-tabs
-  if (tab === "recommended") {
-    const subTab = recommendSubTab();
-
-    if (subTab === "mixed") {
-      const illustCached = tabIllusts["recommended_illust"] !== undefined;
-      const mangaCached = tabIllusts["recommended_manga"] !== undefined;
-      if (illustCached || mangaCached) {
-        setState("illusts", computeMixedIllusts());
-        setState(
-          "nextUrl",
-          tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
-        );
-      }
-      if (!tabLoaded["recommended_mixed"]) {
-        if (!illustCached && !mangaCached) {
-          setState("illusts", []);
-        }
-        await fetchMixed(signal);
-        tabLoaded["recommended_mixed"] = true;
-      }
-      return;
-    }
-
-    const sourceKey = subTab === "illust" ? "recommended_illust" : "recommended_manga";
-    if (tabLoaded[sourceKey]) {
-      if (tabIllusts[sourceKey]) {
-        batch(() => {
-          setState("illusts", filterFeedIllusts(tabIllusts[sourceKey]));
-          setState("nextUrl", tabNextUrl[sourceKey] || null);
-        });
-      }
-      return;
-    }
-    if (tabIllusts[sourceKey]) {
-      batch(() => {
-        setState("illusts", filterFeedIllusts(tabIllusts[sourceKey]));
-        setState("nextUrl", tabNextUrl[sourceKey] || null);
-      });
-      tabLoaded[sourceKey] = true;
-      return;
-    }
-    setState("illusts", []);
-    if (subTab === "illust") {
-      await fetchRecommended("illust", signal);
-    } else {
-      await fetchManga(signal);
-    }
-    tabLoaded[sourceKey] = true;
-    return;
-  }
-
-  // Non-follow, non-recommended tabs (bookmarks, etc.)
-  if (tabLoaded[tab]) {
-    if (tabIllusts[tab]) {
-      batch(() => {
-        setState("illusts", filterFeedIllusts(tabIllusts[tab]));
-        setState("nextUrl", tabNextUrl[tab] || null);
-      });
-    }
-    return;
-  }
-  if (tabIllusts[tab]) {
-    batch(() => {
-      setState("illusts", filterFeedIllusts(tabIllusts[tab]));
-      setState("nextUrl", tabNextUrl[tab] || null);
-    });
-    tabLoaded[tab] = true;
-    return;
-  }
-  setState("illusts", []);
-  tabLoaded[tab] = true;
-}
-
-export async function refresh(signal?: AbortSignal) {
-  const tab = currentTab();
-  const sourceKeys = getRefreshSourceKeys(tab);
-
-  // 检查是否有需要的数据源正在刷新中
-  for (const key of sourceKeys) {
-    if (pendingRefreshKeys.has(key)) {
-      return;
-    }
-  }
-
-  // 锁定数据源
-  for (const key of sourceKeys) {
-    pendingRefreshKeys.add(key);
-  }
-
-  setState("refreshing", true);
-  try {
-    if (tab === "recommended") {
-      const subTab = recommendSubTab();
-      if (subTab === "mixed") {
-        await fetchMixed(signal);
-      } else if (subTab === "illust") {
-        await fetchRecommended("illust", signal);
-      } else {
-        await fetchManga(signal);
-      }
-    } else if (tab === "follow") {
-      await fetchFollow(signal);
-    }
-  } finally {
-    // 释放锁定
-    for (const key of sourceKeys) {
-      pendingRefreshKeys.delete(key);
-    }
-    setState("refreshing", false);
-  }
-}
-
-export function saveTabScroll(tab: string) {
-  if (tab === "follow") {
-    // Don't save tabNextUrl["follow"] — it's never used for follow
-    // The per-source nextUrls are already maintained in tabNextUrl["follow_public"/"follow_private"]
-    scrollRestoreGlobal.saveSimple(tab);
-    return;
-  }
-  if (tab === "recommended") {
-    const key = `recommended_${recommendSubTab()}`;
-    // For mixed sub-tab the source keys (recommended_illust / recommended_manga)
-    // Already hold the truth; state.nextUrl is just a derived value.
-    if (recommendSubTab() !== "mixed") {
-      tabNextUrl[key] = state.nextUrl;
-    }
-    scrollRestoreGlobal.saveSimple(key);
-    return;
-  }
-  tabNextUrl[tab] = state.nextUrl;
-  scrollRestoreGlobal.saveSimple(tab);
+  return false;
 }
 
 export function markFeedMounted() {
   // No-op: lifecycle hook for Feed component
 }
 
-export function isFeedCached(tab?: string) {
-  const t = tab ?? currentTab();
-  if (t === "recommended") {
-    const subTab = recommendSubTab();
-    if (subTab === "mixed") {
-      return (
-        tabLoaded["recommended_mixed"] ||
-        tabIllusts["recommended_illust"] !== undefined ||
-        tabIllusts["recommended_manga"] !== undefined
-      );
-    }
-    const key = `recommended_${subTab}`;
-    return tabLoaded[key] || tabIllusts[key] !== undefined;
+// ── Actions ──
+
+/** 获取当前活跃数据源的 queryKey 列表 */
+function activeQueryKeys(): string[] {
+  const tab = currentTab();
+  if (tab === "follow") {
+    const ft = followTabState();
+    if (ft === "public") return ["follow_public"];
+    if (ft === "private") return ["follow_private"];
+    return ["follow_public", "follow_private"];
   }
-  return tabLoaded[t] || tabIllusts[t] !== undefined;
+  if (tab === "recommended") {
+    const st = recommendSubTabState();
+    if (st === "illust") return ["recommended_illust"];
+    if (st === "manga") return ["recommended_manga"];
+    return ["recommended_illust", "recommended_manga"];
+  }
+  return [];
 }
 
-export function getFeedScrollY(tab?: string) {
+const queryOptionsMap: Record<string, any> = {
+  follow_public: {
+    queryKey: ["feed", "follow_public"] as const,
+    queryFn: ({ signal }: { signal?: AbortSignal }) => loadFollow("public", signal),
+    getNextPageParam: (last: { next_url: string | null }) => last.next_url ?? undefined,
+    initialPageParam: undefined,
+  },
+  follow_private: {
+    queryKey: ["feed", "follow_private"] as const,
+    queryFn: ({ signal }: { signal?: AbortSignal }) => loadFollow("private", signal),
+    getNextPageParam: (last: { next_url: string | null }) => last.next_url ?? undefined,
+    initialPageParam: undefined,
+  },
+  recommended_illust: {
+    queryKey: ["feed", "recommended_illust"] as const,
+    queryFn: ({ signal }: { signal?: AbortSignal }) => loadRecommended("illust", signal),
+    getNextPageParam: (last: { next_url: string | null }) => last.next_url ?? undefined,
+    initialPageParam: undefined,
+  },
+  recommended_manga: {
+    queryKey: ["feed", "recommended_manga"] as const,
+    queryFn: ({ signal }: { signal?: AbortSignal }) => loadRecommended("manga", signal),
+    getNextPageParam: (last: { next_url: string | null }) => last.next_url ?? undefined,
+    initialPageParam: undefined,
+  },
+};
+
+export async function ensureLoaded(_signal?: AbortSignal): Promise<void> {
+  const keys = activeQueryKeys();
+  await Promise.all(
+    keys.map((key) =>
+      queryClient.ensureInfiniteQueryData({
+        ...queryOptionsMap[key],
+        staleTime: 30_000,
+      } as any),
+    ),
+  );
+}
+
+export async function refresh(_signal?: AbortSignal): Promise<void> {
+  const qs = activeQueries();
+  await Promise.all(qs.map((q) => (q as any).refetch()));
+}
+
+export async function fetchMore(_signal?: AbortSignal): Promise<void> {
+  const qs = activeQueries();
+  for (const q of qs) {
+    if ((q as any).hasNextPage && !(q as any).isFetchingNextPage) {
+      await (q as any).fetchNextPage();
+    }
+  }
+}
+
+// ── Scroll position (unchanged) ──
+
+export function saveTabScroll(tab: string) {
+  if (tab === "follow") {
+    scrollRestoreGlobal.saveSimple(tab);
+    return;
+  }
+  if (tab === "recommended") {
+    const key = `recommended_${recommendSubTabState()}`;
+    scrollRestoreGlobal.saveSimple(key);
+    return;
+  }
+  scrollRestoreGlobal.saveSimple(tab);
+}
+
+export function getFeedScrollY(tab?: string): number {
   const t = tab ?? currentTab();
   if (t === "recommended") {
-    return scrollRestoreGlobal.getSimple(`recommended_${recommendSubTab()}`) ?? 0;
+    return scrollRestoreGlobal.getSimple(`recommended_${recommendSubTabState()}`) ?? 0;
   }
   return scrollRestoreGlobal.getSimple(t) ?? 0;
 }
 
+export { type ScrollRestoreState };
+
 // ── TanStack Virtual 滚动状态 API ──
 
-/** 获取存储键名（与 tabScrollState 保持一致） */
 function getScrollStateKey(tab?: string): string {
   const t = tab ?? currentTab();
   if (t === "recommended") {
-    return `recommended_${recommendSubTab()}`;
+    return `recommended_${recommendSubTabState()}`;
   }
   return t;
 }
@@ -418,323 +432,6 @@ export function getFeedScrollState(tab?: string): ScrollRestoreState | null {
   return scrollRestoreGlobal.getVirtual(getScrollStateKey(tab)) ?? null;
 }
 
-// ── Internal fetch functions ──
-
-export async function fetchRecommended(contentType: ContentType = "illust", signal?: AbortSignal) {
-  setState("loading", true);
-  setState("error", null);
-  const sourceKey = contentType === "manga" ? "recommended_manga" : "recommended_illust";
-  try {
-    const data = await loadRecommended(contentType, signal);
-    // Cache raw data; illusts uses filtered version
-    tabIllusts[sourceKey] = data.illusts;
-    tabNextUrl[sourceKey] = data.next_url;
-    if (
-      currentTab() === "recommended" &&
-      recommendSubTab() === (contentType === "manga" ? "manga" : "illust")
-    ) {
-      batch(() => {
-        setState("illusts", filterFeedIllusts(data.illusts));
-        setState("nextUrl", data.next_url);
-      });
-    }
-  } catch (error) {
-    setState("error", toApiError(error));
-  } finally {
-    setState("loading", false);
-  }
-}
-
-export function fetchManga(signal?: AbortSignal) {
-  return fetchRecommended("manga", signal);
-}
-
-export async function fetchMixed(signal?: AbortSignal) {
-  setState("loading", true);
-  setState("error", null);
-  const errors: ApiError[] = [];
-
-  try {
-    const [illustResult, mangaResult] = await Promise.allSettled([
-      loadRecommended("illust", signal),
-      loadRecommended("manga", signal),
-    ]);
-
-    if (illustResult.status === "fulfilled") {
-      tabIllusts["recommended_illust"] = illustResult.value.illusts;
-      tabNextUrl["recommended_illust"] = illustResult.value.next_url;
-    } else {
-      errors.push(toApiError(illustResult.reason, "插画推荐加载失败"));
-    }
-
-    if (mangaResult.status === "fulfilled") {
-      tabIllusts["recommended_manga"] = mangaResult.value.illusts;
-      tabNextUrl["recommended_manga"] = mangaResult.value.next_url;
-    } else {
-      errors.push(toApiError(mangaResult.reason, "漫画推荐加载失败"));
-    }
-
-    if (currentTab() === "recommended" && recommendSubTab() === "mixed") {
-      batch(() => {
-        setState("illusts", computeMixedIllusts());
-        setState(
-          "nextUrl",
-          tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
-        );
-      });
-    }
-
-    if (errors.length > 0) {
-      if (errors.length === 2) {
-        const bestType = pickBestErrorType(...errors);
-        setState("error", { type: bestType, message: errors.map((e) => e.message).join("; ") });
-      } else {
-        console.warn("fetchMixed: partial failure —", errors.map((e) => e.message).join("; "));
-      }
-    }
-  } finally {
-    setState("loading", false);
-  }
-}
-
-export async function fetchMoreMixed(signal?: AbortSignal) {
-  if (state.loading) {
-    return;
-  }
-  setState("loading", true);
-  setState("error", null);
-
-  try {
-    const illustsArr = tabIllusts["recommended_illust"] ?? [];
-    const mangaArr = tabIllusts["recommended_manga"] ?? [];
-
-    const illustOldest =
-      illustsArr.length > 0 ? illustsArr[illustsArr.length - 1].create_date : null;
-    const mangaOldest = mangaArr.length > 0 ? mangaArr[mangaArr.length - 1].create_date : null;
-
-    const errors: ApiError[] = [];
-
-    const loadSource = async (
-      key: "recommended_illust" | "recommended_manga",
-    ): Promise<boolean> => {
-      const next = tabNextUrl[key];
-      if (!next) {
-        return false;
-      }
-      try {
-        const data = await loadNext(next, signal);
-        tabIllusts[key] = [...(tabIllusts[key] || []), ...data.illusts];
-        tabNextUrl[key] = data.next_url;
-        return true;
-      } catch (error) {
-        errors.push(toApiError(error));
-        return false;
-      }
-    };
-
-    // 优先加载当前合并列表尾部时间较早的那一路
-    const preferIllust =
-      mangaOldest === null || (illustOldest !== null && illustOldest <= mangaOldest);
-
-    const loaded = preferIllust
-      ? (await loadSource("recommended_illust")) || (await loadSource("recommended_manga"))
-      : (await loadSource("recommended_manga")) || (await loadSource("recommended_illust"));
-
-    if (loaded && currentTab() === "recommended" && recommendSubTab() === "mixed") {
-      batch(() => {
-        setState("illusts", computeMixedIllusts());
-        setState(
-          "nextUrl",
-          tabNextUrl["recommended_illust"] || tabNextUrl["recommended_manga"] || null,
-        );
-      });
-    }
-
-    if (errors.length > 0 && !loaded) {
-      const bestType = pickBestErrorType(...errors);
-      setState("error", { type: bestType, message: errors.map((e) => e.message).join("; ") });
-    }
-  } finally {
-    setState("loading", false);
-  }
-}
-
-export async function fetchFollow(signal?: AbortSignal) {
-  setState("loading", true);
-  setState("error", null);
-  let errors: ApiError[] = [];
-  try {
-    const [publicResult, privateResult] = await Promise.allSettled([
-      loadFollow("public", signal),
-      loadFollow("private", signal),
-    ]);
-    // Process public result
-    if (publicResult.status === "fulfilled") {
-      tabIllusts["follow_public"] = publicResult.value.illusts;
-      tabNextUrl["follow_public"] = publicResult.value.next_url;
-    } else {
-      errors.push(toApiError(publicResult.reason, "公开关注加载失败"));
-    }
-    // Process private result
-    if (privateResult.status === "fulfilled") {
-      tabIllusts["follow_private"] = privateResult.value.illusts;
-      tabNextUrl["follow_private"] = privateResult.value.next_url;
-    } else {
-      errors.push(toApiError(privateResult.reason, "非公开关注加载失败"));
-    }
-    // Update display if current tab is follow (even if only one succeeded)
-    if (currentTab() === "follow") {
-      batch(() => {
-        setState("illusts", computeFollowIllusts());
-        const ft = state.followTab;
-        const effectiveNext =
-          ft === "public"
-            ? tabNextUrl["follow_public"]
-            : ft === "private"
-              ? tabNextUrl["follow_private"]
-              : tabNextUrl["follow_public"] || tabNextUrl["follow_private"];
-        setState("nextUrl", effectiveNext);
-      });
-    }
-    // Set error only when both failed; partial failure is a warning
-    if (errors.length > 0) {
-      if (errors.length === 2) {
-        const bestType = pickBestErrorType(...errors);
-        setState("error", { type: bestType, message: errors.map((e) => e.message).join("; ") });
-      } else {
-        console.warn("fetchFollow: partial failure —", errors.map((e) => e.message).join("; "));
-      }
-    }
-  } finally {
-    setState("loading", false);
-  }
-}
-
-export async function fetchMore(signal?: AbortSignal) {
-  if (state.loading) {
-    return;
-  }
-  const tab = currentTab();
-  if (tab === "recommended" && recommendSubTab() === "mixed") {
-    return fetchMoreMixed(signal);
-  }
-  if (tab !== "follow") {
-    const sourceKey =
-      tab === "recommended"
-        ? recommendSubTab() === "illust"
-          ? "recommended_illust"
-          : "recommended_manga"
-        : tab;
-    if (!state.nextUrl) {
-      return;
-    }
-    setState("loading", true);
-    setState("error", null);
-    try {
-      const data = await loadNext(state.nextUrl, signal);
-      tabIllusts[sourceKey] = [...(tabIllusts[sourceKey] || []), ...data.illusts];
-      tabNextUrl[sourceKey] = data.next_url;
-      batch(() => {
-        setState(
-          produce((s) => {
-            s.illusts.push(...filterFeedIllusts(data.illusts));
-            s.nextUrl = data.next_url;
-          }),
-        );
-      });
-    } catch (error) {
-      setState("error", toApiError(error));
-    } finally {
-      setState("loading", false);
-    }
-    return;
-  }
-
-  // Follow tab — per-source pagination
-  setState("loading", true);
-  setState("error", null);
-  try {
-    const fTab = state.followTab;
-    if (fTab === "public") {
-      // Load more for public only
-      const pubNext = tabNextUrl["follow_public"];
-      if (!pubNext) {
-        setState("loading", false);
-        return;
-      }
-      const data = await loadNext(pubNext, signal);
-      tabIllusts["follow_public"] = [...(tabIllusts["follow_public"] || []), ...data.illusts];
-      tabNextUrl["follow_public"] = data.next_url;
-      setState(
-        produce((s) => {
-          s.illusts.push(...filterFeedIllusts(data.illusts));
-          s.nextUrl = tabNextUrl["follow_public"];
-        }),
-      );
-    } else if (fTab === "private") {
-      // Load more for private only
-      const privNext = tabNextUrl["follow_private"];
-      if (!privNext) {
-        setState("loading", false);
-        return;
-      }
-      const data = await loadNext(privNext, signal);
-      tabIllusts["follow_private"] = [...(tabIllusts["follow_private"] || []), ...data.illusts];
-      tabNextUrl["follow_private"] = data.next_url;
-      setState(
-        produce((s) => {
-          s.illusts.push(...filterFeedIllusts(data.illusts));
-          s.nextUrl = tabNextUrl["follow_private"];
-        }),
-      );
-    } else {
-      // "all" mode — load the source with older tail first;
-      // If that source is exhausted, fall through to the other.
-      const pubIllusts = tabIllusts["follow_public"] || [];
-      const privIllusts = tabIllusts["follow_private"] || [];
-      const pubOldest =
-        pubIllusts.length > 0 ? pubIllusts[pubIllusts.length - 1].create_date : null;
-      const privOldest =
-        privIllusts.length > 0 ? privIllusts[privIllusts.length - 1].create_date : null;
-
-      if (pubOldest === null && privOldest === null) {
-        setState("loading", false);
-        return;
-      }
-
-      // Determine preferred source order
-      const preferPublic = privOldest === null || (pubOldest !== null && pubOldest >= privOldest);
-
-      const loadSource = async (key: "follow_public" | "follow_private"): Promise<boolean> => {
-        const next = tabNextUrl[key];
-        if (!next) {
-          return false;
-        }
-        const data = await loadNext(next, signal);
-        tabIllusts[key] = [...(tabIllusts[key] || []), ...data.illusts];
-        tabNextUrl[key] = data.next_url;
-        return true;
-      };
-
-      const loaded = preferPublic
-        ? (await loadSource("follow_public")) || (await loadSource("follow_private"))
-        : (await loadSource("follow_private")) || (await loadSource("follow_public"));
-
-      if (loaded) {
-        setState(
-          produce((s) => {
-            s.illusts = computeFollowIllusts();
-            s.nextUrl = tabNextUrl["follow_public"] || tabNextUrl["follow_private"];
-          }),
-        );
-      } else {
-        setState("loading", false);
-        return;
-      }
-    }
-  } catch (error) {
-    setState("error", toApiError(error));
-  } finally {
-    setState("loading", false);
-  }
-}
+// ── Legacy fetch functions (kept for backward compatibility) ──
+// These are no longer primary data paths; TQ handles all fetching.
+// Consumers should use ensureLoaded + refresh + fetchMore instead.

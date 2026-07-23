@@ -77,12 +77,10 @@ const NovelBookmarks: Component<Props> = (props) => {
   });
 
   createEffect(() => {
-    const u = user();
+    const _u = user();
     // Track restrict changes
     bookmarkRestrict();
-    if (u) {
-      ensureLoaded();
-    }
+    ensureLoaded();
   });
 
   return (
