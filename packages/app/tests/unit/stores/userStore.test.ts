@@ -51,6 +51,4 @@ describe("userStore", () => {
       expect(mockGetUserDetail).toHaveBeenCalledTimes(1);
     });
   });
-
-
 });
