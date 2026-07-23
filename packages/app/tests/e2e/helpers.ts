@@ -2,10 +2,10 @@ import { type Page } from "@playwright/test";
 
 /**
  * Click a bottom nav tab by label text.
- * Bottom nav uses class "bottom-nav-item", distinct from card buttons.
+ * Bottom nav uses class "floating-nav-item", distinct from card buttons.
  */
 export async function clickNavTab(page: Page, label: string) {
-  const btn = page.locator(".bottom-nav-item").filter({ hasText: label });
+  const btn = page.locator(".floating-nav-item").filter({ hasText: label });
   await btn.click();
 }
 

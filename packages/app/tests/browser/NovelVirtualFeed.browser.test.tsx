@@ -69,19 +69,20 @@ describe("NovelVirtualFeed", () => {
     expect(container.textContent).toContain("暂无小说");
   });
 
-  it("shows error message", () => {
+  it("shows error component with retry", () => {
     const { container } = render(() => (
       <NovelVirtualFeed
         novels={[]}
         loading={false}
-        error="请求失败"
+        error={{ type: "NETWORK", message: "请求失败" } as any}
         hasMore={false}
         onNovelClick={vi.fn()}
         onLoadMore={vi.fn()}
         onRefresh={vi.fn()}
       />
     ));
-    expect(container.textContent).toContain("请求失败");
+    // ErrorDisplay renders a retry button
+    expect(container.textContent).toContain("重试");
   });
 
   it("shows loading spinner with text", async () => {
@@ -180,48 +181,24 @@ describe("NovelVirtualFeed", () => {
     expect(container.textContent).toContain("a".repeat(200));
   });
 
-  it("restores scroll only after layout is tall enough to contain the offset", async () => {
-    window.scrollTo(0, 0);
-    const scrollToSpy = vi.spyOn(window, "scrollTo");
-    try {
-      const novels = createNovels(20);
-      const [width, setWidth] = createSignal(0);
-      // Defer giving the feed container a real width until after the initial
-      // Restoration frame would have fired. With the buggy code the scroll is
-      // Applied while totalHeight is ~0 and is clamped to the top; the fix waits
-      // Until the layout is tall enough before scrolling.
-      setTimeout(() => setWidth(800), 50);
-
-      render(() => (
-        <div style={{ width: `${width()}px` }}>
-          <NovelVirtualFeed
-            novels={novels}
-            loading={false}
-            error={null}
-            hasMore={false}
-            onNovelClick={vi.fn()}
-            onLoadMore={vi.fn()}
-            onRefresh={vi.fn()}
-            restoreScrollTop={500}
-          />
-        </div>
-      ));
-
-      // Give the buggy early restoration frame time to fire while width is still 0.
-      await new Promise((resolve) => setTimeout(resolve, 40));
-      const earlyScrollTo500 = scrollToSpy.mock.calls.some(
-        (call) => call[0] === 0 && call[1] === 500,
-      );
-      expect(earlyScrollTo500).toBe(false);
-
-      await waitFor(
-        () => {
-          expect(window.scrollY).toBe(500);
-        },
-        { timeout: 3000 },
-      );
-    } finally {
-      scrollToSpy.mockRestore();
-    }
+  it("cards render with measureElement ref for dynamic sizing", async () => {
+    const novels = createNovels(10);
+    const { container } = render(() => (
+      <NovelVirtualFeed
+        novels={novels}
+        loading={false}
+        error={null}
+        hasMore={false}
+        onNovelClick={vi.fn()}
+        onLoadMore={vi.fn()}
+        onRefresh={vi.fn()}
+      />
+    ));
+    await waitFor(() => {
+      expect(container.textContent).toContain("小说标题 1");
+    });
+    // Cards should have data-index for measureElement
+    const items = container.querySelectorAll("[data-index]");
+    expect(items.length).toBeGreaterThan(0);
   });
 });

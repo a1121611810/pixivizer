@@ -10,7 +10,6 @@ import PullIndicator from "./PullIndicator";
 import type { PixivNovel, ApiError } from "../api/types";
 import { VIRTUAL_SCROLL_MARGIN } from "../primitives/rootMargins";
 import { createSentinel } from "@/primitives/visibility";
-import { createComputedTextCard } from "../primitives/createComputedTextCard";
 import type { NovelLayoutMode } from "../stores/uiStore";
 import { saveNovelScrollState, getNovelScrollState } from "../stores/novelStore";
 import { createVirtualScrollRestore } from "../primitives/createVirtualScrollRestore";
@@ -114,69 +113,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
 
   // 单列布局
   const COVER_HEIGHT = 128;
-  const listCardMetrics = createComputedTextCard({
-    novels: () => props.novels,
-    containerWidth,
-    titleFont: () => ({
-      fontSize: 12,
-      fontWeight: 600,
-      fontFamily: "system-ui",
-      lineHeight: 1.25,
-    }),
-    tagFont: () => ({
-      fontSize: 10,
-      fontWeight: 400,
-      fontFamily: "system-ui",
-      lineHeight: 1.4,
-    }),
-    maxTitleLines: 3,
-    maxTagLines: 3,
-    stylePreset: () => "list",
-  });
-
-  // 文本列表布局
-  const textListCardMetrics = createComputedTextCard({
-    novels: () => props.novels,
-    containerWidth,
-    titleFont: () => ({
-      fontSize: 16,
-      fontWeight: 600,
-      fontFamily: "system-ui",
-      lineHeight: 1.5,
-    }),
-    tagFont: () => ({
-      fontSize: 10,
-      fontWeight: 400,
-      fontFamily: "system-ui",
-      lineHeight: 1.4,
-    }),
-    maxTitleLines: 2,
-    maxTagLines: 2,
-  });
-
-  // 封面墙布局
-  const coverWallCardMetrics = createComputedTextCard({
-    novels: () => props.novels,
-    containerWidth: () => {
-      const cw = containerWidth();
-      return cw > 0 ? (cw - GAP) / 2 : 0;
-    },
-    titleFont: () => ({
-      fontSize: 14,
-      fontWeight: 600,
-      fontFamily: "system-ui",
-      lineHeight: 1.25,
-    }),
-    tagFont: () => ({
-      fontSize: 10,
-      fontWeight: 400,
-      fontFamily: "system-ui",
-      lineHeight: 1.2,
-    }),
-    maxTitleLines: 2,
-    maxTagLines: 2,
-    stylePreset: () => "coverWall",
-  });
+  const CARD_VERTICAL_PADDING = 24; // p-[var(--spacingHorizontalM)] × 2 = 12×2
 
   // ── Layout config ──
   const columnCount = createMemo(() => (mode() === "coverWall" ? 2 : 1));
@@ -186,22 +123,18 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     return cw > 0 ? (cw - GAP * (cc - 1)) / cc : 150;
   });
 
-  // ── estimateSize ──
+  // ── estimateSize：粗估种子值，实际高度由 measureElement 实测纠正 ──
   const estimateSize = (index: number): number => {
-    const novel = props.novels[index];
-    if (!novel) {
-      return 100;
-    }
+    if (!props.novels[index]) return 100;
     const m = mode();
     if (m === "textList") {
-      return textListCardMetrics.getInfoHeight(novel.id);
+      return 120;
     }
     if (m === "coverWall") {
       const cw = columnWidth();
-      return cw + coverWallCardMetrics.getInfoHeight(novel.id);
+      return cw + 300;
     }
-    const infoHeight = listCardMetrics.getInfoHeight(novel.id);
-    return Math.max(COVER_HEIGHT, infoHeight) + 20;
+    return Math.max(COVER_HEIGHT + CARD_VERTICAL_PADDING, 160);
   };
 
   // ── Scroll restoration（显式恢复，见 ADR 0010） ──
@@ -233,6 +166,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
     scrollToFn: windowScroll,
     initialOffset: scrollRestore.initialOffset,
     initialMeasurementsCache: scrollRestore.initialMeasurementsCache,
+    laneAssignmentMode: mode() === "coverWall" ? "measured" : "estimate",
   });
 
   // Sync count/lanes changes back to the virtualizer
@@ -250,6 +184,7 @@ const NovelVirtualFeed: Component<Props> = (props) => {
       observeElementRect: observeWindowRect,
       observeElementOffset: observeWindowOffset,
       scrollToFn: windowScroll,
+      laneAssignmentMode: mode() === "coverWall" ? "measured" : "estimate",
     } as any);
     instance.measure();
     setVirtualItems([...instance.getVirtualItems()] as any);
@@ -291,43 +226,6 @@ const NovelVirtualFeed: Component<Props> = (props) => {
       window.removeEventListener("resize", onResize);
     });
   });
-
-  // Proxy to match old interface
-  const _virtualizer = {
-    getVirtualItems: () => virtualItems(),
-    getTotalSize: () => totalSize(),
-    scrollToOffset: (offset: number) => {
-      window.scrollTo({ top: offset, behavior: "auto" });
-    },
-    get scrollOffset() {
-      return window.scrollY;
-    },
-    get scrollElement() {
-      return window;
-    },
-    takeSnapshot: () => {
-      instance._willUpdate();
-      return instance.takeSnapshot();
-    },
-    get isScrolling() {
-      return instance.isScrolling;
-    },
-    getDistanceFromEnd: () => instance.getDistanceFromEnd(),
-    isAtEnd: (threshold?: number) => instance.isAtEnd(threshold),
-    scrollToIndex: (
-      index: number,
-      opts?: { align?: "start" | "center" | "end" | "auto"; behavior?: "auto" | "smooth" },
-    ) => {
-      // Find the item's offset
-      const items = instance.getVirtualItems();
-      const target = items.find((v) => v.index === index);
-      const offset = target?.start ?? 0;
-      window.scrollTo({ top: offset, behavior: opts?.behavior ?? "auto" });
-    },
-    measureElement: instance.measureElement.bind(instance),
-  };
-
-  void _virtualizer;
 
   return (
     <div
@@ -383,12 +281,13 @@ const NovelVirtualFeed: Component<Props> = (props) => {
             }
             return (
               <div
+                ref={instance.measureElement}
+                data-index={vItem.index}
                 style={{
                   position: "absolute",
                   top: 0,
                   left: `${(vItem.lane ?? 0) * (columnWidth() + GAP)}px`,
                   width: mode() === "coverWall" ? `${columnWidth()}px` : "100%",
-                  height: `${vItem.size}px`,
                   transform: `translateY(${vItem.start}px)`,
                 }}
               >

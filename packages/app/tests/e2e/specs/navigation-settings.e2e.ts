@@ -5,7 +5,7 @@ test.describe("Navigation", () => {
   test("navbar tabs are visible and clickable", async ({ loggedInPage: page }) => {
     const tabs = ["推荐", "关注", "收藏"];
     for (const label of tabs) {
-      const btn = page.locator(".bottom-nav-item").filter({ hasText: label });
+      const btn = page.locator(".floating-nav-item").filter({ hasText: label });
       await expect(btn).toBeVisible({ timeout: 5000 });
     }
   });

@@ -18,7 +18,7 @@ test.describe("Novel Detail", () => {
     }
 
     // 4. Try recommended tab instead if follow has no novels
-    const navRecommended = page.locator(".bottom-nav-item").filter({ hasText: "推荐" });
+    const navRecommended = page.locator(".floating-nav-item").filter({ hasText: "推荐" });
     await navRecommended.click();
     await page.waitForTimeout(2000);
 
