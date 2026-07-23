@@ -18,15 +18,68 @@
 本项目使用 CodeGraph 作为默认代码理解工具（通过 `mcp__codegraph__*` MCP 前缀访问）。
 项目已通过 `reasonix.toml` 配置 `--path`，调用 CodeGraph 工具时**不要**手动传 `projectPath`。
 
-完整的 CodeGraph 使用规范（工具列表、参数速查、调用示例、索引维护、降级方案）保存在
-全局 memory `mcp-codegraph-usage.md` 中，所有项目通用。
+### 默认原则
+
+- **任何涉及"理解代码结构、定位符号、追踪调用链、分析影响范围"的任务，默认优先使用 CodeGraph 系列工具（`mcp__codegraph__*`）。**
+- CodeGraph 是默认工具，不是搜索失败后的兜底工具。
+- 仅当 CodeGraph 不可用、或场景明确属于下方「允许的降级」时，才使用 Grep/Glob/Read 等替代手段。
+
+### 工具选择速查
+
+| 场景 | 首选工具 | 说明 |
+|------|----------|------|
+| 接到功能/Bug 任务，不确定入口 | `codegraph_context` | 任何"how does X work"问题首选，返回上下文与源码 |
+| 按名称快速定位符号 | `codegraph_search` | 搜索函数、组件、变量、路由等 |
+| 两个符号之间的调用路径 | `codegraph_trace` | 追踪 A→B 的调用链 |
+| 一次性获取多个相关符号源码 | `codegraph_explore` | 探索组件依赖的 store/service/子组件 |
+| 单个符号详情（含源码） | `codegraph_node` | 用 `includeCode=true` 获取完整体 |
+| 重构前影响分析 | `codegraph_impact` | 分析修改某符号会影响哪些文件 |
+| 索引健康检查 | `codegraph_status` | 检查索引是否就绪、节点/边数量 |
+
+完整规范（参数速查、调用示例、索引维护、结果解读、降级方案）保存在全局 memory `mcp-codegraph-usage.md`。
 
 > 如果 `.codegraph/` 索引尚未生成，在项目根目录运行：`codegraph init`
+
+### 禁止的默认行为
+
+- 未经 CodeGraph 尝试，直接用 Grep/Glob/Bash find 进行大规模代码探索。
+- 用 Grep 手动拼凑调用链（应使用 `codegraph_trace`）。
+- 用 Read 顺序打开多个文件来"摸索"架构（应先用 `codegraph_context` / `codegraph_explore`）。
+
+### projectPath 说明
+
+CodeGraph MCP 服务器的 `projectPath` 参数用于指定要查询的项目。本项目已通过 `reasonix.toml` 在启动服务器时配置了 `--path`，因此：
+
+- **默认不传** `projectPath`：服务器已自带本项目路径，直接调用即可。
+- **报错时再传**：如果调用返回"找不到项目路径"之类的错误，将 `projectPath` 设为当前工作目录路径重试（由系统提示 `Current workspace` 字段可知）。
+- **跨项目查询**：如需分析其他项目，显式传入对应项目的根路径。
 
 ## 文档查询规范（Documentation Query）
 
 文档查询遵循明确的优先级链：Context7 → MDN → `web_fetch`。
-完整的规范（优先级决策链、使用流程、降级策略、调用示例）保存在全局 memory `mcp-doc-query.md` 中，所有项目通用。
+
+### 默认原则
+
+- **第三方库/框架的 API 文档、使用指南、配置说明，默认优先使用 Context7 工具（`mcp__context7__*`）。**
+- **浏览器标准 API（HTML/CSS/JS 标准 API、Web API 语法与兼容性）优先使用 MDN 工具（`mcp__mdn__*`）。**
+- 仅当 Context7 和 MDN 都不支持目标查询时，才使用 `web_fetch` 搜索官方文档。
+
+### 优先级决策链
+
+| 场景 | 第一优先 | 第二优先 |
+|------|---------|---------|
+| 库/框架文档（SolidJS、TanStack、Capacitor、Vite 等） | `mcp__context7__*` | `web_fetch`（官网） |
+| 浏览器标准 API（`fetch`、`Headers`、`Promise`、CSS 属性等） | `mcp__mdn__*` | `web_fetch`（MDN 页面） |
+| 其他技术文档（非库/非浏览器标准） | `mcp__context7__*` 尝试 | `web_fetch`（官方文档） |
+
+完整规范（使用流程、降级策略、调用示例）保存在全局 memory `mcp-doc-query.md`。
+
+### 禁止的默认行为
+
+- 未经 Context7 尝试，直接用 `web_fetch` 查第三方库文档。
+- 用 `web_fetch` 搜索可在 Context7 中直接查到的库文档。
+- 对同一问题重复调用 `resolve-library-id` 超过 2 次。
+- 在单个 `query-docs` 调用中放入多个独立概念。
 
 ## 命令
 
@@ -385,16 +438,16 @@ packages/app/src/
 
 ## 注意事项
 
-- **代码智能规范**：涉及代码理解、调用链追踪、影响分析时，默认优先使用 CodeGraph，详见上方「代码智能规范」章节和全局 memory `mcp-codegraph-usage.md`。
-- **文档查询规范**：查询第三方库/框架文档、浏览器标准 API 或技术资料时，遵循优先级链（Context7 → MDN → `web_fetch`），详见全局 memory `mcp-doc-query.md`。
+- **代码智能规范**：涉及代码理解、调用链追踪、影响分析时，默认优先使用 CodeGraph（工具选择见上方「代码智能规范」工具选择速查表），完整规范参考全局 memory `mcp-codegraph-usage.md`。
+- **文档查询规范**：查询第三方库/框架文档优先使用 Context7，浏览器标准 API 优先使用 MDN（优先级链见上方「文档查询规范」决策表），完整规范参考全局 memory `mcp-doc-query.md`。
 - **路由数据规则**：路由级异步数据统一通过 `@tanstack/solid-router` 的 `loader` 获取；组件内局部异步仍使用 `createSignal` + `createEffect` + 手动 fetch（带 AbortController）。`createResource` 不用于路由组件。
 
 ## 任务完成前自检
 
-- **代码理解优先性**：涉及代码结构、调用链、影响范围分析时，是否优先使用了 CodeGraph？
-- **Fallback 合理性**：未用 CodeGraph 时，是否属于全局 memory `mcp-codegraph-usage.md` 中列出的允许例外之一？
+- **代码理解优先性**：涉及代码结构、调用链、影响范围分析时，是否优先使用了 CodeGraph？（工具选择见上方速查表）
+- **Fallback 合理性**：未用 CodeGraph 时，是否属于允许的例外？（不可用、已知路径读取、非代码搜索等，详见全局 memory `mcp-codegraph-usage.md`）
 - **索引健康**：CodeGraph 返回异常时，是否检查了 `codegraph_status` 并考虑重建索引？
-- **文档查询优先性**：涉及库/框架/浏览器 API 查询时，是否遵循了 `mcp-doc-query.md` 中的优先级链？
+- **文档查询优先性**：涉及库/框架/浏览器 API 查询时，是否遵循了「文档查询规范」的优先级链？（优先 Context7 或 MDN，降级见 `mcp-doc-query.md`）
 
 ## Notes
 
