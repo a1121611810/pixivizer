@@ -190,13 +190,6 @@
   --pageCardBorder: var(--colorNeutralStroke2);
   --pageCardSearchBg: var(--colorNeutralBackground3);
   --pageCardSearchText: var(--colorNeutralForegroundDisabled);
-
-  /* ── Color theme swatches (always defined so the selector is visible in any theme) ── */
-  --theme-coast-swatch: #3a506b;
-  --theme-rose-swatch: #a77c74;
-  --theme-sage-swatch: #5f6b4f;
-  --theme-lavender-swatch: #5d546a;
-  --theme-caramel-swatch: #8a624a;
 }
 
 /* ── Dark theme ── */
@@ -271,231 +264,6 @@
 
   --colorImageBadgeBackground: rgba(0, 0, 0, 0.5);
   --colorImageBadgeForeground: #ffffff;
-}
-
-/* ═══════════════════════════════════════════════════════
-   Color theme palettes — low-saturation overlays
-   Applied via html.theme-<id> by themeApplier.ts
-   ═══════════════════════════════════════════════════════ */
-
-/* ── coast（海岸）── */
-html.theme-coast {
-  --colorBrandBackground: #3a506b;
-  --colorBrandBackgroundHover: #4a607a;
-  --colorBrandBackgroundPressed: #2a4059;
-  --colorBrandBackgroundSelected: #2a4059;
-  --colorBrandForeground1: #3a506b;
-  --colorBrandForegroundLink: #3a506b;
-  --colorBrandForegroundLinkHover: #5a7090;
-  --colorBrandForegroundLinkPressed: #2a4059;
-  --colorBrandStroke1: #3a506b;
-  --colorBrandStroke2: #cdecf6;
-  --colorNeutralForegroundOnBrand: #ffffff;
-
-  --colorCompoundBrandBackground: #3a506b;
-  --colorCompoundBrandBackgroundHover: #4a607a;
-  --colorCompoundBrandBackgroundPressed: #2a4059;
-  --colorCompoundBrandForeground1: #3a506b;
-  --colorCompoundBrandStroke1: #3a506b;
-
-  --colorNeutralBackground1: #cdecf6;
-  --colorNeutralBackground2: #eaf5f9;
-  --colorNeutralBackground3: #f0f8fb;
-  --colorNeutralBackground1Hover: #b8e0ef;
-  --colorNeutralBackground1Pressed: #a4d4e8;
-  --colorNeutralBackground1Selected: #a4d4e8;
-
-  --colorNeutralForeground1: #1a2a3a;
-  --colorNeutralForeground2: #3a506b;
-  --colorNeutralForeground3: #5a7080;
-  --colorNeutralForegroundDisabled: #8aa0b0;
-
-  --colorNeutralStroke1: #a8b59f;
-  --colorNeutralStroke2: #cdecf6;
-  --colorNeutralStrokeAccessible: #3a506b;
-  --colorNeutralStrokeAccessibleHover: #2a4059;
-  --colorNeutralStrokeDisabled: #cdecf6;
-
-  --colorStatusSuccessForeground1: #a8b59f;
-  --colorStatusWarningForeground1: #c9a68b;
-
-  --theme-coast-swatch: #3a506b;
-}
-
-/* ── rose（玫瑰）── */
-html.theme-rose {
-  --colorBrandBackground: #a77c74;
-  --colorBrandBackgroundHover: #b78c84;
-  --colorBrandBackgroundPressed: #8e655d;
-  --colorBrandBackgroundSelected: #8e655d;
-  --colorBrandForeground1: #a77c74;
-  --colorBrandForegroundLink: #a77c74;
-  --colorBrandForegroundLinkHover: #c19088;
-  --colorBrandForegroundLinkPressed: #8e655d;
-  --colorBrandStroke1: #a77c74;
-  --colorBrandStroke2: #f8efef;
-  --colorNeutralForegroundOnBrand: #ffffff;
-
-  --colorCompoundBrandBackground: #a77c74;
-  --colorCompoundBrandBackgroundHover: #b78c84;
-  --colorCompoundBrandBackgroundPressed: #8e655d;
-  --colorCompoundBrandForeground1: #a77c74;
-  --colorCompoundBrandStroke1: #a77c74;
-
-  --colorNeutralBackground1: #f8efef;
-  --colorNeutralBackground2: #ffffff;
-  --colorNeutralBackground3: #fff7f7;
-  --colorNeutralBackground1Hover: #f5e5e5;
-  --colorNeutralBackground1Pressed: #f0dbdb;
-  --colorNeutralBackground1Selected: #f0dbdb;
-
-  --colorNeutralForeground1: #3e2e2a;
-  --colorNeutralForeground2: #6b544f;
-  --colorNeutralForeground3: #8b746f;
-  --colorNeutralForegroundDisabled: #b5a09c;
-
-  --colorNeutralStroke1: #cfa6a0;
-  --colorNeutralStroke2: #e8d5b7;
-  --colorNeutralStrokeAccessible: #6b544f;
-  --colorNeutralStrokeAccessibleHover: #5a4742;
-  --colorNeutralStrokeDisabled: #e8d5b7;
-
-  --colorStatusSuccessForeground1: #8e9678;
-  --colorStatusWarningForeground1: #e8d5b7;
-
-  --theme-rose-swatch: #a77c74;
-}
-
-/* ── sage（鼠尾草）── */
-html.theme-sage {
-  --colorBrandBackground: #5f6b4f;
-  --colorBrandBackgroundHover: #6f7b5f;
-  --colorBrandBackgroundPressed: #4f5b3f;
-  --colorBrandBackgroundSelected: #4f5b3f;
-  --colorBrandForeground1: #5f6b4f;
-  --colorBrandForegroundLink: #5f6b4f;
-  --colorBrandForegroundLinkHover: #7a866a;
-  --colorBrandForegroundLinkPressed: #4f5b3f;
-  --colorBrandStroke1: #5f6b4f;
-  --colorBrandStroke2: #eaf1e3;
-  --colorNeutralForegroundOnBrand: #ffffff;
-
-  --colorCompoundBrandBackground: #5f6b4f;
-  --colorCompoundBrandBackgroundHover: #6f7b5f;
-  --colorCompoundBrandBackgroundPressed: #4f5b3f;
-  --colorCompoundBrandForeground1: #5f6b4f;
-  --colorCompoundBrandStroke1: #5f6b4f;
-
-  --colorNeutralBackground1: #eaf1e3;
-  --colorNeutralBackground2: #f5f8f2;
-  --colorNeutralBackground3: #fafcf8;
-  --colorNeutralBackground1Hover: #dfe9d6;
-  --colorNeutralBackground1Pressed: #d4e0c9;
-  --colorNeutralBackground1Selected: #d4e0c9;
-
-  --colorNeutralForeground1: #2a3020;
-  --colorNeutralForeground2: #5f6b4f;
-  --colorNeutralForeground3: #7a866a;
-  --colorNeutralForegroundDisabled: #a0aa90;
-
-  --colorNeutralStroke1: #a8b59f;
-  --colorNeutralStroke2: #d9c9a3;
-  --colorNeutralStrokeAccessible: #5f6b4f;
-  --colorNeutralStrokeAccessibleHover: #4f5b3f;
-  --colorNeutralStrokeDisabled: #d9c9a3;
-
-  --colorStatusSuccessForeground1: #5f6b4f;
-  --colorStatusWarningForeground1: #8e9678;
-
-  --theme-sage-swatch: #5f6b4f;
-}
-
-/* ── lavender（薰衣草）── */
-html.theme-lavender {
-  --colorBrandBackground: #5d546a;
-  --colorBrandBackgroundHover: #6d647a;
-  --colorBrandBackgroundPressed: #4d445a;
-  --colorBrandBackgroundSelected: #4d445a;
-  --colorBrandForeground1: #5d546a;
-  --colorBrandForegroundLink: #5d546a;
-  --colorBrandForegroundLinkHover: #7a7088;
-  --colorBrandForegroundLinkPressed: #4d445a;
-  --colorBrandStroke1: #5d546a;
-  --colorBrandStroke2: #f7f3ed;
-  --colorNeutralForegroundOnBrand: #ffffff;
-
-  --colorCompoundBrandBackground: #5d546a;
-  --colorCompoundBrandBackgroundHover: #6d647a;
-  --colorCompoundBrandBackgroundPressed: #4d445a;
-  --colorCompoundBrandForeground1: #5d546a;
-  --colorCompoundBrandStroke1: #5d546a;
-
-  --colorNeutralBackground1: #f7f3ed;
-  --colorNeutralBackground2: #ffffff;
-  --colorNeutralBackground3: #fffcfa;
-  --colorNeutralBackground1Hover: #efe9e1;
-  --colorNeutralBackground1Pressed: #e7dfd5;
-  --colorNeutralBackground1Selected: #e7dfd5;
-
-  --colorNeutralForeground1: #2a2630;
-  --colorNeutralForeground2: #5d546a;
-  --colorNeutralForeground3: #7a7088;
-  --colorNeutralForegroundDisabled: #a9a0b0;
-
-  --colorNeutralStroke1: #b8a9c9;
-  --colorNeutralStroke2: #d8d1e6;
-  --colorNeutralStrokeAccessible: #5d546a;
-  --colorNeutralStrokeAccessibleHover: #4d445a;
-  --colorNeutralStrokeDisabled: #d8d1e6;
-
-  --colorStatusSuccessForeground1: #a8b59f;
-  --colorStatusWarningForeground1: #a9b8c8;
-
-  --theme-lavender-swatch: #5d546a;
-}
-
-/* ── caramel（焦糖）── */
-html.theme-caramel {
-  --colorBrandBackground: #8a624a;
-  --colorBrandBackgroundHover: #9a725a;
-  --colorBrandBackgroundPressed: #6f4f39;
-  --colorBrandBackgroundSelected: #6f4f39;
-  --colorBrandForeground1: #8a624a;
-  --colorBrandForegroundLink: #8a624a;
-  --colorBrandForegroundLinkHover: #a67c62;
-  --colorBrandForegroundLinkPressed: #6f4f39;
-  --colorBrandStroke1: #8a624a;
-  --colorBrandStroke2: #f4e6c8;
-  --colorNeutralForegroundOnBrand: #ffffff;
-
-  --colorCompoundBrandBackground: #8a624a;
-  --colorCompoundBrandBackgroundHover: #9a725a;
-  --colorCompoundBrandBackgroundPressed: #6f4f39;
-  --colorCompoundBrandForeground1: #8a624a;
-  --colorCompoundBrandStroke1: #8a624a;
-
-  --colorNeutralBackground1: #f4e6c8;
-  --colorNeutralBackground2: #fbf6eb;
-  --colorNeutralBackground3: #fffdf6;
-  --colorNeutralBackground1Hover: #eddcba;
-  --colorNeutralBackground1Pressed: #e6d2ac;
-  --colorNeutralBackground1Selected: #e6d2ac;
-
-  --colorNeutralForeground1: #3a2a20;
-  --colorNeutralForeground2: #6f5f4a;
-  --colorNeutralForeground3: #8b7b66;
-  --colorNeutralForegroundDisabled: #b0a080;
-
-  --colorNeutralStroke1: #dcc9a3;
-  --colorNeutralStroke2: #b99c6d;
-  --colorNeutralStrokeAccessible: #6f5f4a;
-  --colorNeutralStrokeAccessibleHover: #5c4d3a;
-  --colorNeutralStrokeDisabled: #b99c6d;
-
-  --colorStatusSuccessForeground1: #5f6b4f;
-  --colorStatusWarningForeground1: #8a624a;
-
-  --theme-caramel-swatch: #8a624a;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -585,6 +353,99 @@ html.page-card {
   --colorCompoundBrandStroke1: #4a7db5;
 
   /* ── Page card tokens（引用上方覆盖后的 Fluent token）── */
+  --pageCardBg: var(--colorNeutralBackground2);
+  --pageCardSurface: var(--colorNeutralBackground1);
+  --pageCardRadius: 16px;
+  --pageCardShadow: var(--elevation4);
+  --pageCardTextPrimary: var(--colorNeutralForeground1);
+  --pageCardTextSecondary: var(--colorNeutralForeground3);
+  --pageCardBorder: var(--colorNeutralStroke2);
+  --pageCardSearchBg: var(--colorNeutralBackground1Hover);
+  --pageCardSearchText: var(--colorNeutralForeground3);
+
+  /* ── 卡牌间距与内边距 ── */
+  --pageCardGap: var(--spacingVerticalM);
+  --pageCardPadding: var(--spacingHorizontalL);
+
+  /* ── 页面背景 ── */
+  --colorNeutralBackground3: #f5f6f8;
+}
+
+/* ── Card style: dark theme ── */
+html.page-card.dark {
+  /* ── Surface contexts ── */
+  --colorNeutralBackground1: #2a2826;
+  --colorNeutralBackground2: #1e1c1a;
+  --colorNeutralBackground3: #1e1c1a;
+  --colorNeutralBackgroundAlpha: rgba(30, 28, 26, 0.85);
+  --colorNeutralBackgroundAlpha2: rgba(30, 28, 26, 0.6);
+  --colorNeutralBackground1Hover: #343230;
+  --colorNeutralBackground1Pressed: #3e3c3a;
+  --colorNeutralBackground1Selected: #3e3c3a;
+  --colorNeutralBackground2Hover: #2e2c2a;
+  --colorNeutralBackground2Pressed: #383634;
+  --colorNeutralBackground2Selected: #383634;
+  --colorNeutralBackground3Hover: #2e2c2a;
+  --colorNeutralBackground3Pressed: #383634;
+  --colorNeutralBackground3Selected: #383634;
+
+  /* ── Text ── */
+  --colorNeutralForeground1: #e8e6e4;
+  --colorNeutralForeground2: #a8a6a4;
+  --colorNeutralForeground3: #787674;
+  --colorNeutralForegroundDisabled: #585654;
+  --colorNeutralForegroundOnBrand: #ffffff;
+
+  /* ── Strokes ── */
+  --colorNeutralStroke1: #4a4846;
+  --colorNeutralStroke2: #3a3836;
+  --colorNeutralStrokeAccessible: #787674;
+  --colorNeutralStrokeAccessibleHover: #888684;
+  --colorNeutralStrokeDisabled: #3a3836;
+
+  /* ── Elevation (darker shadows for dark bg) ── */
+  --shadowAmbient: rgba(0, 0, 0, 0.32);
+  --shadowKey: rgba(0, 0, 0, 0.36);
+  --shadowAmbientLighter: rgba(0, 0, 0, 0.16);
+  --shadowKeyLighter: rgba(0, 0, 0, 0.18);
+  --shadowAmbientDarker: rgba(0, 0, 0, 0.48);
+  --shadowKeyDarker: rgba(0, 0, 0, 0.52);
+  --elevation2: 0 0 2px var(--shadowAmbient), 0 2px 4px var(--shadowKey);
+  --elevation4: 0 0 2px var(--shadowAmbient), 0 2px 6px var(--shadowKey);
+  --elevation8: 0 0 2px var(--shadowAmbient), 0 4px 8px var(--shadowKey);
+  --elevation16: 0 0 2px var(--shadowAmbient), 0 8px 16px var(--shadowKey);
+  --elevation28: 0 0 8px var(--shadowAmbient), 0 14px 28px var(--shadowKey);
+  --elevation64: 0 0 8px var(--shadowAmbient), 0 32px 64px var(--shadowKey);
+
+  /* ── Status ── */
+  --colorStatusDangerBackground1: #d9443a;
+  --colorStatusDangerForeground1: #d9443a;
+  --colorStatusDangerBackground2: #3e1d1a;
+  --colorStatusSuccessBackground1: #3a8a3a;
+  --colorStatusSuccessForeground1: #3a8a3a;
+  --colorStatusSuccessBackground2: #1a2e1a;
+  --colorStatusWarningBackground1: #d49220;
+  --colorStatusWarningForeground1: #d49220;
+  --colorStatusWarningBackground2: #3a2e0f;
+
+  /* ── Brand colors (卡牌风格深色使用柔和蓝) ── */
+  --colorBrandBackground: #5a8dc5;
+  --colorBrandBackgroundHover: #7aade5;
+  --colorBrandBackgroundPressed: #4a7db5;
+  --colorBrandBackgroundSelected: #4a7db5;
+  --colorBrandForeground1: #7aade5;
+  --colorBrandForegroundLink: #7aade5;
+  --colorBrandForegroundLinkHover: #9ac5f5;
+  --colorBrandForegroundLinkPressed: #5a8dc5;
+  --colorBrandStroke1: #5a8dc5;
+  --colorBrandStroke2: #1a3052;
+  --colorCompoundBrandBackground: #5a8dc5;
+  --colorCompoundBrandBackgroundHover: #7aade5;
+  --colorCompoundBrandBackgroundPressed: #4a7db5;
+  --colorCompoundBrandForeground1: #7aade5;
+  --colorCompoundBrandStroke1: #5a8dc5;
+
+  /* ── Page card tokens ── */
   --pageCardBg: var(--colorNeutralBackground2);
   --pageCardSurface: var(--colorNeutralBackground1);
   --pageCardRadius: 16px;

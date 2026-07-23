@@ -29,7 +29,7 @@ function syncFluentTheme() {
 }
 
 async function bootstrap() {
-  // 先恢复持久化的颜色主题，确保 <html> theme-* / .dark 在渲染前已应用
+  // 确保 <html> .dark 在渲染前已应用（在 index.html 中通过内联脚本处理）
   await initializeStartupPreferences();
 
   syncFluentTheme();

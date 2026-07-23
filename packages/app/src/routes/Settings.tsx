@@ -4,10 +4,6 @@ import { Preferences } from "@capacitor/preferences";
 import { Capacitor } from "@capacitor/core";
 import FluentIcon from "../components/ui/FluentIcon";
 import {
-  theme,
-  resolvedTheme,
-  setThemePersisted,
-  type Theme,
   listQuality,
   setListQuality,
   detailQuality,
@@ -45,12 +41,7 @@ import PictelioIcon from "../components/PictelioIcon";
 import { checkForUpdate } from "../services/updateService";
 import { imageHostState, setMasterEnabled, modeLabel } from "../stores/imageHostStore";
 import ThemeSelector from "../components/ThemeSelector";
-import { colorTheme, pageStyleTheme, setPageStyleTheme } from "@/stores/themeStore";
 import PageTransition from "../components/PageTransition";
-
-function handleThemeChange(newTheme: Theme) {
-  setThemePersisted(newTheme);
-}
 
 async function handleCheckUpdate() {
   if (isCheckingUpdate()) {
@@ -191,157 +182,15 @@ const Settings: Component = () => {
               显示与交互
             </p>
 
-            {/* Theme picker row — 仅 Fluent 默认主题 + Fluent 页面风格支持明暗切换 */}
-            <Show when={colorTheme() === "fluent" && pageStyleTheme() === "fluent"}>
-              <div class="flex items-center justify-between py-3">
-                <div class="flex items-center gap-3">
-                  <div class="relative w-6 h-6 flex-shrink-0">
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        opacity: resolvedTheme() === "dark" ? 0 : 1,
-                        transition: "opacity var(--durationFast) var(--curveEasyEase)",
-                      }}
-                    >
-                      <FluentIcon name="weatherSunny" size={24} active />
-                    </div>
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        opacity: resolvedTheme() === "dark" ? 1 : 0,
-                        transition: "opacity var(--durationFast) var(--curveEasyEase)",
-                      }}
-                    >
-                      <FluentIcon name="weatherMoon" size={24} active />
-                    </div>
-                  </div>
-                  <div>
-                    <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                      明暗主题
-                    </p>
-                    <p class="[font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                      {(theme() as Theme) === "light"
-                        ? "始终浅色"
-                        : (theme() as Theme) === "dark"
-                          ? "始终深色"
-                          : "跟随系统"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Three-segment theme selector */}
-                <div class="flex rounded-[var(--borderRadiusCircular)] overflow-hidden border border-[var(--colorNeutralStroke2)]">
-                  {(["light", "system", "dark"] as const).map((t) => (
-                    <button
-                      onClick={() => handleThemeChange(t)}
-                      class={`px-3 py-1.5 text-xs font-medium transition-colors duration-[var(--durationNormal)] ease-[var(--curveEasyEase)] ${
-                        theme() === t
-                          ? "bg-[var(--colorCompoundBrandBackground)] text-[var(--colorNeutralForegroundOnBrand)]"
-                          : "bg-transparent text-[var(--colorNeutralForeground2)] hover:text-[var(--colorNeutralForeground1)]"
-                      }`}
-                      aria-label={t === "light" ? "浅色" : t === "dark" ? "深色" : "跟随系统"}
-                    >
-                      {t === "light" ? "☀️ 浅色" : t === "dark" ? "🌙 深色" : "🔄 跟随"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </Show>
-
-            {/* Color theme selector */}
+            {/* 主题与风格选择器 */}
             <div class="py-3">
-              <div class="flex items-center gap-2 mb-2">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                  class="text-[var(--colorNeutralForeground2)] flex-shrink-0"
-                >
-                  <path
-                    d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 1.5a8.5 8.5 0 1 1 0 17 8.5 8.5 0 0 1 0-17zM7.75 9a.75.75 0 0 0 0 1.5h8.5a.75.75 0 0 0 0-1.5h-8.5zM7 12.75a.75.75 0 0 0 .75.75h8.5a.75.75 0 0 0 0-1.5h-8.5a.75.75 0 0 0-.75.75zM7.75 16a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5h-4.5z"
-                    fill="currentColor"
-                  />
-                </svg>
-                <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                  颜色主题
-                </p>
-              </div>
+              <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug mb-2">
+                主题与风格
+              </p>
               <ThemeSelector />
               <p class="mt-2 [font-size:var(--fontSizeBase200)] text-[var(--colorNeutralForeground3)] leading-snug">
-                选择应用整体配色；Fluent 默认支持明暗切换，其他主题为单模式
+                卡片风格提供更大的圆角和白色卡片容器；明暗主题在所有风格下均可用
               </p>
-            </div>
-
-            {/* 页面风格 — 卡牌布局切换 */}
-            <div class="py-3">
-              <div class="flex items-center gap-2 mb-2">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                  class="text-[var(--colorNeutralForeground2)] flex-shrink-0"
-                >
-                  <path
-                    d="M6.25 3A3.25 3.25 0 0 0 3 6.25v1.5A3.25 3.25 0 0 0 6.25 11h1.5A3.25 3.25 0 0 0 11 7.75v-1.5A3.25 3.25 0 0 0 7.75 3zm0 1.5h1.5c.966 0 1.75.784 1.75 1.75v1.5c0 .966-.784 1.75-1.75 1.75h-1.5A1.75 1.75 0 0 1 4.5 7.75v-1.5c0-.966.784-1.75 1.75-1.75zm0 7A3.25 3.25 0 0 0 3 14.75v3A3.25 3.25 0 0 0 6.25 21h1.5A3.25 3.25 0 0 0 11 17.75v-3A3.25 3.25 0 0 0 7.75 11zm0 1.5h1.5c.966 0 1.75.784 1.75 1.75v3c0 .966-.784 1.75-1.75 1.75h-1.5A1.75 1.75 0 0 1 4.5 17.75v-3c0-.966.784-1.75 1.75-1.75zM14.75 3A3.25 3.25 0 0 0 13 6.25v11.5A3.25 3.25 0 0 0 16.25 21h1.5A3.25 3.25 0 0 0 21 17.75V6.25A3.25 3.25 0 0 0 17.75 3zm0 1.5h1.5c.966 0 1.75.784 1.75 1.75v11.5c0 .966-.784 1.75-1.75 1.75h-1.5a1.75 1.75 0 0 1-1.75-1.75V6.25c0-.966.784-1.75 1.75-1.75z"
-                    fill="currentColor"
-                  />
-                </svg>
-                <p class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] leading-snug">
-                  页面风格
-                </p>
-              </div>
-              <div class="grid grid-cols-2 gap-3" role="group" aria-label="页面风格选择">
-                {[
-                  { id: "fluent" as const, label: "Fluent 默认", desc: "标准 Fluent 卡片" },
-                  { id: "card" as const, label: "卡牌风格", desc: "纯白卡片 + 浅灰背景" },
-                ].map((opt) => {
-                  const selected = () => pageStyleTheme() === opt.id;
-                  return (
-                    <button
-                      type="button"
-                      role="button"
-                      aria-pressed={selected()}
-                      aria-label={opt.label}
-                      onClick={() => setPageStyleTheme(opt.id)}
-                      class="flex flex-col items-center gap-1 p-3 rounded-[var(--borderRadiusMedium)] border transition-all duration-[var(--durationFast)] appearance-none bg-transparent cursor-pointer"
-                      classList={{
-                        "border-[var(--colorCompoundBrandStroke)]": selected(),
-                        "bg-[var(--colorNeutralBackground2)]": selected(),
-                        "border-[var(--colorNeutralStroke2)]": !selected(),
-                        "hover:border-[var(--colorNeutralStroke1)]": !selected(),
-                        "hover:bg-[var(--colorNeutralBackground2)]": !selected(),
-                        "active:scale-[0.97]": true,
-                      }}
-                    >
-                      <span
-                        class="w-8 h-8 rounded-[var(--borderRadiusMedium)] border border-[var(--colorNeutralStroke2)] block"
-                        style={{
-                          "background-color":
-                            opt.id === "card" ? "#F5F6F8" : "var(--colorNeutralBackground2)",
-                        }}
-                      />
-                      <span
-                        class="[font-size:var(--fontSizeBase200)] font-medium text-center leading-tight"
-                        classList={{
-                          "text-[var(--colorCompoundBrandForeground1)]": selected(),
-                          "text-[var(--colorNeutralForeground1)]": !selected(),
-                        }}
-                      >
-                        {opt.label}
-                      </span>
-                      <span class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] text-center leading-tight">
-                        {opt.desc}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             {/* 布局设置入口 — 点击进入独立页面 */}

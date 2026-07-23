@@ -1,23 +1,23 @@
-// @vitest-environment browser
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@solidjs/testing-library";
-import "@/styles/tokens.css";
+import { render, screen } from "solid-testing-library";
 
 vi.mock("@/stores/themeStore", () => ({
-  colorTheme: () => "rose",
-  setColorTheme: vi.fn(),
+  pageStyleTheme: () => "card",
+  setPageStyleTheme: vi.fn(),
+  PAGE_STYLE_THEME_IDS: ["fluent", "card"],
+}));
+
+vi.mock("@/stores/uiStore", () => ({
+  theme: () => "system",
+  setThemePersisted: vi.fn(),
 }));
 
 import ThemeSelector from "@/components/ThemeSelector";
 
-describe("ThemeSelector selection indicator", () => {
-  it("shows a selected indicator on the active theme", () => {
+describe("ThemeSelector card style selected", () => {
+  it("marks card style as selected", async () => {
     render(() => <ThemeSelector />);
-
-    const selectedButton = screen.getByLabelText("玫瑰");
-    expect(selectedButton.querySelector("[data-testid='selected-indicator']")).not.toBeNull();
-
-    const unselectedButton = screen.getByLabelText("海岸");
-    expect(unselectedButton.querySelector("[data-testid='selected-indicator']")).toBeNull();
+    const cardBtn = screen.getByLabelText("卡片风格");
+    expect(cardBtn.getAttribute("aria-pressed")).toBe("true");
   });
 });
