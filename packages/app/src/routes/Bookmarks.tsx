@@ -5,7 +5,6 @@ import UserAvatar from "../components/UserAvatar";
 import { setCurrentTab, contentType } from "../stores/uiStore";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsDrawer from "../components/SettingsDrawer";
 import IllustBookmarks from "./IllustBookmarks";
 import NovelBookmarks from "./NovelBookmarks";
 import { scrollToTop } from "../utils/scrollToTop";
@@ -33,7 +32,7 @@ const Bookmarks: Component = () => {
             onDblClick={scrollToTop}
           >
             <h1
-              class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none flex items-center gap-2 min-w-0"
+              class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--pageCardTextPrimary)] tracking-tight leading-none flex items-center gap-2 min-w-0"
               classList={{ "cursor-pointer": isLoggedIn() }}
               onClick={() => isLoggedIn() && void navigate({ to: "/me" })}
             >
@@ -52,8 +51,6 @@ const Bookmarks: Component = () => {
           </Show>
         </div>
       </PageTransition>
-
-      <SettingsDrawer />
 
       <NavBar />
     </>

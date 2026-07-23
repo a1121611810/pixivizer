@@ -42,6 +42,7 @@ import { warmCacheFromDisk } from "@/utils/imageLoader";
 import { loadReportedIds } from "@/stores/reportStore";
 import { loadBlockedIds } from "@/stores/blockStore";
 import { loadImageHostPreference } from "@/stores/imageHostStore";
+import { loadPageStyleThemePreference } from "@/stores/themeStore";
 
 const StartupUpdateDialog = lazy(() => import("@/components/StartupUpdateDialog"));
 
@@ -108,6 +109,7 @@ const RootLayout: Component = () => {
       loadContentTypePreference(),
       loadImageCachePrefs(),
       loadNovelLayoutModePreference(),
+      loadPageStyleThemePreference(),
     ]);
 
     // Load user content moderation state — 并行加载

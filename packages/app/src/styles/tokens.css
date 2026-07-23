@@ -180,6 +180,17 @@
   --colorImageBadgeBackground: rgba(0, 0, 0, 0.5);
   --colorImageBadgeForeground: #ffffff;
 
+  /* ── Page card style tokens ── */
+  --pageCardBg: var(--colorNeutralBackground2);
+  --pageCardSurface: var(--colorNeutralBackground1);
+  --pageCardRadius: var(--borderRadiusXLarge);
+  --pageCardShadow: var(--elevation4);
+  --pageCardTextPrimary: var(--colorNeutralForeground1);
+  --pageCardTextSecondary: var(--colorNeutralForeground3);
+  --pageCardBorder: var(--colorNeutralStroke2);
+  --pageCardSearchBg: var(--colorNeutralBackground3);
+  --pageCardSearchText: var(--colorNeutralForegroundDisabled);
+
   /* ── Color theme swatches (always defined so the selector is visible in any theme) ── */
   --theme-coast-swatch: #3a506b;
   --theme-rose-swatch: #a77c74;
@@ -485,4 +496,102 @@ html.theme-caramel {
   --colorStatusWarningForeground1: #8a624a;
 
   --theme-caramel-swatch: #8a624a;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Page style: card-based layout tokens
+   Applied via html.page-card by themeApplier.ts
+   ═══════════════════════════════════════════════════════ */
+
+html.page-card {
+  /* ── Surface contexts ── */
+  --colorNeutralBackground1: #ffffff;
+  --colorNeutralBackground2: #f5f6f8;
+  --colorNeutralBackground3: #f5f6f8;
+  --colorNeutralBackgroundAlpha: rgba(245, 246, 248, 0.85);
+  --colorNeutralBackgroundAlpha2: rgba(245, 246, 248, 0.6);
+  --colorNeutralBackground1Hover: #f0f0f0;
+  --colorNeutralBackground1Pressed: #e5e5e5;
+  --colorNeutralBackground1Selected: #e5e5e5;
+  --colorNeutralBackground2Hover: #ebebeb;
+  --colorNeutralBackground2Pressed: #e0e0e0;
+  --colorNeutralBackground2Selected: #e0e0e0;
+  --colorNeutralBackground3Hover: #ebebeb;
+  --colorNeutralBackground3Pressed: #e0e0e0;
+  --colorNeutralBackground3Selected: #e0e0e0;
+
+  /* ── Text ── */
+  --colorNeutralForeground1: #1a1a1a;
+  --colorNeutralForeground2: #555;
+  --colorNeutralForeground3: #999;
+  --colorNeutralForegroundDisabled: #bbb;
+  --colorNeutralForegroundOnBrand: #ffffff;
+
+  /* ── Strokes ── */
+  --colorNeutralStroke1: #d5d5d5;
+  --colorNeutralStroke2: #ddd;
+  --colorNeutralStrokeAccessible: #999;
+  --colorNeutralStrokeAccessibleHover: #777;
+  --colorNeutralStrokeDisabled: #e8e8e8;
+
+  /* ── Elevation ── */
+  --shadowAmbient: rgba(0, 0, 0, 0.06);
+  --shadowKey: rgba(0, 0, 0, 0.07);
+  --shadowAmbientLighter: rgba(0, 0, 0, 0.03);
+  --shadowKeyLighter: rgba(0, 0, 0, 0.04);
+  --shadowAmbientDarker: rgba(0, 0, 0, 0.12);
+  --shadowKeyDarker: rgba(0, 0, 0, 0.14);
+  --elevation2: 0 0 2px var(--shadowAmbient), 0 2px 4px var(--shadowKey);
+  --elevation4: 0 0 2px var(--shadowAmbient), 0 2px 6px var(--shadowKey);
+  --elevation8: 0 0 2px var(--shadowAmbient), 0 4px 8px var(--shadowKey);
+  --elevation16: 0 0 2px var(--shadowAmbient), 0 8px 16px var(--shadowKey);
+  --elevation28: 0 0 8px var(--shadowAmbient), 0 14px 28px var(--shadowKey);
+  --elevation64: 0 0 8px var(--shadowAmbient), 0 32px 64px var(--shadowKey);
+
+  /* ── Border radius（卡牌风格使用大圆角）── */
+  --borderRadiusMedium: 12px;
+  --borderRadiusLarge: 16px;
+  --borderRadiusXLarge: 16px;
+  --borderRadius2XLarge: 16px;
+  --borderRadius3XLarge: 16px;
+  --borderRadius4XLarge: 16px;
+
+  /* ── Status backgrounds ── */
+  --colorStatusDangerBackground1: #d9443a;
+  --colorStatusDangerForeground1: #d9443a;
+  --colorStatusDangerBackground2: #fde7e5;
+  --colorStatusSuccessBackground1: #2e8b2e;
+  --colorStatusSuccessForeground1: #2e8b2e;
+  --colorStatusSuccessBackground2: #dff6dd;
+  --colorStatusWarningBackground1: #e89420;
+  --colorStatusWarningForeground1: #e89420;
+  --colorStatusWarningBackground2: #fff4ce;
+
+  /* ── Brand colors（卡牌风格使用柔和蓝）── */
+  --colorBrandBackground: #4a7db5;
+  --colorBrandBackgroundHover: #5a8dc5;
+  --colorBrandBackgroundPressed: #3a6da5;
+  --colorBrandBackgroundSelected: #3a6da5;
+  --colorBrandForeground1: #4a7db5;
+  --colorBrandForegroundLink: #4a7db5;
+  --colorBrandForegroundLinkHover: #6a9dd5;
+  --colorBrandForegroundLinkPressed: #3a6da5;
+  --colorBrandStroke1: #4a7db5;
+  --colorBrandStroke2: #d2e3f5;
+  --colorCompoundBrandBackground: #4a7db5;
+  --colorCompoundBrandBackgroundHover: #5a8dc5;
+  --colorCompoundBrandBackgroundPressed: #3a6da5;
+  --colorCompoundBrandForeground1: #4a7db5;
+  --colorCompoundBrandStroke1: #4a7db5;
+
+  /* ── Page card tokens（引用上方覆盖后的 Fluent token）── */
+  --pageCardBg: var(--colorNeutralBackground2);
+  --pageCardSurface: var(--colorNeutralBackground1);
+  --pageCardRadius: 16px;
+  --pageCardShadow: var(--elevation4);
+  --pageCardTextPrimary: var(--colorNeutralForeground1);
+  --pageCardTextSecondary: var(--colorNeutralForeground3);
+  --pageCardBorder: var(--colorNeutralStroke2);
+  --pageCardSearchBg: var(--colorNeutralBackground1Hover);
+  --pageCardSearchText: var(--colorNeutralForeground3);
 }

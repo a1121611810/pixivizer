@@ -16,7 +16,6 @@ import { viewedUser } from "../stores/userStore";
 import UserWorksFeed from "../components/UserWorksFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsDrawer from "../components/SettingsDrawer";
 import { layoutMode } from "../stores/uiStore";
 import { scrollToTop } from "../utils/scrollToTop";
 import { createScrollDrivenVisibility } from "../primitives/createScrollDrivenVisibility";
@@ -71,7 +70,7 @@ const UserIllusts: Component = () => {
             >
               ←
             </fluent-button>
-            <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none truncate">
+            <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--pageCardTextPrimary)] tracking-tight leading-none truncate">
               {(viewedUser() || user())?.name ?? ""} 的作品
             </h1>
           </header>
@@ -130,8 +129,6 @@ const UserIllusts: Component = () => {
           />
         </div>
       </PageTransition>
-
-      <SettingsDrawer />
 
       <NavBar />
     </>

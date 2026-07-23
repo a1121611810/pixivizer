@@ -3,7 +3,6 @@ import { useNavigate, useRouter } from "@tanstack/solid-router";
 import { resolveImageUrl } from "../utils/imageLoader";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import SettingsDrawer from "../components/SettingsDrawer";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { SENTINEL_MARGIN } from "../primitives/rootMargins";
 import { createSentinel } from "@/primitives/visibility";
@@ -84,7 +83,7 @@ const FollowListPage: Component<Props> = (props) => {
             >
               ←
             </fluent-button>
-            <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--colorNeutralForeground1)] tracking-tight leading-none">
+            <h1 class="[font-size:var(--fontSizeBase400)] font-semibold text-[var(--pageCardTextPrimary)] tracking-tight leading-none">
               {props.mode === "following" ? "关注" : "粉丝"}
             </h1>
           </header>
@@ -116,10 +115,10 @@ const FollowListPage: Component<Props> = (props) => {
                       />
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--colorNeutralForeground1)] truncate">
+                      <p class="[font-size:var(--fontSizeBase300)] font-semibold text-[var(--pageCardTextPrimary)] truncate">
                         {preview.user.name}
                       </p>
-                      <p class="[font-size:var(--fontSizeBase100)] text-[var(--colorNeutralForeground3)] truncate">
+                      <p class="[font-size:var(--fontSizeBase100)] text-[var(--pageCardTextSecondary)] truncate">
                         @{preview.user.account}
                       </p>
                     </div>
@@ -188,8 +187,6 @@ const FollowListPage: Component<Props> = (props) => {
           </div>
         </div>
       </PageTransition>
-
-      <SettingsDrawer />
 
       <NavBar />
     </>
