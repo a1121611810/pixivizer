@@ -87,7 +87,6 @@ const Feed: Component = () => {
         </div>
       </PageTransition>
 
-
       <NavBar />
     </>
   );

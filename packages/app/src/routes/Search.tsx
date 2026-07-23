@@ -55,7 +55,7 @@ const Search: Component = () => {
         addToHistory(newTags.join(" "));
         void navigate({
           to: "/search",
-          search: { word: newTags.join(" "), scope: store.scope(), sort: store.sort() },
+          search: { word: newTags.join(" "), scope: store.scope(), sort: store.toSorted() },
         });
         store.executeSearch();
       }
@@ -183,7 +183,7 @@ const Search: Component = () => {
       clearTimeout(debounceTimer);
       void navigate({
         to: "/search",
-        search: { word: kw, scope, sort: store.sort() },
+        search: { word: kw, scope, sort: store.toSorted() },
       });
       store.executeSearch();
     }
@@ -357,9 +357,9 @@ const Search: Component = () => {
                       class="[font-size:var(--fontSizeBase200)] transition-colors duration-[var(--durationFast)] focus-visible:outline-[var(--colorStrokeFocus2)] focus-visible:outline-2 focus-visible:outline-offset-1"
                       classList={{
                         "text-[var(--colorBrandForeground1)] font-semibold":
-                          store.sort() === opt.value,
+                          store.toSorted() === opt.value,
                         "text-[var(--colorNeutralForeground3)] hover:text-[var(--colorNeutralForeground1)]":
-                          store.sort() !== opt.value,
+                          store.toSorted() !== opt.value,
                       }}
                       onClick={() => handleSortChange(opt.value)}
                     >
@@ -383,7 +383,7 @@ const Search: Component = () => {
                 addToHistory(word);
                 void navigate({
                   to: "/search",
-                  search: { word, scope: store.scope(), sort: store.sort() },
+                  search: { word, scope: store.scope(), sort: store.toSorted() },
                 });
                 store.executeSearch();
               }}

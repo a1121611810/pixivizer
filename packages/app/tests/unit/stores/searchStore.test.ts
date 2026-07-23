@@ -8,7 +8,7 @@ describe("searchStore", () => {
       const store = createSearchStore();
       expect(store.keyword()).toBe("");
       expect(store.scope()).toBe("all");
-      expect(store.sort()).toBe("date_desc");
+      expect(store.toSorted()).toBe("date_desc");
       expect(store.results()).toEqual([]);
       expect(store.loading()).toBe(false);
       expect(store.error()).toBeNull();
@@ -43,9 +43,9 @@ describe("searchStore", () => {
     createRoot((dispose) => {
       const store = createSearchStore();
       store.setSort("popular_desc");
-      expect(store.sort()).toBe("popular_desc");
+      expect(store.toSorted()).toBe("popular_desc");
       store.setSort("date_asc");
-      expect(store.sort()).toBe("date_asc");
+      expect(store.toSorted()).toBe("date_asc");
       dispose();
     });
   });

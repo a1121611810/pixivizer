@@ -157,7 +157,6 @@ export const setThemePersisted = async (newTheme: Theme): Promise<void> => {
   }
 };
 
-
 export const layoutMode = () => state.layoutMode;
 export const setLayoutMode = async (mode: LayoutMode): Promise<void> => {
   setState("layoutMode", mode);
