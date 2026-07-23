@@ -59,7 +59,6 @@ let _authInitialized = false;
 export async function initializeAuth() {
   if (_authInitialized) return;
   _authInitialized = true;
-  setIsLoading(true);
   let token = await getRefreshToken();
   if (!token) {
     token = await migrateRefreshTokenFromPreferences();
@@ -72,7 +71,6 @@ export async function initializeAuth() {
     setRefreshPromise(promise);
     await promise;
   }
-  setIsLoading(false);
 }
 
 async function performRefresh(token: string) {

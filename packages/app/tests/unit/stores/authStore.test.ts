@@ -58,10 +58,10 @@ describe("authStore", () => {
   });
 
   describe("initializeAuth", () => {
-    it("no token found: finishes loading, stays logged out", async () => {
+    it("no token found: stays logged out (loading state managed by RootLayout)", async () => {
       const { initializeAuth, isLoading, isLoggedIn } = await loadStore();
       await initializeAuth();
-      expect(isLoading()).toBe(false);
+      expect(isLoading()).toBe(true);
       expect(isLoggedIn()).toBe(false);
     });
 
@@ -76,7 +76,7 @@ describe("authStore", () => {
       const { initializeAuth, isLoading, isLoggedIn, user } = await loadStore();
       await initializeAuth();
 
-      expect(isLoading()).toBe(false);
+      expect(isLoading()).toBe(true);
       expect(isLoggedIn()).toBe(true);
       expect(user()?.id).toBe(1);
       expect(mockRefreshToken).toHaveBeenCalledWith("valid-refresh-token");
@@ -91,7 +91,7 @@ describe("authStore", () => {
       const { initializeAuth, isLoading, isLoggedIn, user } = await loadStore();
       await initializeAuth();
 
-      expect(isLoading()).toBe(false);
+      expect(isLoading()).toBe(true);
       expect(isLoggedIn()).toBe(false);
       expect(user()).toBeNull();
       expect(mockSecureRemove).toHaveBeenCalled();
@@ -106,9 +106,10 @@ describe("authStore", () => {
         user: { id: 2, name: "Migrated", account: "mig" },
       });
 
-      const { initializeAuth, isLoggedIn, user } = await loadStore();
+      const { initializeAuth, isLoading, isLoggedIn, user } = await loadStore();
       await initializeAuth();
 
+      expect(isLoading()).toBe(true);
       expect(isLoggedIn()).toBe(true);
       expect(user()?.id).toBe(2);
       expect(mockRefreshToken).toHaveBeenCalledWith("migrated-token");
