@@ -9,7 +9,7 @@ const PAGE_STYLE_OPTIONS: {
   icon: Parameters<typeof FluentIcon>[0]["name"];
 }[] = [
   { id: "fluent", label: "Fluent 默认", icon: "home" },
-  { id: "card", label: "卡片风格", icon: "image" },
+  { id: "card", label: "卡片式", icon: "image" },
 ];
 
 const THEME_OPTIONS: {
