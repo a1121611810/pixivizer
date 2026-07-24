@@ -1,17 +1,10 @@
-import { type Component, Show, For, createSignal, createEffect, onCleanup } from "solid-js";
+import { type Component, Show, For, createSignal, createEffect } from "solid-js";
 import { useNavigate } from "@tanstack/solid-router";
-import { createSentinel } from "@/primitives/visibility";
 import type { PixivComment } from "../api/types";
-import { SHEET_LAZY_MARGIN } from "../primitives/rootMargins";
+import { type CommentContentType } from "../api/comment";
 import { user } from "../stores/authStore";
 import { resolveImageUrl } from "../utils/imageLoader";
-import {
-  type CommentContentType,
-  loadRootComments,
-  loadRootCommentsNext,
-  postComment,
-  deleteComment,
-} from "../api/comment";
+import { useComments } from "../primitives/useComments";
 
 interface CommentOverlayProps {
   type: CommentContentType;
@@ -22,93 +15,23 @@ interface CommentOverlayProps {
 
 const CommentOverlay: Component<CommentOverlayProps> = (props) => {
   const navigate = useNavigate();
-  const [rootComments, setRootComments] = createSignal<PixivComment[]>([]);
-  const [hasLoaded, setHasLoaded] = createSignal(false);
-  const [nextUrl, setNextUrl] = createSignal<string | null>(null);
-  const [loadingMore, setLoadingMore] = createSignal(false);
   const [inputText, setInputText] = createSignal("");
   const [replyingTo, setReplyingTo] = createSignal<PixivComment | null>(null);
-  const [error, setError] = createSignal<string | null>(null);
-  const [postError, setPostError] = createSignal<string | null>(null);
-  const [posting, setPosting] = createSignal(false);
-  const [deletingId, setDeletingId] = createSignal<number | null>(null);
-
-  // 首次数据加载
-  createEffect(() => {
-    if (!props.isOpen) {
-      return;
-    }
-    const ac = new AbortController();
-    setError(null);
-    setHasLoaded(false);
-    setRootComments([]);
-    setNextUrl(null);
-
-    loadRootComments(props.type, props.targetId, ac.signal)
-      .then((res) => {
-        setRootComments(res.comments);
-        setNextUrl(res.next_url);
-        setHasLoaded(true);
-      })
-      .catch((error) => {
-        if ((error as { name?: string }).name !== "AbortError") {
-          setError("加载评论失败，请重试");
-        }
-      });
-
-    onCleanup(() => ac.abort());
-  });
-
-  // 分页哨兵
   let inputRef: HTMLInputElement | undefined;
 
-  async function loadMore() {
-    const url = nextUrl();
-    if (!url || loadingMore()) {
-      return;
-    }
-    setLoadingMore(true);
-    try {
-      const res = await loadRootCommentsNext(url);
-      setRootComments((prev) => [...prev, ...res.comments]);
-      setNextUrl(res.next_url);
-    } catch {
-      setError("加载更多失败");
-    } finally {
-      setLoadingMore(false);
-    }
-  }
-
-  const { attach: sentinelAttach } = createSentinel({
-    rootMargin: SHEET_LAZY_MARGIN,
-    enabled: () => nextUrl() !== null && !loadingMore(),
-    onTrigger: () => void loadMore(),
-  });
-
-  // 发表/回复
-  async function handleSubmit() {
-    const text = inputText().trim();
-    if (!text || posting()) {
-      return;
-    }
-    setPosting(true);
-    setPostError(null);
-    try {
-      await postComment(props.type, props.targetId, text, replyingTo()?.id);
-      setInputText("");
-      setReplyingTo(null);
-      // 刷新评论列表
-      const res = await loadRootComments(props.type, props.targetId);
-      setRootComments(res.comments);
-    } catch {
-      setPostError("发送失败，请重试");
-    } finally {
-      setPosting(false);
-    }
-  }
+  const result = useComments(
+    () => props.type,
+    () => props.targetId,
+    () => props.isOpen,
+  );
 
   function handleReply(comment: PixivComment) {
     setReplyingTo(comment);
+    setInputText("");
+  }
+
+  function cancelReply() {
+    setReplyingTo(null);
     setInputText("");
   }
 
@@ -117,9 +40,20 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
     void navigate({ to: `/user/${userId}` });
   }
 
-  function cancelReply() {
-    setReplyingTo(null);
+  // 发表/回复
+  async function handleSubmit() {
+    const text = inputText().trim();
+    if (!text || result.posting()) {
+      return;
+    }
+    await result.post(text, replyingTo()?.id);
     setInputText("");
+    setReplyingTo(null);
+  }
+
+  // 删除
+  async function handleDelete(commentId: number) {
+    await result.remove(commentId);
   }
 
   // 点击回复后自动聚焦到输入框
@@ -128,19 +62,6 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
       inputRef.focus();
     }
   });
-
-  // 删除
-  async function handleDelete(commentId: number) {
-    setDeletingId(commentId);
-    try {
-      await deleteComment(props.type, commentId);
-      setRootComments((prev) => prev.filter((c) => c.id !== commentId));
-    } catch {
-      setError("删除失败");
-    } finally {
-      setDeletingId(null);
-    }
-  }
 
   return (
     <Show when={props.isOpen}>
@@ -183,9 +104,9 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
           </header>
 
           {/* Error banner */}
-          <Show when={error()}>
+          <Show when={result.error()}>
             <div class="px-4 py-2 text-[var(--colorStatusDangerForeground1)] [font-size:var(--fontSizeBase200)] flex items-center gap-2">
-              <span>{error()}</span>
+              <span>{result.error()}</span>
               <button
                 class="underline bg-transparent border-none p-0 cursor-pointer text-[var(--colorBrandForeground1)]"
                 onClick={() => window.location.reload()}
@@ -197,14 +118,14 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
 
           {/* Comment list */}
           <div class="flex-1 overflow-y-auto">
-            <Show when={hasLoaded() && rootComments().length === 0}>
+            <Show when={result.hasLoaded() && result.comments().length === 0}>
               <div class="flex flex-col items-center justify-center py-12 text-[var(--colorNeutralForeground3)] [font-size:var(--fontSizeBase200)]">
                 <p>还没有评论</p>
                 <p class="mt-1">来写第一条吧</p>
               </div>
             </Show>
 
-            <Show when={!hasLoaded()}>
+            <Show when={!result.hasLoaded()}>
               <div class="px-4 py-2 space-y-5">
                 {Array.from({ length: 4 }).map(() => (
                   <div class="flex gap-3">
@@ -246,11 +167,11 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
             </Show>
 
             <div class="px-4 py-2 space-y-4">
-              <For each={rootComments()}>
+              <For each={result.comments()}>
                 {(comment) => (
                   <CommentItem
                     comment={comment}
-                    isDeleting={deletingId() === comment.id}
+                    isDeleting={result.deletingId() === comment.id}
                     currentUserId={user()?.id}
                     onReply={() => handleReply(comment)}
                     onDelete={() => handleDelete(comment.id)}
@@ -260,13 +181,7 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
               </For>
 
               {/* Sentinel for pagination */}
-              <div ref={sentinelAttach}>
-                <Show when={loadingMore()}>
-                  <div class="flex justify-center py-4">
-                    <div class="spinner w-5 h-5" />
-                  </div>
-                </Show>
-              </div>
+              <div ref={result.sentinelAttach} />
             </div>
           </div>
 
@@ -284,9 +199,9 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
               </div>
             </Show>
 
-            <Show when={postError()}>
+            <Show when={result.postError()}>
               <div class="text-[var(--colorStatusDangerForeground1)] [font-size:var(--fontSizeBase200)] mb-1">
-                {postError()}
+                {result.postError()}
               </div>
             </Show>
 
@@ -306,10 +221,10 @@ const CommentOverlay: Component<CommentOverlayProps> = (props) => {
               />
               <button
                 class="h-7 px-3 rounded-[var(--borderRadiusSmall)] bg-[var(--colorBrandBackground)] text-white [font-size:var(--fontSizeBase100)] font-medium border-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.97] transition-all flex-shrink-0"
-                disabled={!inputText().trim() || posting()}
+                disabled={!inputText().trim() || result.posting()}
                 onClick={handleSubmit}
               >
-                {posting() ? "···" : "发送"}
+                {result.posting() ? "···" : "发送"}
               </button>
             </div>
           </div>
