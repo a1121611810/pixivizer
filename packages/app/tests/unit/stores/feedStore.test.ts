@@ -396,6 +396,15 @@ describe("feedStore TQ — loading and error states", () => {
     expect(store.loading()).toBe(false);
   });
 
+  it("refreshing reflects active query fetching state", async () => {
+    getQ("recommended_illust").isFetching = true;
+    setQueryData("recommended_illust", [createIllust(1, "2026-07-01T12:00:00+09:00")], null);
+
+    const store = await import("@/stores/feedStore");
+    store.setRecommendSubTab("illust");
+    expect(store.refreshing()).toBe(true);
+  });
+
   it("error reflects active query error", async () => {
     getQ("recommended_illust").error = {
       type: ApiErrorType.SERVER,
@@ -475,5 +484,20 @@ describe("feedStore TQ — isFeedCached", () => {
     const store = await import("@/stores/feedStore");
     store.setRecommendSubTab("illust");
     expect(store.isFeedCached()).toBe(true);
+  });
+});
+
+describe("feedStore TQ — ensureLoaded", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetQueryMocks();
+    mockCurrentTab = "recommended";
+  });
+
+  it("is a function that returns a promise", async () => {
+    const store = await import("@/stores/feedStore");
+    expect(typeof store.ensureLoaded).toBe("function");
+    const result = store.ensureLoaded();
+    expect(result).toBeInstanceOf(Promise);
   });
 });

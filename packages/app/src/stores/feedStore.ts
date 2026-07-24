@@ -1,17 +1,18 @@
-import { createRoot } from "solid-js";
-import { createInfiniteQuery } from "@tanstack/solid-query";
+import { createSignal, batch } from "solid-js";
+import { createTQFeedStore } from "./shared/createTQFeedStore";
 import { loadRecommended, loadFollow } from "../api/illust";
-import type { PixivIllust, ApiError } from "../api/types";
+import type { PixivIllust } from "../api/types";
 import { currentTab } from "./uiStore";
 import { filterFeedIllusts } from "../utils/r18Filter";
 import { apiClient } from "../api/client";
-import { queryClient } from "../api/queryClient";
-import { normalizeQueryError } from "../api/normalizeQueryError";
+import {
+  createFeedScrollStore,
+  type ScrollRestoreState,
+} from "../primitives/createFeedScrollStore";
 
 export type RecommendSubTab = "mixed" | "illust" | "manga";
 
-// ── Sub-tab signals (kept for backward compatibility) ──
-import { createSignal, batch } from "solid-js";
+// ── Sub-tab signals (kept in module for backward compatibility) ──
 
 const [followTabState, setFollowTab] = createSignal<"all" | "public" | "private">("all");
 const [recommendSubTabState, setRecommendSubTabRaw] = createSignal<RecommendSubTab>("mixed");
@@ -26,371 +27,127 @@ export function setRecommendSubTab(t: RecommendSubTab) {
   });
 }
 
-// ── TQ Infinite Queries ──
-// 每个数据源一个独立查询，enable 由当前 tab + 子标签控制
-
-function onFollowTab(...allowed: ("all" | "public" | "private")[]) {
-  return () => currentTab() === "follow" && allowed.includes(followTabState());
+/**
+ * SubTab adapter:
+ * feedStore uses "mixed" for recommended merge, factory uses "all".
+ * Follow tab uses "all" unchanged.
+ */
+function toFactorySubTab(tab: string, sub: string): string {
+  return tab === "recommended" && sub === "mixed" ? "all" : sub;
 }
 
-function onRecommendedSubTab(...allowed: RecommendSubTab[]) {
-  return () => currentTab() === "recommended" && allowed.includes(recommendSubTabState());
+function fromFactorySubTab(tab: string, sub: string): string {
+  return tab === "recommended" && sub === "all" ? "mixed" : sub;
 }
 
-// Query 1: follow_public
-const followPublicQuery = createRoot(() =>
-  createInfiniteQuery(
-    () => ({
-      queryKey: ["feed", "follow_public"] as const,
-      queryFn: ({ pageParam, signal }) => {
-        if (pageParam) {
-          return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(
-            pageParam as string,
-            undefined,
-            signal,
-          );
-        }
-        return loadFollow("public", signal);
-      },
-      getNextPageParam: (last) => last.next_url ?? undefined,
-      initialPageParam: undefined as string | undefined,
-      enabled: onFollowTab("all", "public")(),
-      staleTime: 30_000,
-      gcTime: 5 * 60_000,
-    }),
-    () => queryClient,
-  ),
-);
-
-// Query 2: follow_private
-const followPrivateQuery = createRoot(() =>
-  createInfiniteQuery(
-    () => ({
-      queryKey: ["feed", "follow_private"] as const,
-      queryFn: ({ pageParam, signal }) => {
-        if (pageParam) {
-          return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(
-            pageParam as string,
-            undefined,
-            signal,
-          );
-        }
-        return loadFollow("private", signal);
-      },
-      getNextPageParam: (last) => last.next_url ?? undefined,
-      initialPageParam: undefined as string | undefined,
-      enabled: onFollowTab("all", "private")(),
-      staleTime: 30_000,
-      gcTime: 5 * 60_000,
-    }),
-    () => queryClient,
-  ),
-);
-
-// Query 3: recommended_illust
-const recommendedIllustQuery = createRoot(() =>
-  createInfiniteQuery(
-    () => ({
-      queryKey: ["feed", "recommended_illust"] as const,
-      queryFn: ({ pageParam, signal }) => {
-        if (pageParam) {
-          return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(
-            pageParam as string,
-            undefined,
-            signal,
-          );
-        }
-        return loadRecommended("illust", signal);
-      },
-      getNextPageParam: (last) => last.next_url ?? undefined,
-      initialPageParam: undefined as string | undefined,
-      enabled: onRecommendedSubTab("mixed", "illust")(),
-      staleTime: 30_000,
-      gcTime: 5 * 60_000,
-    }),
-    () => queryClient,
-  ),
-);
-
-// Query 4: recommended_manga
-const recommendedMangaQuery = createRoot(() =>
-  createInfiniteQuery(
-    () => ({
-      queryKey: ["feed", "recommended_manga"] as const,
-      queryFn: ({ pageParam, signal }) => {
-        if (pageParam) {
-          return apiClient.get<{ illusts: PixivIllust[]; next_url: string | null }>(
-            pageParam as string,
-            undefined,
-            signal,
-          );
-        }
-        return loadRecommended("manga", signal);
-      },
-      getNextPageParam: (last) => last.next_url ?? undefined,
-      initialPageParam: undefined as string | undefined,
-      enabled: onRecommendedSubTab("mixed", "manga")(),
-      staleTime: 30_000,
-      gcTime: 5 * 60_000,
-    }),
-    () => queryClient,
-  ),
-);
-
-// ── Helper: flatten TQ pages → array ──
-
-function flattenIllusts(query: { data?: { pages: { illusts: PixivIllust[] }[] } }): PixivIllust[] {
-  if (!query.data?.pages) return [];
-  return query.data.pages.flatMap((p) => p.illusts);
-}
-
-// ── Helper: get next_url from a query's last page ──
-
-function getLastNextUrl(query: { data?: { pages: { next_url: string | null }[] } }): string | null {
-  if (!query.data?.pages?.length) return null;
-  return query.data.pages[query.data.pages.length - 1].next_url ?? null;
-}
-
-// ── Merge helpers ──
-
-function mergeAndSort(a: PixivIllust[], b: PixivIllust[]): PixivIllust[] {
-  const result: PixivIllust[] = [];
-  let i = 0,
-    j = 0;
-  while (i < a.length && j < b.length) {
-    if (a[i].create_date >= b[j].create_date) {
-      result.push(a[i++]);
-    } else {
-      result.push(b[j++]);
-    }
-  }
-  result.push(...a.slice(i), ...b.slice(j));
-  return result;
-}
-
-function removeDuplicates(illusts: PixivIllust[]): PixivIllust[] {
+/** 去重：按 illust.id */
+function dedupIllusts(items: PixivIllust[]): PixivIllust[] {
   const seen = new Set<number>();
-  return illusts.filter((i) => {
+  return items.filter((i) => {
     if (seen.has(i.id)) return false;
     seen.add(i.id);
     return true;
   });
 }
 
-// ── Derived state ──
-
-/** 当前活跃的查询列表（取决于 tab + 子标签） */
-function activeQueries(): (typeof followPublicQuery)[] {
-  const tab = currentTab();
-  if (tab === "follow") {
-    const ft = followTabState();
-    if (ft === "public") return [followPublicQuery];
-    if (ft === "private") return [followPrivateQuery];
-    return [followPublicQuery, followPrivateQuery];
+/** 下一页 API 请求（pageParam 有值 → apiClient.get，否则调初始 loader） */
+function nextPageOrLoad(
+  pageParam: string | undefined,
+  initialLoader: (
+    signal?: AbortSignal,
+  ) => Promise<{ illusts: PixivIllust[]; next_url: string | null }>,
+  signal?: AbortSignal,
+): Promise<{ items: PixivIllust[]; next_url: string | null }> {
+  if (pageParam) {
+    return apiClient
+      .get<{ illusts: PixivIllust[]; next_url: string | null }>(pageParam, undefined, signal)
+      .then((r) => ({ items: r.illusts, next_url: r.next_url }));
   }
-  if (tab === "recommended") {
-    const st = recommendSubTabState();
-    if (st === "illust") return [recommendedIllustQuery];
-    if (st === "manga") return [recommendedMangaQuery];
-    return [recommendedIllustQuery, recommendedMangaQuery];
-  }
-  return [];
+  return initialLoader(signal).then((r) => ({ items: r.illusts, next_url: r.next_url }));
 }
 
-export const illusts = (): PixivIllust[] => {
-  const tab = currentTab();
-  if (tab === "follow") {
-    const ft = followTabState();
-    if (ft === "public") return filterFeedIllusts(flattenIllusts(followPublicQuery));
-    if (ft === "private") return filterFeedIllusts(flattenIllusts(followPrivateQuery));
-    const pub = flattenIllusts(followPublicQuery);
-    const priv = flattenIllusts(followPrivateQuery);
-    if (pub.length === 0) return filterFeedIllusts(priv);
-    if (priv.length === 0) return filterFeedIllusts(pub);
-    return filterFeedIllusts(mergeAndSort(pub, priv));
-  }
-  if (tab === "recommended") {
-    const st = recommendSubTabState();
-    if (st === "illust") return filterFeedIllusts(flattenIllusts(recommendedIllustQuery));
-    if (st === "manga") return filterFeedIllusts(flattenIllusts(recommendedMangaQuery));
-    // Mixed: merge + deduplicate
-    const illust = flattenIllusts(recommendedIllustQuery);
-    const manga = flattenIllusts(recommendedMangaQuery);
-    if (illust.length === 0) return filterFeedIllusts(manga);
-    if (manga.length === 0) return filterFeedIllusts(illust);
-    return filterFeedIllusts(
-      removeDuplicates(
-        mergeAndSort(
-          [...illust].sort((a, b) => b.create_date.localeCompare(a.create_date)),
-          [...manga].sort((a, b) => b.create_date.localeCompare(a.create_date)),
-        ),
-      ),
-    );
-  }
-  return [];
-};
+// ── Factory instance ──
 
-export const nextUrl = (): string | null => {
-  const tab = currentTab();
-  if (tab === "follow") {
-    const ft = followTabState();
-    if (ft === "public") return getLastNextUrl(followPublicQuery);
-    if (ft === "private") return getLastNextUrl(followPrivateQuery);
-    return getLastNextUrl(followPublicQuery) || getLastNextUrl(followPrivateQuery);
-  }
-  if (tab === "recommended") {
-    const st = recommendSubTabState();
-    if (st === "illust") return getLastNextUrl(recommendedIllustQuery);
-    if (st === "manga") return getLastNextUrl(recommendedMangaQuery);
-    return getLastNextUrl(recommendedIllustQuery) || getLastNextUrl(recommendedMangaQuery);
-  }
-  return null;
-};
+const store = createTQFeedStore<PixivIllust, "recommended" | "follow", undefined>({
+  name: "feed",
+  currentTab: () => currentTab() as "recommended" | "follow",
+  enabled: () => true,
+  getDeps: () => undefined,
+  staleTime: 30_000,
+  gcTime: 5 * 60_000,
+  errorStrategy: "allMustFail",
+  filterFn: filterFeedIllusts,
+  dedupFn: dedupIllusts,
 
-export const loading = (): boolean => {
-  return activeQueries().some((q) => q.isFetching);
-};
+  tabs: {
+    recommended: {
+      allMode: { type: "merge", subTabs: ["illust", "manga"] },
+      getSubTab: () => toFactorySubTab("recommended", recommendSubTabState()),
+      setSubTab: (v) => setRecommendSubTab(fromFactorySubTab("recommended", v) as RecommendSubTab),
+      queries: {
+        illust: {
+          queryKey: () => ["feed", "recommended_illust"],
+          queryFn: (_deps, pageParam, signal) =>
+            nextPageOrLoad(pageParam, (sig) => loadRecommended("illust", sig), signal),
+        },
+        manga: {
+          queryKey: () => ["feed", "recommended_manga"],
+          queryFn: (_deps, pageParam, signal) =>
+            nextPageOrLoad(pageParam, (sig) => loadRecommended("manga", sig), signal),
+        },
+      },
+    },
+    follow: {
+      allMode: { type: "merge", subTabs: ["public", "private"] },
+      getSubTab: () => toFactorySubTab("follow", followTabState()),
+      setSubTab: (v) =>
+        setFollowTab(fromFactorySubTab("follow", v) as "all" | "public" | "private"),
+      queries: {
+        public: {
+          queryKey: () => ["feed", "follow_public"],
+          queryFn: (_deps, pageParam, signal) =>
+            nextPageOrLoad(pageParam, (sig) => loadFollow("public", sig), signal),
+        },
+        private: {
+          queryKey: () => ["feed", "follow_private"],
+          queryFn: (_deps, pageParam, signal) =>
+            nextPageOrLoad(pageParam, (sig) => loadFollow("private", sig), signal),
+        },
+      },
+    },
+  },
+});
 
-export const refreshing = (): boolean => {
-  return activeQueries().some((q) => q.isFetching);
-};
+// ── Derived state (re-export from factory) ──
 
-// ── Error state: pick most specific error from active queries ──
+export const illusts = store.items;
+export const nextUrl = store.nextUrl;
+export const loading = store.loading;
+export const refreshing = store.refreshing;
+export const error = store.error;
 
-const ERROR_TYPE_PRIORITY = [
-  "PROXY",
-  "NETWORK",
-  "UNAUTHORIZED",
-  "RATE_LIMIT",
-  "SERVER",
-  "UNKNOWN",
-] as const;
-
-function pickBestError(...errors: (ApiError | null)[]): ApiError | null {
-  const filtered = errors.filter((e): e is ApiError => e !== null);
-  if (filtered.length === 0) return null;
-  for (const priority of ERROR_TYPE_PRIORITY) {
-    const match = filtered.find((e) => e.type === priority);
-    if (match) return match;
-  }
-  return filtered[0];
-}
-
-export const error = (): ApiError | null => {
-  const qs = activeQueries();
-  const errs = qs.map((q) => normalizeQueryError(q.error));
-  // 双源模式下（mixed/all），仅当全部数据源都失败时才显示错误
-  // 单源模式下，有错就显示
-  if (qs.length <= 1) return pickBestError(...errs);
-  const allFailed = errs.length > 0 && errs.every((e) => e !== null);
-  return allFailed ? pickBestError(...errs) : null;
-};
-
-// ── Tab cache helpers (backward-compatible) ──
+// ── Tab cache helper ──
 
 export function isFeedCached(tab?: string): boolean {
-  const t = tab ?? currentTab();
-  if (t === "follow") {
-    return (
-      (followPublicQuery.data?.pages?.length ?? 0) > 0 ||
-      (followPrivateQuery.data?.pages?.length ?? 0) > 0
-    );
-  }
-  if (t === "recommended") {
-    const st = recommendSubTabState();
-    if (st === "mixed") {
-      return (
-        (recommendedIllustQuery.data?.pages?.length ?? 0) > 0 ||
-        (recommendedMangaQuery.data?.pages?.length ?? 0) > 0
-      );
-    }
-    if (st === "illust") return (recommendedIllustQuery.data?.pages?.length ?? 0) > 0;
-    if (st === "manga") return (recommendedMangaQuery.data?.pages?.length ?? 0) > 0;
-  }
-  return false;
+  void tab;
+  return store.isCached();
 }
 
 export function markFeedMounted() {
   // No-op: lifecycle hook for Feed component
 }
 
-// ── Actions ──
+// ── Actions (re-export from factory) ──
 
-/** 获取当前活跃数据源的 queryKey 列表 */
-function activeQueryKeys(): string[] {
-  const tab = currentTab();
-  if (tab === "follow") {
-    const ft = followTabState();
-    if (ft === "public") return ["follow_public"];
-    if (ft === "private") return ["follow_private"];
-    return ["follow_public", "follow_private"];
-  }
-  if (tab === "recommended") {
-    const st = recommendSubTabState();
-    if (st === "illust") return ["recommended_illust"];
-    if (st === "manga") return ["recommended_manga"];
-    return ["recommended_illust", "recommended_manga"];
-  }
-  return [];
+export const ensureLoaded = store.ensureLoaded;
+export const refresh = store.refresh;
+
+/** 串行翻页（匹配原 feedStore 行为） */
+export function fetchMore(_signal?: AbortSignal): Promise<void | undefined> {
+  return store.fetchMore(_signal);
 }
 
-const queryOptionsMap: Record<string, any> = {
-  follow_public: {
-    queryKey: ["feed", "follow_public"] as const,
-    queryFn: ({ signal }: { signal?: AbortSignal }) => loadFollow("public", signal),
-    getNextPageParam: (last: { next_url: string | null }) => last.next_url ?? undefined,
-    initialPageParam: undefined,
-  },
-  follow_private: {
-    queryKey: ["feed", "follow_private"] as const,
-    queryFn: ({ signal }: { signal?: AbortSignal }) => loadFollow("private", signal),
-    getNextPageParam: (last: { next_url: string | null }) => last.next_url ?? undefined,
-    initialPageParam: undefined,
-  },
-  recommended_illust: {
-    queryKey: ["feed", "recommended_illust"] as const,
-    queryFn: ({ signal }: { signal?: AbortSignal }) => loadRecommended("illust", signal),
-    getNextPageParam: (last: { next_url: string | null }) => last.next_url ?? undefined,
-    initialPageParam: undefined,
-  },
-  recommended_manga: {
-    queryKey: ["feed", "recommended_manga"] as const,
-    queryFn: ({ signal }: { signal?: AbortSignal }) => loadRecommended("manga", signal),
-    getNextPageParam: (last: { next_url: string | null }) => last.next_url ?? undefined,
-    initialPageParam: undefined,
-  },
-};
-
-export async function ensureLoaded(_signal?: AbortSignal): Promise<void> {
-  const keys = activeQueryKeys();
-  await Promise.all(
-    keys.map((key) =>
-      queryClient.ensureInfiniteQueryData({
-        ...queryOptionsMap[key],
-        staleTime: 30_000,
-      } as any),
-    ),
-  );
-}
-
-export async function refresh(_signal?: AbortSignal): Promise<void> {
-  const qs = activeQueries();
-  await Promise.all(qs.map((q) => (q as any).refetch()));
-}
-
-export async function fetchMore(_signal?: AbortSignal): Promise<void> {
-  const qs = activeQueries();
-  for (const q of qs) {
-    if ((q as any).hasNextPage && !(q as any).isFetchingNextPage) {
-      await (q as any).fetchNextPage();
-    }
-  }
-}
-
-import {
-  createFeedScrollStore,
-  type ScrollRestoreState,
-} from "../primitives/createFeedScrollStore";
+// ── Scroll restore (kept from original createFeedScrollStore) ──
 
 const feedScroll = createFeedScrollStore("", followTab, recommendSubTab);
 export const saveTabScroll = feedScroll.saveTabScroll;
@@ -398,7 +155,3 @@ export const getFeedScrollY = feedScroll.getFeedScrollY;
 export const saveFeedScrollState = feedScroll.saveScrollState;
 export const getFeedScrollState = feedScroll.getScrollState;
 export type { ScrollRestoreState };
-
-// ── Legacy fetch functions (kept for backward compatibility) ──
-// These are no longer primary data paths; TQ handles all fetching.
-// Consumers should use ensureLoaded + refresh + fetchMore instead.
