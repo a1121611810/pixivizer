@@ -6,7 +6,7 @@ import {
   latestReleaseUrl,
   latestChangelog,
   setLastDismissedVersion,
-} from "../stores/uiStore";
+} from "../stores/settingsStore";
 
 /**
  * Dismiss the current update version and hide the dialog.

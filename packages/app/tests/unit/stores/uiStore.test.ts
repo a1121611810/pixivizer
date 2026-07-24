@@ -51,10 +51,19 @@ afterAll(() => {
   (globalThis as any).document = originalDocument;
 });
 
-async function loadStore() {
+/** 原 loadStore 已废弃 — settings 相关测试使用 loadSettingsStore，ui 相关使用 loadBothStores */
+
+async function loadSettingsStore() {
   vi.resetModules();
-  const mod = await import("@/stores/uiStore");
+  const mod = await import("@/stores/settingsStore");
   return mod;
+}
+
+async function loadBothStores() {
+  vi.resetModules();
+  const uiMod = await import("@/stores/uiStore");
+  const settingsMod = await import("@/stores/settingsStore");
+  return { ...uiMod, ...settingsMod };
 }
 
 describe("age preference", () => {
@@ -67,7 +76,7 @@ describe("age preference", () => {
   });
 
   it("defaults ageConfirmed and isAdult to false", async () => {
-    const { ageConfirmed, isAdult } = await loadStore();
+    const { ageConfirmed, isAdult } = await loadSettingsStore();
 
     expect(ageConfirmed()).toBe(false);
     expect(isAdult()).toBe(false);
@@ -84,7 +93,8 @@ describe("age preference", () => {
       return { value: null };
     });
 
-    const { loadAgePreference, setShowR18, setShowR18G, showR18, showR18G } = await loadStore();
+    const { loadAgePreference, setShowR18, setShowR18G, showR18, showR18G } =
+      await loadSettingsStore();
     await setShowR18(true);
     await setShowR18G(true);
     await loadAgePreference();
@@ -119,7 +129,7 @@ describe("age preference", () => {
     });
 
     const { loadAgePreference, loadShowR18Preference, loadShowR18GPreference, showR18, showR18G } =
-      await loadStore();
+      await loadSettingsStore();
     await loadShowR18Preference();
     await loadShowR18GPreference();
     await loadAgePreference();
@@ -129,7 +139,8 @@ describe("age preference", () => {
   });
 
   it("setAgeConfirmation(true, false) sets minor and disables adult content", async () => {
-    const { setAgeConfirmation, ageConfirmed, isAdult, showR18, showR18G } = await loadStore();
+    const { setAgeConfirmation, ageConfirmed, isAdult, showR18, showR18G } =
+      await loadSettingsStore();
 
     await setAgeConfirmation(true, false);
 
@@ -156,7 +167,7 @@ describe("age preference", () => {
   });
 
   it("setAgeConfirmation(true, true) sets adult", async () => {
-    const { setAgeConfirmation, ageConfirmed, isAdult } = await loadStore();
+    const { setAgeConfirmation, ageConfirmed, isAdult } = await loadSettingsStore();
 
     await setAgeConfirmation(true, true);
 
@@ -204,7 +215,7 @@ describe("resetUiStore", () => {
       imageCacheDisk,
       imageCacheBrowser,
       imageCachePrefetch,
-    } = await loadStore();
+    } = await loadBothStores();
 
     await setTheme("dark");
     await setShowR18(true);
@@ -259,12 +270,12 @@ describe("resetUiStore", () => {
 
   describe("contentType", () => {
     it("defaults to illust", async () => {
-      const { contentType } = await loadStore();
+      const { contentType } = await loadBothStores();
       expect(contentType()).toBe("illust");
     });
 
     it("persists and updates on setContentType", async () => {
-      const { contentType, setContentType } = await loadStore();
+      const { contentType, setContentType } = await loadBothStores();
       await setContentType("novel");
       expect(contentType()).toBe("novel");
       expect(Preferences.set).toHaveBeenCalledWith({
@@ -275,20 +286,20 @@ describe("resetUiStore", () => {
 
     it("loads persisted contentType via loadContentTypePreference", async () => {
       vi.mocked(Preferences.get).mockResolvedValue({ value: "novel" });
-      const { contentType, loadContentTypePreference } = await loadStore();
+      const { contentType, loadContentTypePreference } = await loadBothStores();
       await loadContentTypePreference();
       expect(contentType()).toBe("novel");
     });
 
     it("ignores invalid persisted values", async () => {
       vi.mocked(Preferences.get).mockResolvedValue({ value: "invalid" });
-      const { contentType, loadContentTypePreference } = await loadStore();
+      const { contentType, loadContentTypePreference } = await loadBothStores();
       await loadContentTypePreference();
       expect(contentType()).toBe("illust"); // Default unchanged
     });
 
     it("dispatches contentTypeChanged event", async () => {
-      const { setContentType } = await loadStore();
+      const { setContentType } = await loadBothStores();
       const dispatchSpy = vi.fn();
       const origDispatch = window.dispatchEvent;
       window.dispatchEvent = dispatchSpy;
@@ -307,12 +318,12 @@ describe("lastDismissedVersion", () => {
   });
 
   it("defaults to empty string", async () => {
-    const { lastDismissedVersion } = await loadStore();
+    const { lastDismissedVersion } = await loadSettingsStore();
     expect(lastDismissedVersion()).toBe("");
   });
 
   it("setLastDismissedVersion updates state and persists", async () => {
-    const { setLastDismissedVersion, lastDismissedVersion } = await loadStore();
+    const { setLastDismissedVersion, lastDismissedVersion } = await loadSettingsStore();
     await setLastDismissedVersion("1.2.3");
     expect(lastDismissedVersion()).toBe("1.2.3");
     expect(Preferences.set).toHaveBeenCalledWith({
@@ -323,7 +334,7 @@ describe("lastDismissedVersion", () => {
 
   it("loadLastDismissedVersionPreference restores persisted value", async () => {
     vi.mocked(Preferences.get).mockResolvedValue({ value: "2.0.0" });
-    const { loadLastDismissedVersionPreference, lastDismissedVersion } = await loadStore();
+    const { loadLastDismissedVersionPreference, lastDismissedVersion } = await loadSettingsStore();
     await loadLastDismissedVersionPreference();
     expect(lastDismissedVersion()).toBe("2.0.0");
     expect(Preferences.get).toHaveBeenCalledWith({ key: "dismissed_update_version" });
@@ -331,7 +342,7 @@ describe("lastDismissedVersion", () => {
 
   it("loadLastDismissedVersionPreference leaves default when no persisted value", async () => {
     vi.mocked(Preferences.get).mockResolvedValue({ value: null });
-    const { loadLastDismissedVersionPreference, lastDismissedVersion } = await loadStore();
+    const { loadLastDismissedVersionPreference, lastDismissedVersion } = await loadSettingsStore();
     await loadLastDismissedVersionPreference();
     expect(lastDismissedVersion()).toBe("");
   });
@@ -339,7 +350,7 @@ describe("lastDismissedVersion", () => {
   it("resetUiStore clears lastDismissedVersion and persists", async () => {
     vi.mocked(Capacitor.getPlatform).mockReturnValue("web");
     vi.mocked(Preferences.set).mockResolvedValue(undefined);
-    const { setLastDismissedVersion, resetUiStore, lastDismissedVersion } = await loadStore();
+    const { setLastDismissedVersion, resetUiStore, lastDismissedVersion } = await loadBothStores();
     await setLastDismissedVersion("1.0.0");
     await resetUiStore();
     expect(lastDismissedVersion()).toBe("");
@@ -352,12 +363,12 @@ describe("lastDismissedVersion", () => {
 
 describe("showUpdateDialog", () => {
   it("defaults to false", async () => {
-    const { showUpdateDialog } = await loadStore();
+    const { showUpdateDialog } = await loadSettingsStore();
     expect(showUpdateDialog()).toBe(false);
   });
 
   it("can be toggled via setShowUpdateDialog", async () => {
-    const { setShowUpdateDialog, showUpdateDialog } = await loadStore();
+    const { setShowUpdateDialog, showUpdateDialog } = await loadSettingsStore();
     setShowUpdateDialog(true);
     expect(showUpdateDialog()).toBe(true);
     setShowUpdateDialog(false);
@@ -377,12 +388,12 @@ describe("novelLayoutMode", () => {
   });
 
   it("defaults to list", async () => {
-    const { novelLayoutMode } = await loadStore();
+    const { novelLayoutMode } = await loadSettingsStore();
     expect(novelLayoutMode()).toBe("list");
   });
 
   it("persists textList", async () => {
-    const { setNovelLayoutMode, novelLayoutMode } = await loadStore();
+    const { setNovelLayoutMode, novelLayoutMode } = await loadSettingsStore();
     await setNovelLayoutMode("textList");
     expect(novelLayoutMode()).toBe("textList");
     expect(Preferences.set).toHaveBeenCalledWith({
@@ -393,14 +404,14 @@ describe("novelLayoutMode", () => {
 
   it("loads persisted textList", async () => {
     vi.mocked(Preferences.get).mockResolvedValue({ value: "textList" });
-    const { loadNovelLayoutModePreference, novelLayoutMode } = await loadStore();
+    const { loadNovelLayoutModePreference, novelLayoutMode } = await loadSettingsStore();
     await loadNovelLayoutModePreference();
     expect(novelLayoutMode()).toBe("textList");
   });
 
   it("ignores invalid persisted values", async () => {
     vi.mocked(Preferences.get).mockResolvedValue({ value: "invalid" });
-    const { loadNovelLayoutModePreference, novelLayoutMode } = await loadStore();
+    const { loadNovelLayoutModePreference, novelLayoutMode } = await loadSettingsStore();
     await loadNovelLayoutModePreference();
     expect(novelLayoutMode()).toBe("list");
   });

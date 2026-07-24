@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { filterNovels, filterFeedIllusts } from "@/utils/r18Filter";
 import type { PixivNovel, PixivIllust } from "@/api/types";
 
-vi.mock("@/stores/uiStore", () => ({
+vi.mock("@/stores/settingsStore", () => ({
   showR18: vi.fn(() => false),
   showR18G: vi.fn(() => false),
 }));
@@ -11,7 +11,7 @@ vi.mock("@/stores/blockStore", () => ({
   isBlocked: vi.fn((id: number) => id === 999),
 }));
 
-import { showR18, showR18G } from "@/stores/uiStore";
+import { showR18, showR18G } from "@/stores/settingsStore";
 
 function createNovel(id: number, xRestrict: number, userId: number): PixivNovel {
   return {

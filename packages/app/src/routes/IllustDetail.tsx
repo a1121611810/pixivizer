@@ -12,7 +12,7 @@ import PixivImage from "../components/PixivImage";
 import LoadingSpinner from "../components/LoadingSpinner";
 import PageTransition from "../components/PageTransition";
 import HeartBurstEffect from "../components/HeartBurstEffect";
-import { detailQuality, showDetailStairs } from "../stores/uiStore";
+import { detailQuality, showDetailStairs } from "../stores/settingsStore";
 import { blockUser, isBlocked } from "../stores/blockStore";
 import { recordVisit } from "../stores/historyStore";
 import { pushOverlay, popOverlay } from "../stores/backGestureStore";

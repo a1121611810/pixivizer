@@ -8,8 +8,8 @@ import {
   setImageCachePrefetch,
   imageCacheDiskSize,
   setImageCacheDiskSize,
-  resetUiStore,
-} from "@/stores/uiStore";
+  resetSettingsStore,
+} from "@/stores/settingsStore";
 
 vi.mock("@capacitor/core", () => {
   const mockCapacitor = {
@@ -87,11 +87,11 @@ describe("imageCache A/B/C 开关", () => {
     expect(imageCachePrefetch()).toBe(true);
   });
 
-  it("resetUiStore 将三个开关重置为 true", async () => {
+  it("resetSettingsStore 将三个开关重置为 true", async () => {
     await setImageCacheDisk(false);
     await setImageCacheBrowser(false);
     await setImageCachePrefetch(false);
-    await resetUiStore();
+    await resetSettingsStore();
     expect(imageCacheDisk()).toBe(true);
     expect(imageCacheBrowser()).toBe(true);
     expect(imageCachePrefetch()).toBe(true);
@@ -105,7 +105,7 @@ describe("imageCache A/B/C 开关", () => {
 
     // 重置模块模拟冷启动
     vi.resetModules();
-    const mod = await import("@/stores/uiStore");
+    const mod = await import("@/stores/settingsStore");
     // 模拟 Preferences.get 返回 false
     const { Preferences } = await import("@capacitor/preferences");
     vi.mocked(Preferences.get).mockImplementation(async ({ key }) => {
@@ -147,9 +147,9 @@ describe("imageCacheDiskSize 磁盘缓存上限", () => {
     expect(imageCacheDiskSize()).toBe(1000);
   });
 
-  it("resetUiStore 重置为 300", async () => {
+  it("resetSettingsStore 重置为 300", async () => {
     await setImageCacheDiskSize(500);
-    await resetUiStore();
+    await resetSettingsStore();
     expect(imageCacheDiskSize()).toBe(300);
   });
 });

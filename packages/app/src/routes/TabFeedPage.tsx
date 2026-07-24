@@ -18,8 +18,9 @@ import {
   setRecommendSubTab,
   type RecommendSubTab,
 } from "../stores/feedStore";
-import { layoutMode, contentType, setContentType } from "../stores/uiStore";
+import { contentType, setContentType } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
+import { layoutMode } from "../stores/settingsStore";
 import type { PixivIllust } from "../api/types";
 import { user, isLoggedIn } from "../stores/authStore";
 import UserAvatar from "../components/UserAvatar";

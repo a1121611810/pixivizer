@@ -8,7 +8,7 @@ import LoadingSpinner from "./LoadingSpinner";
 import ErrorDisplay from "./ErrorDisplay";
 import PullIndicator from "./PullIndicator";
 import type { PixivNovel, ApiError } from "../api/types";
-import type { NovelLayoutMode } from "../stores/uiStore";
+import type { NovelLayoutMode } from "../stores/settingsStore";
 import { saveNovelScrollState, getNovelScrollState } from "../stores/novelStore";
 import { createVirtualScrollRestore } from "../primitives/createVirtualScrollRestore";
 

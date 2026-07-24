@@ -1,7 +1,7 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { ApiErrorType, type ApiError } from "./types";
 import { PictelioHttp } from "../native/PictelioHttp";
-import { useDnsOverride } from "../stores/uiStore";
+import { useDnsOverride } from "../stores/settingsStore";
 import { PIXIV_USER_AGENT } from "./userAgent";
 
 // ─── 端点（编译时常量，从 credentials.json5 注入） ───

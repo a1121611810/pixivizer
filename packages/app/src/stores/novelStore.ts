@@ -9,8 +9,10 @@ import { currentTab } from "./uiStore";
 import { user } from "./authStore";
 import { apiClient } from "../api/client";
 import { queryClient } from "../api/queryClient";
-import { scrollRestoreGlobal } from "../primitives/createScrollRestore";
-import type { ScrollRestoreState } from "../primitives/createScrollRestore";
+import {
+  createFeedScrollStore,
+  type ScrollRestoreState,
+} from "../primitives/createFeedScrollStore";
 
 // ── Signals (kept for backward compatibility) ──
 import { createSignal } from "solid-js";
@@ -311,36 +313,11 @@ export function isNovelCached(tab?: string): boolean {
   return false;
 }
 
-// ── Scroll position (unchanged) ──
+// ── Scroll position ──
 
-export function saveTabScroll(tab: string) {
-  if (tab === "follow") {
-    scrollRestoreGlobal.saveSimple(`novel_follow_${followTabState()}`);
-    return;
-  }
-  scrollRestoreGlobal.saveSimple(`novel_${tab}`);
-}
-
-export function getFeedScrollY(tab?: string): number {
-  const t = tab ?? currentTab();
-  if (t === "follow") {
-    return scrollRestoreGlobal.getSimple(`novel_follow_${followTabState()}`) ?? 0;
-  }
-  return scrollRestoreGlobal.getSimple(`novel_${t}`) ?? 0;
-}
-
-export { type ScrollRestoreState };
-
-function getScrollStateKey(tab?: string): string {
-  const t = tab ?? currentTab();
-  if (t === "follow") return `novel_follow_${followTabState()}`;
-  return `novel_${t}`;
-}
-
-export function saveNovelScrollState(tab: string, st: ScrollRestoreState) {
-  scrollRestoreGlobal.saveVirtual(getScrollStateKey(tab), st);
-}
-
-export function getNovelScrollState(tab?: string): ScrollRestoreState | null {
-  return scrollRestoreGlobal.getVirtual(getScrollStateKey(tab)) ?? null;
-}
+const novelScroll = createFeedScrollStore("novel_", novelFollowTab);
+export const saveTabScroll = novelScroll.saveTabScroll;
+export const getFeedScrollY = novelScroll.getFeedScrollY;
+export const saveNovelScrollState = novelScroll.saveScrollState;
+export const getNovelScrollState = novelScroll.getScrollState;
+export type { ScrollRestoreState };

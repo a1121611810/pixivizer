@@ -1,5 +1,5 @@
 import { type Component } from "solid-js";
-import { setAgeConfirmation } from "../stores/uiStore";
+import { setAgeConfirmation } from "../stores/settingsStore";
 
 function confirmAdult() {
   setAgeConfirmation(true, true);

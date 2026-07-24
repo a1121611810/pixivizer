@@ -11,7 +11,7 @@ import { useNavigate } from "@tanstack/solid-router";
 import { useLiveQuery, eq, ilike, gte, lte, and } from "@tanstack/solid-db";
 import { historyCollection, removeHistoryEntry, clearAllHistory } from "@/stores/historyStore";
 import { user } from "@/stores/authStore";
-import { showR18, showR18G } from "@/stores/uiStore";
+import { showR18, showR18G } from "@/stores/settingsStore";
 import { resolveImageUrl } from "@/utils/imageLoader";
 import PageTransition from "@/components/PageTransition";
 import FluentIcon from "@/components/ui/FluentIcon";

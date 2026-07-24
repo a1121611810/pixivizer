@@ -1,5 +1,5 @@
 import type { PixivIllust, PixivNovel, PixivUserPreview } from "../api/types";
-import { showR18, showR18G } from "../stores/uiStore";
+import { showR18, showR18G } from "../stores/settingsStore";
 import { isBlocked } from "../stores/blockStore";
 
 /**

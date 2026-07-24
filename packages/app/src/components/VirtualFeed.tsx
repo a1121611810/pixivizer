@@ -12,7 +12,7 @@ import type { LayoutMode } from "../primitives/types";
 import { createFeedVirtualizer } from "../primitives/createFeedVirtualizer";
 import { loadImage, checkImageCache } from "../utils/imageLoader";
 import { isImageHostEnabled } from "../stores/imageHostStore";
-import { imageCachePrefetch } from "../stores/uiStore";
+import { imageCachePrefetch } from "../stores/settingsStore";
 import {
   saveFeedScrollState,
   getFeedScrollState,

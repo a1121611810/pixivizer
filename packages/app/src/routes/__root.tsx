@@ -18,12 +18,10 @@ import {
   loadLayoutModePreference,
   loadShowDetailStairsPreference,
   loadAgePreference,
-  loadThemePreference,
   ageConfirmed,
   autoCheckUpdate,
   loadAutoCheckUpdatePreference,
   loadUseDnsOverridePreference,
-  loadContentTypePreference,
   loadImageCachePrefs,
   loadNovelLayoutModePreference,
   loadLastDismissedVersionPreference,
@@ -35,7 +33,8 @@ import {
   setIsCheckingUpdate,
   setCheckCompleted,
   lastDismissedVersion,
-} from "@/stores/uiStore";
+} from "@/stores/settingsStore";
+import { loadThemePreference, loadContentTypePreference } from "@/stores/uiStore";
 import { checkForUpdate } from "@/services/updateService";
 import { clearOverlays, registerBackGesture } from "@/services/backGestureService";
 import { warmCacheFromDisk } from "@/utils/imageLoader";

@@ -14,7 +14,7 @@ import {
 } from "../stores/novelStore";
 import NovelVirtualFeed from "../components/NovelVirtualFeed";
 import SeriesSheet from "../components/SeriesSheet";
-import { novelLayoutMode } from "../stores/uiStore";
+import { novelLayoutMode } from "../stores/settingsStore";
 import { pushOverlay, popOverlay } from "../stores/backGestureStore";
 import { createSignal } from "solid-js";
 

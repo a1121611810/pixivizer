@@ -7,8 +7,6 @@ import { filterFeedIllusts } from "../utils/r18Filter";
 import { apiClient } from "../api/client";
 import { queryClient } from "../api/queryClient";
 import { normalizeQueryError } from "../api/normalizeQueryError";
-import { scrollRestoreGlobal } from "../primitives/createScrollRestore";
-import type { ScrollRestoreState } from "../primitives/createScrollRestore";
 
 export type RecommendSubTab = "mixed" | "illust" | "manga";
 
@@ -389,48 +387,17 @@ export async function fetchMore(_signal?: AbortSignal): Promise<void> {
   }
 }
 
-// ── Scroll position (unchanged) ──
+import {
+  createFeedScrollStore,
+  type ScrollRestoreState,
+} from "../primitives/createFeedScrollStore";
 
-export function saveTabScroll(tab: string) {
-  if (tab === "follow") {
-    scrollRestoreGlobal.saveSimple(tab);
-    return;
-  }
-  if (tab === "recommended") {
-    const key = `recommended_${recommendSubTabState()}`;
-    scrollRestoreGlobal.saveSimple(key);
-    return;
-  }
-  scrollRestoreGlobal.saveSimple(tab);
-}
-
-export function getFeedScrollY(tab?: string): number {
-  const t = tab ?? currentTab();
-  if (t === "recommended") {
-    return scrollRestoreGlobal.getSimple(`recommended_${recommendSubTabState()}`) ?? 0;
-  }
-  return scrollRestoreGlobal.getSimple(t) ?? 0;
-}
-
-export { type ScrollRestoreState };
-
-// ── TanStack Virtual 滚动状态 API ──
-
-function getScrollStateKey(tab?: string): string {
-  const t = tab ?? currentTab();
-  if (t === "recommended") {
-    return `recommended_${recommendSubTabState()}`;
-  }
-  return t;
-}
-
-export function saveFeedScrollState(tab: string, st: ScrollRestoreState) {
-  scrollRestoreGlobal.saveVirtual(getScrollStateKey(tab), st);
-}
-
-export function getFeedScrollState(tab?: string): ScrollRestoreState | null {
-  return scrollRestoreGlobal.getVirtual(getScrollStateKey(tab)) ?? null;
-}
+const feedScroll = createFeedScrollStore("", followTab, recommendSubTab);
+export const saveTabScroll = feedScroll.saveTabScroll;
+export const getFeedScrollY = feedScroll.getFeedScrollY;
+export const saveFeedScrollState = feedScroll.saveScrollState;
+export const getFeedScrollState = feedScroll.getScrollState;
+export type { ScrollRestoreState };
 
 // ── Legacy fetch functions (kept for backward compatibility) ──
 // These are no longer primary data paths; TQ handles all fetching.

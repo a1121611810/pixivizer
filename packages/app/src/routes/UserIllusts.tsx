@@ -16,7 +16,7 @@ import { viewedUser } from "../stores/userStore";
 import UserWorksFeed from "../components/UserWorksFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";
-import { layoutMode } from "../stores/uiStore";
+import { layoutMode } from "../stores/settingsStore";
 import { scrollToTop } from "../utils/scrollToTop";
 import { createScrollDrivenVisibility } from "../primitives/createScrollDrivenVisibility";
 

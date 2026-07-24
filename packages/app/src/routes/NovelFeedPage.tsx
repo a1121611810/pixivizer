@@ -22,8 +22,9 @@ import {
   novelFollowTab,
   setNovelFollowTab,
 } from "../stores/novelStore";
-import { setCurrentTab, novelLayoutMode } from "../stores/uiStore";
+import { setCurrentTab } from "../stores/uiStore";
 import type { Tab } from "../stores/uiStore";
+import { novelLayoutMode } from "../stores/settingsStore";
 import NovelVirtualFeed from "../components/NovelVirtualFeed";
 import SeriesSheet from "../components/SeriesSheet";
 import { pushOverlay, popOverlay } from "../stores/backGestureStore";

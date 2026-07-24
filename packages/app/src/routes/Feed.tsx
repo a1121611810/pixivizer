@@ -13,7 +13,8 @@ import {
   markFeedMounted,
   isFeedCached,
 } from "../stores/feedStore";
-import { currentTab, layoutMode } from "../stores/uiStore";
+import { currentTab } from "../stores/uiStore";
+import { layoutMode } from "../stores/settingsStore";
 import VirtualFeed from "../components/VirtualFeed";
 import NavBar from "../components/NavBar";
 import PageTransition from "../components/PageTransition";

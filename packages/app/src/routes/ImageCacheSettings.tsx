@@ -8,7 +8,7 @@ import {
   setImageCachePrefetch,
   imageCacheDiskSize,
   setImageCacheDiskSize,
-} from "../stores/uiStore";
+} from "../stores/settingsStore";
 
 /**
  * 图片缓存设置页 — A（磁盘缓存）/ B（浏览器缓存）/ C（后台预取）三个独立开关。

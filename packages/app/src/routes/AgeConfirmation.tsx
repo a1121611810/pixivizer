@@ -1,6 +1,6 @@
 import { type Component } from "solid-js";
 import { useNavigate, useSearch } from "@tanstack/solid-router";
-import { setAgeConfirmation } from "../stores/uiStore";
+import { setAgeConfirmation } from "../stores/settingsStore";
 import { initializeAuth, isLoggedIn, setIsLoading } from "../stores/authStore";
 
 // ── Fluent UI System Icon: ShieldCheckmark (24px) ──

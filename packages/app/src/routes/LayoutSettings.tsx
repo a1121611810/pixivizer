@@ -10,7 +10,7 @@ import {
   setShowDetailStairs,
   autoHideNavBar,
   setAutoHideNavBar,
-} from "../stores/uiStore";
+} from "../stores/settingsStore";
 
 /**
  * 布局设置页 — 插画/小说布局模式选择 + 详情页楼梯导航 + 自动隐藏导航栏。

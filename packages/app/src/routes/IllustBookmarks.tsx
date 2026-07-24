@@ -13,7 +13,7 @@ import {
   saveBookmarkScroll,
 } from "../stores/bookmarkStore";
 import { user } from "../stores/authStore";
-import { layoutMode } from "../stores/uiStore";
+import { layoutMode } from "../stores/settingsStore";
 import VirtualFeed from "../components/VirtualFeed";
 
 const r18Handler = () => refresh();

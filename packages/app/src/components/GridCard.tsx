@@ -1,6 +1,6 @@
 import { type Component, createSignal } from "solid-js";
 import type { PixivIllust } from "../api/types";
-import { listQuality } from "../stores/uiStore";
+import { listQuality } from "../stores/settingsStore";
 import PixivImage from "./PixivImage";
 import HeartBurstEffect from "./HeartBurstEffect";
 import SkeletonShimmer from "./SkeletonShimmer";
