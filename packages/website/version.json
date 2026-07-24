@@ -1,5 +1,5 @@
 {
-  "version": "3.16.2",
-  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.16.2",
-  "changelog": "🐛 修复\n  fix(startup): keep loading overlay visible through full init sequence\n  fix(novel-card): make cover responsive with clamp(80px,20vw,128px)\n  fix(virtual): ensure data-index attribute is set be"
+  "version": "3.17.0",
+  "url": "https://github.com/a1121611810/pixivizer/releases/tag/v3.17.0",
+  "changelog": "♻️ 重构\n  refactor(stores): migrate feedStore to createTQFeedStore factory\n  refactor(stores): split uiStore and extract createFeedScrollStore factory\n  refactor(settings): extract Settings sub-componen"
 }
